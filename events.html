@@ -65,8 +65,8 @@
         <div class="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <a href="events.html" class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                    <span class="bg-slate-900 text-white w-8 h-8 flex items-center justify-center rounded-lg text-sm"><i class="fa-solid fa-map-location-dot"></i></span>
-                    イベント
+                    <img src="NOAH.png" alt="NOAH" class="w-8 h-8 rounded-lg object-cover">
+                    <span>NOAH</span>
                 </a>
             </div>
 
@@ -837,25 +837,36 @@
 
             try {
                 if (isJoined) {
+                    // キャンセル処理
+                    // 1. イベント側の参加者リストから削除
                     await deleteDoc(partRef);
-                    // ユーザー側の削除も試みるが、失敗してもエラーにしない（権限がない場合の保険）
-                    try { await deleteDoc(myJoinRef); } catch(e) { console.warn("My list update failed", e); }
+                    // 2. 自分の参加リストから削除 (エラーならここで止まり、catchに飛びます)
+                    await deleteDoc(myJoinRef);
+                    
                     alert('参加をキャンセルしました');
                 } else {
+                    // 参加処理
                     const ts = serverTimestamp();
+                    // 1. イベント側の参加者リストに追加
                     await setDoc(partRef, { joinedAt: ts, uid: currentUser.uid });
-                    // ユーザー側の書き込みも試みる（失敗してもアラートしない）
-                    try { await setDoc(myJoinRef, { joinedAt: ts, eventId: eventId }); } catch(e) { console.warn("My list update failed", e); }
+                    // 2. 自分の参加リストに追加 (エラーならここで止まり、catchに飛びます)
+                    await setDoc(myJoinRef, { joinedAt: ts, eventId: eventId });
+                    
                     alert('イベントに参加しました！');
                 }
+                
+                // 表示更新
                 const evt = allEvents.find(e => e.id === eventId);
                 if (evt) showEventSheet(evt);
+
             } catch (e) {
-                console.error(e);
-                // エラーメッセージの分岐: 権限エラーなら具体的なメッセージを出す
+                console.error("Join Event Error:", e);
+                
                 if (e.code === 'permission-denied') {
-                    alert('データベースの書き込み権限がありません。\nFirestoreのルール設定で "participating_events" への書き込みを許可してください。');
+                    // 権限エラーの場合
+                    alert('【保存エラー】\n自分の参加リストへの書き込みが拒否されました。\n\nFirestoreのルール設定で、\n"users/{uid}/participating_events" \nへの書き込みが許可されているか確認してください。');
                 } else {
+                    // その他のエラー
                     alert('エラーが発生しました: ' + e.message);
                 }
             } finally {
