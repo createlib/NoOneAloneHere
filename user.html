@@ -33,15 +33,39 @@
             animation: placeholderShimmer 1s linear infinite forwards;
         }
         @keyframes placeholderShimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
-        .pb-safe-bottom { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
+        
+        /* ボトムナビの高さ固定設定 */
+        .bottom-nav-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            border-top: 1px solid #e2e8f0;
+            z-index: 50;
+            height: 4rem;
+            height: calc(4rem + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .bottom-nav-content {
+            height: 4rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+        }
+        .body-pb-nav {
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+        }
 
         .badge-walker { background-color: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
         .badge-builder { background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); color: #334155; border: 1px solid #94a3b8; }
         .badge-guardian { background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%); color: #854d0e; border: 1px solid #facc15; }
     </style>
 </head>
-<body class="text-slate-800 antialiased pb-safe-bottom lg:pb-0">
+<body class="text-slate-800 antialiased body-pb-nav lg:pb-0">
 
+    <!-- Navbar -->
     <nav class="glass-header border-b border-slate-200 fixed w-full z-50 top-0 h-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
             <div class="flex items-center gap-4">
@@ -49,8 +73,8 @@
                     <i class="fa-solid fa-arrow-left text-xl"></i>
                 </a>
                 <a href="user.html" class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                    <img src="NOAH.png" alt="NOAH" class="w-8 h-8 rounded-lg object-cover">
-                    <span>NOAH</span>
+                    <span class="bg-slate-900 text-white w-8 h-8 flex items-center justify-center rounded-lg text-sm"><i class="fa-solid fa-user"></i></span>
+                    <span id="header-title">マイページ</span>
                 </a>
             </div>
             <div class="flex items-center gap-3">
@@ -78,12 +102,17 @@
         </div>
     </nav>
 
-    <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 w-full bg-white border-t border-slate-200 lg:hidden z-50 safe-area-pb">
-        <div class="flex justify-around items-center h-16">
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="lg:hidden bottom-nav-fixed">
+        <div class="bottom-nav-content">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-house text-xl mb-1"></i>
                 <span class="text-[10px] font-medium">ホーム</span>
+            </a>
+            <!-- イベントを追加 -->
+            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">イベント</span>
             </a>
             <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-magnifying-glass text-xl mb-1"></i>
@@ -157,7 +186,7 @@
                                 </a>
                             </div>
 
-                            <div class="mb-6"><p id="profile-bio" class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"></p></div>
+                            <div class="mb-6"><div id="profile-bio" class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"></div></div>
 
                             <div class="flex items-center gap-6 py-4 border-t border-slate-100">
                                 <div class="text-center cursor-pointer hover:opacity-75 transition-opacity">
@@ -182,7 +211,7 @@
                                 
                                 <!-- Personal Mask Overlay -->
                                 <div id="personal-mask" class="hidden mt-2 p-3 bg-gray-50 rounded border border-gray-100 text-center">
-                                    <p class="text-xs text-gray-500 font-medium"><i class="fa-solid fa-lock mr-1"></i>詳細は相互フォローで公開</p>
+                                    <p class="text-xs text-gray-500 font-medium"></p>
                                 </div>
                             </div>
 
@@ -191,9 +220,9 @@
                                 <div class="w-full bg-slate-200 rounded-full h-2"><div id="score-bar" class="bg-brand-500 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div></div>
                             </div>
 
-                            <!-- Debug: Rank Switcher -->
+                            <!-- Debug: Rank Switcher (Admin Only) -->
                             <div id="debug-rank-switcher" class="hidden mt-6 pt-6 border-t border-dashed border-gray-200">
-                                <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wide">【デバッグ用】ランク変更 (DB保存)</p>
+                                <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wide">【管理者用】ランク変更 (DB保存)</p>
                                 <div class="flex gap-2">
                                     <button onclick="changeRank('walker')" class="flex-1 py-1.5 text-[10px] font-bold bg-gray-100 text-gray-600 rounded hover:bg-gray-200 border border-gray-200">WALKER</button>
                                     <button onclick="changeRank('builder')" class="flex-1 py-1.5 text-[10px] font-bold bg-slate-200 text-slate-700 rounded hover:bg-slate-300 border border-slate-300">BUILDER</button>
@@ -214,7 +243,7 @@
                         <div id="message-container" class="hidden">
                             <div class="relative"><i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-2 -left-2 z-0"></i><div id="profile-message" class="relative z-10 text-[15px] leading-8 text-slate-700 whitespace-pre-wrap font-medium pl-4"></div></div>
                         </div>
-                        <div id="message-mask" class="hidden py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center"><div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white mb-3 shadow-sm"><i class="fa-solid fa-lock text-slate-400"></i></div><p class="text-sm font-bold text-slate-500">相互フォローで想いを読む</p></div>
+                        <div id="message-mask" class="hidden py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center"><div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white mb-3 shadow-sm"><i class="fa-solid fa-lock text-slate-400"></i></div><p class="text-sm font-bold text-slate-500"></p></div>
                     </div>
 
                     <!-- Matching Section (ID added) -->
@@ -260,9 +289,9 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp, collection, getCountFromServer, addDoc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp, collection, getCountFromServer, addDoc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         // ▼▼▼▼ Firebase Config ▼▼▼▼
         const firebaseConfig = {
@@ -286,7 +315,7 @@
         let targetUid = null;
         let isFollowing = false;
         let isMutual = false;
-        let myRank = 'walker'; // 自分のランク
+        let myRank = 'walker'; 
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const urlParams = new URLSearchParams(window.location.search);
@@ -326,7 +355,6 @@
                 currentUser = user;
                 checkUnreadNotifications(user.uid);
                 
-                // 自分の情報を取得 (ランク含む)
                 const myProfileRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
                 const myProfileSnap = await getDoc(myProfileRef);
                 if (myProfileSnap.exists()) {
@@ -367,20 +395,22 @@
         function enableSelfMode(currentRank) {
             const headerActions = document.getElementById('header-actions');
             if(headerActions) {
-                // スマホ向けに見やすいボタン配置
                 headerActions.innerHTML = `
                 <div class="flex flex-col items-end gap-1 w-full lg:w-auto">
                     <a href="profile.html" class="inline-flex items-center justify-center px-6 py-2 border border-slate-300 shadow-sm text-sm font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all active:scale-95">
                         プロフィール編集
                     </a>
-                    <!-- 有料会員向けにもさりげなく表示 -->
                     <a href="upgrade.html" class="text-[10px] font-bold text-slate-400 hover:text-brand-600 transition-colors mr-1 underline decoration-dotted">
                         プランの確認・変更
                     </a>
                 </div>`;
             }
             document.getElementById('completion-bar-container').classList.remove('hidden');
-            document.getElementById('debug-rank-switcher').classList.remove('hidden'); 
+            
+            // ★管理者のみランク変更機能を表示
+            if (isAdmin) {
+                document.getElementById('debug-rank-switcher').classList.remove('hidden');
+            }
             
             // ★ WALKER会員なら、目立つアップグレードバナーを表示
             if (currentRank === 'walker') {
@@ -471,10 +501,6 @@
                     if (isMutual && !isSelf) badge.classList.remove('hidden');
                     else badge.classList.add('hidden');
                 }
-
-                // 表示制限判定の呼び出し (UI更新へ)
-                // ステータス変更に伴う再描画などは updateDashboardUI や toggleRestrictedContent で行う
-
             } catch (e) { console.error("Check follow err:", e); }
         }
 
@@ -490,6 +516,9 @@
             if (isAdmin && !isSelf) {
                 btnHtml += `<a href="profile.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-xl text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
                 document.getElementById('admin-badge').classList.remove('hidden');
+                
+                // ★管理者用ランク変更パネル（他人閲覧時）
+                document.getElementById('debug-rank-switcher').classList.remove('hidden');
             }
             container.innerHTML = btnHtml;
         }
@@ -699,6 +728,7 @@
                 }
             }
 
+            // Public Data Filling (Only if NOT walker restriction)
             if (!applyWalkerRestriction) {
                 const updateList = (id, items) => {
                     const el = document.getElementById(id);
@@ -748,7 +778,7 @@
         // --- Debug: Change Rank Function ---
         window.changeRank = async (newRole) => {
             if (!currentUser) return;
-            const uid = currentUser.uid;
+            const uid = targetUid; // 管理者として他人のランクを変えるため targetUid を使用
             try {
                 const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
                 await updateDoc(privateRef, { membershipRank: newRole });
