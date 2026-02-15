@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ホーム | NOAH</title>
+    <title>ホーム | LIFE REMIX</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -25,18 +25,45 @@
         .calendar-day.has-event::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #ef4444; border-radius: 50%; }
         .calendar-day.selected.has-event::after { background-color: white; }
         
-        /* ボトムナビの高さ調整 */
-        .pb-safe-bottom { padding-bottom: 5rem; } 
+        /* ボトムナビゲーションの高さ固定設定 (user.htmlと統一) */
+        .bottom-nav-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            border-top: 1px solid #e2e8f0;
+            z-index: 50;
+            /* 高さ: アイコンエリア(64px) + iPhone等のホームバー領域 */
+            height: 4rem;
+            height: calc(4rem + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .bottom-nav-content {
+            height: 4rem; /* 64px固定 */
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* コンテンツがナビに隠れないようにする余白 */
+        .body-pb-nav {
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+        }
     </style>
 </head>
-<body class="text-slate-800 antialiased pb-safe-bottom lg:pb-0">
+<body class="text-slate-800 antialiased body-pb-nav lg:pb-0">
 
     <!-- Header / Nav -->
     <nav class="bg-white/90 backdrop-blur-md border-b border-slate-200 fixed w-full z-50 top-0 h-16">
         <div class="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <img src="NOAH.png" alt="NOAH" class="w-8 h-8 rounded-lg object-cover">
-                <span class="text-xl font-black text-slate-900 tracking-tight">NOAH</span>
+                <div class="bg-slate-900 text-white w-8 h-8 flex items-center justify-center rounded-lg text-sm">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <span class="text-xl font-black text-slate-900 tracking-tight">LIFE REMIX</span>
             </div>
 
             <!-- PC Navigation -->
@@ -52,7 +79,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto pt-24 px-4 sm:px-6 lg:px-8 pb-24">
+    <main class="max-w-7xl mx-auto pt-24 px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <!-- Left Column -->
@@ -60,7 +87,7 @@
                 <!-- Welcome Card -->
                 <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
                     <div class="relative z-10">
-                        <h1 class="text-2xl font-bold mb-2">Welcome to NOAH</h1>
+                        <h1 class="text-2xl font-bold mb-2">Welcome to LIFE REMIX</h1>
                         <p class="text-slate-300 text-sm mb-6">つながり、学び、創り出すためのコミュニティプラットフォーム。</p>
                         <div class="flex gap-3">
                             <a href="search.html" class="bg-white text-slate-900 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-100 transition-colors">
@@ -172,9 +199,61 @@
         </div>
     </main>
 
+    <!-- Event Detail Modal -->
+    <div id="event-detail-modal" class="hidden fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <div class="relative h-40 bg-slate-200">
+                <img id="modal-event-img" class="w-full h-full object-cover" src="">
+                <button onclick="closeDetailModal()" class="absolute top-3 right-3 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto">
+                <h3 id="modal-event-title" class="text-xl font-bold text-slate-900 mb-2"></h3>
+                
+                <div class="flex flex-wrap gap-2 mb-4" id="modal-event-tags"></div>
+
+                <div class="space-y-3 mb-6 text-sm text-slate-600">
+                    <div class="flex gap-3">
+                        <i class="fa-regular fa-calendar mt-0.5 text-slate-400 w-5 text-center"></i>
+                        <span id="modal-event-date" class="font-bold"></span>
+                    </div>
+                    <div class="flex gap-3">
+                        <i class="fa-regular fa-clock mt-0.5 text-slate-400 w-5 text-center"></i>
+                        <span id="modal-event-time"></span>
+                    </div>
+                    <div class="flex gap-3">
+                        <i class="fa-solid fa-location-dot mt-0.5 text-slate-400 w-5 text-center"></i>
+                        <span id="modal-event-location"></span>
+                    </div>
+                    <div class="flex gap-3">
+                        <i class="fa-solid fa-user mt-0.5 text-slate-400 w-5 text-center"></i>
+                        <span>主催: <span id="modal-event-organizer"></span></span>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">詳細</h4>
+                    <p id="modal-event-desc" class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"></p>
+                </div>
+
+                <!-- Google Calendar Button -->
+                <a id="modal-gcal-btn" href="#" target="_blank" class="block w-full py-3 bg-brand-600 text-white text-center font-bold rounded-xl hover:bg-brand-700 transition-colors shadow-md">
+                    <i class="fa-brands fa-google mr-2"></i> Googleカレンダーに追加
+                </a>
+                
+                <a href="events.html" class="block w-full text-center text-xs text-slate-400 mt-4 hover:underline">
+                    イベントマップで位置を確認する
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation (Mobile Only) -->
-    <nav class="fixed bottom-0 w-full bg-white border-t border-slate-200 lg:hidden z-40 pb-safe-bottom">
-        <div class="flex justify-around items-center h-16">
+    <nav class="lg:hidden bottom-nav-fixed">
+        <div class="bottom-nav-content">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600">
                 <i class="fa-solid fa-house text-xl mb-1"></i>
                 <span class="text-[10px] font-bold">ホーム</span>
@@ -261,8 +340,6 @@
         }
 
         async function loadEvents(uid) {
-            
-            // 現在時刻
             const now = new Date().toISOString();
 
             // 1. Hosting Events (自分が主催)
@@ -271,7 +348,6 @@
                 const qHost = query(eventsRef, where('organizerId', '==', uid), orderBy('createdAt', 'desc')); 
                 const snapHost = await getDocs(qHost);
                 
-                // 終了済みを除外
                 const activeHostEvents = snapHost.docs
                     .map(d => ({...d.data(), id: d.id}))
                     .filter(evt => !evt.endTimestamp || evt.endTimestamp >= now);
@@ -279,6 +355,7 @@
                 renderEventList('hosting-events-list', activeHostEvents, '主催する予定のイベントはありません');
             } catch (e) { 
                 console.error("Host load err", e);
+                // Fallback for index error
                 try {
                      const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
                      const qAll = query(eventsRef, orderBy('createdAt', 'desc'));
@@ -323,7 +400,6 @@
 
                     const allJoinedEvents = (await Promise.all(eventPromises)).filter(e => e !== null);
                     
-                    // 終了済みを除外
                     myEvents = allJoinedEvents.filter(evt => !evt.endTimestamp || evt.endTimestamp >= now);
                     
                     // 日付順ソート (近い順)
@@ -376,7 +452,6 @@
             container.appendChild(el);
         }
 
-        // --- View Switcher ---
         window.switchView = (view) => {
             const listEl = document.getElementById('participating-events-list');
             const calEl = document.getElementById('participating-events-calendar');
@@ -401,7 +476,6 @@
             }
         };
 
-        // --- Calendar Logic ---
         window.changeMonth = (diff) => {
             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + diff);
             renderCalendar();
@@ -410,10 +484,8 @@
         function renderCalendar() {
             const container = document.getElementById('calendar-days');
             container.innerHTML = '';
-            
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
-            
             document.getElementById('calendar-month-year').textContent = `${year}年 ${month + 1}月`;
 
             const firstDay = new Date(year, month, 1);
@@ -435,10 +507,8 @@
                 dayEl.className = `calendar-day text-sm ${hasEvent ? 'has-event' : ''}`;
                 dayEl.textContent = d;
                 dayEl.onclick = () => selectDate(dateStr, dayEl);
-                
                 container.appendChild(dayEl);
             }
-            
             document.getElementById('calendar-selected-events').classList.add('hidden');
         }
 
@@ -460,10 +530,8 @@
             }
         }
 
-        // --- Detail Modal ---
         window.openEventDetail = (evt) => {
             const modal = document.getElementById('event-detail-modal');
-            
             document.getElementById('modal-event-title').textContent = evt.title;
             document.getElementById('modal-event-img').src = evt.thumbnailUrl || 'https://via.placeholder.com/400x200';
             document.getElementById('modal-event-date').textContent = `${evt.startDate} ${evt.startTime} ~ ${evt.endTime}`;
