@@ -3,59 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新規登録 | BRAIN BRIDGE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>新規登録 | NOAH</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body { font-family: 'Noto Sans JP', sans-serif; background-color: #f3f4f6; }</style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Noto Sans JP', 'sans-serif'] },
+                    colors: { brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 900: '#312e81' } }
+                }
+            }
+        }
+    </script>
+    <style>body { background-color: #f8fafc; }</style>
 </head>
-<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative text-slate-800">
 
     <!-- トップページに戻るリンク -->
     <div class="absolute top-4 left-4 sm:top-8 sm:left-8">
-        <a href="home.html" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">
+        <a href="home.html" class="inline-flex items-center text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors">
             <i class="fa-solid fa-arrow-left mr-2"></i>
             ホームに戻る
         </a>
     </div>
 
-    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
         <div class="text-center">
-            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">BRAIN BRIDGE</h2>
-            <p class="mt-2 text-sm text-gray-600">新しいアカウントを作成</p>
+            <img src="NOAH.png" alt="NOAH" class="w-16 h-16 rounded-xl object-cover mx-auto mb-4 shadow-sm">
+            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">NOAH</h2>
+            <p class="mt-2 text-sm text-slate-500">新しいアカウントを作成</p>
         </div>
 
-        <form class="mt-8 space-y-4" onsubmit="handleRegister(event)">
+        <form class="mt-8 space-y-5" onsubmit="handleRegister(event)">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">紹介者ID (紹介者のユーザーID) <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-700 mb-1">紹介者ID (紹介者のユーザーID) <span class="text-red-500">*</span></label>
                 <div class="relative">
-                    <input name="referrer" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this); checkReferrer(this.value);" class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" placeholder="紹介者のIDを入力">
+                    <input name="referrer" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this); checkReferrer(this.value);" class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="紹介者のIDを入力">
                     <div id="referrer-status-icon" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none hidden"></div>
                 </div>
-                <p id="referrer-msg" class="mt-1 text-xs text-gray-500">半角英数字とアンダーバーのみ</p>
+                <p id="referrer-msg" class="mt-1.5 text-xs text-slate-500 font-medium">半角英数字とアンダーバーのみ</p>
             </div>
+            
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">ユーザーID (あなたのID) <span class="text-red-500">*</span></label>
-                <input name="userid" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this)" class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" placeholder="希望ID（ログインに使用します）">
+                <label class="block text-sm font-bold text-slate-700 mb-1">ユーザーID (あなたのID) <span class="text-red-500">*</span></label>
+                <input name="userid" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this)" class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="希望ID（ログインに使用します）">
             </div>
+            
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
-                <input name="email" type="email" required class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" placeholder="example@mail.com">
+                <label class="block text-sm font-bold text-slate-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
+                <input name="email" type="email" required class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="example@mail.com">
             </div>
+            
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">パスワード <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-700 mb-1">パスワード <span class="text-red-500">*</span></label>
                 <div class="relative">
-                    <input id="reg-password" name="password" type="password" required minlength="6" class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" placeholder="6文字以上">
-                    <button type="button" onclick="togglePassword('reg-password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                    <input id="reg-password" name="password" type="password" required minlength="6" class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="6文字以上">
+                    <button type="button" onclick="togglePassword('reg-password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
                         <i class="fa-regular fa-eye"></i>
                     </button>
                 </div>
             </div>
-            <button type="submit" id="btn-register" disabled class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-gray-400 cursor-not-allowed transition-all shadow-md">新規登録</button>
+            
+            <button type="submit" id="btn-register" disabled class="w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-slate-300 cursor-not-allowed transition-all shadow-sm mt-6">
+                新規登録
+            </button>
         </form>
 
         <div class="mt-6 text-center">
-            <p class="text-sm text-gray-600">すでにアカウントをお持ちの方は <a href="login.html" class="font-bold text-blue-600 hover:text-blue-500 underline decoration-2 underline-offset-2">ログインはこちら</a></p>
+            <p class="text-sm text-slate-600">すでにアカウントをお持ちの方は <a href="login.html" class="font-bold text-brand-600 hover:text-brand-500 hover:underline">ログインはこちら</a></p>
         </div>
     </div>
 
@@ -65,9 +82,9 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         // ▼▼▼▼ Firebase Config ▼▼▼▼
         const firebaseConfig = {
@@ -91,11 +108,13 @@
         // ★ 管理者作成用シークレットコード
         const ADMIN_SECRET = "admin_start";
 
-        // DB検索用に匿名認証
+        // DB検索用に匿名認証 (紹介者IDのチェック用)
         signInAnonymously(auth).catch(e => console.log("Anon auth:", e));
 
         onAuthStateChanged(auth, (user) => {
             // 新規登録直後のリダイレクトは handleRegister で制御
+            // 既にログイン済み（匿名以外）ならホームへ飛ばす処理を入れても良いが、
+            // 新規登録フローの邪魔にならないようにここでは何もしない
         });
 
         window.validateInput = (input) => {
@@ -111,7 +130,7 @@
             
             if (!value) {
                 msgElement.textContent = '半角英数字とアンダーバーのみ';
-                msgElement.className = 'mt-1 text-xs text-gray-500';
+                msgElement.className = 'mt-1.5 text-xs text-slate-500 font-medium';
                 iconContainer.classList.add('hidden');
                 return;
             }
@@ -119,7 +138,7 @@
             // --- 1. 管理者モード (admin_start) のチェック ---
             if (value === ADMIN_SECRET) {
                 msgElement.textContent = '管理者モード: 紹介者チェックをスキップします';
-                msgElement.className = 'mt-1 text-xs text-purple-600 font-bold';
+                msgElement.className = 'mt-1.5 text-xs text-purple-600 font-bold';
                 iconContainer.classList.remove('hidden');
                 iconContainer.innerHTML = '<i class="fa-solid fa-crown text-purple-500"></i>';
                 isReferrerValid = true;
@@ -130,7 +149,7 @@
             // --- 2. "admin" IDの利用禁止チェック ---
             if (value === "admin") {
                 msgElement.textContent = 'このIDは紹介者として指定できません';
-                msgElement.className = 'mt-1 text-xs text-red-500 font-bold';
+                msgElement.className = 'mt-1.5 text-xs text-red-500 font-bold';
                 iconContainer.classList.remove('hidden');
                 iconContainer.innerHTML = '<i class="fa-solid fa-ban text-red-500"></i>';
                 isReferrerValid = false;
@@ -140,9 +159,9 @@
             // ---------------------------------------------
 
             msgElement.textContent = '確認中...';
-            msgElement.className = 'mt-1 text-xs text-blue-500';
+            msgElement.className = 'mt-1.5 text-xs text-brand-500 font-medium';
             iconContainer.classList.remove('hidden');
-            iconContainer.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-gray-400"></i>';
+            iconContainer.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-slate-400"></i>';
 
             if (referrerCheckTimeout) clearTimeout(referrerCheckTimeout);
 
@@ -157,18 +176,18 @@
                         const userData = querySnapshot.docs[0].data();
                         const displayName = userData.name || userData.userId || 'ユーザー';
                         msgElement.textContent = `紹介者: ${displayName} さんを確認しました`;
-                        msgElement.className = 'mt-1 text-xs text-green-600 font-bold';
+                        msgElement.className = 'mt-1.5 text-xs text-green-600 font-bold';
                         iconContainer.innerHTML = '<i class="fa-solid fa-circle-check text-green-500"></i>';
                         isReferrerValid = true;
                     } else {
                         msgElement.textContent = '該当する紹介者が見つかりません';
-                        msgElement.className = 'mt-1 text-xs text-red-500 font-bold';
+                        msgElement.className = 'mt-1.5 text-xs text-red-500 font-bold';
                         iconContainer.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
                     }
                 } catch (error) {
                     console.error("Referrer check error:", error);
                     msgElement.textContent = '確認できませんでした';
-                    msgElement.className = 'mt-1 text-xs text-red-500';
+                    msgElement.className = 'mt-1.5 text-xs text-red-500 font-bold';
                     iconContainer.innerHTML = '<i class="fa-solid fa-circle-exclamation text-red-500"></i>';
                 }
                 updateRegisterButton();
@@ -179,12 +198,12 @@
             const btn = document.getElementById('btn-register');
             if (isReferrerValid) {
                 btn.disabled = false;
-                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
-                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                btn.classList.remove('bg-slate-300', 'cursor-not-allowed');
+                btn.classList.add('bg-brand-600', 'hover:bg-brand-700', 'shadow-lg');
             } else {
                 btn.disabled = true;
-                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
-                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                btn.classList.add('bg-slate-300', 'cursor-not-allowed');
+                btn.classList.remove('bg-brand-600', 'hover:bg-brand-700', 'shadow-lg');
             }
         }
 
@@ -217,27 +236,30 @@
                 // 3. データ保存
                 const timestamp = new Date().toISOString();
                 
-                // A. 非公開データ (Private Profile)
+                // A. 非公開データ (Private Profile) - マスタデータ
                 await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'), {
                     userId: userId,
                     referrerId: referrerId,
                     email: email,
                     name: userId, // 初期表示名はID
                     createdAt: timestamp,
-                    profilePublic: "false" // 初期は非公開
+                    profilePublic: "false", // 初期は非公開
+                    membershipRank: "walker" // 初期ランク
                 });
 
-                // B. 公開データ (Public Data)
+                // B. 公開データ (Public Data) - 検索用（IDログイン維持のため最小限保存）
+                // ※ WALKERは検索結果から除外するため isHidden: true
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid), {
                     userId: userId, // 独自ID
                     name: userId,
                     email: email, // ログイン検索用
-                    createdAt: timestamp,
+                    isHidden: true, // 検索結果には表示しない
+                    updatedAt: timestamp,
                 });
 
-                showNotification('登録完了！マイページへ移動します', 'success');
+                showNotification('登録完了！ホームへ移動します', 'success');
                 setTimeout(() => {
-                    window.location.href = 'user.html';
+                    window.location.href = 'home.html'; // 修正: index.html -> home.html
                 }, 1000);
 
             } catch (error) {
