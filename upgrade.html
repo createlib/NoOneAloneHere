@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プランのアップグレード | BRAIN BRIDGE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Noto Sans JP', 'sans-serif'] },
+                    colors: { brand: { 500: '#6366f1', 600: '#4f46e5' } }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-slate-800 antialiased">
+
+    <nav class="bg-white/90 backdrop-blur-md border-b border-gray-200 fixed w-full z-50 top-0 h-16 flex items-center justify-between px-4">
+        <a href="user.html" class="text-slate-500 hover:text-slate-900"><i class="fa-solid fa-arrow-left text-xl"></i></a>
+        <span class="font-bold text-lg">プラン選択</span>
+        <div class="w-6"></div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto pt-24 px-4 pb-12">
+        
+        <div class="text-center mb-10">
+            <h1 class="text-2xl font-black text-slate-900 mb-2">メンバーシップをアップグレード</h1>
+            <p class="text-sm text-slate-500">
+                プランを選択して決済へ進んでください。<br>
+                アカウント情報は自動的に連携されます。
+            </p>
+        </div>
+
+        <!-- Plans -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Monthly -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col relative overflow-hidden group hover:border-slate-300 transition-all">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gray-300"></div>
+                <h3 class="text-lg font-bold text-slate-500 mb-2">BUILDER (月額)</h3>
+                <div class="text-3xl font-black text-slate-900 mb-4">¥9,900<span class="text-sm font-normal text-slate-400">/月</span></div>
+                <ul class="text-sm text-slate-600 space-y-3 mb-8 flex-1">
+                    <li class="flex gap-2"><i class="fa-solid fa-check text-green-500"></i> 全ユーザーの検索・閲覧</li>
+                    <li class="flex gap-2"><i class="fa-solid fa-check text-green-500"></i> プロフィールの完全公開</li>
+                    <li class="flex gap-2"><i class="fa-solid fa-check text-green-500"></i> シルバーバッジ付与</li>
+                </ul>
+                <button onclick="goToStripe('https://buy.stripe.com/aFa00j9B84Vp0lH1bc7bW02')" class="w-full py-3 rounded-xl bg-gray-100 text-slate-700 font-bold hover:bg-gray-200 transition-colors">
+                    月額プランを選択
+                </button>
+            </div>
+
+            <!-- Yearly -->
+            <div class="bg-white rounded-2xl shadow-lg border-2 border-brand-500 p-6 flex flex-col relative transform md:-translate-y-4">
+                <div class="absolute top-0 right-0 bg-brand-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">人気</div>
+                <h3 class="text-lg font-bold text-brand-600 mb-2">BUILDER (年額)</h3>
+                <div class="text-3xl font-black text-slate-900 mb-4">¥99,000<span class="text-sm font-normal text-slate-400">/年</span></div>
+                <p class="text-xs text-red-500 font-bold mb-4">2ヶ月分お得！</p>
+                <ul class="text-sm text-slate-600 space-y-3 mb-8 flex-1">
+                    <li class="flex gap-2"><i class="fa-solid fa-check text-brand-500"></i> 月額プランの全機能</li>
+                    <li class="flex gap-2"><i class="fa-solid fa-check text-brand-500"></i> 優先的なサポート</li>
+                    <li class="flex gap-2"><i class="fa-solid fa-check text-brand-500"></i> イベント優先参加権</li>
+                </ul>
+                <button onclick="goToStripe('https://buy.stripe.com/00wbJ17t09bF7O9f227bW03')" class="w-full py-3 rounded-xl bg-brand-600 text-white font-bold hover:bg-brand-700 shadow-lg shadow-brand-500/30 transition-colors">
+                    年額プランを選択
+                </button>
+            </div>
+
+            <!-- Sponsor -->
+            <div class="bg-gradient-to-b from-yellow-50 to-white rounded-2xl shadow-sm border border-yellow-200 p-6 flex flex-col relative">
+                <h3 class="text-lg font-bold text-yellow-600 mb-2">GUARDIAN (協賛)</h3>
+                <div class="text-3xl font-black text-slate-900 mb-4">Any<span class="text-sm font-normal text-slate-400">/寄付</span></div>
+                <ul class="text-sm text-slate-600 space-y-3 mb-8 flex-1">
+                    <li class="flex gap-2"><i class="fa-solid fa-star text-yellow-500"></i> ゴールドバッジ付与</li>
+                    <li class="flex gap-2"><i class="fa-solid fa-star text-yellow-500"></i> コミュニティ運営支援</li>
+                    <li class="flex gap-2"><i class="fa-solid fa-star text-yellow-500"></i> 特別な感謝状</li>
+                </ul>
+                <button onclick="goToStripe('https://donate.stripe.com/eVq14nbJgcnRfgB1bc7bW07')" class="w-full py-3 rounded-xl bg-yellow-500 text-white font-bold hover:bg-yellow-600 transition-colors">
+                    協賛する
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ▼▼▼▼ Firebase Config ▼▼▼▼
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0",
+            authDomain: "brainbridge-4b8ac.firebaseapp.com",
+            projectId: "brainbridge-4b8ac",
+            storageBucket: "brainbridge-4b8ac.firebasestorage.app",
+            messagingSenderId: "803209683213",
+            appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
+        };
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        let currentUid = "";
+        let currentEmail = "";
+
+        // Admin Mock Check
+        if (localStorage.getItem('isAdminMock') === 'true') {
+            currentUid = 'test_admin_uid';
+            currentEmail = 'admin@example.com';
+        } else {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUid = user.uid;
+                    currentEmail = user.email || "";
+
+                    // Get custom UserID if available for accurate tracking
+                    try {
+                        const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
+                        if (docSnap.exists() && docSnap.data().userId) {
+                            currentUid = docSnap.data().userId;
+                        }
+                    } catch (e) { console.error(e); }
+
+                } else {
+                    window.location.href = 'login.html';
+                }
+            });
+        }
+
+        window.goToStripe = (url) => {
+            if (!currentUid) {
+                alert("ログイン情報を取得できませんでした。再読み込みしてください。");
+                return;
+            }
+            
+            // 1. client_reference_id: システム連携用（これが最も重要）
+            // 2. prefilled_email: 決済画面のメール欄に自動入力される（UX向上）
+            const finalUrl = `${url}?client_reference_id=${currentUid}&prefilled_email=${encodeURIComponent(currentEmail)}`;
+            
+            window.open(finalUrl, '_blank');
+        };
+    </script>
+</body>
+</html>

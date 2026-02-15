@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase接続診断ツール</title>
+    <style>
+        body { font-family: sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; background: #f0f2f5; }
+        .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { margin-top: 0; color: #1a73e8; }
+        .step { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #eee; }
+        .status { font-weight: bold; margin-left: 10px; }
+        .success { color: green; }
+        .error { color: red; }
+        .btn { background: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .btn:hover { background: #1557b0; }
+        pre { background: #333; color: #fff; padding: 1rem; border-radius: 4px; overflow-x: auto; font-family: monospace; }
+        code { color: #e83e8c; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Firebase 接続診断 (修正版)</h1>
+        <p>階層構造を修正して、書き込みテストを行います。</p>
+
+        <!-- Step 1 -->
+        <div class="step">
+            <h3>1. 設定確認</h3>
+            <p>コード内の <code>firebaseConfig</code> が正しく設定されているか確認してください。</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step">
+            <h3>2. 接続テスト実行</h3>
+            <button class="btn" onclick="runTest()">テスト開始</button>
+        </div>
+
+        <!-- Log Area -->
+        <div>
+            <h3>実行ログ</h3>
+            <div id="log-container">
+                <pre id="logs">ここに結果が表示されます...</pre>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+        // 【重要】ここにあなたのFirebase Configを貼り付けてください！
+        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+        const firebaseConfig = {
+  apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0",
+  authDomain: "brainbridge-4b8ac.firebaseapp.com",
+  projectId: "brainbridge-4b8ac",
+  storageBucket: "brainbridge-4b8ac.firebasestorage.app",
+  messagingSenderId: "803209683213",
+  appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
+        };
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        // ログ表示用関数
+        const logArea = document.getElementById('logs');
+        function log(msg, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'red' : (type === 'success' ? '#4caf50' : 'white');
+            logArea.innerHTML += `<div style="color:${color}">[${timestamp}] ${msg}</div>`;
+            console.log(msg);
+        }
+
+        // テスト実行関数をwindowに登録
+        window.runTest = async () => {
+            logArea.innerHTML = ''; // クリア
+            log("--- テスト開始 ---");
+
+            // 1. 初期化チェック
+            if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                log("❌ エラー: firebaseConfigが設定されていません。コードを編集してAPIキーなどを貼り付けてください。", 'error');
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+                log("✅ Firebase SDKの初期化: 成功", 'success');
+
+                // 2. 認証チェック
+                log("認証（匿名ログイン）を試行中...");
+                const userCredential = await signInAnonymously(auth);
+                const user = userCredential.user;
+                log(`✅ ログイン成功: UID = ${user.uid}`, 'success');
+
+                // 3. Firestore書き込みチェック
+                const appId = 'default-app-id';
+                // 【修正】末尾に /data を追加して偶数階層（6階層）にする
+                const testPath = `artifacts/${appId}/users/${user.uid}/profile/data`;
+                
+                log(`Firestoreへの書き込みを試行中...\nパス: ${testPath}`);
+                
+                const testData = {
+                    userId: user.uid,
+                    message: "接続テスト成功！階層修正済み",
+                    updatedAt: new Date().toISOString()
+                };
+
+                // 【修正】doc関数の引数に 'data' を追加
+                await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'), testData);
+                
+                log("✅ Firestore書き込み: 成功！", 'success');
+                log("👉 これでデータベース接続は確立されました。", 'success');
+                log("👉 本番コード（profile.html等）も同様にパスの修正が必要です。", 'info');
+
+            } catch (error) {
+                log(`❌ エラー発生: ${error.message}`, 'error');
+                
+                if (error.code === 'permission-denied') {
+                    log("💡 ヒント: パスを変更したため、Firestoreの「ルール」も修正が必要かもしれません。\n現在のルールが 'match /users/{userId}/profile/data' を許可しているか確認してください。", 'info');
+                }
+            }
+        };
+    </script>
+</body>
+</html>

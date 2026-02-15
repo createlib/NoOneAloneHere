@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロフィール | LIFE REMIX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Noto Sans JP', 'sans-serif'] },
+                    colors: { brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 900: '#312e81' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; }
+        @media (min-width: 1024px) {
+            .profile-sidebar { position: sticky; top: 5rem; height: calc(100vh - 6rem); overflow-y: auto; scrollbar-width: none; }
+            .profile-sidebar::-webkit-scrollbar { display: none; }
+        }
+        .cover-gradient { background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%); }
+        .glass-header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .shimmer {
+            background: #f6f7f8;
+            background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+            background-repeat: no-repeat;
+            background-size: 800px 100%; 
+            animation: placeholderShimmer 1s linear infinite forwards;
+        }
+        @keyframes placeholderShimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
+        .pb-safe-bottom { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
+
+        .badge-walker { background-color: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+        .badge-builder { background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); color: #334155; border: 1px solid #94a3b8; }
+        .badge-guardian { background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%); color: #854d0e; border: 1px solid #facc15; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased pb-safe-bottom lg:pb-0">
+
+    <nav class="glass-header border-b border-slate-200 fixed w-full z-50 top-0 h-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="javascript:history.back()" class="lg:hidden text-slate-500 hover:text-slate-900 transition-colors">
+                    <i class="fa-solid fa-arrow-left text-xl"></i>
+                </a>
+                <a href="user.html" class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    <span class="bg-slate-900 text-white w-8 h-8 flex items-center justify-center rounded-lg text-sm"><i class="fa-solid fa-layer-group"></i></span>
+                    BRAIN BRIDGE
+                </a>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- PC Navigation Links -->
+                <div class="hidden lg:flex items-center gap-6 mr-4">
+                    <a href="home.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-house"></i> ホーム</a>
+                    <a href="events.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-map-location-dot"></i> イベント</a>
+                    <a href="search.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-magnifying-glass"></i> さがす</a>
+                    <a href="user.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-user"></i> マイページ</a>
+                </div>
+
+                <!-- PC用 UPGRADEボタン -->
+                <a href="upgrade.html" class="hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-crown mr-1"></i> UPGRADE
+                </a>
+                
+                <a href="notifications.html" class="p-2 text-slate-400 hover:text-brand-600 transition-colors relative" title="通知">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span id="nav-badge" class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                </a>
+                <button onclick="location.reload()" class="p-2 text-slate-400 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
+                <div class="h-6 w-px bg-slate-200 mx-1 hidden lg:block"></div>
+                <button onclick="handleLogout()" class="text-sm font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2"><span class="hidden sm:inline">ログアウト</span><i class="fa-solid fa-right-from-bracket text-lg"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full bg-white border-t border-slate-200 lg:hidden z-50 safe-area-pb">
+        <div class="flex justify-around items-center h-16">
+            <a href="index.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-house text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">ホーム</span>
+            </a>
+            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-magnifying-glass text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">さがす</span>
+            </a>
+            <button onclick="alert('マッチング機能は準備中です。\nComing Soon!')" class="flex flex-col items-center justify-center w-full h-full text-slate-300 hover:text-slate-400 transition-colors">
+                <i class="fa-solid fa-handshake-simple text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">マッチ</span>
+            </button>
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600">
+                <i class="fa-solid fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">マイページ</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Error Container -->
+    <div id="error-container" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+        <div class="bg-white p-8 rounded-2xl shadow-xl border border-red-100 text-center max-w-sm mx-4">
+            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-2xl"><i class="fa-solid fa-user-slash"></i></div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">ユーザーが見つかりません</h3>
+            <p class="text-slate-500 text-sm mb-6">IDが間違っているか、データが取得できませんでした。</p>
+            <a href="user.html" class="inline-block w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors">自分のページに戻る</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto pt-16 px-0 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:py-8">
+            
+            <aside class="w-full lg:w-[360px] flex-shrink-0">
+                <div class="profile-sidebar">
+                    <div class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+                        <div class="h-32 bg-slate-200 cover-gradient w-full"></div>
+                        <div class="px-6 relative">
+                            <div class="-mt-12 flex justify-between items-end mb-4">
+                                <div class="relative">
+                                    <div class="h-24 w-24 rounded-2xl border-4 border-white bg-white shadow-sm overflow-hidden">
+                                        <i id="header-icon-placeholder" class="fa-solid fa-user text-4xl text-slate-200 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+                                        <img id="header-icon-img" src="" class="hidden w-full h-full object-cover" alt="Profile">
+                                    </div>
+                                </div>
+                                <div id="header-actions" class="mb-1"></div>
+                            </div>
+
+                            <div class="mb-2">
+                                <h1 class="text-2xl font-bold text-slate-900 leading-tight"><span id="profile-name" class="shimmer block w-32 h-8 rounded mb-1"></span></h1>
+                                <div class="flex flex-wrap items-center gap-2 mt-1">
+                                    <p class="text-sm text-slate-500 font-medium" id="profile-id">@...</p>
+                                    <span id="rank-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border"></span>
+                                    <span id="mutual-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100"><i class="fa-solid fa-handshake mr-1"></i>相互フォロー</span>
+                                    <span id="admin-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100"><i class="fa-solid fa-crown mr-1"></i>管理者閲覧中</span>
+                                </div>
+                            </div>
+
+                            <!-- Upgrade CTA (Displayed if Walker) -->
+                            <div id="upgrade-cta-container" class="hidden mb-6">
+                                <a href="upgrade.html" class="block w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                                    <div class="px-3 py-2.5 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-white/20 rounded-full p-1.5 group-hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-crown text-base text-white"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <p class="text-[10px] font-medium text-white/90 leading-tight">機能制限を解除</p>
+                                                <p class="text-sm font-black tracking-wide leading-tight">プランをアップグレード</p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-white/80 text-sm"></i>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <div class="mb-6"><p id="profile-bio" class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"></p></div>
+
+                            <div class="flex items-center gap-6 py-4 border-t border-slate-100">
+                                <div class="text-center cursor-pointer hover:opacity-75 transition-opacity">
+                                    <span class="block font-bold text-slate-900 text-lg" id="count-following">-</span>
+                                    <span class="text-xs text-slate-500 font-medium">フォロー中</span>
+                                </div>
+                                <div class="text-center cursor-pointer hover:opacity-75 transition-opacity">
+                                    <span class="block font-bold text-slate-900 text-lg" id="count-followers">-</span>
+                                    <span class="text-xs text-slate-500 font-medium">フォロワー</span>
+                                </div>
+                            </div>
+
+                            <div class="py-4 border-t border-slate-100 space-y-3">
+                                <div class="flex items-center gap-3 text-sm text-slate-600"><div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0"><i class="fa-solid fa-briefcase"></i></div><span id="profile-job" class="font-medium">-</span></div>
+                                <div class="flex items-center gap-3 text-sm text-slate-600"><div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0"><i class="fa-solid fa-location-dot"></i></div><span id="profile-location" class="font-medium">-</span></div>
+                                
+                                <div class="mutual-only hidden space-y-3">
+                                    <div class="flex items-center gap-3 text-sm text-slate-600"><div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0"><i class="fa-solid fa-venus-mars"></i></div><span id="data-gender" class="font-medium">-</span></div>
+                                    <div class="flex items-center gap-3 text-sm text-slate-600"><div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0"><i class="fa-solid fa-cake-candles"></i></div><span id="data-birth" class="font-medium">-</span></div>
+                                </div>
+                                <div id="profile-sns-links" class="flex gap-3 pt-2"></div>
+                                
+                                <!-- Personal Mask Overlay -->
+                                <div id="personal-mask" class="hidden mt-2 p-3 bg-gray-50 rounded border border-gray-100 text-center">
+                                    <p class="text-xs text-gray-500 font-medium"><i class="fa-solid fa-lock mr-1"></i>詳細は相互フォローで公開</p>
+                                </div>
+                            </div>
+
+                            <div id="completion-bar-container" class="hidden my-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-slate-500">プロフィール充実度</span><span id="score-text" class="text-sm font-bold text-brand-600">0%</span></div>
+                                <div class="w-full bg-slate-200 rounded-full h-2"><div id="score-bar" class="bg-brand-500 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div></div>
+                            </div>
+
+                            <!-- Debug: Rank Switcher -->
+                            <div id="debug-rank-switcher" class="hidden mt-6 pt-6 border-t border-dashed border-gray-200">
+                                <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wide">【デバッグ用】ランク変更 (DB保存)</p>
+                                <div class="flex gap-2">
+                                    <button onclick="changeRank('walker')" class="flex-1 py-1.5 text-[10px] font-bold bg-gray-100 text-gray-600 rounded hover:bg-gray-200 border border-gray-200">WALKER</button>
+                                    <button onclick="changeRank('builder')" class="flex-1 py-1.5 text-[10px] font-bold bg-slate-200 text-slate-700 rounded hover:bg-slate-300 border border-slate-300">BUILDER</button>
+                                    <button onclick="changeRank('guardian')" class="flex-1 py-1.5 text-[10px] font-bold bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 border border-yellow-300">GUARDIAN</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="flex-1 min-w-0">
+                <div class="space-y-6">
+                    
+                    <!-- Message Section (ID added) -->
+                    <div id="section-message" class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8">
+                        <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">想い・メッセージ</h2><i id="message-lock-icon" class="fa-solid fa-lock text-slate-300 hidden"></i></div>
+                        <div id="message-container" class="hidden">
+                            <div class="relative"><i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-2 -left-2 z-0"></i><div id="profile-message" class="relative z-10 text-[15px] leading-8 text-slate-700 whitespace-pre-wrap font-medium pl-4"></div></div>
+                        </div>
+                        <div id="message-mask" class="hidden py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center"><div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white mb-3 shadow-sm"><i class="fa-solid fa-lock text-slate-400"></i></div><p class="text-sm font-bold text-slate-500">相互フォローで想いを読む</p></div>
+                    </div>
+
+                    <!-- Matching Section (ID added) -->
+                    <div id="section-matching" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-blue-200 transition-colors">
+                            <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                            <h3 class="text-sm font-bold text-slate-500 mb-4 uppercase tracking-wide relative z-10">提供できること</h3>
+                            <ul id="list-can-offer" class="space-y-3 relative z-10"><li class="text-slate-400 italic text-sm">未設定</li></ul>
+                        </div>
+                        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-pink-200 transition-colors">
+                            <div class="absolute top-0 right-0 w-24 h-24 bg-pink-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+                            <h3 class="text-sm font-bold text-slate-500 mb-4 uppercase tracking-wide relative z-10">求めていること</h3>
+                            <ul id="list-looking-for" class="space-y-3 relative z-10"><li class="text-slate-400 italic text-sm">未設定</li></ul>
+                        </div>
+                    </div>
+
+                    <!-- Tags Section (ID added) -->
+                    <div id="section-tags" class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 p-6">
+                        <h2 class="text-lg font-bold text-slate-900 mb-4">スキル・趣味</h2>
+                        <div id="tags-container" class="flex flex-wrap gap-2"><span class="text-sm text-slate-400 italic">未設定</span></div>
+                    </div>
+
+                    <!-- Goals Section (ID added) -->
+                    <div id="section-goals" class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 p-6">
+                        <h2 class="text-lg font-bold text-slate-900 mb-4">目標・ビジョン</h2>
+                        <div id="profile-goals" class="text-slate-700 text-sm leading-7 whitespace-pre-wrap">未設定</div>
+                    </div>
+
+                    <!-- Career Section (ID added) -->
+                    <div id="section-career" class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8">
+                        <div class="flex items-center justify-between mb-6"><h2 class="text-lg font-bold text-slate-900">経歴</h2><i id="career-lock-icon" class="fa-solid fa-lock text-slate-300"></i></div>
+                        <div id="career-container" class="space-y-8 mt-2 relative"><div class="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-100"></div></div>
+                        <div id="career-mask" class="hidden py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center"><p class="text-sm font-bold text-slate-500">相互フォローで経歴を表示</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 hidden transition-all duration-300 translate-y-20">
+        <div class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-90"><i class="fa-solid fa-check-circle text-brand-400 text-lg"></i><span id="notif-message" class="text-sm font-bold"></span></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp, collection, getCountFromServer, addDoc, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ▼▼▼▼ Firebase Config ▼▼▼▼
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0",
+            authDomain: "brainbridge-4b8ac.firebaseapp.com",
+            projectId: "brainbridge-4b8ac",
+            storageBucket: "brainbridge-4b8ac.firebasestorage.app",
+            messagingSenderId: "803209683213",
+            appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
+        };
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        let currentUser = null;
+        let isSelf = false;
+        let isAdmin = false;
+        let targetUid = null;
+        let isFollowing = false;
+        let isMutual = false;
+        let myRank = 'walker'; // 自分のランク
+
+        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
+        const urlParams = new URLSearchParams(window.location.search);
+        targetUid = urlParams.get('uid');
+
+        // Helper
+        function formatText(text) {
+            if (!text) return '';
+            let safeText = text.replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]; });
+            return safeText.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)|(https?:\/\/[a-zA-Z0-9.\/?=&%#_:-]+)/g, (match, mdText, mdUrl, rawUrl) => {
+                if (mdText && mdUrl) return `<a href="${mdUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:underline cursor-pointer">${mdText}</a>`;
+                if (rawUrl) return `<a href="${rawUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:underline break-all cursor-pointer">${rawUrl}</a>`;
+                return match;
+            });
+        }
+        function setElText(id, text) { const el = document.getElementById(id); if(el) el.textContent = text || '-'; }
+        function setElHtml(id, html) { const el = document.getElementById(id); if(el) el.innerHTML = html || ''; }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (isAdminMock) {
+                currentUser = { uid: 'test_admin_uid', displayName: '管理者' };
+                isAdmin = true;
+                myRank = 'guardian'; 
+                if (targetUid && targetUid !== 'test_admin_uid') {
+                    isSelf = false;
+                    setupViewForOtherUser();
+                } else {
+                    isSelf = true;
+                    targetUid = 'test_admin_uid';
+                    updateDashboardUI(getAdminMockData());
+                    enableSelfMode(myRank);
+                }
+                return;
+            }
+
+            if (user && !user.isAnonymous) {
+                currentUser = user;
+                checkUnreadNotifications(user.uid);
+                
+                // 自分の情報を取得 (ランク含む)
+                const myProfileRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+                const myProfileSnap = await getDoc(myProfileRef);
+                if (myProfileSnap.exists()) {
+                    const myData = myProfileSnap.data();
+                    if (myData.userId === 'admin') isAdmin = true;
+                    if (isAdmin) document.getElementById('admin-badge').classList.remove('hidden');
+                    myRank = myData.membershipRank || 'walker';
+                } else {
+                    myRank = 'walker';
+                }
+
+                if (!targetUid || targetUid === user.uid) {
+                    isSelf = true;
+                    targetUid = user.uid;
+                    enableSelfMode(myRank); 
+                    if (myProfileSnap.exists()) updateDashboardUI(myProfileSnap.data());
+                    else updateDashboardUI({ userId: user.uid, name: '（未設定）' });
+                } else {
+                    isSelf = false;
+                    await checkFollowStatus(user.uid, targetUid); 
+                    await loadPublicProfile(targetUid);
+                }
+                updateFollowCounts(targetUid);
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        async function checkUnreadNotifications(uid) {
+            try {
+                const notifRef = collection(db, 'artifacts', appId, 'users', uid, 'notifications');
+                const q = query(notifRef, where('isRead', '==', false));
+                const snap = await getCountFromServer(q);
+                if (snap.data().count > 0) document.getElementById('nav-badge').classList.remove('hidden');
+            } catch (e) { console.error(e); }
+        }
+
+        function enableSelfMode(currentRank) {
+            const headerActions = document.getElementById('header-actions');
+            if(headerActions) {
+                // スマホ向けに見やすいボタン配置
+                headerActions.innerHTML = `
+                <div class="flex flex-col items-end gap-1 w-full lg:w-auto">
+                    <a href="profile.html" class="inline-flex items-center justify-center px-6 py-2 border border-slate-300 shadow-sm text-sm font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all active:scale-95">
+                        プロフィール編集
+                    </a>
+                    <!-- 有料会員向けにもさりげなく表示 -->
+                    <a href="upgrade.html" class="text-[10px] font-bold text-slate-400 hover:text-brand-600 transition-colors mr-1 underline decoration-dotted">
+                        プランの確認・変更
+                    </a>
+                </div>`;
+            }
+            document.getElementById('completion-bar-container').classList.remove('hidden');
+            document.getElementById('debug-rank-switcher').classList.remove('hidden'); 
+            
+            // ★ WALKER会員なら、目立つアップグレードバナーを表示
+            if (currentRank === 'walker') {
+                document.getElementById('upgrade-cta-container').classList.remove('hidden');
+            } else {
+                document.getElementById('upgrade-cta-container').classList.add('hidden');
+            }
+            
+            isMutual = true; 
+            toggleRestrictedContent(true);
+        }
+
+        async function setupViewForOtherUser() {
+            const mockTarget = getAdminMockData();
+            mockTarget.name = "サンプル太郎";
+            mockTarget.userId = "target_user";
+            isMutual = confirm("【テスト】相互フォロー状態にしますか？\nOK=相互(全表示), Cancel=片思い/未フォロー");
+            isFollowing = true;
+            renderFollowButton();
+            updateDashboardUI(mockTarget);
+            toggleRestrictedContent(isMutual);
+            if(isMutual) document.getElementById('mutual-badge').classList.remove('hidden');
+            setElText('count-following', '120');
+            setElText('count-followers', '45');
+        }
+
+        async function loadPublicProfile(uid) {
+            try {
+                let dataToUse = null;
+                const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
+                const publicSnap = await getDoc(publicRef);
+
+                if (publicSnap.exists()) {
+                    dataToUse = publicSnap.data();
+                }
+                
+                // 自分がWALKERなら詳細データ(Private)は取れない（制限のため）
+                // ただし管理者は取れる
+                if (isAdmin || (isMutual && myRank !== 'walker')) {
+                    try {
+                        const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
+                        const privateSnap = await getDoc(privateRef);
+                        if (privateSnap.exists()) {
+                            dataToUse = { ...(dataToUse || {}), ...privateSnap.data() };
+                        }
+                    } catch (e) { console.log("Private load failed", e); }
+                }
+
+                if (dataToUse) {
+                    updateDashboardUI(dataToUse);
+                } else {
+                    document.getElementById('error-container').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error("Load error:", e);
+            }
+        }
+
+        async function updateFollowCounts(uid) {
+            try {
+                const followingColl = collection(db, 'artifacts', appId, 'users', uid, 'following');
+                const followersColl = collection(db, 'artifacts', appId, 'users', uid, 'followers');
+                const followingSnap = await getCountFromServer(followingColl);
+                const followersSnap = await getCountFromServer(followersColl);
+                setElText('count-following', followingSnap.data().count);
+                setElText('count-followers', followersSnap.data().count);
+            } catch (e) {
+                setElText('count-following', '-');
+                setElText('count-followers', '-');
+            }
+        }
+
+        async function checkFollowStatus(myUid, targetUid) {
+            try {
+                const followingRef = doc(db, 'artifacts', appId, 'users', myUid, 'following', targetUid);
+                const isFollowingSnap = await getDoc(followingRef);
+                isFollowing = isFollowingSnap.exists();
+
+                const followerRef = doc(db, 'artifacts', appId, 'users', myUid, 'followers', targetUid);
+                const isFollowedBackSnap = await getDoc(followerRef);
+                const isFollowedBack = isFollowedBackSnap.exists();
+
+                isMutual = isFollowing && isFollowedBack;
+                renderFollowButton();
+                
+                const badge = document.getElementById('mutual-badge');
+                if (badge) {
+                    if (isMutual && !isSelf) badge.classList.remove('hidden');
+                    else badge.classList.add('hidden');
+                }
+
+                // 表示制限判定の呼び出し (UI更新へ)
+                // ステータス変更に伴う再描画などは updateDashboardUI や toggleRestrictedContent で行う
+
+            } catch (e) { console.error("Check follow err:", e); }
+        }
+
+        function renderFollowButton() {
+            const container = document.getElementById('header-actions');
+            if(!container) return;
+            let btnHtml = '';
+            if (isFollowing) {
+                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-bold rounded-xl text-slate-900 bg-white hover:bg-slate-50 transition-all mr-2">フォロー中</button>`;
+            } else {
+                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-bold rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition-all mr-2">フォロー</button>`;
+            }
+            if (isAdmin && !isSelf) {
+                btnHtml += `<a href="profile.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-xl text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
+                document.getElementById('admin-badge').classList.remove('hidden');
+            }
+            container.innerHTML = btnHtml;
+        }
+
+        window.toggleFollow = async () => {
+            if (!currentUser || isAdminMock) {
+                if(isAdminMock) { isFollowing = !isFollowing; renderFollowButton(); showNotification('Mock Action'); }
+                return;
+            }
+            const myUid = currentUser.uid;
+            const myFollowingRef = doc(db, 'artifacts', appId, 'users', myUid, 'following', targetUid);
+            const targetFollowerRef = doc(db, 'artifacts', appId, 'users', targetUid, 'followers', myUid);
+            const notificationColl = collection(db, 'artifacts', appId, 'users', targetUid, 'notifications');
+
+            try {
+                if (isFollowing) {
+                    await deleteDoc(myFollowingRef);
+                    await deleteDoc(targetFollowerRef);
+                    isFollowing = false;
+                    showNotification('フォローを解除しました');
+                } else {
+                    const timestamp = serverTimestamp();
+                    await setDoc(myFollowingRef, { createdAt: timestamp });
+                    await setDoc(targetFollowerRef, { createdAt: timestamp });
+                    try {
+                        await addDoc(notificationColl, {
+                            type: 'follow',
+                            fromUid: myUid,
+                            createdAt: timestamp,
+                            isRead: false
+                        });
+                    } catch (e) { console.warn("Notify err:", e); }
+                    isFollowing = true;
+                    showNotification('フォローしました');
+                }
+                await checkFollowStatus(myUid, targetUid);
+                updateFollowCounts(targetUid);
+                loadPublicProfile(targetUid);
+            } catch (e) {
+                console.error(e);
+                showNotification('エラーが発生しました');
+            }
+        };
+
+        function toggleRestrictedContent(show) {
+            const masks = ['message-mask', 'career-mask', 'personal-mask'];
+            document.querySelectorAll('.mutual-only').forEach(el => {
+                if(show) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            if (show) {
+                document.getElementById('message-container')?.classList.remove('hidden');
+                document.getElementById('message-lock-icon')?.classList.add('hidden');
+                document.getElementById('career-container')?.classList.remove('hidden');
+                document.getElementById('career-lock-icon')?.classList.add('hidden');
+                masks.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+            } else {
+                document.getElementById('message-container')?.classList.add('hidden');
+                document.getElementById('message-lock-icon')?.classList.remove('hidden');
+                document.getElementById('career-container')?.classList.add('hidden');
+                document.getElementById('career-lock-icon')?.classList.remove('hidden');
+                masks.forEach(id => document.getElementById(id)?.classList.remove('hidden'));
+            }
+        }
+
+        function updateDashboardUI(data) {
+            setElText('nav-name', data.name || 'User');
+            if (data.userId) setElText('nav-id', '@' + data.userId);
+            document.querySelectorAll('.shimmer').forEach(el => el.classList.remove('shimmer', 'w-32', 'h-8'));
+
+            setElText('profile-name', data.name || data.userId || '（名称未設定）');
+            setElText('profile-id', '@' + (data.userId || '-'));
+            setElText('profile-job', data.jobTitle || '職業未設定');
+            setElText('profile-location', data.prefecture || '未設定');
+            setElHtml('profile-bio', formatText(data.bio || ''));
+            
+            const iconImg = document.getElementById('header-icon-img');
+            const iconPh = document.getElementById('header-icon-placeholder');
+            if (iconImg && iconPh) {
+                if (data.photoURL) {
+                    iconImg.src = data.photoURL;
+                    iconImg.classList.remove('hidden');
+                    iconPh.classList.add('hidden');
+                } else {
+                    iconImg.classList.add('hidden');
+                    iconPh.classList.remove('hidden');
+                }
+            }
+
+            // Rank Badge
+            const rank = data.membershipRank || 'walker';
+            const badgeEl = document.getElementById('rank-badge');
+            if (badgeEl) {
+                badgeEl.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border';
+                badgeEl.classList.remove('hidden');
+                if (rank === 'guardian') {
+                    badgeEl.classList.add('badge-guardian');
+                    badgeEl.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i>GUARDIAN';
+                } else if (rank === 'builder') {
+                    badgeEl.classList.add('badge-builder');
+                    badgeEl.innerHTML = '<i class="fa-solid fa-hammer mr-1"></i>BUILDER';
+                } else {
+                    badgeEl.classList.add('badge-walker');
+                    badgeEl.innerHTML = '<i class="fa-solid fa-person-walking mr-1"></i>WALKER';
+                }
+            }
+
+            // Restriction Logic
+            const isTargetWalker = rank === 'walker';
+            const isViewerWalker = myRank === 'walker';
+            const isViewerPrivileged = isSelf || isAdmin;
+            
+            const applyWalkerRestriction = (isTargetWalker || isViewerWalker) && !isViewerPrivileged;
+
+            const hideIfWalker = (id) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (applyWalkerRestriction) el.classList.add('hidden');
+                    else el.classList.remove('hidden');
+                }
+            };
+            if (applyWalkerRestriction) document.getElementById('profile-bio').parentElement.classList.add('hidden');
+            else document.getElementById('profile-bio').parentElement.classList.remove('hidden');
+
+            hideIfWalker('section-tags');
+            hideIfWalker('section-matching');
+            hideIfWalker('section-goals');
+            hideIfWalker('section-message'); 
+
+            const showRestricted = (isMutual || isViewerPrivileged) && !applyWalkerRestriction;
+            toggleRestrictedContent(showRestricted);
+
+            if (applyWalkerRestriction) {
+                let maskMsg = '';
+                if (isViewerWalker) {
+                    maskMsg = '<span class="text-brand-600 font-bold cursor-pointer underline" onclick="location.href=\'upgrade.html\'">BUILDERにアップグレード</span>して詳細を表示';
+                } else {
+                    maskMsg = 'このユーザーはWALKER会員のため情報は制限されています';
+                }
+                document.querySelector('#message-mask p').innerHTML = maskMsg;
+                document.querySelector('#career-mask p').innerHTML = maskMsg;
+                document.querySelector('#personal-mask p').innerHTML = '<i class="fa-solid fa-lock mr-2"></i>' + maskMsg;
+
+                if (!isViewerPrivileged) {
+                    document.getElementById('section-message').classList.remove('hidden');
+                    document.getElementById('message-mask').classList.remove('hidden');
+                    document.getElementById('personal-mask').classList.remove('hidden');
+                }
+            } else if (!isMutual && !isViewerPrivileged) {
+                const normalMsg = '相互フォローで詳細を表示';
+                document.querySelector('#message-mask p').textContent = normalMsg;
+                document.querySelector('#career-mask p').textContent = normalMsg;
+                document.querySelector('#personal-mask p').textContent = normalMsg;
+            }
+
+            if (showRestricted) {
+                setElText('data-gender', data.gender);
+                
+                let birthDisplay = '-';
+                if (data.birthDate) {
+                    if (isAdmin || isSelf || data.birthVisibility === 'full') {
+                        birthDisplay = data.birthDate;
+                    } else if (data.birthVisibility === 'monthDay') {
+                        birthDisplay = data.birthDate.substring(5);
+                    } else {
+                        birthDisplay = '非公開';
+                    }
+                }
+                setElText('data-birth', birthDisplay);
+
+                const careerContainer = document.getElementById('career-container');
+                if (careerContainer) {
+                    careerContainer.innerHTML = '';
+                    if (data.career && data.career.length > 0) {
+                        data.career.forEach(c => {
+                            const formattedDesc = formatText(c.description || '');
+                            careerContainer.innerHTML += `
+                                <div class="relative pl-6 pb-2">
+                                    <div class="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-brand-500 ring-4 ring-white z-10 shadow-sm"></div>
+                                    <h4 class="font-bold text-slate-900 text-base">${c.company || '会社名不明'}</h4>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">${c.role || 'Role'}</span>
+                                        <span class="text-xs text-slate-400 font-medium">${c.start || '?'} 〜 ${c.end || '現在'}</span>
+                                    </div>
+                                    <div class="text-sm text-slate-600 leading-relaxed font-medium bg-slate-50 p-3 rounded-xl">${formattedDesc}</div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        careerContainer.innerHTML = '<div class="text-slate-400 text-sm italic">経歴情報はありません</div>';
+                    }
+                }
+                
+                const snsContainer = document.getElementById('profile-sns-links');
+                if (snsContainer) {
+                    snsContainer.innerHTML = '';
+                    if (data.websiteUrl) snsContainer.innerHTML += `<a href="${data.websiteUrl}" target="_blank" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"><i class="fa-solid fa-globe"></i></a>`;
+                    if (data.snsInstagram) snsContainer.innerHTML += `<a href="${data.snsInstagram.startsWith('http') ? data.snsInstagram : 'https://instagram.com/'+data.snsInstagram}" target="_blank" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-pink-50 hover:text-pink-500 transition-colors"><i class="fa-brands fa-instagram"></i></a>`;
+                    if (data.snsX) snsContainer.innerHTML += `<a href="${data.snsX.startsWith('http') ? data.snsX : 'https://twitter.com/'+data.snsX}" target="_blank" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"><i class="fa-brands fa-x-twitter"></i></a>`;
+                }
+
+                const messageEl = document.getElementById('profile-message');
+                if (messageEl) {
+                    messageEl.innerHTML = data.message ? formatText(data.message) : 'まだメッセージがありません。';
+                    if (!data.message) messageEl.classList.add('text-slate-400');
+                    else messageEl.classList.remove('text-slate-400');
+                }
+            }
+
+            if (!applyWalkerRestriction) {
+                const updateList = (id, items) => {
+                    const el = document.getElementById(id);
+                    if(!el) return;
+                    el.innerHTML = '';
+                    if (items && items.length > 0) {
+                        items.forEach(item => {
+                            el.innerHTML += `<li class="flex items-start gap-2 text-[15px] text-slate-700"><i class="fa-solid fa-check text-brand-500 mt-1 flex-shrink-0"></i><span class="font-medium">${item}</span></li>`;
+                        });
+                    } else {
+                        el.innerHTML = '<li class="text-slate-400 text-xs italic">未設定</li>';
+                    }
+                };
+                updateList('list-can-offer', data.canOffer);
+                updateList('list-looking-for', data.lookingFor);
+
+                const goalsEl = document.getElementById('profile-goals');
+                if (goalsEl) {
+                    goalsEl.innerHTML = data.goals ? formatText(data.goals) : '未設定';
+                    if (!data.goals) goalsEl.classList.add('text-slate-400');
+                }
+
+                const tagsContainer = document.getElementById('tags-container');
+                if (tagsContainer) {
+                    tagsContainer.innerHTML = '';
+                    const allTags = [...(data.hobbies || []), ...(data.skills || [])];
+                    if (allTags.length > 0) {
+                        allTags.forEach(tag => {
+                            const span = document.createElement('span');
+                            span.className = 'inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 text-slate-600 border border-slate-200';
+                            span.textContent = tag;
+                            tagsContainer.appendChild(span);
+                        });
+                    } else {
+                        tagsContainer.innerHTML = '<span class="text-xs text-slate-400 italic">タグ未設定</span>';
+                    }
+                }
+            }
+
+            if (isSelf) {
+                setElText('score-text', (data.profileScore || 0) + '%');
+                const scoreBar = document.getElementById('score-bar');
+                if(scoreBar) scoreBar.style.width = (data.profileScore || 0) + '%';
+            }
+        }
+
+        // --- Debug: Change Rank Function ---
+        window.changeRank = async (newRole) => {
+            if (!currentUser) return;
+            const uid = currentUser.uid;
+            try {
+                const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
+                await updateDoc(privateRef, { membershipRank: newRole });
+                
+                const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
+                const pubSnap = await getDoc(publicRef);
+                if (pubSnap.exists()) {
+                    await updateDoc(publicRef, { membershipRank: newRole });
+                }
+                
+                alert(`ランクを ${newRole} に変更しました。\n画面をリロードします。`);
+                window.location.reload();
+            } catch (e) {
+                console.error(e);
+                alert("変更に失敗しました");
+            }
+        };
+
+        window.handleLogout = () => {
+            if (isAdminMock) {
+                localStorage.removeItem('isAdminMock');
+                window.location.href = 'login.html';
+                return;
+            }
+            signOut(auth);
+            window.location.href = 'login.html';
+        };
+
+        window.showNotification = (msg) => {
+            const notif = document.getElementById('notification');
+            const msgEl = document.getElementById('notif-message');
+            if(notif && msgEl) {
+                notif.classList.remove('hidden', 'translate-y-20');
+                msgEl.textContent = msg;
+                setTimeout(() => {
+                    notif.classList.add('translate-y-20');
+                    setTimeout(() => notif.classList.add('hidden'), 300);
+                }, 3000);
+            }
+        };
+
+        function getAdminMockData() {
+            return {
+                userId: 'admin', name: 'テスト管理者', jobTitle: 'システム開発', gender: '男性',
+                profileScore: 90, hobbies: ['開発', 'デザイン'], skills: ['Firebase', 'HTML/CSS'], email: 'admin@test.com',
+                prefecture: '東京都', message: '管理者アカウントです。', bio: '自己紹介エリア', goals: '目標',
+                canOffer: ['技術'], lookingFor: ['デザイン'], career: [], membershipRank: 'guardian'
+            };
+        }
+    </script>
+</body>
+</html>

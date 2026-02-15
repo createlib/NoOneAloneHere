@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お問い合わせ | BRAIN BRIDGE</title>
+    <!-- Google Fonts: Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+
+    <div class="max-w-2xl mx-auto">
+        <!-- Back Link -->
+        <div class="mb-6">
+            <a href="index.html" class="inline-flex items-center text-sm text-gray-500 hover:text-blue-600 transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                トップページに戻る
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">お問い合わせ</h1>
+            <p class="mt-4 text-sm text-gray-600">
+                ご質問やご相談は、以下のフォームよりお気軽にお問い合わせください。<br>
+                内容を確認次第、担当者よりご連絡いたします。
+            </p>
+        </div>
+
+        <!-- Contact Form Container -->
+        <div class="bg-white shadow sm:rounded-lg border border-gray-200 p-6 sm:p-8">
+            
+            <!-- 送信完了メッセージ（初期状態は非表示） -->
+            <div id="success-message" class="hidden text-center py-10">
+                <svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <h3 class="mt-2 text-xl font-medium text-gray-900">送信完了</h3>
+                <p class="mt-1 text-gray-500">お問い合わせありがとうございます。<br>内容を確認の上、ご連絡させていただきます。</p>
+                <button onclick="location.reload()" class="mt-6 text-sm text-blue-600 hover:text-blue-500 underline">
+                    フォームに戻る
+                </button>
+            </div>
+
+            <!-- 
+              Googleフォーム連携用設定
+              action: Googleフォームの送信先URL（viewform ではなく formResponse になっています）
+              target: 画面遷移しないように隠しiframeを指定
+            -->
+            <form id="contact-form" 
+                  action="https://docs.google.com/forms/d/e/1FAIpQLSe-um1-IG2s0ZChRZl4MAWjhbTWSjzGPINVL9VQjReflwK4Zw/formResponse" 
+                  method="POST" 
+                  target="hidden_iframe" 
+                  onsubmit="submitted=true;">
+                
+                <div class="space-y-6">
+                    <!-- Name Field -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">
+                            氏名 <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <!-- 氏名のID: entry.1284985487 -->
+                            <input type="text" name="entry.1284985487" id="name" required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="山田 太郎">
+                        </div>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">
+                            メールアドレス <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <!-- メールアドレスのID: entry.1213234869 -->
+                            <input type="email" name="entry.1213234869" id="email" required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="example@email.com">
+                        </div>
+                    </div>
+
+                    <!-- Subject Field -->
+                    <div>
+                        <label for="subject" class="block text-sm font-medium text-gray-700">
+                            件名 <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <!-- 件名のID: entry.549170446 -->
+                            <input type="text" name="entry.549170446" id="subject" required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="サービスに関するお問い合わせ">
+                        </div>
+                    </div>
+
+                    <!-- Message Body Field -->
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-gray-700">
+                            お問い合わせ内容 <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <!-- 本文のID: entry.1104805669 -->
+                            <textarea id="message" name="entry.1104805669" rows="6" required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                placeholder="お問い合わせ内容をご記入ください。"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div>
+                        <button type="submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                            送信する
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-sm text-gray-500">
+            &copy; BRAIN BRIDGE. All rights reserved.
+        </div>
+    </div>
+
+    <!-- 画面遷移を防ぐための隠しiframe -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) { showSuccess(); }"></iframe>
+
+    <script>
+        // 送信フラグ
+        let submitted = false;
+
+        // 送信完了時にフォームを隠して完了メッセージを表示する関数
+        function showSuccess() {
+            const form = document.getElementById('contact-form');
+            const successMsg = document.getElementById('success-message');
+            
+            // アニメーション的に切り替え
+            form.style.display = 'none';
+            successMsg.classList.remove('hidden');
+            
+            // ページ上部へスクロール
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+
+</body>
+</html>

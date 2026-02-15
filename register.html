@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新規登録 | BRAIN BRIDGE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body { font-family: 'Noto Sans JP', sans-serif; background-color: #f3f4f6; }</style>
+</head>
+<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+
+    <!-- トップページに戻るリンク -->
+    <div class="absolute top-4 left-4 sm:top-8 sm:left-8">
+        <a href="home.html" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors">
+            <i class="fa-solid fa-arrow-left mr-2"></i>
+            ホームに戻る
+        </a>
+    </div>
+
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+        <div class="text-center">
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">BRAIN BRIDGE</h2>
+            <p class="mt-2 text-sm text-gray-600">新しいアカウントを作成</p>
+        </div>
+
+        <form class="mt-8 space-y-4" onsubmit="handleRegister(event)">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">紹介者ID (紹介者のユーザーID) <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <input name="referrer" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this); checkReferrer(this.value);" class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" placeholder="紹介者のIDを入力">
+                    <div id="referrer-status-icon" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none hidden"></div>
+                </div>
+                <p id="referrer-msg" class="mt-1 text-xs text-gray-500">半角英数字とアンダーバーのみ</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">ユーザーID (あなたのID) <span class="text-red-500">*</span></label>
+                <input name="userid" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this)" class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" placeholder="希望ID（ログインに使用します）">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
+                <input name="email" type="email" required class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" placeholder="example@mail.com">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">パスワード <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <input id="reg-password" name="password" type="password" required minlength="6" class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" placeholder="6文字以上">
+                    <button type="button" onclick="togglePassword('reg-password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" id="btn-register" disabled class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-gray-400 cursor-not-allowed transition-all shadow-md">新規登録</button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600">すでにアカウントをお持ちの方は <a href="login.html" class="font-bold text-blue-600 hover:text-blue-500 underline decoration-2 underline-offset-2">ログインはこちら</a></p>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="fixed top-4 right-4 z-50 hidden max-w-sm w-full bg-white shadow-lg rounded-lg p-4 border-l-4">
+        <p id="notif-message" class="text-sm font-medium"></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ▼▼▼▼ Firebase Config ▼▼▼▼
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0",
+            authDomain: "brainbridge-4b8ac.firebaseapp.com",
+            projectId: "brainbridge-4b8ac",
+            storageBucket: "brainbridge-4b8ac.firebasestorage.app",
+            messagingSenderId: "803209683213",
+            appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
+        };
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        let isReferrerValid = false;
+        let referrerCheckTimeout = null;
+
+        // ★ 管理者作成用シークレットコード
+        const ADMIN_SECRET = "admin_start";
+
+        // DB検索用に匿名認証
+        signInAnonymously(auth).catch(e => console.log("Anon auth:", e));
+
+        onAuthStateChanged(auth, (user) => {
+            // 新規登録直後のリダイレクトは handleRegister で制御
+        });
+
+        window.validateInput = (input) => {
+            input.value = input.value.replace(/[^a-zA-Z0-9_]/g, '');
+        };
+
+        window.checkReferrer = async (value) => {
+            const msgElement = document.getElementById('referrer-msg');
+            const iconContainer = document.getElementById('referrer-status-icon');
+            
+            isReferrerValid = false;
+            updateRegisterButton();
+            
+            if (!value) {
+                msgElement.textContent = '半角英数字とアンダーバーのみ';
+                msgElement.className = 'mt-1 text-xs text-gray-500';
+                iconContainer.classList.add('hidden');
+                return;
+            }
+
+            // --- 1. 管理者モード (admin_start) のチェック ---
+            if (value === ADMIN_SECRET) {
+                msgElement.textContent = '管理者モード: 紹介者チェックをスキップします';
+                msgElement.className = 'mt-1 text-xs text-purple-600 font-bold';
+                iconContainer.classList.remove('hidden');
+                iconContainer.innerHTML = '<i class="fa-solid fa-crown text-purple-500"></i>';
+                isReferrerValid = true;
+                updateRegisterButton();
+                return;
+            }
+
+            // --- 2. "admin" IDの利用禁止チェック ---
+            if (value === "admin") {
+                msgElement.textContent = 'このIDは紹介者として指定できません';
+                msgElement.className = 'mt-1 text-xs text-red-500 font-bold';
+                iconContainer.classList.remove('hidden');
+                iconContainer.innerHTML = '<i class="fa-solid fa-ban text-red-500"></i>';
+                isReferrerValid = false;
+                updateRegisterButton();
+                return;
+            }
+            // ---------------------------------------------
+
+            msgElement.textContent = '確認中...';
+            msgElement.className = 'mt-1 text-xs text-blue-500';
+            iconContainer.classList.remove('hidden');
+            iconContainer.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-gray-400"></i>';
+
+            if (referrerCheckTimeout) clearTimeout(referrerCheckTimeout);
+
+            referrerCheckTimeout = setTimeout(async () => {
+                try {
+                    // ID検索: Publicデータから検索
+                    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                    const q = query(usersRef, where("userId", "==", value));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const userData = querySnapshot.docs[0].data();
+                        const displayName = userData.name || userData.userId || 'ユーザー';
+                        msgElement.textContent = `紹介者: ${displayName} さんを確認しました`;
+                        msgElement.className = 'mt-1 text-xs text-green-600 font-bold';
+                        iconContainer.innerHTML = '<i class="fa-solid fa-circle-check text-green-500"></i>';
+                        isReferrerValid = true;
+                    } else {
+                        msgElement.textContent = '該当する紹介者が見つかりません';
+                        msgElement.className = 'mt-1 text-xs text-red-500 font-bold';
+                        iconContainer.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+                    }
+                } catch (error) {
+                    console.error("Referrer check error:", error);
+                    msgElement.textContent = '確認できませんでした';
+                    msgElement.className = 'mt-1 text-xs text-red-500';
+                    iconContainer.innerHTML = '<i class="fa-solid fa-circle-exclamation text-red-500"></i>';
+                }
+                updateRegisterButton();
+            }, 500);
+        };
+
+        function updateRegisterButton() {
+            const btn = document.getElementById('btn-register');
+            if (isReferrerValid) {
+                btn.disabled = false;
+                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            }
+        }
+
+        window.handleRegister = async (e) => {
+            e.preventDefault();
+            if (!isReferrerValid) return;
+
+            const form = e.target;
+            const referrerId = form.referrer.value;
+            const userId = form.userid.value;
+            const email = form.email.value;
+            const password = form.password.value;
+
+            showNotification('登録処理中...', 'info');
+
+            try {
+                // 1. ユーザーIDの重複チェック
+                const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                const idQuery = query(usersRef, where("userId", "==", userId));
+                const idCheckSnapshot = await getDocs(idQuery);
+                
+                if (!idCheckSnapshot.empty) {
+                    throw new Error("このユーザーIDは既に使用されています。別のIDを指定してください。");
+                }
+
+                // 2. Authユーザー作成
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // 3. データ保存
+                const timestamp = new Date().toISOString();
+                
+                // A. 非公開データ (Private Profile)
+                await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'), {
+                    userId: userId,
+                    referrerId: referrerId,
+                    email: email,
+                    name: userId, // 初期表示名はID
+                    createdAt: timestamp,
+                    profilePublic: "false" // 初期は非公開
+                });
+
+                // B. 公開データ (Public Data)
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid), {
+                    userId: userId, // 独自ID
+                    name: userId,
+                    email: email, // ログイン検索用
+                    createdAt: timestamp,
+                });
+
+                showNotification('登録完了！マイページへ移動します', 'success');
+                setTimeout(() => {
+                    window.location.href = 'user.html';
+                }, 1000);
+
+            } catch (error) {
+                console.error("Reg error:", error);
+                let msg = '登録に失敗しました。';
+                if (error.code === 'auth/email-already-in-use') msg = 'このメールアドレスは既に使用されています。';
+                if (error.message) msg = error.message;
+                showNotification(msg, 'error');
+            }
+        };
+
+        window.togglePassword = (id) => {
+            const input = document.getElementById(id);
+            const icon = input.nextElementSibling.querySelector('i');
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        };
+
+        window.showNotification = (msg, type) => {
+            const notif = document.getElementById('notification');
+            const msgEl = document.getElementById('notif-message');
+            notif.classList.remove('hidden', 'border-blue-500', 'border-red-500', 'border-green-500');
+            
+            if(type === 'error') {
+                notif.classList.add('border-red-500', 'text-red-700');
+            } else if (type === 'success') {
+                notif.classList.add('border-green-500', 'text-green-700');
+            } else {
+                notif.classList.add('border-blue-500', 'text-blue-700');
+            }
+            msgEl.textContent = msg;
+            notif.classList.remove('hidden');
+            setTimeout(() => notif.classList.add('hidden'), 3000);
+        };
+    </script>
+</body>
+</html>

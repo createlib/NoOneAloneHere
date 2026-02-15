@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホーム | LIFE REMIX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'Noto Sans JP', 'sans-serif'] },
+                    colors: { brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 900: '#312e81' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; }
+        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; border-radius: 9999px; transition: all 0.2s; }
+        .calendar-day:hover { background-color: #f1f5f9; }
+        .calendar-day.selected { background-color: #4f46e5; color: white; font-weight: bold; }
+        .calendar-day.has-event::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #ef4444; border-radius: 50%; }
+        .calendar-day.selected.has-event::after { background-color: white; }
+        
+        /* --- ボトムナビゲーションの高さ固定設定 --- */
+        .bottom-nav-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            border-top: 1px solid #e2e8f0;
+            z-index: 40;
+            /* 高さ: アイコンエリア(64px) + iPhone等のホームバー領域 */
+            height: 4rem; /* フォールバック */
+            height: calc(4rem + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .bottom-nav-content {
+            height: 4rem; /* 64px */
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* コンテンツがナビに隠れないようにする余白 */
+        .body-pb-nav {
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased body-pb-nav lg:pb-0">
+
+    <!-- Header / Nav -->
+    <nav class="bg-white/90 backdrop-blur-md border-b border-slate-200 fixed w-full z-50 top-0 h-16">
+        <div class="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-slate-900 text-white w-8 h-8 flex items-center justify-center rounded-lg text-sm">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <span class="text-xl font-black text-slate-900 tracking-tight">LIFE REMIX</span>
+            </div>
+
+            <!-- PC Navigation -->
+            <div class="hidden lg:flex items-center gap-6">
+                <a href="home.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-house"></i> ホーム</a>
+                <a href="events.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-map-location-dot"></i> イベント</a>
+                <a href="search.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-magnifying-glass"></i> さがす</a>
+                <a href="user.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-user"></i> マイページ</a>
+                <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                <button onclick="handleLogout()" class="text-sm font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> ログアウト</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto pt-24 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Welcome Card -->
+                <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h1 class="text-2xl font-bold mb-2">Welcome to LIFE REMIX</h1>
+                        <p class="text-slate-300 text-sm mb-6">つながり、学び、創り出すためのコミュニティプラットフォーム。</p>
+                        <div class="flex gap-3">
+                            <a href="search.html" class="bg-white text-slate-900 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-100 transition-colors">
+                                仲間を探す
+                            </a>
+                            <a href="events.html" class="bg-white/10 text-white border border-white/20 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-white/20 transition-colors">
+                                イベントへ
+                            </a>
+                        </div>
+                    </div>
+                    <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
+                        <i class="fa-solid fa-brain text-[12rem]"></i>
+                    </div>
+                </div>
+
+                <!-- Participating Events -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-bold text-lg text-slate-900 flex items-center gap-2 border-l-4 border-brand-500 pl-3">
+                            参加予定のイベント
+                        </h2>
+                        <!-- Toggle Switch -->
+                        <div class="flex bg-slate-100 p-1 rounded-lg">
+                            <button onclick="switchView('list')" id="btn-view-list" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all bg-white shadow text-brand-600">
+                                <i class="fa-solid fa-list mr-1"></i>リスト
+                            </button>
+                            <button onclick="switchView('calendar')" id="btn-view-calendar" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all text-slate-500 hover:text-slate-700">
+                                <i class="fa-regular fa-calendar mr-1"></i>カレンダー
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- List View -->
+                    <div id="participating-events-list" class="space-y-3">
+                        <!-- Loading State -->
+                        <div class="animate-pulse flex space-x-4 p-4 bg-white rounded-xl border border-slate-100">
+                            <div class="rounded-lg bg-slate-200 h-16 w-16"></div>
+                            <div class="flex-1 space-y-2 py-1">
+                                <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                                <div class="h-4 bg-slate-200 rounded w-1/2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Calendar View (Hidden by default) -->
+                    <div id="participating-events-calendar" class="hidden bg-white rounded-2xl border border-slate-100 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg" id="calendar-month-year">2023年 12月</h3>
+                            <div class="flex gap-2">
+                                <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-50 rounded-full"><i class="fa-solid fa-chevron-left"></i></button>
+                                <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-50 rounded-full"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
+                            <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+                        </div>
+                        <div id="calendar-days" class="grid grid-cols-7 gap-1 text-sm text-slate-700">
+                            <!-- JS injected -->
+                        </div>
+                        
+                        <!-- Selected Date Events -->
+                        <div id="calendar-selected-events" class="mt-6 pt-4 border-t border-slate-100 hidden">
+                            <h4 class="text-xs font-bold text-slate-500 mb-2" id="selected-date-label">選択した日のイベント</h4>
+                            <div id="calendar-events-list" class="space-y-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hosting Events -->
+                <div class="space-y-4">
+                    <h2 class="font-bold text-lg text-slate-900 flex items-center gap-2 border-l-4 border-yellow-500 pl-3">
+                        主催するイベント
+                    </h2>
+                    <div id="hosting-events-list" class="space-y-3">
+                        <div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column (Sidebar) -->
+            <div class="space-y-6">
+                <!-- User Card Mini -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
+                    <div class="w-20 h-20 bg-slate-100 rounded-full mx-auto mb-3 overflow-hidden border-2 border-white shadow-sm">
+                        <img id="home-user-icon" src="" class="w-full h-full object-cover hidden">
+                        <div id="home-user-placeholder" class="w-full h-full flex items-center justify-center text-slate-300"><i class="fa-solid fa-user text-3xl"></i></div>
+                    </div>
+                    <h3 class="font-bold text-slate-900" id="home-user-name">Guest</h3>
+                    <p class="text-xs text-slate-400 mb-4" id="home-user-id">@...</p>
+                    <a href="user.html" class="block w-full py-2 bg-slate-50 text-slate-600 text-sm font-bold rounded-lg hover:bg-slate-100 transition-colors">
+                        プロフィールを表示
+                    </a>
+                </div>
+
+                <!-- Info -->
+                <div class="bg-brand-50 rounded-2xl p-6 border border-brand-100">
+                    <h3 class="font-bold text-brand-900 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-crown text-brand-600"></i> プランについて
+                    </h3>
+                    <p class="text-xs text-brand-700 leading-relaxed mb-4">
+                        有料会員になると、より詳細なプロフィール閲覧や検索機能が利用できます。
+                    </p>
+                    <a href="upgrade.html" class="text-xs font-bold text-brand-600 hover:underline">
+                        詳細を見る &rarr;
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Event Detail Modal -->
+    <div id="event-detail-modal" class="hidden fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            
+            <div class="relative h-40 bg-slate-200">
+                <img id="modal-event-img" class="w-full h-full object-cover" src="">
+                <button onclick="closeDetailModal()" class="absolute top-3 right-3 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto">
+                <h3 id="modal-event-title" class="text-xl font-bold text-slate-900 mb-2"></h3>
+                
+                <div class="flex flex-wrap gap-2 mb-4" id="modal-event-tags"></div>
+
+                <div class="space-y-3 mb-6 text-sm text-slate-600">
+                    <div class="flex gap-3">
+                        <i class="fa-regular fa-calendar mt-0.5 text-slate-400 w-5 text-center"></i>
+                        <span id="modal-event-date" class="font-bold"></span>
+                    </div>
+                    <div class="flex gap-3">
+                        <i class="fa-regular fa-clock mt-0.5 text-slate-400 w-5 text-center"></i>
+                        <span id="modal-event-time"></span>
+                    </div>
+                    <div class="flex gap-3">
+                        <i class="fa-solid fa-location-dot mt-0.5 text-slate-400 w-5 text-center"></i>
+                        <span id="modal-event-location"></span>
+                    </div>
+                    <div class="flex gap-3">
+                        <i class="fa-solid fa-user mt-0.5 text-slate-400 w-5 text-center"></i>
+                        <span>主催: <span id="modal-event-organizer"></span></span>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">詳細</h4>
+                    <p id="modal-event-desc" class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"></p>
+                </div>
+
+                <!-- Google Calendar Button -->
+                <a id="modal-gcal-btn" href="#" target="_blank" class="block w-full py-3 bg-brand-600 text-white text-center font-bold rounded-xl hover:bg-brand-700 transition-colors shadow-md">
+                    <i class="fa-brands fa-google mr-2"></i> Googleカレンダーに追加
+                </a>
+                
+                <a href="events.html" class="block w-full text-center text-xs text-slate-400 mt-4 hover:underline">
+                    イベントマップで位置を確認する
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="lg:hidden bottom-nav-fixed">
+        <div class="bottom-nav-content">
+            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600">
+                <i class="fa-solid fa-house text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">ホーム</span>
+            </a>
+            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">イベント</span>
+            </a>
+            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-magnifying-glass text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">さがす</span>
+            </a>
+            <button onclick="alert('マッチング機能は準備中です。\nComing Soon!')" class="flex flex-col items-center justify-center w-full h-full text-slate-300 hover:text-slate-400 transition-colors">
+                <i class="fa-solid fa-handshake-simple text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">マッチ</span>
+            </button>
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-medium">マイページ</span>
+            </a>
+        </div>
+    </nav>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0",
+            authDomain: "brainbridge-4b8ac.firebaseapp.com",
+            projectId: "brainbridge-4b8ac",
+            storageBucket: "brainbridge-4b8ac.firebasestorage.app",
+            messagingSenderId: "803209683213",
+            appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
+
+        let myEvents = []; 
+        let currentCalendarDate = new Date();
+
+        onAuthStateChanged(auth, async (user) => {
+            if (isAdminMock) {
+                updateUI({ name: 'テスト管理者', userId: 'admin' });
+                document.getElementById('participating-events-list').innerHTML = '<div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">管理者モード: 参加イベントなし</div>';
+                document.getElementById('hosting-events-list').innerHTML = '<div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">管理者モード: 主催イベントなし</div>';
+                return;
+            }
+
+            if (user && !user.isAnonymous) {
+                try {
+                    const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
+                    if (docSnap.exists()) {
+                        updateUI(docSnap.data());
+                    } else {
+                        updateUI({ name: 'User', userId: user.uid });
+                    }
+                } catch (e) { console.error(e); }
+                
+                loadEvents(user.uid);
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        function updateUI(data) {
+            document.getElementById('home-user-name').textContent = data.name || 'User';
+            document.getElementById('home-user-id').textContent = '@' + (data.userId || '-');
+            
+            if (data.photoURL) {
+                const img = document.getElementById('home-user-icon');
+                img.src = data.photoURL;
+                img.classList.remove('hidden');
+                document.getElementById('home-user-placeholder').classList.add('hidden');
+            }
+        }
+
+        async function loadEvents(uid) {
+            
+            // 現在時刻 (ISO文字列の比較用)
+            const now = new Date().toISOString();
+
+            // 1. Hosting Events (自分が主催)
+            try {
+                const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
+                const qHost = query(eventsRef, where('organizerId', '==', uid), orderBy('createdAt', 'desc')); 
+                const snapHost = await getDocs(qHost);
+                
+                // 終了済みを除外
+                const activeHostEvents = snapHost.docs
+                    .map(d => ({...d.data(), id: d.id}))
+                    .filter(evt => !evt.endTimestamp || evt.endTimestamp >= now);
+
+                renderEventList('hosting-events-list', activeHostEvents, '主催する予定のイベントはありません');
+            } catch (e) { 
+                console.error("Host load err", e);
+                // Fallback
+                try {
+                     const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
+                     const qAll = query(eventsRef, orderBy('createdAt', 'desc'));
+                     const snapAll = await getDocs(qAll);
+                     const hostEvents = snapAll.docs
+                        .map(d => ({...d.data(), id: d.id}))
+                        .filter(d => d.organizerId === uid && (!d.endTimestamp || d.endTimestamp >= now));
+                     renderEventList('hosting-events-list', hostEvents, '主催する予定のイベントはありません');
+                } catch (e2) {
+                     document.getElementById('hosting-events-list').innerHTML = '<div class="text-sm text-red-400 p-4">読み込みエラー</div>';
+                }
+            }
+
+            // 2. Participating Events (自分が参加)
+            try {
+                const myJoinColl = collection(db, 'artifacts', appId, 'users', uid, 'participating_events');
+                const snapJoin = await getDocs(myJoinColl);
+                
+                const listEl = document.getElementById('participating-events-list');
+                listEl.innerHTML = '';
+
+                if (snapJoin.empty) {
+                    listEl.innerHTML = `
+                        <div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">
+                            参加予定のイベントはありません<br>
+                            <a href="events.html" class="text-brand-600 underline mt-2 inline-block">イベントを探す</a>
+                        </div>`;
+                } else {
+                    const eventPromises = snapJoin.docs.map(async (joinDoc) => {
+                        const eventId = joinDoc.id; 
+                        try {
+                            const evtRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', eventId);
+                            const evtSnap = await getDoc(evtRef);
+                            if (evtSnap.exists()) {
+                                const data = evtSnap.data();
+                                data.id = evtSnap.id;
+                                return data;
+                            }
+                        } catch (e) { console.error(e); }
+                        return null; 
+                    });
+
+                    const allJoinedEvents = (await Promise.all(eventPromises)).filter(e => e !== null);
+                    
+                    // 終了済みを除外
+                    myEvents = allJoinedEvents.filter(evt => !evt.endTimestamp || evt.endTimestamp >= now);
+                    
+                    // 日付順ソート (近い順)
+                    myEvents.sort((a, b) => {
+                        const dateA = new Date(a.startDate).getTime();
+                        const dateB = new Date(b.startDate).getTime();
+                        return dateA - dateB;
+                    });
+
+                    if (myEvents.length === 0) {
+                         listEl.innerHTML = '<div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">参加予定のイベントはありません（または終了しました）</div>';
+                    } else {
+                        myEvents.forEach(evt => renderEventItem(listEl, evt));
+                        renderCalendar(); 
+                    }
+                }
+            } catch (e) { 
+                console.error("Join load err", e); 
+                document.getElementById('participating-events-list').innerHTML = '<div class="text-sm text-red-400 p-4">読み込みエラー</div>';
+            }
+        }
+
+        function renderEventList(containerId, events, emptyMsg) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (events.length === 0) {
+                container.innerHTML = `<div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">${emptyMsg}</div>`;
+                return;
+            }
+            events.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+            events.forEach(evt => renderEventItem(container, evt));
+        }
+
+        function renderEventItem(container, evt) {
+            const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/80?text=No+Image';
+            const el = document.createElement('div');
+            el.className = 'flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-100 hover:border-brand-200 transition-colors shadow-sm cursor-pointer';
+            el.onclick = () => openEventDetail(evt);
+            el.innerHTML = `
+                <img src="${thumb}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 bg-slate-100">
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-slate-900 truncate text-sm mb-1">${evt.title}</h4>
+                    <p class="text-xs text-slate-500 flex items-center gap-2">
+                        <span><i class="fa-regular fa-calendar mr-1"></i>${evt.startDate}</span>
+                        <span class="truncate max-w-[120px]"><i class="fa-solid fa-location-dot mr-1"></i>${evt.locationName}</span>
+                    </p>
+                </div>
+                <i class="fa-solid fa-chevron-right text-slate-300 text-sm"></i>
+            `;
+            container.appendChild(el);
+        }
+
+        // --- View Switcher ---
+        window.switchView = (view) => {
+            const listEl = document.getElementById('participating-events-list');
+            const calEl = document.getElementById('participating-events-calendar');
+            const btnList = document.getElementById('btn-view-list');
+            const btnCal = document.getElementById('btn-view-calendar');
+
+            if (view === 'list') {
+                listEl.classList.remove('hidden');
+                calEl.classList.add('hidden');
+                btnList.classList.add('bg-white', 'shadow', 'text-brand-600');
+                btnList.classList.remove('text-slate-500');
+                btnCal.classList.remove('bg-white', 'shadow', 'text-brand-600');
+                btnCal.classList.add('text-slate-500');
+            } else {
+                listEl.classList.add('hidden');
+                calEl.classList.remove('hidden');
+                btnCal.classList.add('bg-white', 'shadow', 'text-brand-600');
+                btnCal.classList.remove('text-slate-500');
+                btnList.classList.remove('bg-white', 'shadow', 'text-brand-600');
+                btnList.classList.add('text-slate-500');
+                renderCalendar();
+            }
+        };
+
+        // --- Calendar Logic ---
+        window.changeMonth = (diff) => {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + diff);
+            renderCalendar();
+        };
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-days');
+            container.innerHTML = '';
+            
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            document.getElementById('calendar-month-year').textContent = `${year}年 ${month + 1}月`;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay(); 
+
+            for (let i = 0; i < startingDay; i++) {
+                container.appendChild(document.createElement('div'));
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                // イベントがあるかチェック
+                const hasEvent = myEvents.some(e => {
+                    return e.startDate === dateStr;
+                });
+                
+                const dayEl = document.createElement('div');
+                dayEl.className = `calendar-day text-sm ${hasEvent ? 'has-event' : ''}`;
+                dayEl.textContent = d;
+                dayEl.onclick = () => selectDate(dateStr, dayEl);
+                
+                container.appendChild(dayEl);
+            }
+            
+            document.getElementById('calendar-selected-events').classList.add('hidden');
+        }
+
+        function selectDate(dateStr, el) {
+            document.querySelectorAll('.calendar-day').forEach(e => e.classList.remove('selected'));
+            el.classList.add('selected');
+
+            const eventsOnDate = myEvents.filter(e => e.startDate === dateStr);
+            const list = document.getElementById('calendar-events-list');
+            list.innerHTML = '';
+
+            document.getElementById('selected-date-label').textContent = `${dateStr} のイベント`;
+            document.getElementById('calendar-selected-events').classList.remove('hidden');
+
+            if (eventsOnDate.length === 0) {
+                list.innerHTML = '<p class="text-xs text-slate-400 italic">予定はありません</p>';
+            } else {
+                eventsOnDate.forEach(evt => renderEventItem(list, evt));
+            }
+        }
+
+        // --- Detail Modal ---
+        window.openEventDetail = (evt) => {
+            const modal = document.getElementById('event-detail-modal');
+            
+            document.getElementById('modal-event-title').textContent = evt.title;
+            document.getElementById('modal-event-img').src = evt.thumbnailUrl || 'https://via.placeholder.com/400x200';
+            document.getElementById('modal-event-date').textContent = `${evt.startDate} ${evt.startTime} ~ ${evt.endTime}`;
+            document.getElementById('modal-event-time').textContent = evt.startTime;
+            document.getElementById('modal-event-location').textContent = evt.locationName;
+            document.getElementById('modal-event-organizer').textContent = evt.organizerName;
+            document.getElementById('modal-event-desc').textContent = evt.description || '';
+            
+            const tagsEl = document.getElementById('modal-event-tags');
+            tagsEl.innerHTML = '';
+            if (evt.tags) {
+                evt.tags.forEach(tag => {
+                    tagsEl.innerHTML += `<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs">#${tag}</span>`;
+                });
+            }
+
+            const startStr = evt.startDate.replace(/-/g, '') + 'T' + (evt.startTime ? evt.startTime.replace(/:/g, '') + '00' : '000000');
+            const endStr = (evt.endDate ? evt.endDate.replace(/-/g, '') : startStr.substring(0,8)) + 'T' + (evt.endTime ? evt.endTime.replace(/:/g, '') + '00' : '235900');
+            const gcalUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(evt.title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(evt.description || '')}&location=${encodeURIComponent(evt.locationName || '')}`;
+            
+            document.getElementById('modal-gcal-btn').href = gcalUrl;
+            modal.classList.remove('hidden');
+        };
+
+        window.closeDetailModal = () => {
+            document.getElementById('event-detail-modal').classList.add('hidden');
+        };
+
+        window.handleLogout = () => {
+            if (isAdminMock) localStorage.removeItem('isAdminMock');
+            signOut(auth);
+            window.location.href = 'login.html';
+        };
+    </script>
+</body>
+</html>
