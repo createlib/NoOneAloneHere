@@ -31,9 +31,10 @@
 
     <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
         <div class="text-center">
-            <img src="NOAH.png" alt="Icon" class="w-16 h-16 rounded-xl object-cover mx-auto mb-4 shadow-sm">
-            <!-- タイトル文字を画像に変更 -->
-            <img src="NOAH_typo.png" alt="NOAH" class="h-8 mx-auto mb-2 block">
+            <!-- アプリアイコン -->
+            <img src="NOAH.png" alt="Icon" class="w-16 h-16 rounded-xl object-cover mx-auto mb-6 shadow-sm">
+            <!-- タイポロゴ (横長表示用) -->
+            <img src="NOAH_typo.png" alt="NOAH" class="h-10 w-auto mx-auto mb-2 block object-contain">
             <p class="mt-2 text-sm text-slate-500">コミュニティにログイン</p>
         </div>
 
@@ -116,7 +117,7 @@
 
                 // 入力値がメールアドレスでない場合（@がない場合）、ユーザーIDとして検索
                 if (!userInput.includes('@')) {
-                    // ID検索 (Firestoreの公開データからEmailを取得)
+                    // ID検索
                     const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
                     const q = query(usersRef, where("userId", "==", userInput));
                     const querySnapshot = await getDocs(q);
@@ -125,9 +126,8 @@
                         const userData = querySnapshot.docs[0].data();
                         if (userData.email) {
                             email = userData.email;
-                            console.log("IDからメールアドレスを取得しました");
                         } else {
-                            throw new Error("このIDでのログインは現在サポートされていません（メールアドレスで試してください）。");
+                            throw new Error("このIDでのログインは現在サポートされていません。");
                         }
                     } else {
                         throw new Error("指定されたユーザーIDは見つかりません。");
@@ -137,7 +137,6 @@
                 // Emailとパスワードでログイン実行
                 await signInWithEmailAndPassword(auth, email, password);
                 showNotification('ログイン成功！', 'success');
-                // リダイレクトは onAuthStateChanged が処理します
             } catch (error) {
                 console.error(error);
                 let msg = 'ログインに失敗しました。';
