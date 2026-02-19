@@ -1,239 +1,265 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>特定商取引法に基づく表記 | BRAIN BRIDGE</title>
-    <!-- Google Fonts: Noto Sans JP -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background-color: #f3f4f6;
-            color: #1f2937;
-        }
-        .dt-label {
-            background-color: #f9fafb;
-        }
-        @media (min-width: 640px) {
-            .dt-label {
-                background-color: transparent;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>特定商取引法に基づく表記 | NOAH</title>
+  <link rel="icon" href="img/icon.png">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap');
+    
+    body {
+      font-family: 'Noto Serif JP', serif;
+      background-color: #f7f5f0;
+      color: #4a3b32;
+    }
+    
+    .bg-texture {
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+    }
+  </style>
 </head>
-<body class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+<body class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-texture">
 
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-10">
-            <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">特定商取引法に基づく表記</h1>
-            <p class="mt-4 text-sm text-gray-600">特定商取引法に基づき、以下のとおり表示いたします。</p>
-        </div>
-
-        <!-- Main Content Table -->
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
-            <dl>
-                <!-- Row 1 -->
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        販売事業者名
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        BRAIN BRIDGE 運営事務局<br>
-                        （個人事業主）
-                    </dd>
-                </div>
-
-                <!-- Row 2 -->
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        運営責任者
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        請求があった場合に遅滞なく開示いたします。
-                    </dd>
-                </div>
-
-                <!-- Row 3 -->
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        所在地
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        請求があった場合に遅滞なく開示いたします。
-                    </dd>
-                </div>
-
-                <!-- Row 4 -->
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        電話番号
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        電話での対応は行っておりません。<br>
-                        お問い合わせは下記メールアドレスまでお願いいたします。
-                    </dd>
-                </div>
-
-                <!-- Row 5 -->
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        メールアドレス
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <a href="mailto:6rain6ridge@gmail.com" class="text-blue-600 hover:text-blue-800 underline break-all">6rain6ridge@gmail.com</a>
-                    </dd>
-                </div>
-
-                <!-- Row 6 -->
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        販売URL
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <a href="https://brainbridge.pages.dev/" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline break-all">https://brainbridge.pages.dev/</a>
-                    </dd>
-                </div>
-
-                <!-- Row 7 -->
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        販売価格
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        各サービス・プランの価格は、販売ページに記載の金額（税込）とします。
-                    </dd>
-                </div>
-
-                <!-- Row 8: Plans -->
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-start pt-1">
-                        料金プラン
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <ul class="list-disc pl-5 space-y-1">
-                            <li><strong>月額プラン：</strong>9,900円（税込）</li>
-                            <li><strong>年額プラン：</strong>99,000円（税込）</li>
-                            <li class="pt-2"><strong>期間限定プラン：</strong>
-                                <ul class="list-none pl-0 pt-1 space-y-1 text-gray-700">
-                                    <li>・月額 3,300円（税込）</li>
-                                    <li>・年額 33,000円（税込）</li>
-                                </ul>
-                                <p class="text-xs text-red-600 mt-1">※期間限定プランは、予告なく変更または終了する場合があります。</p>
-                            </li>
-                        </ul>
-                    </dd>
-                </div>
-
-                <!-- Row 9 -->
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        商品代金以外の必要料金
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <ul class="list-disc pl-5 space-y-1">
-                            <li>インターネット接続に必要な通信費</li>
-                            <li>銀行振込等を選択した場合の振込手数料</li>
-                        </ul>
-                        <p class="text-xs text-gray-500 mt-2">※いずれもお客様のご負担となります。</p>
-                    </dd>
-                </div>
-
-                <!-- Row 10 -->
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        支払方法
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        クレジットカード決済<br>
-                        その他、販売ページに記載する決済方法
-                    </dd>
-                </div>
-
-                <!-- Row 11 -->
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        支払時期
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <div class="space-y-2">
-                            <p><strong>月額プラン：</strong>申込時および以降毎月、自動的に課金されます</p>
-                            <p><strong>年額プラン：</strong>申込時に一括でお支払いいただきます</p>
-                        </div>
-                    </dd>
-                </div>
-
-                <!-- Row 12 -->
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        サービス提供時期
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        決済完了後、直ちにオンラインコミュニティへの参加権限を付与し、サービス提供を開始します。
-                    </dd>
-                </div>
-
-                <!-- Row 13 -->
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-start pt-1">
-                        返品・キャンセル・<br class="hidden sm:inline">返金について
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        本サービスは、オンラインコミュニティおよびデジタルサービスという性質上、決済完了後のキャンセル・返金は原則としてお受けしておりません。<br><br>
-                        ただし、当方の責に帰すべき事由により、明らかにサービス提供が行われなかった場合には、個別に協議のうえ対応いたします。
-                    </dd>
-                </div>
-
-                <!-- Row 14 -->
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        解約について
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        <div class="space-y-2">
-                            <p><strong>月額プラン：</strong>次回更新日の前日までに解約手続きを行うことで、次回以降の課金は停止されます</p>
-                            <p><strong>年額プラン：</strong>契約期間途中での解約は可能ですが、残期間分の返金は行っておりません</p>
-                            <p class="pt-2">解約方法は、コミュニティ内の所定手続き、またはメールでの申請となります。</p>
-                        </div>
-                    </dd>
-                </div>
-
-                <!-- Row 15 -->
-                <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-gray-200">
-                    <dt class="text-sm font-bold text-gray-700 flex items-start pt-1">
-                        表現および<br class="hidden sm:inline">サービス内容に関する注意書き<br><span class="font-normal text-xs">（成果保証について）</span>
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        本サービスは、人と人とのつながりや交流の機会を提供することを目的としたコミュニティです。<br>
-                        コミュニティ参加による成果、収益、ビジネス上の成功、人間関係の構築等について、いかなる保証も行うものではありません。<br>
-                        得られる結果は、参加者個人の行動・判断・状況等により異なります。
-                    </dd>
-                </div>
-
-                <!-- Row 16 -->
-                <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt class="text-sm font-bold text-gray-700 flex items-center">
-                        動作環境
-                    </dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        本サービスは、インターネット接続が可能なPC・スマートフォン・タブレット端末からご利用いただけます。<br>
-                        推奨環境については、販売ページをご確認ください。
-                    </dd>
-                </div>
-
-            </dl>
-        </div>
-
-        <!-- Footer -->
-        <div class="mt-8 text-center text-sm text-gray-500">
-            &copy; BRAIN BRIDGE. All rights reserved.
-        </div>
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <a href="index.html" class="text-[#8b6a4f] font-serif tracking-[0.3em] text-xl mb-4 inline-block hover:opacity-70 transition-opacity">
+        NOAH
+      </a>
+      <h1 class="text-3xl font-bold text-[#3e2723] sm:text-4xl">特定商取引法に基づく表記</h1>
+      <p class="mt-4 text-sm text-[#5c4a3d]">特定商取引法に基づき、以下のとおり表示いたします。</p>
     </div>
+
+    <!-- Main Content Table -->
+    <div class="bg-[#fffdf9] shadow-md overflow-hidden sm:rounded-sm border border-[#e8dfd1]">
+      <dl>
+        <!-- 1. 販売事業者名 -->
+        <div class="bg-[#f7f5f0] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            販売事業者名
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            NOAH｜No One Alone, Here<br>
+            （代表者：柳町 一磨）
+          </dd>
+        </div>
+
+        <!-- 2. 運営責任者 -->
+        <div class="bg-[#fffdf9] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            運営責任者
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            柳町 一磨
+          </dd>
+        </div>
+
+        <!-- 3. 所在地 -->
+        <div class="bg-[#f7f5f0] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            所在地
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            〒450-0002<br>
+            愛知県名古屋市中村区名駅4丁目24番5号 第2森ビル401<br>
+            <span class="text-xs text-[#725b3f] mt-1 inline-block">※請求があった場合、遅滞なく開示いたします。</span>
+          </dd>
+        </div>
+
+        <!-- 4. 電話番号 -->
+        <div class="bg-[#fffdf9] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            電話番号
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            電話での対応は行っておりません。<br>
+            お問い合わせは下記メールアドレスまでお願いいたします。
+          </dd>
+        </div>
+
+        <!-- 5. メールアドレス -->
+        <div class="bg-[#f7f5f0] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            メールアドレス
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            <a href="mailto:noonealone.here369@gmail.com" class="text-[#8b6a4f] hover:text-[#725b3f] underline break-all transition-colors">noonealone.here369@gmail.com</a>
+          </dd>
+        </div>
+
+        <!-- 6. お問い合わせ対応時間 -->
+        <div class="bg-[#fffdf9] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            お問い合わせ対応時間
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            10:00〜18:00（平日のみ）
+          </dd>
+        </div>
+
+        <!-- 7. 販売URL -->
+        <div class="bg-[#f7f5f0] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            販売URL
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            <a href="index.html" class="text-[#8b6a4f] hover:text-[#725b3f] underline break-all transition-colors">NOAH 公式サイト</a>
+          </dd>
+        </div>
+
+        <!-- 8. 販売するサービスの内容 -->
+        <div class="bg-[#fffdf9] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-start pt-1">
+            販売するサービスの内容
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            <p class="mb-4">本サービスは、紹介制のクローズドオンラインコミュニティおよび各種会員向け支援サービスです。</p>
+            <p class="mb-2 font-bold text-[#4a3b32]">主な提供内容は以下の通りです。</p>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+              <li>会員限定プラットフォーム（メディア・メンバーDB）への参加権</li>
+              <li>コミュニティ内でのプロフィールマッチング機能の利用</li>
+              <li>会員同士のイベント共有、宣伝、参加権</li>
+              <li>起業・企業支援ツールおよびサポートの提供</li>
+              <li>企業PR動画やライブ配信等の広告制作サポート</li>
+              <li>連携する地域・サービスの優待利用</li>
+            </ul>
+            <p class="text-xs text-[#725b3f]">
+              ※提供内容はご契約の会員ランク（役割）によって異なります。<br>
+              ※提供内容は、運営上の判断により予告なく変更・追加される場合があります。
+            </p>
+          </dd>
+        </div>
+
+        <!-- 9. 販売価格 -->
+        <div class="bg-[#f7f5f0] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-start pt-1">
+            販売価格
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            <div class="space-y-3 mb-4">
+              <p><strong>ARRIVAL（たどり着いた人）:</strong> 無料</p>
+              <p><strong>SETTLER（暮らす人）:</strong> 月額 3,300円（税込）</p>
+              <p><strong>BUILDER（創る人）:</strong> 月額 6,600円（税込）※リリース予定</p>
+              <p><strong>GUARDIAN（守る人）:</strong> 月額 9,900円（税込）※リリース予定</p>
+              <p><strong>COVENANT（託される人）:</strong> 年額 69,000円（税込）</p>
+            </div>
+            
+            <div class="bg-[#fffdf9] p-4 rounded-sm border border-[#d4af37] relative">
+              <div class="absolute -top-3 left-4 bg-[#d4af37] text-[#2a1a17] px-2 py-0.5 text-xs font-bold tracking-widest">期間限定</div>
+              <p class="mt-2 mb-1"><span class="font-bold text-[#4a3b32]">COVENANT（託される人）1年目特別価格</span></p>
+              <p class="text-lg font-serif text-[#b8860b] mb-1">36,900円（税込）</p>
+              <p class="text-xs text-[#725b3f]">※2年目の更新時からは通常価格（年額69,000円）へ自動移行します。</p>
+            </div>
+          </dd>
+        </div>
+
+        <!-- 10. 商品代金以外の必要料金 -->
+        <div class="bg-[#fffdf9] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            商品代金以外の必要料金
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            <ul class="list-disc pl-5 space-y-1">
+              <li>インターネット接続にかかる通信料金</li>
+              <li>オフラインイベント等への参加時の実費（交通費・宿泊費・飲食費など）</li>
+            </ul>
+          </dd>
+        </div>
+
+        <!-- 11. 支払方法 -->
+        <div class="bg-[#f7f5f0] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            支払方法
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            クレジットカード決済（Stripe）<br>
+            その他、販売ページに記載する決済方法
+          </dd>
+        </div>
+
+        <!-- 12. 代金の支払い時期 -->
+        <div class="bg-[#fffdf9] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-start pt-1">
+            代金の支払い時期
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            <p class="mb-2"><strong>初回決済：</strong>申込み時に即時決済</p>
+            <p class="mb-2"><strong>2回目以降（月額プラン）：</strong>初回決済日を起算日として、毎月同日に自動課金</p>
+            <p class="mb-2"><strong>2回目以降（年額プラン）：</strong>初回決済日を起算日として、毎年同日に自動課金</p>
+            <p class="text-xs text-[#725b3f]">（例：1月10日に月額プラン入会 → 以降、毎月10日に決済）</p>
+          </dd>
+        </div>
+
+        <!-- 13. サービス提供時期 -->
+        <div class="bg-[#f7f5f0] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            サービス提供時期
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            決済完了後、直ちにコミュニティへの参加権限および各種機能の利用権限を付与し、サービス提供を開始します。
+          </dd>
+        </div>
+
+        <!-- 14. 中途解約・退会について -->
+        <div class="bg-[#fffdf9] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-start pt-1">
+            中途解約・退会について
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            <p class="mb-4">解約はいつでも可能です。<br>ただし、決済後の返金はいかなる理由があっても行いません。<br>年額プラン（COVENANT）をご利用中の場合、期間途中での解約および日割り返金はできません。</p>
+            
+            <p class="font-bold text-[#4a3b32] mb-1">【解約方法】</p>
+            <p class="mb-1">次回決済日の前日までに、所定の退会・解約手続きを行うことで解約可能です。</p>
+            <p class="text-xs text-[#725b3f]">※決済日当日の申請は、翌月（または翌年）の解約扱いとなる場合があります。</p>
+          </dd>
+        </div>
+
+        <!-- 15. クーリング・オフについて -->
+        <div class="bg-[#f7f5f0] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            クーリング・オフについて
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            本サービスはインターネットを通じた通信販売に該当するため、特定商取引法上のクーリング・オフ制度の適用対象外となります。
+          </dd>
+        </div>
+
+        <!-- 16. 免責事項 -->
+        <div class="bg-[#fffdf9] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 border-b border-[#e8dfd1]">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            免責事項
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            本サービスは、理想のパートナーとのマッチングや事業の成功、収益の向上を必ずしも保証するものではありません。<br><br>
+            提供される情報やコミュニティ内での交流、各種支援の活用は、すべて会員ご自身の判断と責任で行っていただきます。<br><br>
+            本サービスの利用、または会員間のトラブルにより生じたいかなる損害についても、当運営は責任を負いかねます。
+          </dd>
+        </div>
+
+        <!-- 17. 動作環境 -->
+        <div class="bg-[#f7f5f0] px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+          <dt class="text-sm font-bold text-[#3e2723] flex items-center">
+            動作環境
+          </dt>
+          <dd class="mt-1 text-sm text-[#5c4a3d] sm:mt-0 sm:col-span-2">
+            本サービスは、インターネット接続が可能なPC・スマートフォン・タブレット端末からご利用いただけます。<br>
+            最新のOSおよびブラウザ（Google Chrome, Safari, Edge等の最新版）でのご利用を推奨いたします。
+          </dd>
+        </div>
+
+      </dl>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-8 text-center text-sm text-[#725b3f]">
+      &copy; <script>document.write(new Date().getFullYear())</script> NOAH Community. All rights reserved.
+    </div>
+  </div>
 
 </body>
 </html>
