@@ -48,39 +48,32 @@
       <i data-lucide="ship" width="800" height="800" stroke-width="0.5" class="text-[#3e2723]"></i>
     </div>
     
-    <div class="z-10 flex flex-col items-center">
-      <!-- Icon with Fallback -->
-      <div class="mb-12 border-ornament rounded-full p-4 bg-[#f7f5f0] shadow-xl">
-        <img 
-          src="./img/icon.png" 
-          alt="NOAH Icon" 
-          class="w-32 h-32 md:w-40 md:h-40 object-contain rounded-full"
-          onerror="this.style.display='none'; document.getElementById('fallback-icon').style.display='flex';"
-        />
-        <div id="fallback-icon" style="display: none;" class="items-center justify-center w-32 h-32 md:w-40 md:h-40">
-          <i data-lucide="anchor" class="text-[#5c4a3d] w-20 h-20" stroke-width="1.5"></i>
-        </div>
-      </div>
-
+    <div class="z-10 flex flex-col items-center w-full max-w-5xl">
+      
       <!-- Typo with Fallback -->
-      <div class="mb-8">
+      <div class="mb-4 w-full flex justify-center">
         <img 
           src="./img/typo.png" 
           alt="NOAH Logo" 
-          class="max-w-full w-[400px] h-auto object-contain"
+          class="w-[90%] md:w-[700px] h-auto object-contain drop-shadow-xl transition-transform hover:scale-[1.02] duration-700"
           onerror="this.style.display='none'; document.getElementById('fallback-typo').style.display='block';"
         />
         <div id="fallback-typo" style="display: none;" class="text-center font-serif tracking-[0.3em] text-[#3e2723]">
-          <h1 class="text-6xl md:text-8xl font-bold mb-2">NOAH</h1>
-          <p class="text-sm md:text-base tracking-widest uppercase">No One Alone, Here</p>
+          <h1 class="text-6xl md:text-9xl font-bold mb-2">NOAH</h1>
         </div>
       </div>
 
-      <div class="text-center mt-6 space-y-4">
-        <p class="text-xl md:text-2xl text-[#5c4a3d] tracking-widest font-bold">
+      <!-- Subtitle -->
+      <h2 class="text-xs md:text-lg text-[#725b3f] font-serif tracking-[0.4em] md:tracking-[0.6em] uppercase mb-16 text-center border-b border-[#c8b9a6] pb-4 px-8 md:px-16">
+        No One Alone, Here
+      </h2>
+
+      <!-- Catch Copy -->
+      <div class="text-center space-y-6">
+        <p class="text-xl md:text-3xl text-[#4a3b32] tracking-widest font-bold leading-relaxed drop-shadow-sm">
           ここでは、誰も一人にならない。
         </p>
-        <p class="text-sm md:text-base text-[#8b6a4f] max-w-lg mx-auto leading-loose border-t border-[#c8b9a6] pt-5 mt-5">
+        <p class="text-sm md:text-base text-[#5c4a3d] max-w-2xl mx-auto leading-loose pt-4">
           信頼の連鎖が、人生の最高のパートナーを引き寄せる。<br />
           共鳴と安心でつながる、完全紹介制のクローズドコミュニティ。
         </p>
