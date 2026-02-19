@@ -1,618 +1,401 @@
 <!DOCTYPE html>
-<html lang="ja" class="scroll-smooth">
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRAIN BRIDGE | デジタルとリアルを懸け橋にするコミュニティ</title>
-    <meta name="description" content="「はじめまして」の距離感を、0秒で飛び越える。オンラインで深く知り、オフラインで熱く出会う。BRAIN BRIDGEはデジタルとリアルを懸け橋にするコミュニティです。">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOAH</title>
+  <link rel="icon" href="img/icon.png">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap');
     
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <!-- 英語フォント追加（数字や見出し用） -->
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    body {
+      font-family: 'Noto Serif JP', serif;
+      background-color: #f7f5f0;
+      color: #4a3b32;
+    }
     
-    <!-- Icons (Lucide) -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    .bg-texture {
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+    }
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Noto Sans JP"', 'sans-serif'],
-                        oswald: ['"Oswald"', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            dark: '#0F172A', // Deep Navy
-                            primary: '#1E293B', // Slate
-                            accent: '#D97706', // Warm Amber
-                            gold: '#F59E0B', // Bright Gold
-                            light: '#F8FAFC', // Off White
-                        }
-                    },
-                    backgroundImage: {
-                        'hero-pattern': "linear-gradient(to right bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.8)), url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')",
-                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        /* カスタムスタイル */
-        .fade-in-up {
-            animation: fadeInUp 1s ease-out forwards;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        
-        .delay-100 { animation-delay: 0.1s; }
-        .delay-200 { animation-delay: 0.2s; }
-        .delay-300 { animation-delay: 0.3s; }
-
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* ロゴの調整クラス */
-        .logo-white-filter {
-            filter: brightness(0) invert(1); /* 真っ白にする */
-        }
-        
-        /* グラデーションテキスト */
-        .text-gradient {
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-image: linear-gradient(to right, #F59E0B, #FCD34D);
-        }
-
-        /* Benefitsカードの装飾 */
-        .benefit-card-number {
-            -webkit-text-stroke: 1px rgba(15, 23, 42, 0.05);
-            color: transparent;
-        }
-        .group:hover .benefit-card-number {
-            -webkit-text-stroke: 1px rgba(217, 119, 6, 0.1);
-            color: rgba(217, 119, 6, 0.02);
-        }
-    </style>
+    .border-ornament {
+      border: 1px solid #c8b9a6;
+      padding: 4px;
+      position: relative;
+    }
+    
+    .border-ornament::before {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px; right: 2px; bottom: 2px;
+      border: 1px solid #8b6a4f;
+      pointer-events: none;
+    }
+  </style>
 </head>
-<body class="font-sans text-brand-primary bg-brand-light antialiased selection:bg-brand-accent selection:text-white">
+<body class="min-h-screen bg-texture overflow-x-hidden">
 
-    <!-- Header -->
-    <header class="fixed w-full z-50 transition-all duration-300 bg-brand-dark/90 backdrop-blur-md shadow-lg" id="header">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <!-- ロゴエリア: 画像とテキストを並べて表示 -->
-            <a href="#" class="flex items-center gap-3 group">
-                <!-- ロゴ画像 -->
-                <img src="透過_BB_モノ.png" alt="BRAIN BRIDGE Logo" class="h-8 md:h-10 w-auto object-contain logo-white-filter transition-transform group-hover:scale-105" id="header-logo-img">
-                <!-- ロゴテキスト: 常時表示 -->
-                <span class="text-white font-bold text-lg md:text-xl tracking-widest font-oswald">BRAIN BRIDGE</span>
-            </a>
-            
-            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-                <a href="#concept" class="hover:text-white transition-colors">Concept</a>
-                <a href="#benefits" class="hover:text-white transition-colors">Benefits</a>
-                <a href="#engines" class="hover:text-white transition-colors">Engines</a>
-                <a href="#story" class="hover:text-white transition-colors">Story</a>
-                <a href="#price" class="hover:text-white transition-colors">Price</a>
-                <!-- リンク変更: #contact -> login.html -->
-                <a href="login.html" class="bg-brand-accent text-white px-5 py-2.5 rounded-full hover:bg-yellow-600 transition-all shadow-lg hover:shadow-yellow-500/30 transform hover:-translate-y-0.5">
-                    参加する
-                </a>
-            </nav>
-
-            <!-- Mobile Menu Button -->
-            <button class="md:hidden text-white p-2" onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
-                <i data-lucide="menu" class="w-6 h-6"></i>
-            </button>
+  <!-- --- HERO SECTION --- -->
+  <section class="relative min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#f7f5f0] to-[#eae5d8]">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-10 flex items-center justify-center">
+      <i data-lucide="ship" width="800" height="800" stroke-width="0.5" class="text-[#3e2723]"></i>
+    </div>
+    
+    <div class="z-10 flex flex-col items-center">
+      <!-- Icon with Fallback -->
+      <div class="mb-12 border-ornament rounded-full p-4 bg-[#f7f5f0] shadow-xl">
+        <img 
+          src="./img/icon.png" 
+          alt="NOAH Icon" 
+          class="w-32 h-32 md:w-40 md:h-40 object-contain rounded-full"
+          onerror="this.style.display='none'; document.getElementById('fallback-icon').style.display='flex';"
+        />
+        <div id="fallback-icon" style="display: none;" class="items-center justify-center w-32 h-32 md:w-40 md:h-40">
+          <i data-lucide="anchor" class="text-[#5c4a3d] w-20 h-20" stroke-width="1.5"></i>
         </div>
-        
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-brand-dark border-t border-gray-700">
-            <div class="px-6 py-4 flex flex-col gap-4 text-gray-300">
-                <a href="#concept" class="hover:text-white">Concept</a>
-                <a href="#benefits" class="hover:text-white">Benefits</a>
-                <a href="#engines" class="hover:text-white">Engines</a>
-                <a href="#story" class="hover:text-white">Story</a>
-                <a href="#price" class="hover:text-white">Price</a>
-                <!-- リンク変更: #contact -> login.html -->
-                <a href="login.html" class="text-brand-accent font-bold">参加する</a>
-            </div>
-        </div>
-    </header>
+      </div>
 
-    <!-- Hero Section -->
-    <section class="relative min-h-screen flex items-center justify-center bg-hero-pattern bg-cover bg-center bg-fixed bg-no-repeat pt-20">
-        <div class="container mx-auto px-6 text-center text-white relative z-10">
-            <div class="mb-6 fade-in-up">
-                <span class="inline-block py-1 px-3 border border-brand-accent/50 rounded-full bg-brand-accent/10 text-brand-accent text-sm tracking-wider mb-4 backdrop-blur-sm">
-                    DIGITAL × REAL COMMUNITY
-                </span>
-            </div>
-            
-            <!-- タイトル: 文節での改行を防ぎつつ、指定箇所で確実に改行 -->
-            <h1 class="text-3xl md:text-5xl lg:text-7xl font-black leading-tight mb-8 fade-in-up delay-100">
-                <span class="inline-block">「はじめまして」の距離感を、</span><br>
-                <span class="text-gradient inline-block">0秒で飛び越える。</span>
-            </h1>
-            
-            <p class="text-lg md:text-2xl font-light mb-8 opacity-90 fade-in-up delay-200">
-                <span class="inline-block">オンラインで深く知り、</span>
-                <span class="inline-block md:inline">オフラインで熱く出会う。</span>
+      <!-- Typo with Fallback -->
+      <div class="mb-8">
+        <img 
+          src="./img/typo.png" 
+          alt="NOAH Logo" 
+          class="max-w-full w-[400px] h-auto object-contain"
+          onerror="this.style.display='none'; document.getElementById('fallback-typo').style.display='block';"
+        />
+        <div id="fallback-typo" style="display: none;" class="text-center font-serif tracking-[0.3em] text-[#3e2723]">
+          <h1 class="text-6xl md:text-8xl font-bold mb-2">NOAH</h1>
+          <p class="text-sm md:text-base tracking-widest uppercase">No One Alone, Here</p>
+        </div>
+      </div>
+
+      <div class="text-center mt-6 space-y-4">
+        <p class="text-xl md:text-2xl text-[#5c4a3d] tracking-widest font-bold">
+          ここでは、誰も一人にならない。
+        </p>
+        <p class="text-sm md:text-base text-[#8b6a4f] max-w-lg mx-auto leading-loose border-t border-[#c8b9a6] pt-5 mt-5">
+          信頼の連鎖が、人生の最高のパートナーを引き寄せる。<br />
+          共鳴と安心でつながる、完全紹介制のクローズドコミュニティ。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- --- CONCEPT SECTION --- -->
+  <section class="py-24 px-6 max-w-4xl mx-auto">
+    <div class="flex flex-col items-center justify-center text-center mb-16">
+      <i data-lucide="compass" class="w-8 h-8 text-[#8b6a4f] mb-4" stroke-width="1.5"></i>
+      <h2 class="text-3xl md:text-4xl font-serif text-[#3e2723] mb-2">Concept</h2>
+      <p class="text-[#725b3f] tracking-widest text-sm uppercase">理念</p>
+      <div class="w-16 h-[1px] bg-[#8b6a4f] mt-6"></div>
+    </div>
+    
+    <div class="bg-[#fffdf9] p-8 md:p-12 shadow-md border border-[#e8dfd1] relative">
+      <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-[#8b6a4f] -translate-x-2 -translate-y-2"></div>
+      <div class="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-[#8b6a4f] translate-x-2 translate-y-2"></div>
+      
+      <div class="space-y-6 text-base md:text-lg leading-loose text-center text-[#4a3b32]">
+        <p>
+          このコミュニティは<strong class="text-[#3e2723]">”誰も取り残さない”</strong>システムを作るために、<br class="hidden md:block"/>
+          メンバーがコミュニティに対して何を提供できるかを考え、<br class="hidden md:block"/>
+          コミュニティもメンバーに何ができるかを考え、お互いに成長する場です。
+        </p>
+        <p>
+          普段のつながりの中で何となく繋がっている感覚を、<br class="hidden md:block"/>
+          一つのコミュニティとして同じ枠の中に居れる安心感として提供します。
+        </p>
+        <p>
+          各々がその人の背景や考え方などを深く知ることで、<br class="hidden md:block"/>
+          人生の最高のパートナーを本来の何倍も見つけやすくするためのコミュニティです。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- --- MESSAGE SECTION --- -->
+  <section class="py-24 px-6 bg-[#3e2723] text-[#f7f5f0] bg-texture relative">
+    <div class="absolute inset-0 opacity-5 bg-[url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'3\'/%3E%3Ccircle cx=\'13\' cy=\'13\' r=\'3\'/%3E%3C/g%3E%3C/svg%3E')]"></div>
+    
+    <div class="max-w-3xl mx-auto relative z-10">
+      <div class="flex items-center justify-center mb-10">
+        <i data-lucide="feather" class="w-10 h-10 text-[#c8b9a6]" stroke-width="1"></i>
+      </div>
+      <h2 class="text-2xl md:text-3xl text-center mb-12 text-[#e8dfd1] tracking-widest">
+        創造主からのメッセージ
+      </h2>
+      
+      <div class="space-y-8 text-sm md:text-base leading-relaxed tracking-wide font-light text-[#dcd4c6]">
+        <p>
+          私が住んでいる国では地域の格差や情報の格差によって苦しむ人が多く存在しています。
+          少しでもその格差をなくし、お互いが本心から協力できるような世界を作りたいと考えました。
+          そのためにはお互いがお互いの考え方や行動理念を知っていることが重要になってきます。
+        </p>
+        <p>
+          かつて私は、自分の人生に色がついていないように感じ、悩んでいた時期があります。しかし、人と膝を突き合わせ、相手の目を見て、その人の人生経験や痛みを親身になって聞いたとき、世界が変わりました。
+        </p>
+        <p>
+          同じ時代を生きていても、誰一人として同じ経験をした人はいない。その「違い」に触れ、共鳴した瞬間、「ああ、自分は自分でいいんだ」と、自分自身の輪郭がハッキリと見えたのです。
+        </p>
+        <div class="text-center py-6 border-y border-[#5c4a3d] my-8 text-[#f7f5f0] text-lg font-medium italic">
+          相手を知っているから、安心して踏み込める。<br />
+          安心して話せるから、自分の色に気づける。
+        </div>
+        <p class="text-center">
+          テクノロジーの力を使って、もっとも人間らしい温かさを生み出す場所を、<br class="hidden md:block"/>
+          あなたと作りたいと思っています。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- --- FEATURES SECTION --- -->
+  <section class="py-24 px-6 max-w-6xl mx-auto">
+    <div class="flex flex-col items-center justify-center text-center mb-16">
+      <i data-lucide="book-open" class="w-8 h-8 text-[#8b6a4f] mb-4" stroke-width="1.5"></i>
+      <h2 class="text-3xl md:text-4xl font-serif text-[#3e2723] mb-2">Features</h2>
+      <p class="text-[#725b3f] tracking-widest text-sm uppercase">コミュニティの機能</p>
+      <div class="w-16 h-[1px] bg-[#8b6a4f] mt-6"></div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      
+      <!-- Feature 1 -->
+      <div class="bg-[#fffdf9] p-8 border border-[#e8dfd1] hover:border-[#8b6a4f] transition-colors group flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-[#f7f5f0] border border-[#e8dfd1] flex items-center justify-center mb-6 group-hover:bg-[#8b6a4f] group-hover:text-white transition-colors text-[#5c4a3d]">
+          <i data-lucide="users" class="w-7 h-7" stroke-width="1.5"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-4 text-[#3e2723]">自社メディア運営 & メンバーDB</h3>
+        <p class="text-[#5c4a3d] text-sm leading-relaxed">独自のプラットフォームの中でメディアの運営、コミュニティメンバーの管理を行っています。</p>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="bg-[#fffdf9] p-8 border border-[#e8dfd1] hover:border-[#8b6a4f] transition-colors group flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-[#f7f5f0] border border-[#e8dfd1] flex items-center justify-center mb-6 group-hover:bg-[#8b6a4f] group-hover:text-white transition-colors text-[#5c4a3d]">
+          <i data-lucide="hourglass" class="w-7 h-7" stroke-width="1.5"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-4 text-[#3e2723]">イベント共有・宣伝</h3>
+        <p class="text-[#5c4a3d] text-sm leading-relaxed">コミュニティメンバー同士が交流できる場を宣伝したり参加したりできます。</p>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="bg-[#fffdf9] p-8 border border-[#e8dfd1] hover:border-[#8b6a4f] transition-colors group flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-[#f7f5f0] border border-[#e8dfd1] flex items-center justify-center mb-6 group-hover:bg-[#8b6a4f] group-hover:text-white transition-colors text-[#5c4a3d]">
+          <i data-lucide="user-check" class="w-7 h-7" stroke-width="1.5"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-4 text-[#3e2723]">プロフィールマッチング</h3>
+        <p class="text-[#5c4a3d] text-sm leading-relaxed">各種プロフィールの内容を検索し、相性がいい人やイベント、場所をマッチさせることができます。</p>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="bg-[#fffdf9] p-8 border border-[#e8dfd1] hover:border-[#8b6a4f] transition-colors group flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-[#f7f5f0] border border-[#e8dfd1] flex items-center justify-center mb-6 group-hover:bg-[#8b6a4f] group-hover:text-white transition-colors text-[#5c4a3d]">
+          <i data-lucide="building" class="w-7 h-7" stroke-width="1.5"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-4 text-[#3e2723]">起業・企業支援</h3>
+        <p class="text-[#5c4a3d] text-sm leading-relaxed">これから起業したいという人のための支援やツールの提供などをします。</p>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="bg-[#fffdf9] p-8 border border-[#e8dfd1] hover:border-[#8b6a4f] transition-colors group flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-[#f7f5f0] border border-[#e8dfd1] flex items-center justify-center mb-6 group-hover:bg-[#8b6a4f] group-hover:text-white transition-colors text-[#5c4a3d]">
+          <i data-lucide="video" class="w-7 h-7" stroke-width="1.5"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-4 text-[#3e2723]">広告・PRサポート</h3>
+        <p class="text-[#5c4a3d] text-sm leading-relaxed">資産(asset)として企業PR動画やライブ配信、写真などに関する製作サポートをします。</p>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="bg-[#fffdf9] p-8 border border-[#e8dfd1] hover:border-[#8b6a4f] transition-colors group flex flex-col items-center text-center">
+        <div class="w-16 h-16 rounded-full bg-[#f7f5f0] border border-[#e8dfd1] flex items-center justify-center mb-6 group-hover:bg-[#8b6a4f] group-hover:text-white transition-colors text-[#5c4a3d]">
+          <i data-lucide="handshake" class="w-7 h-7" stroke-width="1.5"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-4 text-[#3e2723]">地域・他コミュニティ連携</h3>
+        <p class="text-[#5c4a3d] text-sm leading-relaxed">コミュニティが連携する地域やサービスを優先的、またはお得に利用することができます。</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- --- PRICING & ROLES SECTION --- -->
+  <section class="py-24 px-6 bg-[#eae5d8] border-t border-[#dcd4c6]">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col items-center justify-center text-center mb-16">
+        <i data-lucide="ship" class="w-8 h-8 text-[#8b6a4f] mb-4" stroke-width="1.5"></i>
+        <h2 class="text-3xl md:text-4xl font-serif text-[#3e2723] mb-2">Roles & Voyages</h2>
+        <p class="text-[#725b3f] tracking-widest text-sm uppercase">役割と航海</p>
+        <div class="w-16 h-[1px] bg-[#8b6a4f] mt-6"></div>
+      </div>
+      
+      <div class="text-center mb-16 max-w-2xl mx-auto">
+        <p class="text-lg text-[#3e2723] leading-loose italic mb-4">
+          世界が揺らぐ中で<br />
+          ただ乗り込む者、<br />
+          船を動かす者、<br />
+          守る者、<br />
+          次の世界を託される者。
+        </p>
+        <p class="text-sm text-[#725b3f]">
+          ※各役割は「上級会員」という概念ではなく、“覚悟のある人”にしか名乗れない名前として定義されています。
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- ARRIVAL -->
+        <div class="bg-[#fffdf9] p-8 border border-[#c8b9a6] flex flex-col relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-[#8b6a4f] text-white text-xs px-3 py-1 font-bold">無料</div>
+          <div class="flex items-baseline gap-2 mb-2">
+            <h3 class="text-2xl font-bold text-[#3e2723]">ARRIVAL</h3>
+            <span class="text-sm text-[#8b6a4f]">たどり着いた人</span>
+          </div>
+          <div class="text-3xl font-serif text-[#3e2723] mb-6">¥0 <span class="text-sm text-[#725b3f]">/ 月</span></div>
+          <div class="mb-6 flex-grow">
+            <p class="font-bold text-[#4a3b32] mb-2 border-b border-[#e8dfd1] pb-2">「この箱舟に、たどり着いた。」</p>
+            <p class="text-sm text-[#5c4a3d] leading-relaxed mb-4">
+              まだ役割は持たないが、世界の一部になっている。<br />
+              箱舟の存在を知り、この航海に身を委ねることを選んだ人。
             </p>
-
-            <div class="max-w-3xl mx-auto mb-12 fade-in-up delay-300">
-                <p class="text-gray-300 leading-relaxed text-sm md:text-base">
-                    会った瞬間から、まるで旧知の仲のように。<br>
-                    人となりを知っているからこそ生まれる、本質的なつながりを。<br>
-                    デジタルとリアルを懸け橋にするコミュニティ『BRAIN BRIDGE』
-                </p>
-            </div>
-
-            <div class="flex flex-col sm:flex-row justify-center gap-4 fade-in-up delay-300">
-                <!-- 文言変更: 初期メンバーに応募する -> メンバー応募 -->
-                <!-- リンク変更: #price -> login.html -->
-                <a href="login.html" class="bg-brand-accent text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-yellow-600 transition-all shadow-xl hover:shadow-yellow-500/40 transform hover:-translate-y-1">
-                    メンバー応募
-                </a>
-                <a href="#concept" class="bg-white/10 backdrop-blur-sm border border-white/30 text-white px-8 py-4 rounded-full font-medium hover:bg-white/20 transition-all">
-                    詳しく見る
-                </a>
-            </div>
+            <ul class="text-sm text-[#5c4a3d] space-y-2">
+              <li class="flex items-start"><i data-lucide="compass" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>「軽さ」ではなく“選択した人”という尊厳</li>
+            </ul>
+          </div>
+          <button class="w-full py-3 bg-[#3e2723] text-[#f7f5f0] hover:bg-[#2a1a17] transition-colors border border-[#3e2723]">
+            乗船する (無料登録)
+          </button>
         </div>
 
-        <!-- Scroll Down Indicator -->
-        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce text-white/50">
-            <i data-lucide="chevron-down" class="w-8 h-8"></i>
+        <!-- SETTLER -->
+        <div class="bg-[#fffdf9] p-8 border-2 border-[#8b6a4f] flex flex-col relative shadow-lg">
+          <div class="flex items-baseline gap-2 mb-2">
+            <h3 class="text-2xl font-bold text-[#3e2723]">SETTLER</h3>
+            <span class="text-sm text-[#8b6a4f]">暮らす人</span>
+          </div>
+          <div class="text-3xl font-serif text-[#3e2723] mb-6">¥3,300 <span class="text-sm text-[#725b3f]">/ 月</span></div>
+          <div class="mb-6 flex-grow">
+            <p class="font-bold text-[#4a3b32] mb-2 border-b border-[#e8dfd1] pb-2">「ここで暮らすことを選んだ。」</p>
+            <p class="text-sm text-[#5c4a3d] leading-relaxed mb-4">
+              ただの乗客から一歩進んだ存在。<br />
+              箱舟の中でただ生き延びるだけでなく、生活を営み始めた人。
+            </p>
+            <ul class="text-sm text-[#5c4a3d] space-y-2">
+              <li class="flex items-start"><i data-lucide="compass" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>コミュニティに発言する</li>
+              <li class="flex items-start"><i data-lucide="compass" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>場の空気をつくる</li>
+              <li class="flex items-start"><i data-lucide="compass" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>文化の芽になる</li>
+            </ul>
+          </div>
+          <a href="https://buy.stripe.com/eVq4gz28G87Bb0ldXY7bW08" target="_blank" rel="noopener noreferrer" class="block text-center w-full py-3 bg-[#8b6a4f] text-white hover:bg-[#725b3f] transition-colors cursor-pointer">
+            居場所を作る (加入する)
+          </a>
         </div>
-    </section>
+      </div>
 
-    <!-- Mission / Introduction Section (Updated) -->
-    <!-- 配色変更: ヒーローとの色被りを避けるため、白背景に変更 -->
-    <section class="py-24 bg-white text-brand-dark relative overflow-hidden">
-        <!-- Background Accent -->
-        <div class="absolute top-0 right-0 w-full h-full opacity-40 pointer-events-none">
-             <!-- 白背景なので薄いオレンジ/イエロー系のブラーに変更 -->
-            <div class="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-amber-100 rounded-full blur-[100px]"></div>
-            <div class="absolute bottom-[-10%] left-[-10%] w-[300px] h-[300px] bg-blue-50 rounded-full blur-[80px]"></div>
-        </div>
-
-        <div class="container mx-auto px-6 relative z-10 text-center">
-            <div class="max-w-5xl mx-auto">
-                <h2 class="text-2xl md:text-4xl font-bold mb-10 leading-relaxed">
-                    <!-- 改行位置の調整: inline-blockで単語のまとまりを作成 -->
-                    <span class="inline-block"><span class="text-brand-accent">信頼を福利に</span>、</span>
-                    <span class="inline-block"><span class="text-brand-accent">想像を創造する</span>コミュニティ。</span><br class="hidden lg:block">
-                    <span class="inline-block mt-2 md:mt-0">それが <span class="font-oswald tracking-wider text-4xl md:text-5xl ml-2 text-brand-dark">BRAIN BRIDGE</span>。</span>
-                </h2>
-                
-                <div class="space-y-8 text-gray-600 leading-relaxed text-sm md:text-base font-light">
-                    <p class="text-lg font-medium text-brand-primary">
-                        BRAIN BRIDGEは、メンバー同士がスキルやアイデアを持ち寄り、<br class="hidden md:block">
-                        協力し合うことで成長と挑戦を実現するコミュニティです。
-                    </p>
-                    <p>
-                        ただの交流ではなく、事業を立ち上げたり、イベントを企画したり、<br class="hidden md:block">
-                        助け合いながら実際の成果を生み出す場所。
-                    </p>
-                    
-                    <!-- 区切り線の色調整 -->
-                    <div class="py-6 border-y border-gray-200 my-8">
-                        <p class="text-xl md:text-3xl font-bold text-brand-dark mb-4">
-                            “信頼が複利で回り、福利を作り出す”
-                        </p>
-                        <p class="text-xl md:text-3xl font-bold text-brand-dark">
-                            “想像を創造する”
-                        </p>
-                    </div>
-
-                    <p>
-                        を根本に持つメンバーが集まる環境。<br>
-                        信頼の輪が広がるほど、あなたの可能性も大きく育ちます。
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Concept Section (Updated Color) -->
-    <!-- 配色変更: Mission(白)との境界を作るため、薄いグレーに変更 -->
-    <section id="concept" class="py-24 bg-gray-50">
-        <div class="container mx-auto px-6">
-            <div class="flex flex-col md:flex-row items-center gap-16">
-                <div class="md:w-1/2">
-                    <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1632&q=80" alt="Meeting with connection" class="rounded-2xl shadow-2xl grayscale hover:grayscale-0 transition-all duration-700">
-                </div>
-                <div class="md:w-1/2">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-12 h-1 bg-brand-accent"></div>
-                        <h2 class="text-sm font-bold tracking-widest text-brand-accent uppercase">Concept</h2>
-                    </div>
-                    <h3 class="text-3xl md:text-4xl font-bold text-brand-dark mb-8 leading-snug">
-                        「初対面」という、<br>もっとも非効率な時間をなくしたい
-                    </h3>
-                    
-                    <div class="space-y-6 text-gray-600 leading-relaxed">
-                        <p>
-                            人と人が初めて会うとき。お互いに何者か分からない状態から、探り合うように自己紹介をする時間は、時として非常にもったいないものです。
-                            相手がどんな想いで生きているのか、どんな経験をしてきたのかが分からないままでは、その人の本質に触れるまでに膨大な時間がかかってしまいます。
-                        </p>
-                        <p class="font-bold text-brand-dark">
-                            『BRAIN BRIDGE』は、オンラインとオフラインの懸け橋となり、出会いの「質」を劇的に変えます。
-                        </p>
-                        <p>
-                            オンライン（コミュニティサイト）には、肩書きだけでなく、メンバー一人ひとりの「人生のストーリー」や「人柄」が綴られています。
-                            会う前に、その人のことを深く知ることができる（＝Brain）。
-                            だからこそ、オフラインで顔を合わせた瞬間（＝Bridge）、自己紹介という序章をスキップして、
-                            <span class="bg-yellow-100 px-1 font-bold">「あなたの生き方に共感しました」</span>
-                            という心の通った会話から始められるのです。
-                        </p>
-                        <p>
-                            オンラインで理解し、オフラインで体温を感じる。このサイクルが、あなたの人生に「一生モノの仲間」を連れてきます。
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Benefits Section (Updated Color) -->
-    <!-- 配色変更: Concept(グレー)との境界を作るため、白に変更 -->
-    <section id="benefits" class="py-24 bg-white relative overflow-hidden">
-        <!-- Decorative Background -->
-        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-            <div class="absolute -left-20 top-20 w-96 h-96 bg-gray-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
-            <div class="absolute -right-20 top-40 w-96 h-96 bg-amber-50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 opacity-70">
+        <!-- BUILDER (Coming Soon) -->
+        <!-- 将来用決済リンク: https://buy.stripe.com/dRm9ATeVs2Nh3xTbPQ7bW0a -->
+        <div class="bg-gray-100 p-8 border border-gray-300 flex flex-col relative grayscale">
+          <div class="absolute inset-0 bg-black/5 flex items-center justify-center z-10">
+            <div class="bg-[#3e2723] text-white px-6 py-2 font-serif tracking-widest rotate-[-5deg] border border-[#dcd4c6]">COMING SOON</div>
+          </div>
+          <div class="flex items-baseline gap-2 mb-2">
+            <h3 class="text-xl font-bold text-gray-700">BUILDER</h3>
+            <span class="text-sm text-gray-500">創る人</span>
+          </div>
+          <div class="text-2xl font-serif text-gray-700 mb-6">¥6,600 <span class="text-sm">/ 月</span></div>
+          <p class="font-bold text-gray-600 mb-2">「未来を創る側に回った。」</p>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            仕組み・文化・プロジェクトを生む側。<br/>航海のあいだ、次の世界に何を持ち込むかを形にし始めた人。
+          </p>
         </div>
 
-        <div class="container mx-auto px-6 relative z-10">
-            <div class="text-center mb-20">
-                <h2 class="text-4xl md:text-5xl font-bold text-brand-dark mb-4">BRAIN BRIDGE 3つの特色</h2>
-                <div class="w-16 h-1 bg-brand-accent mx-auto"></div>
-                <p class="text-gray-500 mt-4 tracking-widest uppercase text-sm">Bridge Benefits</p>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Benefit 1 -->
-                <div class="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
-                    <!-- Huge Number Background -->
-                    <span class="benefit-card-number absolute -right-6 -bottom-10 text-[10rem] font-black font-oswald leading-none opacity-20 transition-all duration-500 select-none pointer-events-none">
-                        01
-                    </span>
-                    
-                    <div class="relative z-10">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-dark to-slate-700 flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                            <i data-lucide="heart-handshake" class="w-8 h-8 text-white"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-4 text-brand-dark group-hover:text-brand-accent transition-colors">Deep Connection</h3>
-                        <h4 class="text-sm font-bold text-gray-500 mb-6 border-b border-gray-100 pb-4">出会いの質を変える<br>「既知感」のあるコネクション</h4>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            初めて会う人とも、以前からの友人のように話せる。それは、事前にWEB上で相手の「人生経験」や「価値観」を知っているからです。初対面の緊張感や、表面的な会話は必要ありません。
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Benefit 2 -->
-                <div class="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
-                    <span class="benefit-card-number absolute -right-6 -bottom-10 text-[10rem] font-black font-oswald leading-none opacity-20 transition-all duration-500 select-none pointer-events-none">
-                        02
-                    </span>
-                    
-                    <div class="relative z-10">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-accent to-yellow-500 flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                            <i data-lucide="network" class="w-8 h-8 text-white"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-4 text-brand-dark group-hover:text-brand-accent transition-colors">Open Network</h3>
-                        <h4 class="text-sm font-bold text-gray-500 mb-6 border-b border-gray-100 pb-4">コミュニティ内外を<br>自由に行き来する「懸け橋」</h4>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            ここは閉鎖的な集まりではありません。地域の別サービスや他のコミュニティとも柔軟に連携します。BRAIN BRIDGEで培った信頼関係を土台に、外の世界とも滑らかに繋がります。
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Benefit 3 -->
-                <div class="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
-                    <span class="benefit-card-number absolute -right-6 -bottom-10 text-[10rem] font-black font-oswald leading-none opacity-20 transition-all duration-500 select-none pointer-events-none">
-                        03
-                    </span>
-                    
-                    <div class="relative z-10">
-                        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-dark to-slate-700 flex items-center justify-center mb-8 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                            <i data-lucide="wallet" class="w-8 h-8 text-white"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-4 text-brand-dark group-hover:text-brand-accent transition-colors">Free Business</h3>
-                        <h4 class="text-sm font-bold text-gray-500 mb-6 border-b border-gray-100 pb-4">共に創るビジネスの手数料<br>「完全無料」</h4>
-                        <p class="text-gray-600 text-sm leading-relaxed">
-                            ここで出会った仲間と事業を立ち上げたり、仕事を依頼し合って収益が生まれたとしても、紹介料や手数料は一切いただきません。信頼できる「人」と、リスクなく新しい挑戦を。
-                        </p>
-                    </div>
-                </div>
-            </div>
+        <!-- GUARDIAN (Coming Soon) -->
+        <!-- 将来用決済リンク: https://buy.stripe.com/28E28r8x44VpecxdXY7bW0b -->
+        <div class="bg-gray-100 p-8 border border-gray-300 flex flex-col relative grayscale">
+          <div class="absolute inset-0 bg-black/5 flex items-center justify-center z-10">
+            <div class="bg-[#3e2723] text-white px-6 py-2 font-serif tracking-widest rotate-[5deg] border border-[#dcd4c6]">COMING SOON</div>
+          </div>
+          <div class="flex items-baseline gap-2 mb-2">
+            <h3 class="text-xl font-bold text-gray-700">GUARDIAN</h3>
+            <span class="text-sm text-gray-500">守る人</span>
+          </div>
+          <div class="text-2xl font-serif text-gray-700 mb-6">¥9,900 <span class="text-sm">/ 月</span></div>
+          <p class="font-bold text-gray-600 mb-2">「共同体を守る責任を引き受けた。」</p>
+          <p class="text-sm text-gray-500 leading-relaxed">
+            判断・秩序・倫理に関与する立場。<br/>嵐の中でも箱舟が進み続けるよう見張り、支え、守る人。
+          </p>
         </div>
-    </section>
+      </div>
 
-    <!-- Engines Section -->
-    <section id="engines" class="py-24 bg-brand-dark text-white relative overflow-hidden">
-        <!-- Background Elements -->
-        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-10">
-            <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-brand-accent blur-3xl"></div>
-            <div class="absolute top-40 -left-20 w-72 h-72 rounded-full bg-blue-500 blur-3xl"></div>
+      <!-- COVENANT -->
+      <div class="bg-gradient-to-br from-[#2a1a17] to-[#3e2723] p-1 shadow-2xl relative mt-16 max-w-3xl mx-auto">
+        <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-6 py-1 font-bold text-sm tracking-widest flex items-center gap-2 border border-[#8b6a4f]">
+          <i data-lucide="shield" class="w-4 h-4"></i> 特別枠
         </div>
-
-        <div class="container mx-auto px-6 relative z-10">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4">6つのエンジン</h2>
-                <p class="text-gray-400">あなたの人生とビジネスを加速させる、6つの強力な機能</p>
+        <div class="bg-[#fffdf9] p-8 md:p-12 border border-[#d4af37] relative h-full">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#e8dfd1] pb-6 mb-6">
+            <div>
+              <div class="flex items-baseline gap-2 mb-1">
+                <h3 class="text-3xl font-bold text-[#3e2723]">COVENANT</h3>
+                <span class="text-sm text-[#8b6a4f]">託される人</span>
+              </div>
+              <p class="text-sm text-[#725b3f] italic">ノアと神が結んだ「契約」から</p>
             </div>
-
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Engine 1 -->
-                <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-xl hover:bg-white/10 transition-colors">
-                    <div class="text-brand-accent mb-4">
-                        <i data-lucide="database" class="w-8 h-8"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">1. 自社メディア運営 &<br>メンバーデータベース</h3>
-                    <p class="text-sm text-gray-300 leading-relaxed">
-                        運営局が持つ「自社メディア」として、メンバー一人ひとりを特集・掲載します。あなたの人生、事業、想いをコンテンツ化し、コミュニティ内外へ発信。
-                    </p>
-                </div>
-
-                <!-- Engine 2 -->
-                <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-xl hover:bg-white/10 transition-colors">
-                    <div class="text-brand-accent mb-4">
-                        <i data-lucide="camera" class="w-8 h-8"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">2. プロによる<br>撮影・編集・制作</h3>
-                    <p class="text-sm text-gray-300 leading-relaxed">
-                        メディア掲載や活動に必要な写真・動画は、プロのクオリティで撮影・編集・制作までサポート。「魅せ方」にこだわることで、あなたの信頼性を高めます。
-                    </p>
-                </div>
-
-                <!-- Engine 3 -->
-                <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-xl hover:bg-white/10 transition-colors">
-                    <div class="text-brand-accent mb-4">
-                        <i data-lucide="users" class="w-8 h-8"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">3. 各種<br>オフラインイベント</h3>
-                    <p class="text-sm text-gray-300 leading-relaxed">
-                        交流会、勉強会、体験型ワークショップなど、実際に顔を合わせる場を定期開催。メディアで知ったあの人と、リアルで深く繋がる「答え合わせ」の瞬間を。
-                    </p>
-                </div>
-
-                <!-- Engine 4 -->
-                <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-xl hover:bg-white/10 transition-colors relative">
-                    <div class="absolute top-4 right-4 bg-brand-accent text-xs font-bold px-2 py-1 rounded text-white">Coming Soon</div>
-                    <div class="text-brand-accent mb-4">
-                        <i data-lucide="bot" class="w-8 h-8"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">4. AI自動<br>ニーズマッチング</h3>
-                    <p class="text-sm text-gray-300 leading-relaxed">
-                        膨大なメンバーデータから、あなたの事業課題や価値観に合う「運命の相手」をAIが分析。人間では気づけなかった意外な繋がりを提案します。
-                    </p>
-                </div>
-
-                <!-- Engine 5 -->
-                <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-xl hover:bg-white/10 transition-colors">
-                    <div class="text-brand-accent mb-4">
-                        <i data-lucide="briefcase" class="w-8 h-8"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">5. 事業共創<br>手数料完全無料</h3>
-                    <p class="text-sm text-gray-300 leading-relaxed">
-                        コミュニティ内で生まれた収益に対して、BRAIN BRIDGEは紹介料や手数料を一切いただきません。「繋がり放題」の環境を使い倒してください。
-                    </p>
-                </div>
-
-                <!-- Engine 6 -->
-                <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-xl hover:bg-white/10 transition-colors">
-                    <div class="text-brand-accent mb-4">
-                        <i data-lucide="map-pin" class="w-8 h-8"></i>
-                    </div>
-                    <h3 class="text-xl font-bold mb-3">6. 地域のサービス・<br>他コミュニティとの連携</h3>
-                    <p class="text-sm text-gray-300 leading-relaxed">
-                        地域の飲食店やサービス、他のコミュニティ団体とも積極的に提携。「ここに入っていれば、地域のあの店で優待が受けられる」ハブとしての機能を果たします。
-                    </p>
-                </div>
+            <div class="text-right mt-4 md:mt-0">
+              <div class="text-[#8b6a4f] text-sm line-through mb-1">通常 ¥69,000 / 年</div>
+              <div class="text-4xl font-serif text-[#b8860b]">
+                ¥36,900 <span class="text-base text-[#725b3f]">/ 1年目特別価格</span>
+              </div>
             </div>
+          </div>
+          
+          <div class="mb-8">
+            <p class="text-lg font-bold text-[#4a3b32] mb-3">「世界を託された。」</p>
+            <p class="text-[#5c4a3d] leading-relaxed mb-6">
+              この航海が終わったあと、どんな世界を残すか。その責任を引き受けた人。<br />
+              中核メンバーとして意思決定に関与し、世界観・方針を保持します。
+            </p>
+            <ul class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-[#5c4a3d]">
+              <li class="flex items-center bg-[#f7f5f0] p-3 border border-[#e8dfd1]"><i data-lucide="award" class="w-5 h-5 mr-3 text-[#b8860b]"></i>中核メンバーとしての参画</li>
+              <li class="flex items-center bg-[#f7f5f0] p-3 border border-[#e8dfd1]"><i data-lucide="award" class="w-5 h-5 mr-3 text-[#b8860b]"></i>コミュニティの意思決定に関与</li>
+              <li class="flex items-center bg-[#f7f5f0] p-3 border border-[#e8dfd1]"><i data-lucide="award" class="w-5 h-5 mr-3 text-[#b8860b]"></i>世界観・方針の保持者としての権利</li>
+            </ul>
+          </div>
+          
+          <a href="https://buy.stripe.com/dRm14n28GevZ0lH2fg7bW09" target="_blank" rel="noopener noreferrer" class="w-full py-4 bg-[#b8860b] text-white font-bold text-lg hover:bg-[#996515] transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer">
+            <i data-lucide="anchor" class="w-5 h-5"></i> 契約を結ぶ
+          </a>
         </div>
-    </section>
+      </div>
 
-    <!-- Story Section -->
-    <section id="story" class="py-24 bg-white">
-        <div class="container mx-auto px-6">
-            <div class="max-w-4xl mx-auto bg-gray-50 rounded-3xl overflow-hidden shadow-xl">
-                <div class="flex flex-col md:flex-row">
-                    <div class="md:w-2/5 h-64 md:h-auto bg-gray-300 relative">
-                         <!-- プレースホルダー画像 -->
-                        <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="代表イメージ" class="w-full h-full object-cover grayscale">
-                        <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/70 to-transparent text-white">
-                            <p class="text-xs font-bold tracking-widest uppercase mb-1">Representative</p>
-                            <p class="font-bold text-lg">代表メッセージ</p>
-                        </div>
-                    </div>
-                    <div class="md:w-3/5 p-8 md:p-12">
-                        <i data-lucide="quote" class="w-10 h-10 text-brand-accent/20 mb-4"></i>
-                        <h3 class="text-2xl font-bold text-brand-dark mb-6">初対面の「探り合い」ではなく、<br>「共鳴」を求めていた。</h3>
-                        
-                        <div class="space-y-4 text-gray-600 text-sm leading-relaxed">
-                            <p>
-                                「何者かになりたい」ともがいていた私を変えたのは、上辺の会話ではなく、魂の通った対話でした。
-                            </p>
-                            <p>
-                                かつて私は、自分の人生に色がついていないように感じ、悩んでいた時期があります。しかし、人と膝を突き合わせ、相手の目を見て、その人の人生経験や痛みを親身になって聞いたとき、世界が変わりました。
-                            </p>
-                            <p>
-                                同じ時代を生きていても、誰一人として同じ経験をした人はいない。その「違い」に触れ、共鳴した瞬間、「ああ、自分は自分でいいんだ」と、自分自身の輪郭がハッキリと見えたのです。
-                            </p>
-                            <p>
-                                ただ、初めて会う人とそこまで深い話をするのは簡単ではありません。だからこそ、「事前にその人の物語を知っている」という環境が必要だと考えました。
-                            </p>
-                            <p class="font-medium text-brand-dark">
-                                相手を知っているから、安心して踏み込める。<br>
-                                安心して話せるから、自分の色に気づける。
-                            </p>
-                            <p>
-                                人生を一生共にしたいと思える10人の仲間を、ここで100人、1000人に。テクノロジーの力を使って、もっとも人間らしい温かさを生み出す場所を、あなたと作りたいと思っています。
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Pricing Section -->
-    <section id="price" class="py-24 bg-gray-100 relative">
-        <div class="container mx-auto px-6 max-w-5xl">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold text-brand-dark mb-4">Join Our Community</h2>
-                <div class="w-16 h-1 bg-brand-accent mx-auto"></div>
-                <p class="text-gray-500 mt-4 uppercase tracking-widest text-sm">Memberships</p>
-            </div>
+  <!-- --- FOOTER --- -->
+  <footer class="bg-[#1a110f] text-[#a09080] py-12 text-center text-sm border-t border-[#3e2723]">
+    <div class="mb-6 flex justify-center">
+      <img 
+        src="img/icon.png" 
+        alt="NOAH Footer Logo" 
+        class="w-16 h-16 opacity-50 grayscale"
+        onerror="this.style.display='none'; document.getElementById('fallback-footer-icon').style.display='block';"
+      />
+      <div id="fallback-footer-icon" style="display: none;" class="opacity-50">
+        <i data-lucide="anchor" class="w-12 h-12 text-[#a09080]" stroke-width="1.5"></i>
+      </div>
+    </div>
+    <p class="mb-2 font-serif tracking-widest">NOAH - No One Alone, Here</p>
+    <p>&copy; <span id="year"></span> NOAH Community. All rights reserved.</p>
+  </footer>
 
-            <!-- Dark Themed Structured Card -->
-            <div class="bg-brand-dark text-white rounded-3xl shadow-2xl overflow-hidden border border-gray-800 flex flex-col md:flex-row">
-                
-                <!-- Left: Pricing Info -->
-                <div class="md:w-1/2 p-10 md:p-14 flex flex-col justify-center border-b md:border-b-0 md:border-r border-gray-700 bg-brand-dark relative overflow-hidden">
-                    <!-- Background Glow -->
-                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-brand-accent/5 to-transparent"></div>
-                    
-                    <div class="relative z-10">
-                        <div class="inline-block bg-brand-accent text-white px-4 py-1.5 text-xs font-bold rounded-full mb-6 tracking-wider">期間限定・初期メンバー募集</div>
-                        <h3 class="text-3xl font-bold mb-2">Standard Plan</h3>
-                        <p class="text-gray-400 text-sm mb-8">BRAIN BRIDGEの全ての機能にアクセス</p>
-
-                        <div class="space-y-2 mb-10">
-                            <div class="flex items-center gap-3 text-gray-500 line-through">
-                                <span>通常価格</span>
-                                <span class="text-xl">¥9,900</span>
-                                <span class="text-xs">/月</span>
-                            </div>
-                            <div class="flex items-end gap-2 text-brand-gold">
-                                <span class="text-6xl font-black font-oswald tracking-tight">3,300</span>
-                                <span class="text-xl font-bold mb-2 text-white">円 / 月</span>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-2">※年額払いなら <span class="text-brand-gold font-bold">33,000円</span>（2ヶ月分お得）</p>
-                        </div>
-
-                        <!-- リンク変更: #contact -> login.html -->
-                        <a href=/*"login.html"*/ class="block w-full bg-white text-brand-dark text-center font-bold py-4 rounded-lg hover:bg-gray-100 transition-all transform hover:-translate-y-1 shadow-lg shadow-white/5">
-                            今すぐ参加する
-                        </a>
-                        <p class="text-center text-xs text-gray-400 mt-4 leading-relaxed">
-                            ※定員に達し次第、通常価格へ戻ります。<br>
-                            <span class="text-brand-gold font-bold">※本コミュニティは完全紹介制です。<br>ご入会には既存メンバーからの紹介が必要です。</span>
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Right: Features List -->
-                <div class="md:w-1/2 p-10 md:p-14 bg-gray-900/50">
-                    <h4 class="text-lg font-bold mb-6 flex items-center gap-2">
-                        <i data-lucide="check-circle" class="w-5 h-5 text-brand-accent"></i>
-                        メンバーシップに含まれるもの
-                    </h4>
-                    
-                    <ul class="space-y-4">
-                        <!-- 基本機能 -->
-                        <li class="flex items-start gap-3">
-                            <i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0 mt-0.5"></i>
-                            <span class="text-gray-300 text-sm">メンバー限定オンライングループへの招待</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0 mt-0.5"></i>
-                            <span class="text-gray-300 text-sm">ビジネスマッチング手数料完全無料</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i data-lucide="check" class="w-5 h-5 text-brand-accent flex-shrink-0 mt-0.5"></i>
-                            <span class="text-gray-300 text-sm">提携店舗・サービスの優待利用</span>
-                        </li>
-                        
-                        <!-- 有料オプション（優待） -->
-                        <li class="flex items-start gap-3 border-t border-gray-800 pt-4 mt-2">
-                            <i data-lucide="gem" class="w-5 h-5 text-brand-gold flex-shrink-0 mt-0.5"></i>
-                            <div class="flex flex-col">
-                                <span class="text-gray-300 text-sm font-medium">自社メディア掲載・記事作成</span>
-                                <span class="text-xs text-brand-gold mt-0.5">※会員優待価格にて提供</span>
-                            </div>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <i data-lucide="gem" class="w-5 h-5 text-brand-gold flex-shrink-0 mt-0.5"></i>
-                            <div class="flex flex-col">
-                                <span class="text-gray-300 text-sm font-medium">プロカメラマンによるプロフィール撮影</span>
-                                <span class="text-xs text-brand-gold mt-0.5">※会員優待価格にて提供</span>
-                            </div>
-                        </li>
-
-                        <!-- Coming Soon -->
-                        <li class="flex items-start gap-3 border-t border-gray-800 pt-4 mt-2">
-                            <i data-lucide="clock" class="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5"></i>
-                            <span class="text-gray-500 text-sm">月1回の定例交流会 <span class="inline-block bg-gray-800 text-gray-400 text-[10px] px-1.5 py-0.5 rounded ml-1 align-middle border border-gray-700">Coming Soon</span></span>
-                        </li>
-                    </ul>
-
-                    <div class="mt-8 pt-8 border-t border-gray-800">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center text-brand-accent">
-                                <i data-lucide="shield-check" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <p class="font-bold text-sm">完全紹介制・安心の運営体制</p>
-                                <p class="text-xs text-gray-500">既存会員の紹介必須 / 入会審査・面談あり</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-brand-dark text-white py-12 border-t border-gray-800" id="contact">
-        <div class="container mx-auto px-6">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8">
-                <div class="flex items-center gap-3 mb-6 md:mb-0">
-                    <img src="透過_BB_モノ.png" alt="BRAIN BRIDGE" class="h-8 w-auto logo-white-filter opacity-80">
-                    <!-- フッターにもロゴテキスト追加 -->
-                    <span class="text-gray-300 font-bold text-lg tracking-widest font-oswald">BRAIN BRIDGE</span>
-                </div>
-                <div class="flex gap-6 text-sm text-gray-400">
-                    <!-- 運営会社リンクを削除し、各ページのパスを設定 -->
-                    <a href="privacy.html" class="hover:text-white transition-colors">プライバシーポリシー</a>
-                    <a href="tokusho.html" class="hover:text-white transition-colors">特定商取引法に基づく表記</a>
-                    <a href="contact.html" class="hover:text-white transition-colors">お問い合わせ</a>
-                </div>
-            </div>
-            <div class="text-center md:text-left text-xs text-gray-600">
-                &copy; 2026 BRAIN BRIDGE Community. All Rights Reserved.
-            </div>
-        </div>
-    </footer>
-
-    <!-- Script for Icons -->
-    <script>
-        lucide.createIcons();
-        
-        // フォールバック: ロゴ画像が読み込めない場合、画像を非表示にする（テキストは表示されているので代替不要）
-        const logoImg = document.getElementById('header-logo-img');
-        
-        if(logoImg) {
-            logoImg.onerror = function() {
-                this.style.display = 'none';
-            };
-        }
-    </script>
+  <!-- Initialize Lucide Icons & Auto Update Year -->
+  <script>
+    lucide.createIcons();
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
