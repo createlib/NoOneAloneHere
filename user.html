@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>プロフィール | LIFE REMIX</title>
+    <title>プロフィール | NOAH</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -102,14 +102,13 @@
         </div>
     </nav>
 
-    <!-- Bottom Navigation (Mobile Only) -->
+    <!-- Bottom Navigation -->
     <nav class="lg:hidden bottom-nav-fixed">
         <div class="bottom-nav-content">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-house text-xl mb-1"></i>
                 <span class="text-[10px] font-medium">ホーム</span>
             </a>
-            <!-- イベントを追加 -->
             <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
                 <span class="text-[10px] font-medium">イベント</span>
@@ -158,7 +157,7 @@
                                 <div id="header-actions" class="mb-1"></div>
                             </div>
 
-                            <div class="mb-2">
+                            <div class="mb-4">
                                 <h1 class="text-2xl font-bold text-slate-900 leading-tight"><span id="profile-name" class="shimmer block w-32 h-8 rounded mb-1"></span></h1>
                                 <div class="flex flex-wrap items-center gap-2 mt-1">
                                     <p class="text-sm text-slate-500 font-medium" id="profile-id">@...</p>
@@ -167,26 +166,9 @@
                                     <span id="admin-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100"><i class="fa-solid fa-crown mr-1"></i>管理者閲覧中</span>
                                 </div>
                             </div>
-
-                            <!-- Upgrade CTA (Displayed if Walker) -->
-                            <div id="upgrade-cta-container" class="hidden mb-6">
-                                <a href="upgrade.html" class="block w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
-                                    <div class="px-3 py-2.5 flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
-                                            <div class="bg-white/20 rounded-full p-1.5 group-hover:scale-110 transition-transform">
-                                                <i class="fa-solid fa-crown text-base text-white"></i>
-                                            </div>
-                                            <div class="text-left">
-                                                <p class="text-[10px] font-medium text-white/90 leading-tight">機能制限を解除</p>
-                                                <p class="text-sm font-black tracking-wide leading-tight">プランをアップグレード</p>
-                                            </div>
-                                        </div>
-                                        <i class="fa-solid fa-chevron-right text-white/80 text-sm"></i>
-                                    </div>
-                                </a>
-                            </div>
-
-                            <div class="mb-6"><div id="profile-bio" class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"></div></div>
+                            
+                            <!-- Bio Section (ID added) -->
+                            <div class="mb-6" id="section-bio"><p id="profile-bio" class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"></p></div>
 
                             <div class="flex items-center gap-6 py-4 border-t border-slate-100">
                                 <div class="text-center cursor-pointer hover:opacity-75 transition-opacity">
@@ -211,7 +193,7 @@
                                 
                                 <!-- Personal Mask Overlay -->
                                 <div id="personal-mask" class="hidden mt-2 p-3 bg-gray-50 rounded border border-gray-100 text-center">
-                                    <p class="text-xs text-gray-500 font-medium"></p>
+                                    <p class="text-xs text-gray-500 font-medium"><i class="fa-solid fa-lock mr-1"></i>詳細は相互フォローで公開</p>
                                 </div>
                             </div>
 
@@ -220,9 +202,27 @@
                                 <div class="w-full bg-slate-200 rounded-full h-2"><div id="score-bar" class="bg-brand-500 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div></div>
                             </div>
 
+                            <!-- Upgrade CTA (Displayed if Walker and Self) -->
+                            <div id="upgrade-cta-container" class="hidden mt-4">
+                                <a href="upgrade.html" class="block w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                                    <div class="px-3 py-2.5 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-white/20 rounded-full p-1.5 group-hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-crown text-base text-white"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <p class="text-[10px] font-medium text-white/90 leading-tight">機能制限を解除</p>
+                                                <p class="text-sm font-black tracking-wide leading-tight">プランをアップグレード</p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-white/80 text-sm"></i>
+                                    </div>
+                                </a>
+                            </div>
+
                             <!-- Debug: Rank Switcher (Admin Only) -->
                             <div id="debug-rank-switcher" class="hidden mt-6 pt-6 border-t border-dashed border-gray-200">
-                                <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wide">【管理者用】ランク変更 (DB保存)</p>
+                                <p class="text-[10px] font-bold text-purple-600 mb-2 uppercase tracking-wide">【管理者用】ランク変更 (DB保存)</p>
                                 <div class="flex gap-2">
                                     <button onclick="changeRank('walker')" class="flex-1 py-1.5 text-[10px] font-bold bg-gray-100 text-gray-600 rounded hover:bg-gray-200 border border-gray-200">WALKER</button>
                                     <button onclick="changeRank('builder')" class="flex-1 py-1.5 text-[10px] font-bold bg-slate-200 text-slate-700 rounded hover:bg-slate-300 border border-slate-300">BUILDER</button>
@@ -728,46 +728,6 @@
                 }
             }
 
-            // Public Data Filling (Only if NOT walker restriction)
-            if (!applyWalkerRestriction) {
-                const updateList = (id, items) => {
-                    const el = document.getElementById(id);
-                    if(!el) return;
-                    el.innerHTML = '';
-                    if (items && items.length > 0) {
-                        items.forEach(item => {
-                            el.innerHTML += `<li class="flex items-start gap-2 text-[15px] text-slate-700"><i class="fa-solid fa-check text-brand-500 mt-1 flex-shrink-0"></i><span class="font-medium">${item}</span></li>`;
-                        });
-                    } else {
-                        el.innerHTML = '<li class="text-slate-400 text-xs italic">未設定</li>';
-                    }
-                };
-                updateList('list-can-offer', data.canOffer);
-                updateList('list-looking-for', data.lookingFor);
-
-                const goalsEl = document.getElementById('profile-goals');
-                if (goalsEl) {
-                    goalsEl.innerHTML = data.goals ? formatText(data.goals) : '未設定';
-                    if (!data.goals) goalsEl.classList.add('text-slate-400');
-                }
-
-                const tagsContainer = document.getElementById('tags-container');
-                if (tagsContainer) {
-                    tagsContainer.innerHTML = '';
-                    const allTags = [...(data.hobbies || []), ...(data.skills || [])];
-                    if (allTags.length > 0) {
-                        allTags.forEach(tag => {
-                            const span = document.createElement('span');
-                            span.className = 'inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 text-slate-600 border border-slate-200';
-                            span.textContent = tag;
-                            tagsContainer.appendChild(span);
-                        });
-                    } else {
-                        tagsContainer.innerHTML = '<span class="text-xs text-slate-400 italic">タグ未設定</span>';
-                    }
-                }
-            }
-
             if (isSelf) {
                 setElText('score-text', (data.profileScore || 0) + '%');
                 const scoreBar = document.getElementById('score-bar');
@@ -778,7 +738,7 @@
         // --- Debug: Change Rank Function ---
         window.changeRank = async (newRole) => {
             if (!currentUser) return;
-            const uid = targetUid; // 管理者として他人のランクを変えるため targetUid を使用
+            const uid = targetUid; // 管理者が他人のページで操作する場合もあるため targetUid を使う
             try {
                 const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
                 await updateDoc(privateRef, { membershipRank: newRole });
