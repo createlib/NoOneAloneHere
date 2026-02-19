@@ -43,10 +43,11 @@
 <body class="min-h-screen bg-texture overflow-x-hidden">
 
   <!-- --- HERO SECTION --- -->
-  <section class="relative min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#f7f5f0] to-[#eae5d8]">
-    <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-10 flex items-center justify-center">
-      <i data-lucide="ship" width="800" height="800" stroke-width="0.5" class="text-[#3e2723]"></i>
-    </div>
+  <section class="relative min-h-screen flex flex-col items-center justify-center p-6 bg-[#f7f5f0] overflow-hidden">
+    <!-- アンティークなビネット効果（四隅を少し暗くして中央を際立たせる） -->
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(62,39,35,0.08)_100%)] pointer-events-none z-0"></div>
+    <!-- 差し込む光のエフェクト -->
+    <div class="absolute -top-[50%] -left-[20%] w-[150%] h-[200%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4)_0%,transparent_50%)] pointer-events-none z-0"></div>
     
     <div class="z-10 flex flex-col items-center w-full max-w-5xl">
       
@@ -370,7 +371,7 @@
 
   <!-- --- FOOTER --- -->
   <footer class="bg-[#1a110f] text-[#a09080] py-12 text-center text-sm border-t border-[#3e2723]">
-    <div class="mb-6 flex justify-center">
+    <div class="mb-8 flex justify-center">
       <img 
         src="img/icon.png" 
         alt="NOAH Footer Logo" 
@@ -381,6 +382,14 @@
         <i data-lucide="anchor" class="w-12 h-12 text-[#a09080]" stroke-width="1.5"></i>
       </div>
     </div>
+
+    <!-- 規約リンク -->
+    <div class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-8 mb-8 text-xs md:text-sm tracking-widest">
+      <a href="terms.html" class="hover:text-[#f7f5f0] transition-colors">利用規約</a>
+      <a href="privacy.html" class="hover:text-[#f7f5f0] transition-colors">プライバシーポリシー</a>
+      <a href="tokusho.html" class="hover:text-[#f7f5f0] transition-colors">特定商取引法に基づく表記</a>
+    </div>
+
     <p class="mb-2 font-serif tracking-widest">NOAH - No One Alone, Here</p>
     <p>&copy; <span id="year"></span> NOAH Community. All rights reserved.</p>
   </footer>
