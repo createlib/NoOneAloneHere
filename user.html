@@ -98,10 +98,12 @@
             padding-bottom: calc(5rem + env(safe-area-inset-bottom));
         }
 
-        /* ランクバッジのNOAH風スタイリング */
-        .badge-walker { background-color: #f7f5f0; color: #5c4a3d; border: 1px solid #c8b9a6; }
-        .badge-builder { background: linear-gradient(135deg, #e8dfd1 0%, #dcd4c6 100%); color: #4a3b32; border: 1px solid #8b6a4f; }
-        .badge-guardian { background: linear-gradient(135deg, #fef9c3 0%, #d4af37 100%); color: #3e2723; border: 1px solid #b8860b; }
+        /* ランクバッジのNOAH風スタイリング (5段階) */
+        .badge-arrival { background-color: #f7f5f0; color: #5c4a3d; border: 1px solid #c8b9a6; }
+        .badge-settler { background: linear-gradient(135deg, #e8dfd1 0%, #dcd4c6 100%); color: #4a3b32; border: 1px solid #8b6a4f; }
+        .badge-builder { background: linear-gradient(135deg, #dcd4c6 0%, #c8b9a6 100%); color: #3e2723; border: 1px solid #725b3f; }
+        .badge-guardian { background: linear-gradient(135deg, #c8b9a6 0%, #a09080 100%); color: #f7f5f0; border: 1px solid #5c4a3d; }
+        .badge-covenant { background: linear-gradient(135deg, #fef9c3 0%, #d4af37 100%); color: #3e2723; border: 1px solid #b8860b; }
     </style>
 </head>
 <body class="antialiased body-pb-nav lg:pb-0 bg-texture">
@@ -268,10 +270,12 @@
                             <!-- Debug: Rank Switcher (Admin Only) -->
                             <div id="debug-rank-switcher" class="hidden mt-6 pt-6 border-t border-dashed border-brand-200 relative z-20 pb-4">
                                 <p class="text-[10px] font-bold text-[#b8860b] mb-2 uppercase tracking-widest">【管理者用】役割変更</p>
-                                <div class="flex gap-2">
-                                    <button onclick="changeRank('walker')" class="flex-1 py-1 text-[9px] font-bold bg-brand-50 text-brand-600 rounded-sm hover:bg-brand-100 border border-brand-200">PASSENGER</button>
-                                    <button onclick="changeRank('builder')" class="flex-1 py-1 text-[9px] font-bold bg-brand-200 text-brand-800 rounded-sm hover:bg-brand-300 border border-brand-300">BUILDER</button>
-                                    <button onclick="changeRank('guardian')" class="flex-1 py-1 text-[9px] font-bold bg-[#d4af37] text-[#2a1a17] rounded-sm hover:bg-[#b8860b] border border-[#996515]">COVENANT</button>
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="changeRank('arrival')" class="flex-1 py-1 text-[9px] font-bold bg-brand-50 text-brand-600 rounded-sm hover:bg-brand-100 border border-brand-200 min-w-[60px]">ARRIVAL</button>
+                                    <button onclick="changeRank('settler')" class="flex-1 py-1 text-[9px] font-bold bg-brand-100 text-brand-700 rounded-sm hover:bg-brand-200 border border-brand-300 min-w-[60px]">SETTLER</button>
+                                    <button onclick="changeRank('builder')" class="flex-1 py-1 text-[9px] font-bold bg-brand-200 text-brand-800 rounded-sm hover:bg-brand-300 border border-brand-400 min-w-[60px]">BUILDER</button>
+                                    <button onclick="changeRank('guardian')" class="flex-1 py-1 text-[9px] font-bold bg-brand-300 text-[#fffdf9] rounded-sm hover:bg-brand-400 border border-brand-500 min-w-[60px]">GUARDIAN</button>
+                                    <button onclick="changeRank('covenant')" class="flex-1 py-1 text-[9px] font-bold bg-[#d4af37] text-[#2a1a17] rounded-sm hover:bg-[#b8860b] border border-[#996515] min-w-[60px]">COVENANT</button>
                                 </div>
                             </div>
                         </div>
@@ -379,7 +383,7 @@
         let targetUid = null;
         let isFollowing = false;
         let isMutual = false;
-        let myRank = 'walker'; 
+        let myRank = 'arrival'; // デフォルトをarrivalに変更
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const urlParams = new URLSearchParams(window.location.search);
@@ -402,7 +406,7 @@
             if (isAdminMock) {
                 currentUser = { uid: 'test_admin_uid', displayName: '管理者' };
                 isAdmin = true;
-                myRank = 'guardian'; 
+                myRank = 'covenant'; // 管理者モックは最高ランク
                 if (targetUid && targetUid !== 'test_admin_uid') {
                     isSelf = false;
                     setupViewForOtherUser();
@@ -425,9 +429,9 @@
                     const myData = myProfileSnap.data();
                     if (myData.userId === 'admin') isAdmin = true;
                     if (isAdmin) document.getElementById('admin-badge').classList.remove('hidden');
-                    myRank = myData.membershipRank || 'walker';
+                    myRank = myData.membershipRank || 'arrival'; // デフォルト
                 } else {
-                    myRank = 'walker';
+                    myRank = 'arrival';
                 }
 
                 if (!targetUid || targetUid === user.uid) {
@@ -475,7 +479,8 @@
                 document.getElementById('debug-rank-switcher').classList.remove('hidden');
             }
             
-            if (currentRank === 'walker') {
+            // ARRIVAL（無料）の場合のみアップグレードを促す
+            if (currentRank === 'arrival') {
                 document.getElementById('upgrade-cta-container').classList.remove('hidden');
             } else {
                 document.getElementById('upgrade-cta-container').classList.add('hidden');
@@ -509,7 +514,8 @@
                     dataToUse = publicSnap.data();
                 }
                 
-                if (isAdmin || (isMutual && myRank !== 'walker')) {
+                // 自分がARRIVALでない、または管理者の場合は詳細データを取得
+                if (isAdmin || (isMutual && myRank !== 'arrival')) {
                     try {
                         const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
                         const privateSnap = await getDoc(privateRef);
@@ -666,55 +672,65 @@
                 }
             }
 
-            // Rank Badge (Styling & Text changed for NOAH)
-            const rank = data.membershipRank || 'walker';
+            // 5段階のランクバッジ描画
+            const rank = data.membershipRank || 'arrival';
             const badgeEl = document.getElementById('rank-badge');
             if (badgeEl) {
                 badgeEl.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest';
                 badgeEl.classList.remove('hidden');
-                if (rank === 'guardian') {
+                
+                // 既存のクラスをリセット
+                badgeEl.classList.remove('badge-arrival', 'badge-settler', 'badge-builder', 'badge-guardian', 'badge-covenant');
+                
+                if (rank === 'covenant') {
+                    badgeEl.classList.add('badge-covenant');
+                    badgeEl.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i>COVENANT';
+                } else if (rank === 'guardian') {
                     badgeEl.classList.add('badge-guardian');
-                    badgeEl.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i>COVENANT / GUARDIAN';
+                    badgeEl.innerHTML = '<i class="fa-solid fa-gavel mr-1"></i>GUARDIAN';
                 } else if (rank === 'builder') {
                     badgeEl.classList.add('badge-builder');
                     badgeEl.innerHTML = '<i class="fa-solid fa-hammer mr-1"></i>BUILDER';
+                } else if (rank === 'settler') {
+                    badgeEl.classList.add('badge-settler');
+                    badgeEl.innerHTML = '<i class="fa-solid fa-house mr-1"></i>SETTLER';
                 } else {
-                    badgeEl.classList.add('badge-walker');
-                    badgeEl.innerHTML = '<i class="fa-solid fa-anchor mr-1"></i>SETTLER / ARRIVAL';
+                    badgeEl.classList.add('badge-arrival');
+                    badgeEl.innerHTML = '<i class="fa-solid fa-anchor mr-1"></i>ARRIVAL';
                 }
             }
 
-            // Restriction Logic
-            const isTargetWalker = rank === 'walker';
-            const isViewerWalker = myRank === 'walker';
+            // Restriction Logic: ARRIVAL(無料)は情報制限
+            const isTargetArrival = rank === 'arrival';
+            const isViewerArrival = myRank === 'arrival';
             const isViewerPrivileged = isSelf || isAdmin;
             
-            const applyWalkerRestriction = (isTargetWalker || isViewerWalker) && !isViewerPrivileged;
+            const applyRestriction = (isTargetArrival || isViewerArrival) && !isViewerPrivileged;
 
-            const hideIfWalker = (id) => {
+            const hideIfRestricted = (id) => {
                 const el = document.getElementById(id);
                 if (el) {
-                    if (applyWalkerRestriction) el.classList.add('hidden');
+                    if (applyRestriction) el.classList.add('hidden');
                     else el.classList.remove('hidden');
                 }
             };
-            if (applyWalkerRestriction) document.getElementById('profile-bio').parentElement.classList.add('hidden');
+            if (applyRestriction) document.getElementById('profile-bio').parentElement.classList.add('hidden');
             else document.getElementById('profile-bio').parentElement.classList.remove('hidden');
 
-            hideIfWalker('section-tags');
-            hideIfWalker('section-matching');
-            hideIfWalker('section-goals');
-            hideIfWalker('section-message'); 
+            hideIfRestricted('section-tags');
+            hideIfRestricted('section-matching');
+            hideIfRestricted('section-goals');
+            hideIfRestricted('section-message'); 
 
-            const showRestricted = (isMutual || isViewerPrivileged) && !applyWalkerRestriction;
+            const showRestricted = (isMutual || isViewerPrivileged) && !applyRestriction;
             toggleRestrictedContent(showRestricted);
 
-            if (applyWalkerRestriction) {
+            if (applyRestriction) {
                 let maskMsg = '';
-                if (isViewerWalker) {
-                    maskMsg = '<span class="text-brand-700 font-bold cursor-pointer underline hover:text-brand-900 transition-colors" onclick="location.href=\'upgrade.html\'">SETTLER / BUILDER にアップグレード</span> して詳細を表示';
+                if (isViewerArrival) {
+                    maskMsg = '<span class="text-brand-700 font-bold cursor-pointer underline hover:text-brand-900 transition-colors" onclick="location.href=\'upgrade.html\'">SETTLER 以上に契約変更</span> して詳細を表示';
                 } else {
-                    maskMsg = 'このユーザーの役割上、情報は制限されています';
+                    maskMsg = 'このユーザーの役割（ARRIVAL）により、情報は制限されています';
                 }
                 document.querySelector('#message-mask p').innerHTML = maskMsg;
                 document.querySelector('#career-mask p').innerHTML = maskMsg;
@@ -843,7 +859,7 @@
                 userId: 'admin', name: 'NOAH 運営', jobTitle: '航海士', gender: '男性',
                 profileScore: 90, hobbies: ['開発', 'デザイン'], skills: ['Firebase', 'HTML/CSS'], email: 'admin@test.com',
                 prefecture: '愛知県', message: 'ここでは誰も一人にならない。', bio: 'NOAHの航海を見守る管理者アカウントです。', goals: '誰も取り残さないシステムを作ること。',
-                canOffer: ['環境の提供', 'マッチングサポート'], lookingFor: ['共鳴できる仲間'], career: [], membershipRank: 'guardian'
+                canOffer: ['環境の提供', 'マッチングサポート'], lookingFor: ['共鳴できる仲間'], career: [], membershipRank: 'covenant'
             };
         }
     </script>
