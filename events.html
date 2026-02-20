@@ -48,7 +48,7 @@
             font-family: 'Noto Serif JP', serif;
             background-color: #f7f5f0; 
             color: #4a3b32;
-            overflow: hidden; /* Prevent body scroll, handle internally */
+            overflow: hidden;
         }
         
         .bg-texture {
@@ -97,11 +97,6 @@
         .detail-sheet { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .sheet-open { transform: translateY(0%) !important; }
         .sheet-closed { transform: translateY(100%); }
-
-        /* PC Panel */
-        .detail-panel-pc { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: -4px 0 15px rgba(62,39,35,0.1); }
-        .panel-open { transform: translateX(0%) !important; }
-        .panel-closed { transform: translateX(100%); }
 
         /* Tag Selection */
         .tag-btn.selected { 
@@ -168,13 +163,11 @@
                     <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
-                <!-- Notification Bell -->
                 <a href="notifications.html" class="p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
                     <i class="fa-regular fa-bell text-xl"></i>
                     <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]"></span>
                 </a>
 
-                <!-- Logout (Desktop) -->
                 <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
                 <button onclick="handleLogout()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-red-800 transition-colors flex items-center gap-2">
                     <span class="hidden sm:inline tracking-widest">下船する</span>
@@ -188,13 +181,13 @@
     <div class="fixed top-16 w-full z-[1400] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
         <div class="max-w-3xl mx-auto px-4 flex justify-between items-center">
             <div class="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
-                <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-map-location-dot"></i> マップ(イベント)
+                <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-map-location-dot"></i> マップ
                 </button>
-                <button onclick="switchView('list-events')" id="tab-list-events" class="tab-btn flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-list"></i> リスト(イベント)
+                <button onclick="switchView('list-events')" id="tab-list-events" class="tab-btn flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-list"></i> イベント
                 </button>
-                <button onclick="switchView('list-jobs')" id="tab-list-jobs" class="tab-btn flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 relative">
+                <button onclick="switchView('list-jobs')" id="tab-list-jobs" class="tab-btn flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 relative">
                     <i class="fa-solid fa-briefcase"></i> 仕事・依頼
                     <span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d4af37] opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-[#b8860b]"></span></span>
                 </button>
@@ -210,23 +203,24 @@
     <div class="mt-[120px] w-full h-full relative z-0">
         
         <!-- View 1: Map -->
-        <div id="view-map" class="block relative">
+        <div id="view-map" class="block relative h-full">
             <!-- Search in Map -->
             <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md pointer-events-none">
                 <div class="relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
-                    <input type="text" id="map-search-input" placeholder="イベントや仕事を検索..." 
+                    <input type="text" id="map-search-input" placeholder="キーワードで検索..." 
                         class="w-full bg-[#fffdf9]/95 backdrop-blur border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 shadow-sm font-serif tracking-widest">
                 </div>
             </div>
 
             <div id="map" class="w-full h-full"></div>
+            
             <!-- Location Adjustment UI inside Map View -->
-            <div id="adjust-location-ui" class="hidden absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-sm pointer-events-auto">
-                <div class="bg-[#fffdf9] p-4 rounded-sm shadow-xl border border-brand-300 text-center text-brand-900 font-serif">
-                    <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-1"></i>赤色のピンをドラッグして調整</p>
-                    <button onclick="finishLocationAdjust()" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-2.5 rounded-sm shadow-md tracking-widest text-sm hover:bg-[#2a1a17]">
-                        位置を決定して編集に戻る
+            <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
+                <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
+                    <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-2 text-lg"></i>赤色のピンを動かして調整</p>
+                    <button onclick="finishLocationAdjust()" class="w-full bg-[#3e2723] text-[#d4af37] font-bold py-3 rounded-sm shadow-md tracking-widest text-sm hover:bg-[#2a1a17] border border-[#b8860b]">
+                        位置を決定して戻る
                     </button>
                 </div>
             </div>
@@ -238,7 +232,7 @@
                 <h2 class="text-xl font-bold text-brand-900 font-serif tracking-widest">イベント一覧</h2>
                 <span id="event-list-status" class="text-xs text-brand-500 tracking-widest">現在地から近い順</span>
             </div>
-            <div id="event-list-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- List injected here -->
             </div>
             <div id="event-list-loading" class="text-center py-10 text-brand-400 hidden"><i class="fa-solid fa-compass fa-spin text-2xl mb-2"></i><p class="text-xs tracking-widest">探しています...</p></div>
@@ -261,7 +255,6 @@
     </div>
 
     <!-- Create FAB & Menu -->
-    <!-- スマホ時のメニュー被り防止のため、計算式で高さを浮かせる -->
     <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
         <!-- Floating Menu -->
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
@@ -269,7 +262,7 @@
                 <span><i class="fa-solid fa-champagne-glasses text-brand-500 w-5"></i> イベントを企画</span>
             </button>
             <button onclick="openCreateModal('job')" class="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest flex items-center justify-between group">
-                <span><i class="fa-solid fa-briefcase text-brand-500 w-5"></i> 仕事・依頼を掲載</span>
+                <span><i class="fa-solid fa-briefcase text-blue-500 w-5"></i> 仕事・依頼を掲載</span>
                 <i class="fa-solid fa-lock text-brand-300 text-xs group-hover:text-brand-500" title="BUILDER以上限定"></i>
             </button>
         </div>
@@ -279,7 +272,7 @@
         </button>
     </div>
 
-    <!-- Filter Panel (Unified for both Events and Jobs) -->
+    <!-- Filter Panel -->
     <div id="filter-panel" class="fixed top-0 left-0 w-full h-full bg-[#2a1a17]/50 z-[3000] hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm">
         <div class="absolute right-0 top-0 h-full w-80 sm:w-96 bg-[#fffdf9] bg-texture shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col border-l border-brand-200" id="filter-content">
             <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] z-10 relative">
@@ -387,9 +380,9 @@
     </div>
 
 
-    <!-- Details Sheet/Panel (Event) -->
-    <div id="event-sheet" class="detail-sheet sheet-closed absolute bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-sm shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:w-[400px] lg:left-4 lg:bottom-4 lg:rounded-sm lg:border lg:max-h-[85vh] lg:pb-0 lg:transform-none lg:hidden bg-texture">
-        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-10 pt-3 pb-2 flex justify-center border-b border-brand-100" onclick="closeDetail('event')">
+    <!-- Details Sheet (Event) -->
+    <div id="event-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:w-[450px] lg:left-4 lg:bottom-4 lg:rounded-sm lg:border lg:max-h-[85vh] lg:pb-0 lg:transform-none lg:hidden bg-texture">
+        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100" onclick="closeDetail('event')">
             <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
             <div class="hidden lg:flex w-full justify-between items-center px-4">
                 <span class="text-xs font-bold text-brand-500 tracking-widest">イベント詳細</span>
@@ -399,9 +392,9 @@
         <div id="event-sheet-content" class="px-5 pb-20 lg:pb-5 pt-4"></div>
     </div>
 
-    <!-- Details Sheet/Panel (Job) -->
-    <div id="job-sheet" class="detail-sheet sheet-closed absolute bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-sm shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:w-[500px] lg:left-4 lg:bottom-4 lg:rounded-sm lg:border lg:max-h-[85vh] lg:pb-0 lg:transform-none lg:hidden bg-texture">
-        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-10 pt-3 pb-2 flex justify-center border-b border-brand-100" onclick="closeDetail('job')">
+    <!-- Details Sheet (Job) -->
+    <div id="job-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:w-[450px] lg:left-4 lg:bottom-4 lg:rounded-sm lg:border lg:max-h-[85vh] lg:pb-0 lg:transform-none lg:hidden bg-texture">
+        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100" onclick="closeDetail('job')">
             <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
             <div class="hidden lg:flex w-full justify-between items-center px-4">
                 <span class="text-xs font-bold text-brand-500 tracking-widest">仕事・依頼 詳細</span>
@@ -485,10 +478,11 @@
                                 <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
                                 <input type="text" id="location-search-input" placeholder="住所や建物名で検索" class="w-full border-brand-200 rounded-sm text-sm pl-10 p-2.5 bg-[#fffdf9]">
                             </div>
-                            <button onclick="searchLocation()" type="button" class="bg-brand-800 text-white px-4 rounded-sm text-sm font-bold whitespace-nowrap hover:bg-brand-900 tracking-widest">検索</button>
+                            <button onclick="searchLocation('event')" type="button" class="bg-brand-800 text-white px-4 rounded-sm text-sm font-bold whitespace-nowrap hover:bg-brand-900 tracking-widest">検索</button>
                         </div>
+                        <p class="text-[10px] text-brand-500 mb-2 leading-tight">※番地や建物名でピンが立たない場合は、市区町村で検索し、地図上でピンを動かして調整してください。</p>
                         <div id="location-results" class="hidden mb-3 border border-brand-200 rounded-sm overflow-hidden max-h-40 overflow-y-auto shadow-sm bg-white"></div>
-                        <button type="button" onclick="startLocationAdjust()" class="w-full py-2 bg-[#fffdf9] border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors mb-4 flex items-center justify-center gap-2 tracking-widest shadow-sm">
+                        <button type="button" onclick="startLocationAdjust('event')" class="w-full py-2 bg-[#fffdf9] border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors mb-4 flex items-center justify-center gap-2 tracking-widest shadow-sm">
                             <i class="fa-solid fa-map-location-dot text-brand-500"></i> 地図を見ながら位置を微調整する
                         </button>
                         <div>
@@ -633,7 +627,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">勤務形態</label>
-                                <select id="job-work-style" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                <select id="job-work-style" onchange="toggleJobLocationUI()" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
                                     <option value="フルリモート">フルリモート</option>
                                     <option value="一部出社">一部出社</option>
                                     <option value="出社必須">出社必須</option>
@@ -641,9 +635,25 @@
                                 </select>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">勤務地(出社の場合)</label>
-                            <input type="text" id="job-location" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 東京都渋谷区 または オンライン可">
+                        
+                        <!-- Job Location UI -->
+                        <div id="job-location-wrapper" class="hidden p-3 border border-brand-200 rounded-sm bg-white">
+                            <label class="block text-[10px] font-bold text-brand-500 mb-2 tracking-widest">勤務地・活動場所をマップに設定 <span class="text-red-500">*</span></label>
+                            <div class="flex gap-2 mb-2">
+                                <div class="relative flex-1">
+                                    <i class="fa-solid fa-search absolute left-2 top-1/2 transform -translate-y-1/2 text-brand-300 text-xs"></i>
+                                    <input type="text" id="job-location-search-input" placeholder="住所検索" class="w-full border-brand-200 rounded-sm text-xs pl-7 p-2 bg-brand-50">
+                                </div>
+                                <button onclick="searchLocation('job')" type="button" class="bg-brand-600 text-white px-3 rounded-sm text-xs font-bold whitespace-nowrap hover:bg-brand-700">検索</button>
+                            </div>
+                            <div id="job-location-results" class="hidden mb-2 border border-brand-200 rounded-sm overflow-hidden max-h-32 overflow-y-auto shadow-sm bg-white"></div>
+                            <button type="button" onclick="startLocationAdjust('job')" class="w-full py-1.5 bg-brand-50 border border-brand-200 text-brand-700 rounded-sm text-[10px] font-bold hover:bg-brand-100 transition-colors mb-2 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-map-location-dot text-brand-500"></i> 地図で微調整する
+                            </button>
+                            <div>
+                                <label class="block text-[10px] text-brand-500 mb-1">表示用テキスト</label>
+                                <input type="text" id="job-location-name" class="w-full border-brand-200 rounded-sm text-xs p-2 bg-brand-50" placeholder="例: 東京都渋谷区">
+                            </div>
                         </div>
                     </div>
                 </details>
@@ -765,11 +775,14 @@
         let myProfile = null;
         let userLocation = null; 
         
-        let currentViewMode = 'map'; // map, list-events, list-jobs
+        let currentViewMode = 'map'; 
 
         // Form States
         let tempMarker = null; 
-        let selectedCoords = null;
+        let selectedCoordsEvent = null;
+        let selectedCoordsJob = null;
+        let currentAdjustType = null; // 'event' or 'job'
+
         let selectedTags = new Set();
         let isJoining = false;
         let editingEventId = null;
@@ -783,6 +796,12 @@
             iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
         });
 
+        const blueIcon = new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             initMap();
             renderEventTagButtons();
@@ -792,22 +811,10 @@
             const pcSearch = document.getElementById('pc-map-search');
             const mobileSearch = document.getElementById('map-search-input');
             const handleSearch = (e) => {
-                const val = e.target.value.toLowerCase();
-                
-                // Sync inputs
+                const val = e.target.value;
                 if(pcSearch && pcSearch.value !== val) pcSearch.value = val;
                 if(mobileSearch && mobileSearch.value !== val) mobileSearch.value = val;
-
-                if (currentViewMode === 'list-jobs') {
-                    // Jobs Text Search
-                    const filteredJobs = allJobs.filter(job => job.title.toLowerCase().includes(val) || (job.desc && job.desc.toLowerCase().includes(val)));
-                    renderJobList(filteredJobs);
-                } else {
-                    // Events Text Search
-                    const filteredEvents = allEvents.filter(evt => evt.title.toLowerCase().includes(val) || (evt.description && evt.description.toLowerCase().includes(val)));
-                    renderMarkers(filteredEvents);
-                    renderEventList(filteredEvents);
-                }
+                filterData();
             };
             if(pcSearch) pcSearch.addEventListener('input', handleSearch);
             if(mobileSearch) mobileSearch.addEventListener('input', handleSearch);
@@ -818,7 +825,6 @@
                 if (!endDateInput.value) endDateInput.value = startDateInput.value;
             });
             
-            // Image Preview Handler
             document.getElementById('event-image').addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -849,7 +855,6 @@
                     if (docSnap.exists()) {
                         myProfile = docSnap.data();
                         const rank = myProfile.membershipRank || 'arrival';
-                        // ARRIVAL(無料)以外はFABを表示
                         if (rank !== 'arrival') {
                             document.getElementById('create-fab-btn').classList.remove('hidden');
                         }
@@ -882,7 +887,6 @@
 
             if (viewName === 'map' && map) setTimeout(() => map.invalidateSize(), 100);
             
-            // Adjust search placeholder
             const placeholderText = viewName === 'list-jobs' ? "仕事や依頼を検索..." : "イベントを検索...";
             document.getElementById('pc-map-search').placeholder = placeholderText;
             document.getElementById('map-search-input').placeholder = placeholderText;
@@ -890,6 +894,8 @@
 
         async function loadAllData() {
             await Promise.all([loadEvents(), loadJobs()]);
+            // Both loaded, render initial
+            filterData();
         }
 
         // ==========================================
@@ -937,11 +943,7 @@
         };
 
         window.applyFilters = () => {
-            if (currentViewMode === 'list-jobs') {
-                filterJobs();
-            } else {
-                filterEvents();
-            }
+            filterData(); 
             toggleFilters();
         };
 
@@ -953,7 +955,6 @@
                 document.getElementById('filter-job-reward').value = "";
                 document.getElementById('pc-map-search').value = "";
                 document.getElementById('map-search-input').value = "";
-                renderJobList(allJobs);
             } else {
                 document.getElementById('filter-event-date').value = "all";
                 document.getElementById('filter-event-format').value = "all";
@@ -961,14 +962,15 @@
                 document.querySelectorAll('.event-filter-tag').forEach(cb => cb.checked = false);
                 document.getElementById('pc-map-search').value = "";
                 document.getElementById('map-search-input').value = "";
-                renderMarkers(allEvents);
-                renderEventList(allEvents);
             }
+            filterData();
             toggleFilters();
         };
 
-        function filterEvents() {
+        function filterData() {
             const term = document.getElementById('pc-map-search').value.toLowerCase() || document.getElementById('map-search-input').value.toLowerCase();
+            
+            // --- Event Filter ---
             const dateVal = document.getElementById('filter-event-date').value;
             const formatVal = document.getElementById('filter-event-format').value;
             const priceVal = document.getElementById('filter-event-price').value;
@@ -978,7 +980,7 @@
             const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
             const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-            const filtered = allEvents.filter(evt => {
+            const filteredEvents = allEvents.filter(evt => {
                 const matchTerm = !term || evt.title.toLowerCase().includes(term) || (evt.description && evt.description.toLowerCase().includes(term));
                 
                 let matchDate = true;
@@ -1002,18 +1004,13 @@
                 return matchTerm && matchDate && matchFormat && matchPrice && matchTags;
             });
 
-            renderMarkers(filtered);
-            renderEventList(filtered);
-        }
-
-        function filterJobs() {
-            const term = document.getElementById('pc-map-search').value.toLowerCase() || document.getElementById('map-search-input').value.toLowerCase();
+            // --- Job Filter ---
             const type = document.getElementById('filter-job-type').value;
             const cat = document.getElementById('filter-job-category').value;
             const style = document.getElementById('filter-job-workstyle').value;
             const rew = document.getElementById('filter-job-reward').value;
 
-            const filtered = allJobs.filter(job => {
+            const filteredJobs = allJobs.filter(job => {
                 const matchTerm = !term || job.title.toLowerCase().includes(term) || (job.desc && job.desc.toLowerCase().includes(term));
                 const matchType = !type || job.type === type;
                 const matchCat = !cat || job.category === cat;
@@ -1022,7 +1019,9 @@
                 return matchTerm && matchType && matchCat && matchStyle && matchRew;
             });
 
-            renderJobList(filtered);
+            renderMarkers(filteredEvents, filteredJobs);
+            renderEventList(filteredEvents);
+            renderJobList(filteredJobs);
         }
 
         // ==========================================
@@ -1039,7 +1038,7 @@
                     (position) => {
                         userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
                         map.setView([userLocation.lat, userLocation.lng], 13);
-                        renderEventList(allEvents); // Re-render list to calculate distances
+                        filterData(); 
                     },
                     () => { console.log("Location access denied or error"); }
                 );
@@ -1050,21 +1049,15 @@
             const now = new Date().toISOString();
             const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
             const q = query(eventsRef, orderBy('createdAt', 'desc')); 
-            
             try {
                 const snapshot = await getDocs(q);
-                markers.forEach(m => map.removeLayer(m));
-                markers = [];
                 allEvents = [];
-
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     data.id = doc.id;
                     if (data.endTimestamp && data.endTimestamp < now) return; 
                     allEvents.push(data);
                 });
-                renderMarkers(allEvents);
-                renderEventList(allEvents);
             } catch (e) { console.error("Event Load Error:", e); }
         }
 
@@ -1106,7 +1099,11 @@
             container.innerHTML = displayEvents.map(evt => {
                 const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/150?text=NOAH';
                 const distStr = evt._distance !== undefined && evt._distance < 99999 ? `<span class="bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-sm ml-2 text-[10px] font-bold"><i class="fa-solid fa-location-arrow mr-1"></i>${evt._distance.toFixed(1)}km</span>` : '';
-                const dateStr = `${evt.startDate} ${evt.startTime}`;
+                
+                const dateStr = (evt.startDate === evt.endDate) 
+                    ? `${evt.startDate} ${evt.startTime} 〜 ${evt.endTime}`
+                    : `${evt.startDate} ${evt.startTime} 〜 ${evt.endDate} ${evt.endTime}`;
+
                 const tags = evt.tags ? evt.tags.slice(0,2).map(t => `<span class="text-[10px] bg-[#f7f5f0] border border-brand-200 text-brand-600 px-1 rounded-sm">#${t}</span>`).join('') : '';
 
                 return `
@@ -1117,7 +1114,7 @@
                     <div class="p-3 flex flex-col justify-between flex-1 min-w-0">
                         <div>
                             <h3 class="font-bold text-sm text-brand-900 truncate font-serif tracking-widest">${evt.title}</h3>
-                            <p class="text-[10px] text-brand-500 mt-1 flex items-center"><i class="fa-regular fa-clock mr-1"></i>${dateStr} ${distStr}</p>
+                            <p class="text-[10px] text-brand-500 mt-1 flex items-center truncate"><i class="fa-regular fa-clock mr-1"></i>${dateStr} ${distStr}</p>
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex gap-1 overflow-hidden">${tags}</div>
@@ -1129,34 +1126,33 @@
             }).join('');
         }
 
-        function renderMarkers(events) {
+        function renderMarkers(eventsToRender, jobsToRender) {
             markers.forEach(m => map.removeLayer(m));
             markers = [];
-            events.forEach(data => {
+            
+            // Events (Red)
+            eventsToRender.forEach(data => {
                 if (data.lat && data.lng) {
-                    const marker = L.marker([data.lat, data.lng]).addTo(map);
+                    const marker = L.marker([data.lat, data.lng], {icon: redIcon}).addTo(map);
                     marker.on('click', () => {
                         switchView('map');
-                        handleMarkerClick(data);
+                        showEventSheet(data);
                     });
                     markers.push(marker);
                 }
             });
-        }
 
-        function handleMarkerClick(targetEvent) {
-            const zoom = map.getZoom();
-            const targetLatLng = L.latLng(targetEvent.lat, targetEvent.lng);
-            const targetPoint = map.project(targetLatLng, zoom);
-            
-            const nearbyEvents = allEvents.filter(evt => {
-                if (!evt.lat || !evt.lng) return false;
-                const evtLatLng = L.latLng(evt.lat, evt.lng);
-                const evtPoint = map.project(evtLatLng, zoom);
-                return targetPoint.distanceTo(evtPoint) < 30; 
+            // Jobs (Blue)
+            jobsToRender.forEach(data => {
+                if (data.lat && data.lng) {
+                    const marker = L.marker([data.lat, data.lng], {icon: blueIcon}).addTo(map);
+                    marker.on('click', () => {
+                        switchView('map');
+                        showJobSheet(data);
+                    });
+                    markers.push(marker);
+                }
             });
-            
-            showEventSheet(targetEvent);
         }
 
         // ==========================================
@@ -1173,7 +1169,6 @@
                     data.id = doc.id;
                     allJobs.push(data);
                 });
-                renderJobList(allJobs);
             } catch (e) { console.error("Job Load Error:", e); }
         }
 
@@ -1201,7 +1196,7 @@
                     <p class="text-xs text-brand-500 line-clamp-2 leading-relaxed mb-3">${job.desc}</p>
                     <div class="flex flex-wrap gap-x-4 gap-y-2 border-t border-brand-100 pt-3">
                         <div class="text-[10px] font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-yen-sign text-brand-400 mr-1"></i>${job.rewardType}: ${job.rewardAmount || '応相談'}</div>
-                        <div class="text-[10px] font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-location-dot text-brand-400 mr-1"></i>${job.workStyle}</div>
+                        <div class="text-[10px] font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-location-dot text-brand-400 mr-1"></i>${job.locationName || job.location || '-'}</div>
                         <div class="text-[10px] font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-building text-brand-400 mr-1"></i>${job.company || job.organizerName}</div>
                     </div>
                 </div>
@@ -1210,160 +1205,67 @@
         }
 
         // ==========================================
-        // FAB & Menus & Modal Management
+        // Shared Map Location Methods
         // ==========================================
-        window.toggleCreateMenu = () => {
-            const menu = document.getElementById('create-menu');
-            const icon = document.getElementById('fab-icon');
-            if (menu.classList.contains('menu-closed')) {
-                menu.classList.remove('menu-closed');
-                menu.classList.add('menu-open');
-                icon.style.transform = 'rotate(45deg)';
-            } else {
-                menu.classList.add('menu-closed');
-                menu.classList.remove('menu-open');
-                icon.style.transform = 'rotate(0deg)';
-            }
-        };
-
-        window.openCreateModal = (type) => {
-            toggleCreateMenu(); // Close menu
-            
-            if (!myProfile) return alert('プロフィール情報が読み込めません。');
-            const rank = myProfile.membershipRank || 'arrival';
-
-            if (type === 'event') {
-                if (rank === 'arrival' && !isAdmin) return alert('イベント企画は SETTLER 以上の機能です。契約変更をご検討ください。');
-                
-                document.getElementById('event-modal').classList.remove('hidden');
-                editingEventId = null;
-                
-                // Form Reset
-                document.getElementById('event-title').value = "";
-                document.getElementById('event-price').value = "0";
-                const todayStr = new Date().toISOString().split('T')[0];
-                document.getElementById('event-start-date').value = todayStr;
-                document.getElementById('event-end-date').value = todayStr;
-                document.getElementById('event-start-time').value = "";
-                document.getElementById('event-end-time').value = "";
-                document.getElementById('event-location-name').value = "";
-                document.getElementById('event-online-tool').value = "";
-                document.getElementById('event-online-url').value = "";
-                document.getElementById('event-desc').value = "";
-                document.getElementById('event-custom-tags').value = "";
-                document.getElementById('location-search-input').value = "";
-                document.getElementById('location-results').classList.add('hidden');
-                document.getElementById('event-public-participants').checked = true;
-                
-                // Image Reset
-                document.getElementById('event-image').value = "";
-                document.getElementById('event-image-preview').src = "";
-                document.getElementById('event-image-preview').classList.add('hidden');
-
-                selectedTags.clear();
-                renderEventTagButtons();
-                checkOnlineToggle();
-                if (tempMarker) map.removeLayer(tempMarker);
-                selectedCoords = null;
-
-            } else if (type === 'job') {
-                const allowedRanks = ['builder', 'guardian', 'covenant'];
-                if (!allowedRanks.includes(rank) && !isAdmin) return alert('仕事・依頼の掲載は BUILDER 以上の機能です。契約変更をご検討ください。');
-                
-                document.getElementById('job-modal').classList.remove('hidden');
-                document.getElementById('job-form-container').scrollTop = 0;
-                
-                // Form Reset
-                document.getElementById('job-title').value = "";
-                document.getElementById('job-type').value = "業務委託";
-                document.getElementById('job-category').value = "デザイン";
-                document.getElementById('job-desc').value = "";
-                document.getElementById('job-reward-type').value = "固定報酬";
-                document.getElementById('job-reward-amount').value = "";
-                document.getElementById('job-period').value = "単発";
-                document.getElementById('job-work-style').value = "フルリモート";
-                document.getElementById('job-location').value = "";
-                document.getElementById('job-skills').value = "";
-                document.getElementById('job-deadline').value = "";
-                document.getElementById('job-flow').value = "面談1回";
-                document.getElementById('job-company').value = "";
-                document.getElementById('job-url').value = "";
-            }
-        };
-
-        window.closeCreateModal = (type) => {
-            if(type === 'event') document.getElementById('event-modal').classList.add('hidden');
-            if(type === 'job') document.getElementById('job-modal').classList.add('hidden');
-        };
-
-        // ==========================================
-        // Event Create Logic (Updated with Online/Price/Upload safety)
-        // ==========================================
-        function renderEventTagButtons() {
-            const container = document.getElementById('event-tag-area');
-            container.innerHTML = '';
-            presetTags.forEach(tag => {
-                const btn = document.createElement('button');
-                btn.type = "button";
-                btn.className = 'tag-btn px-3 py-1 rounded-sm border border-brand-200 text-[10px] font-bold text-brand-600 bg-[#fffdf9] transition-all tracking-widest';
-                btn.textContent = tag;
-                if(selectedTags.has(tag)) btn.classList.add('selected');
-
-                btn.onclick = () => {
-                    if (selectedTags.has(tag)) selectedTags.delete(tag);
-                    else selectedTags.add(tag);
-                    renderEventTagButtons();
-                    checkOnlineToggle();
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function checkOnlineToggle() {
-            const offlineGroup = document.getElementById('offline-location-group');
-            const onlineGroup = document.getElementById('online-url-group');
-            if (selectedTags.has('オンライン')) {
-                offlineGroup.classList.add('hidden');
-                onlineGroup.classList.remove('hidden');
-            } else {
-                offlineGroup.classList.remove('hidden');
-                onlineGroup.classList.add('hidden');
-            }
-        }
-
-        window.searchLocation = async () => {
-            const query = document.getElementById('location-search-input').value;
+        window.searchLocation = async (type) => {
+            const inputId = type === 'event' ? 'location-search-input' : 'job-location-search-input';
+            const query = document.getElementById(inputId).value;
             if (!query) return;
+
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
                 const results = await response.json();
-                const list = document.getElementById('location-results');
+                
+                const listId = type === 'event' ? 'location-results' : 'job-location-results';
+                const list = document.getElementById(listId);
                 list.innerHTML = '';
                 list.classList.remove('hidden');
-                if (results.length === 0) { list.innerHTML = '<div class="p-3 text-sm text-brand-500">見つかりませんでした</div>'; return; }
+
+                if (results.length === 0) { 
+                    list.innerHTML = '<div class="p-3 text-[10px] text-brand-500 tracking-widest leading-tight">見つかりませんでした。<br>※番地や建物名で出ない場合は、市区町村で検索し、地図上でピンを動かして調整してください。</div>'; 
+                    return; 
+                }
+
                 results.forEach(place => {
                     const div = document.createElement('div');
-                    div.className = 'p-3 border-b border-brand-100 cursor-pointer text-sm text-brand-700 hover:bg-brand-50';
+                    div.className = 'p-3 border-b border-brand-100 cursor-pointer text-xs text-brand-700 hover:bg-brand-50 tracking-widest truncate';
                     div.textContent = place.display_name;
-                    div.onclick = () => selectLocation(place);
+                    div.onclick = () => selectLocation(type, place);
                     list.appendChild(div);
                 });
             } catch (e) { alert('検索エラーが発生しました'); }
         };
 
-        function selectLocation(place) {
-            selectedCoords = { lat: parseFloat(place.lat), lng: parseFloat(place.lon) };
-            document.getElementById('location-results').classList.add('hidden');
-            document.getElementById('event-location-name').value = place.display_name.split(',')[0];
+        function selectLocation(type, place) {
+            const listId = type === 'event' ? 'location-results' : 'job-location-results';
+            const nameInputId = type === 'event' ? 'event-location-name' : 'job-location-name';
+            const icon = type === 'event' ? redIcon : blueIcon;
+
+            const coords = { lat: parseFloat(place.lat), lng: parseFloat(place.lon) };
+            if (type === 'event') selectedCoordsEvent = coords; else selectedCoordsJob = coords;
+
+            document.getElementById(listId).classList.add('hidden');
+            document.getElementById(nameInputId).value = place.display_name.split(',')[0];
+            
             if (tempMarker) map.removeLayer(tempMarker);
-            tempMarker = L.marker(selectedCoords, { draggable: true, icon: redIcon }).addTo(map);
-            tempMarker.on('dragend', function(e) { selectedCoords = e.target.getLatLng(); });
-            map.flyTo(selectedCoords, 15);
+            tempMarker = L.marker(coords, { draggable: true, icon: icon }).addTo(map);
+            
+            tempMarker.on('dragend', function(e) { 
+                if (type === 'event') selectedCoordsEvent = e.target.getLatLng(); 
+                else selectedCoordsJob = e.target.getLatLng(); 
+            });
+            
+            map.flyTo(coords, 15);
         }
 
-        window.startLocationAdjust = () => {
-            if (!selectedCoords) return alert('先に場所を検索してください');
-            document.getElementById('event-modal').classList.add('hidden');
+        window.startLocationAdjust = (type) => {
+            currentAdjustType = type;
+            const coords = type === 'event' ? selectedCoordsEvent : selectedCoordsJob;
+            if (!coords) return alert('先に場所を検索するか、地図をタップしてください');
+            
+            if (type === 'event') document.getElementById('event-modal').classList.add('hidden');
+            if (type === 'job') document.getElementById('job-modal').classList.add('hidden');
+            
             document.getElementById('adjust-location-ui').classList.remove('hidden');
             switchView('map');
             map.invalidateSize();
@@ -1371,9 +1273,25 @@
 
         window.finishLocationAdjust = () => {
             document.getElementById('adjust-location-ui').classList.add('hidden');
-            document.getElementById('event-modal').classList.remove('hidden');
+            if (currentAdjustType === 'event') document.getElementById('event-modal').classList.remove('hidden');
+            if (currentAdjustType === 'job') document.getElementById('job-modal').classList.remove('hidden');
+            currentAdjustType = null;
         };
 
+        window.toggleJobLocationUI = () => {
+            const style = document.getElementById('job-work-style').value;
+            const wrapper = document.getElementById('job-location-wrapper');
+            if (style === 'フルリモート') {
+                wrapper.classList.add('hidden');
+            } else {
+                wrapper.classList.remove('hidden');
+            }
+        };
+
+
+        // ==========================================
+        // Event/Job Creation Submits
+        // ==========================================
         window.submitEvent = async () => {
             if (!currentUser) return;
             const title = document.getElementById('event-title').value;
@@ -1387,23 +1305,18 @@
             const isOnline = selectedTags.has('オンライン');
 
             if (!title || !startDate || !startTime || !endDate || !endTime) return alert('タイトルと日時は必須です');
-            if (!isOnline && !selectedCoords) return alert('オフライン開催の場合は場所を設定してください');
+            if (!isOnline && !selectedCoordsEvent) return alert('オフライン開催の場合は場所を設定してください');
 
             let thumbnailUrl = '';
             const file = document.getElementById('event-image').files[0];
-            
             if (file) {
                 if (isAdminMock) {
-                    // モック環境での画像アップロードエラーを回避するためのダミーURL
                     thumbnailUrl = 'https://via.placeholder.com/400x200?text=Mock+Image';
                 } else {
                     try {
                         const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${Date.now()}_${file.name}`), file);
                         thumbnailUrl = await getDownloadURL(snap.ref);
-                    } catch (e) { 
-                        console.error(e);
-                        return alert("画像のアップロードに失敗しました"); 
-                    }
+                    } catch (e) { return alert("画像のアップロードに失敗しました"); }
                 }
             }
 
@@ -1420,7 +1333,6 @@
                 organizerName: myProfile ? (myProfile.name || myProfile.userId) : '主催者',
                 isParticipantsPublic: document.getElementById('event-public-participants').checked,
                 createdAt: serverTimestamp(),
-                participantCount: 0
             };
 
             if (isOnline) {
@@ -1431,45 +1343,40 @@
             } else {
                 eventData.isOnline = false;
                 eventData.locationName = document.getElementById('event-location-name').value;
-                eventData.lat = selectedCoords.lat; eventData.lng = selectedCoords.lng;
+                eventData.lat = selectedCoordsEvent.lat; eventData.lng = selectedCoordsEvent.lng;
             }
 
             try {
                 document.getElementById('event-submit-btn').textContent = "送信中...";
-                if (isAdminMock) {
-                    alert('【テスト】イベントを作成しました！(モックデータ)');
-                } else {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'events'), eventData);
-                    alert('イベントを企画しました！');
-                }
+                if (isAdminMock) alert('【テスト】イベントを作成しました！(モックデータ)');
+                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'events'), eventData);
+                
                 closeCreateModal('event');
-                loadEvents();
-            } catch (e) {
-                console.error(e); alert('処理に失敗しました。');
-            } finally {
-                document.getElementById('event-submit-btn').textContent = "イベントを企画する";
-            }
+                await loadEvents();
+                filterData();
+            } catch (e) { alert('処理に失敗しました。'); } 
+            finally { document.getElementById('event-submit-btn').textContent = "イベントを企画する"; }
         };
 
-        // ==========================================
-        // Job Create Logic
-        // ==========================================
         window.submitJob = async () => {
             if (!currentUser) return;
             const title = document.getElementById('job-title').value;
-            const type = document.getElementById('job-type').value;
-            const category = document.getElementById('job-category').value;
             const desc = document.getElementById('job-desc').value;
+            const style = document.getElementById('job-work-style').value;
 
             if (!title || !desc) return alert('必須項目(タイトル・詳細)を入力してください');
+            if (style !== 'フルリモート' && !selectedCoordsJob) return alert('勤務地・活動場所をマップで検索して設定してください');
 
             const jobData = {
-                title: title, type: type, category: category, desc: desc,
+                title: title, 
+                type: document.getElementById('job-type').value, 
+                category: document.getElementById('job-category').value, 
+                desc: desc,
                 rewardType: document.getElementById('job-reward-type').value,
                 rewardAmount: document.getElementById('job-reward-amount').value,
                 period: document.getElementById('job-period').value,
-                workStyle: document.getElementById('job-work-style').value,
-                location: document.getElementById('job-location').value,
+                workStyle: style,
+                location: document.getElementById('job-location').value, // 自由記述テキスト用(残してある場合)
                 skills: document.getElementById('job-skills').value,
                 deadline: document.getElementById('job-deadline').value,
                 flow: document.getElementById('job-flow').value,
@@ -1482,42 +1389,48 @@
                 createdAt: serverTimestamp(),
             };
 
+            if (style === 'フルリモート') {
+                jobData.locationName = "フルリモート";
+                jobData.lat = null; jobData.lng = null;
+            } else {
+                jobData.locationName = document.getElementById('job-location-name').value;
+                jobData.lat = selectedCoordsJob.lat; jobData.lng = selectedCoordsJob.lng;
+            }
+
             try {
                 document.getElementById('job-submit-btn').textContent = "送信中...";
-                if (isAdminMock) {
-                    alert('【テスト】仕事・依頼を掲載しました！(モックデータ)');
-                } else {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jobs'), jobData);
-                    alert('仕事・依頼を掲載しました！');
-                }
+                if (isAdminMock) alert('【テスト】仕事・依頼を掲載しました！(モックデータ)');
+                else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jobs'), jobData);
+                
                 closeCreateModal('job');
-                loadJobs();
-                switchView('list-jobs'); // 掲載後リストへ遷移
-            } catch (e) {
-                console.error(e); alert('処理に失敗しました。');
-            } finally {
-                document.getElementById('job-submit-btn').textContent = "募集を掲載する";
-            }
+                await loadJobs();
+                switchView('list-jobs'); 
+                filterData();
+            } catch (e) { alert('処理に失敗しました。'); } 
+            finally { document.getElementById('job-submit-btn').textContent = "募集を掲載する"; }
         };
 
         // ==========================================
-        // Details Sheets Display
+        // Details Sheets Display & Participation
         // ==========================================
         window.showEventSheet = async (evt) => {
-            const isPC = window.innerWidth >= 1024;
             const sheet = document.getElementById('event-sheet');
             const content = document.getElementById('event-sheet-content');
 
-            let partsHtml = '<div class="text-[10px] text-brand-500 bg-brand-50 p-2 rounded-sm border border-brand-200">現在参加者の表示機能は調整中です</div>';
             const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/400x200?text=NOAH+Event';
             const tags = evt.tags ? evt.tags.map(t => `<span class="bg-brand-50 border border-brand-200 text-brand-600 px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">#${t}</span>`).join('') : '';
             const priceText = evt.price > 0 ? `¥${evt.price.toLocaleString()}` : '無料';
             
+            const dateStr = (evt.startDate === evt.endDate) 
+                    ? `${evt.startDate} ${evt.startTime} 〜 ${evt.endTime}`
+                    : `${evt.startDate} ${evt.startTime} 〜 ${evt.endDate} ${evt.endTime}`;
+
             let locHtml = evt.isOnline 
                 ? `<div class="flex items-center gap-3"><i class="fa-solid fa-laptop text-brand-400 w-4 text-center"></i><span class="tracking-widest">${evt.locationName}</span></div>
                    ${evt.onlineUrl ? `<div class="flex items-center gap-3 mt-2"><i class="fa-solid fa-link text-brand-400 w-4 text-center"></i><a href="${evt.onlineUrl}" target="_blank" class="text-blue-600 underline truncate tracking-widest text-xs">${evt.onlineUrl}</a></div>` : ''}`
                 : `<div class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-brand-400 w-4 text-center"></i><span class="tracking-widest">${evt.locationName}</span></div>`;
 
+            // Basic UI Loading State
             content.innerHTML = `
                 <div class="relative h-48 w-full rounded-sm overflow-hidden mb-4 shadow-sm border border-brand-200">
                     <img src="${thumb}" class="w-full h-full object-cover">
@@ -1527,17 +1440,127 @@
                 <div class="flex flex-wrap gap-2 mb-5">${tags}</div>
                 <div class="space-y-3 text-xs text-brand-800 bg-[#fffdf9] p-4 rounded-sm mb-5 border border-brand-200 shadow-sm relative">
                     <div class="absolute top-0 right-0 w-6 h-6 border-t border-r border-brand-300 m-1"></div>
-                    <div class="flex items-center gap-3"><i class="fa-regular fa-clock text-brand-400 w-4 text-center"></i><span class="tracking-widest">${evt.startDate} ${evt.startTime} 〜</span></div>
+                    <div class="flex items-center gap-3"><i class="fa-regular fa-clock text-brand-400 w-4 text-center"></i><span class="tracking-widest">${dateStr}</span></div>
                     ${locHtml}
                     <div class="flex items-center gap-3 pt-2 border-t border-brand-100"><i class="fa-solid fa-user text-brand-400 w-4 text-center"></i><a href="user.html?uid=${evt.organizerId}" class="text-brand-600 font-bold hover:underline tracking-widest">主催: ${evt.organizerName}</a></div>
                 </div>
                 <div class="mb-6"><h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">詳細</h3><p class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap tracking-wide">${evt.description || ''}</p></div>
-                <div class="mb-6"><h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">参加者</h3>${partsHtml}</div>
-                <button onclick="alert('参加登録処理は開発中です。')" class="w-full py-3.5 rounded-sm font-bold tracking-widest shadow-md transition-colors bg-[#3e2723] text-[#d4af37] border border-[#b8860b] hover:bg-[#2a1a17]">航海に参加する</button>
+                <div id="event-dynamic-area"><div class="text-center text-brand-400 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i>読み込み中...</div></div>
             `;
-
             sheet.classList.remove('hidden', 'sheet-closed');
             sheet.classList.add('sheet-open');
+
+            // Async Fetch Participants & Join Status
+            let isJoined = false;
+            let partsHtml = '';
+            let participants = [];
+            
+            if (currentUser && !isAdminMock) {
+                try {
+                    const partDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'events', evt.id, 'participants', currentUser.uid));
+                    isJoined = partDoc.exists();
+                    
+                    const partsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events', evt.id, 'participants');
+                    const partsSnap = await getDocs(partsRef);
+                    partsSnap.forEach(d => participants.push(d.id));
+                } catch(e) {}
+            } else if (isAdminMock) {
+                participants = ['user1', 'user2']; // Dummy
+            }
+
+            const isOrganizer = currentUser && currentUser.uid === evt.organizerId;
+            
+            if (evt.isParticipantsPublic || isOrganizer || isAdmin) {
+                if (participants.length === 0) {
+                    partsHtml = '<div class="text-[10px] text-brand-500">まだ参加者はいません</div>';
+                } else {
+                    partsHtml = '<div class="flex -space-x-2 overflow-hidden py-1 pl-1">';
+                    let count = 0;
+                    for (const uid of participants) {
+                        if (count >= 6) break;
+                        partsHtml += `<div class="inline-block h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-100 border border-brand-300 flex items-center justify-center overflow-hidden"><i class="fa-solid fa-user text-brand-400 text-xs"></i></div>`;
+                        count++;
+                    }
+                    if (participants.length > 6) partsHtml += `<div class="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-50 text-[10px] font-bold text-brand-600 border border-brand-200">+${participants.length - 6}</div>`;
+                    partsHtml += '</div>';
+                }
+            } else {
+                partsHtml = '<div class="text-[10px] text-brand-500 bg-brand-50 px-2 py-1.5 rounded-sm border border-brand-200"><i class="fa-solid fa-lock mr-1"></i>参加者は主催者のみ確認できます</div>';
+            }
+
+            const btnHtml = `
+                <button onclick="toggleJoinEvent('${evt.id}', ${isJoined})" class="w-full py-3.5 rounded-sm font-bold tracking-widest shadow-md transition-colors ${isJoined ? 'bg-brand-100 text-brand-700 border border-brand-300 hover:bg-brand-200' : 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b] hover:bg-[#2a1a17]'}">
+                    ${isJoined ? '参加をキャンセルする' : '航海に参加する'}
+                </button>
+            `;
+
+            let actionBtns = '';
+            if (isOrganizer || isAdmin) {
+                actionBtns = `
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="deleteEvent('${evt.id}')" class="flex-1 py-2 rounded-sm text-red-700 font-bold border border-brand-200 hover:bg-red-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
+                            <i class="fa-solid fa-trash mr-1"></i> 削除
+                        </button>
+                    </div>`;
+            }
+
+            document.getElementById('event-dynamic-area').innerHTML = `
+                <div class="mb-6"><h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">参加者 (${participants.length}名)</h3>${partsHtml}</div>
+                ${btnHtml}
+                ${actionBtns}
+            `;
+        };
+
+        window.toggleJoinEvent = async (eventId, isJoined) => {
+            if (!currentUser) return alert('ログインが必要です');
+            if (isJoining) return;
+            isJoining = true;
+
+            if (isAdminMock) {
+                alert('【テスト】参加状況を変更しました');
+                isJoining = false;
+                closeDetail('event');
+                return;
+            }
+
+            const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'events', eventId, 'participants', currentUser.uid);
+            const myJoinRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'participating_events', eventId);
+            
+            try {
+                if (isJoined) {
+                    await deleteDoc(partRef);
+                    await deleteDoc(myJoinRef);
+                    alert('参加をキャンセルしました');
+                } else {
+                    const ts = serverTimestamp();
+                    await setDoc(partRef, { joinedAt: ts, uid: currentUser.uid });
+                    await setDoc(myJoinRef, { joinedAt: ts, eventId: eventId });
+                    alert('イベントに参加しました！');
+                }
+                
+                // Refresh 
+                const evt = allEvents.find(e => e.id === eventId);
+                if (evt) showEventSheet(evt);
+
+            } catch (e) {
+                console.error("Join Event Error:", e);
+                alert('エラーが発生しました: ' + e.message);
+            } finally {
+                isJoining = false;
+            }
+        };
+
+        window.deleteEvent = async (eventId) => {
+            if (!confirm('本当にこのイベントを削除しますか？\nこの操作は取り消せません。')) return;
+            if (isAdminMock) return alert("【テスト】削除しました");
+
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'events', eventId));
+                alert('イベントを削除しました');
+                closeDetail('event');
+                await loadEvents();
+                filterData();
+            } catch (e) { alert('削除に失敗しました'); }
         };
 
         window.showJobSheet = (job) => {
@@ -1545,6 +1568,17 @@
             const content = document.getElementById('job-sheet-content');
             
             const badgeColor = job.type === '正社員' ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-brand-50 text-brand-600 border border-brand-200';
+
+            let actionBtns = '';
+            const isOrganizer = currentUser && currentUser.uid === job.organizerId;
+            if (isOrganizer || isAdmin) {
+                actionBtns = `
+                    <div class="mt-4 pt-4 border-t border-brand-200">
+                        <button onclick="deleteJob('${job.id}')" class="w-full py-2 rounded-sm text-red-700 font-bold border border-brand-200 hover:bg-red-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
+                            <i class="fa-solid fa-trash mr-1"></i> この求人を削除
+                        </button>
+                    </div>`;
+            }
 
             content.innerHTML = `
                 <div class="flex items-start gap-3 mb-4 mt-2">
@@ -1561,7 +1595,7 @@
                 <div class="bg-[#f7f5f0] border border-brand-200 p-4 rounded-sm mb-6 space-y-3 text-xs tracking-widest text-brand-800 shadow-inner">
                     <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">報酬</span><span class="font-bold">${job.rewardType}: ${job.rewardAmount || '応相談'}</span></div>
                     <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">働き方</span><span>${job.workStyle}</span></div>
-                    <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">勤務地</span><span>${job.location || '-'}</span></div>
+                    <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">勤務地</span><span>${job.locationName || job.location || '-'}</span></div>
                     <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">期間</span><span>${job.period || '-'}</span></div>
                     <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">締切</span><span>${job.deadline || '未定'}</span></div>
                     <div class="flex justify-between"><span class="text-brand-500 font-bold">掲載元</span><span><a href="user.html?uid=${job.organizerId}" class="hover:underline">${job.company || job.organizerName}</a></span></div>
@@ -1583,10 +1617,25 @@
                 </div>
 
                 <a href="user.html?uid=${job.organizerId}" class="block w-full text-center py-3.5 rounded-sm font-bold tracking-widest shadow-md transition-colors bg-[#3e2723] text-[#d4af37] border border-[#b8860b] hover:bg-[#2a1a17]">掲載者のプロフィールを見る</a>
+                
+                ${actionBtns}
             `;
 
             sheet.classList.remove('hidden', 'sheet-closed');
             sheet.classList.add('sheet-open');
+        };
+
+        window.deleteJob = async (jobId) => {
+            if (!confirm('本当にこの求人を削除しますか？')) return;
+            if (isAdminMock) return alert("【テスト】削除しました");
+
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jobs', jobId));
+                alert('求人を削除しました');
+                closeDetail('job');
+                await loadJobs();
+                filterData();
+            } catch (e) { alert('削除に失敗しました'); }
         };
 
         window.closeDetail = (type) => {
