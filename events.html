@@ -181,7 +181,6 @@
     <div class="fixed top-16 w-full z-[1400] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
         <div class="max-w-3xl mx-auto px-4 flex justify-between items-center">
             <div class="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
-                <!-- ① タブ名をスマホで1行に収まるよう短縮 -->
                 <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
                     <i class="fa-solid fa-map-location-dot"></i> マップ
                 </button>
@@ -215,7 +214,7 @@
 
             <div id="map" class="w-full h-full"></div>
             
-            <!-- Location Adjustment UI inside Map View (⑤ 位置調整UIの前面・固定化) -->
+            <!-- Location Adjustment UI inside Map View -->
             <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
                 <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
                     <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-2 text-lg"></i>赤色のピンを動かして調整</p>
@@ -255,7 +254,6 @@
     </div>
 
     <!-- Create FAB & Menu -->
-    <!-- スマホ時のメニュー被り防止のため、計算式で高さを浮かせる -->
     <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
         <!-- Floating Menu -->
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
@@ -267,8 +265,8 @@
                 <i class="fa-solid fa-lock text-brand-300 text-xs group-hover:text-brand-500" title="BUILDER以上限定"></i>
             </button>
         </div>
-        <!-- FAB (ALWAYS SHOW) -->
-        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
+        <!-- FAB -->
+        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="hidden w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
             <i class="fa-solid fa-plus text-xl transition-transform duration-300" id="fab-icon"></i>
         </button>
     </div>
@@ -887,14 +885,20 @@
 
             if (viewName === 'map' && map) setTimeout(() => map.invalidateSize(), 100);
             
-            const placeholderText = viewName === 'list-jobs' ? "仕事や依頼を検索..." : "イベントを検索...";
+            const placeholderText = viewName === 'list-jobs' ? "仕事や依頼を検索..." : "イベントや仕事を検索...";
             document.getElementById('pc-map-search').placeholder = placeholderText;
             document.getElementById('map-search-input').placeholder = placeholderText;
         };
 
         async function loadAllData() {
-            await Promise.all([loadEvents(), loadJobs()]);
-            // Both loaded, render initial
+            try {
+                await loadEvents();
+            } catch(e) { console.error("Event error:", e); }
+            
+            try {
+                await loadJobs();
+            } catch(e) { console.error("Job error:", e); }
+            
             filterData();
         }
 
@@ -1044,34 +1048,35 @@
                         map.setView([userLocation.lat, userLocation.lng], 13);
                         filterData(); 
                     },
-                    () => { console.log("Location access denied or error"); }
+                    (error) => {
+                        console.log("Location access denied or error");
+                        filterData(); // Failed, but render anyway
+                    }
                 );
+            } else {
+                filterData();
             }
         }
 
         async function loadEvents() {
-            const now = new Date().toISOString();
             const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
+            const snapshot = await getDocs(eventsRef);
+            allEvents = [];
             
-            try {
-                // 安全のため orderBy は外し、JS側でソートする (Firestoreのインデックス未作成エラー回避)
-                const snapshot = await getDocs(eventsRef);
-                allEvents = [];
+            // 安全な日付解析のための関数
+            const safeGetTime = (createdAt) => {
+                if (!createdAt) return 0;
+                if (createdAt.toMillis) return createdAt.toMillis();
+                return new Date(createdAt).getTime() || 0;
+            };
 
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    data.id = doc.id;
-                    if (data.endTimestamp && data.endTimestamp < now) return; 
-                    allEvents.push(data);
-                });
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                data.id = doc.id;
+                allEvents.push(data);
+            });
 
-                // JavaScriptでのソート
-                allEvents.sort((a, b) => {
-                    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-                    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-                    return timeB - timeA;
-                });
-            } catch (e) { console.error("Event Load Error:", e); }
+            allEvents.sort((a, b) => safeGetTime(b.createdAt) - safeGetTime(a.createdAt));
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -1113,7 +1118,6 @@
                 const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/150?text=NOAH';
                 const distStr = evt._distance !== undefined && evt._distance < 99999 ? `<span class="bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-sm ml-2 text-[10px] font-bold"><i class="fa-solid fa-location-arrow mr-1"></i>${evt._distance.toFixed(1)}km</span>` : '';
                 
-                // ⑦ イベントの終了時間も表示
                 const dateStr = (evt.startDate === evt.endDate) 
                     ? `${evt.startDate} ${evt.startTime || ''} 〜 ${evt.endTime || ''}`
                     : `${evt.startDate} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
@@ -1140,8 +1144,8 @@
             }).join('');
         }
 
-        // ③ マップのピンをイベント（赤）と仕事（青）で分ける
         function renderMarkers(eventsToRender = [], jobsToRender = []) {
+            if (!map) return;
             markers.forEach(m => map.removeLayer(m));
             markers = [];
             
@@ -1173,21 +1177,22 @@
         // ==========================================
         async function loadJobs() {
             const jobsRef = collection(db, 'artifacts', appId, 'public', 'data', 'jobs');
-            try {
-                // 安全のため orderBy は外し、JS側でソートする
-                const snapshot = await getDocs(jobsRef);
-                allJobs = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    data.id = doc.id;
-                    allJobs.push(data);
-                });
-                allJobs.sort((a, b) => {
-                    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-                    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-                    return timeB - timeA;
-                });
-            } catch (e) { console.error("Job Load Error:", e); }
+            const snapshot = await getDocs(jobsRef);
+            allJobs = [];
+            
+            const safeGetTime = (createdAt) => {
+                if (!createdAt) return 0;
+                if (createdAt.toMillis) return createdAt.toMillis();
+                return new Date(createdAt).getTime() || 0;
+            };
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                data.id = doc.id;
+                allJobs.push(data);
+            });
+
+            allJobs.sort((a, b) => safeGetTime(b.createdAt) - safeGetTime(a.createdAt));
         }
 
         function renderJobList(jobsToRender) {
@@ -1203,12 +1208,19 @@
 
             container.innerHTML = jobsToRender.map(job => {
                 const badgeColor = job.type === '正社員' ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-brand-50 text-brand-600 border border-brand-200';
+                
+                let displayDate = '';
+                if (job.createdAt) {
+                    if (job.createdAt.toMillis) displayDate = new Date(job.createdAt.toMillis()).toLocaleDateString();
+                    else displayDate = new Date(job.createdAt).toLocaleDateString();
+                }
+
                 return `
                 <div class="bg-[#fffdf9] border border-brand-200 rounded-sm p-4 shadow-sm hover:shadow-md hover:border-brand-300 transition-all cursor-pointer relative" onclick='showJobSheet(${JSON.stringify(job).replace(/'/g, "&apos;")})'>
                     <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-200 m-2"></div>
                     <div class="flex justify-between items-start mb-2 pr-4">
                         <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-sm tracking-widest ${badgeColor}">${job.type}</span>
-                        <span class="text-[10px] text-brand-400"><i class="fa-solid fa-clock-rotate-left mr-1"></i>${job.createdAt ? new Date(job.createdAt.toMillis ? job.createdAt.toMillis() : job.createdAt).toLocaleDateString() : ''}</span>
+                        <span class="text-[10px] text-brand-400"><i class="fa-solid fa-clock-rotate-left mr-1"></i>${displayDate}</span>
                     </div>
                     <h3 class="font-bold text-brand-900 font-serif tracking-widest leading-tight mb-2">${job.title || '名称未設定'}</h3>
                     <p class="text-xs text-brand-500 line-clamp-2 leading-relaxed mb-3">${job.desc || ''}</p>
@@ -1379,7 +1391,7 @@
             
             document.getElementById('adjust-location-ui').classList.remove('hidden');
             switchView('map');
-            map.invalidateSize();
+            if (map) map.invalidateSize();
         };
 
         window.finishLocationAdjust = () => {
