@@ -132,7 +132,7 @@
         .accordion-arrow { transition: transform 0.2s ease; }
         details[open] .accordion-arrow { transform: rotate(180deg); }
 
-        /* View Tab Active State (スマホでも絶対色が変わるよう !important 指定) */
+        /* View Tab Active State */
         .tab-btn.active {
             background-color: #3e2723 !important;
             color: #d4af37 !important;
@@ -215,7 +215,7 @@
             <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md pointer-events-none">
                 <div class="relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
-                    <input type="text" id="map-search-input" placeholder="イベント名で検索..." 
+                    <input type="text" id="map-search-input" placeholder="イベントや仕事を検索..." 
                         class="w-full bg-[#fffdf9]/95 backdrop-blur border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 shadow-sm font-serif tracking-widest">
                 </div>
             </div>
@@ -788,13 +788,26 @@
             renderEventTagButtons();
             initFilterOptions();
             
+            // Search Input Binding
             const pcSearch = document.getElementById('pc-map-search');
             const mobileSearch = document.getElementById('map-search-input');
             const handleSearch = (e) => {
                 const val = e.target.value.toLowerCase();
-                const filtered = allEvents.filter(evt => evt.title.toLowerCase().includes(val));
-                renderMarkers(filtered);
-                renderEventList(filtered);
+                
+                // Sync inputs
+                if(pcSearch && pcSearch.value !== val) pcSearch.value = val;
+                if(mobileSearch && mobileSearch.value !== val) mobileSearch.value = val;
+
+                if (currentViewMode === 'list-jobs') {
+                    // Jobs Text Search
+                    const filteredJobs = allJobs.filter(job => job.title.toLowerCase().includes(val) || (job.desc && job.desc.toLowerCase().includes(val)));
+                    renderJobList(filteredJobs);
+                } else {
+                    // Events Text Search
+                    const filteredEvents = allEvents.filter(evt => evt.title.toLowerCase().includes(val) || (evt.description && evt.description.toLowerCase().includes(val)));
+                    renderMarkers(filteredEvents);
+                    renderEventList(filteredEvents);
+                }
             };
             if(pcSearch) pcSearch.addEventListener('input', handleSearch);
             if(mobileSearch) mobileSearch.addEventListener('input', handleSearch);
@@ -803,6 +816,20 @@
             const endDateInput = document.getElementById('event-end-date');
             startDateInput.addEventListener('change', () => {
                 if (!endDateInput.value) endDateInput.value = startDateInput.value;
+            });
+            
+            // Image Preview Handler
+            document.getElementById('event-image').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const img = document.getElementById('event-image-preview');
+                        img.src = ev.target.result;
+                        img.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
         });
 
@@ -854,6 +881,11 @@
             document.getElementById(`view-${viewName}`).classList.remove('hidden');
 
             if (viewName === 'map' && map) setTimeout(() => map.invalidateSize(), 100);
+            
+            // Adjust search placeholder
+            const placeholderText = viewName === 'list-jobs' ? "仕事や依頼を検索..." : "イベントを検索...";
+            document.getElementById('pc-map-search').placeholder = placeholderText;
+            document.getElementById('map-search-input').placeholder = placeholderText;
         };
 
         async function loadAllData() {
@@ -919,6 +951,8 @@
                 document.getElementById('filter-job-category').value = "";
                 document.getElementById('filter-job-workstyle').value = "";
                 document.getElementById('filter-job-reward').value = "";
+                document.getElementById('pc-map-search').value = "";
+                document.getElementById('map-search-input').value = "";
                 renderJobList(allJobs);
             } else {
                 document.getElementById('filter-event-date').value = "all";
@@ -973,17 +1007,19 @@
         }
 
         function filterJobs() {
+            const term = document.getElementById('pc-map-search').value.toLowerCase() || document.getElementById('map-search-input').value.toLowerCase();
             const type = document.getElementById('filter-job-type').value;
             const cat = document.getElementById('filter-job-category').value;
             const style = document.getElementById('filter-job-workstyle').value;
             const rew = document.getElementById('filter-job-reward').value;
 
             const filtered = allJobs.filter(job => {
+                const matchTerm = !term || job.title.toLowerCase().includes(term) || (job.desc && job.desc.toLowerCase().includes(term));
                 const matchType = !type || job.type === type;
                 const matchCat = !cat || job.category === cat;
                 const matchStyle = !style || job.workStyle === style;
                 const matchRew = !rew || job.rewardType === rew;
-                return matchType && matchCat && matchStyle && matchRew;
+                return matchTerm && matchType && matchCat && matchStyle && matchRew;
             });
 
             renderJobList(filtered);
@@ -1120,7 +1156,6 @@
                 return targetPoint.distanceTo(evtPoint) < 30; 
             });
             
-            // 重なっている場合は複数表示のロジック（今回は簡略化のため直接Sheet表示へ）
             showEventSheet(targetEvent);
         }
 
@@ -1175,7 +1210,7 @@
         }
 
         // ==========================================
-        // FAB & Menus
+        // FAB & Menus & Modal Management
         // ==========================================
         window.toggleCreateMenu = () => {
             const menu = document.getElementById('create-menu');
@@ -1202,15 +1237,29 @@
                 
                 document.getElementById('event-modal').classList.remove('hidden');
                 editingEventId = null;
+                
+                // Form Reset
                 document.getElementById('event-title').value = "";
                 document.getElementById('event-price').value = "0";
                 const todayStr = new Date().toISOString().split('T')[0];
                 document.getElementById('event-start-date').value = todayStr;
                 document.getElementById('event-end-date').value = todayStr;
+                document.getElementById('event-start-time').value = "";
+                document.getElementById('event-end-time').value = "";
                 document.getElementById('event-location-name').value = "";
                 document.getElementById('event-online-tool').value = "";
                 document.getElementById('event-online-url').value = "";
                 document.getElementById('event-desc').value = "";
+                document.getElementById('event-custom-tags').value = "";
+                document.getElementById('location-search-input').value = "";
+                document.getElementById('location-results').classList.add('hidden');
+                document.getElementById('event-public-participants').checked = true;
+                
+                // Image Reset
+                document.getElementById('event-image').value = "";
+                document.getElementById('event-image-preview').src = "";
+                document.getElementById('event-image-preview').classList.add('hidden');
+
                 selectedTags.clear();
                 renderEventTagButtons();
                 checkOnlineToggle();
@@ -1223,6 +1272,22 @@
                 
                 document.getElementById('job-modal').classList.remove('hidden');
                 document.getElementById('job-form-container').scrollTop = 0;
+                
+                // Form Reset
+                document.getElementById('job-title').value = "";
+                document.getElementById('job-type').value = "業務委託";
+                document.getElementById('job-category').value = "デザイン";
+                document.getElementById('job-desc').value = "";
+                document.getElementById('job-reward-type').value = "固定報酬";
+                document.getElementById('job-reward-amount').value = "";
+                document.getElementById('job-period').value = "単発";
+                document.getElementById('job-work-style').value = "フルリモート";
+                document.getElementById('job-location').value = "";
+                document.getElementById('job-skills').value = "";
+                document.getElementById('job-deadline').value = "";
+                document.getElementById('job-flow').value = "面談1回";
+                document.getElementById('job-company').value = "";
+                document.getElementById('job-url').value = "";
             }
         };
 
@@ -1232,7 +1297,7 @@
         };
 
         // ==========================================
-        // Event Create Logic (Updated with Online/Price)
+        // Event Create Logic (Updated with Online/Price/Upload safety)
         // ==========================================
         function renderEventTagButtons() {
             const container = document.getElementById('event-tag-area');
@@ -1326,11 +1391,20 @@
 
             let thumbnailUrl = '';
             const file = document.getElementById('event-image').files[0];
+            
             if (file) {
-                try {
-                    const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${Date.now()}_${file.name}`), file);
-                    thumbnailUrl = await getDownloadURL(snap.ref);
-                } catch (e) { return alert("画像のアップロードに失敗しました"); }
+                if (isAdminMock) {
+                    // モック環境での画像アップロードエラーを回避するためのダミーURL
+                    thumbnailUrl = 'https://via.placeholder.com/400x200?text=Mock+Image';
+                } else {
+                    try {
+                        const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${Date.now()}_${file.name}`), file);
+                        thumbnailUrl = await getDownloadURL(snap.ref);
+                    } catch (e) { 
+                        console.error(e);
+                        return alert("画像のアップロードに失敗しました"); 
+                    }
+                }
             }
 
             const customTags = document.getElementById('event-custom-tags').value.split(',').map(s=>s.trim()).filter(s=>s);
@@ -1362,8 +1436,12 @@
 
             try {
                 document.getElementById('event-submit-btn').textContent = "送信中...";
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'events'), eventData);
-                alert('イベントを企画しました！');
+                if (isAdminMock) {
+                    alert('【テスト】イベントを作成しました！(モックデータ)');
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'events'), eventData);
+                    alert('イベントを企画しました！');
+                }
                 closeCreateModal('event');
                 loadEvents();
             } catch (e) {
@@ -1406,8 +1484,12 @@
 
             try {
                 document.getElementById('job-submit-btn').textContent = "送信中...";
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jobs'), jobData);
-                alert('仕事・依頼を掲載しました！');
+                if (isAdminMock) {
+                    alert('【テスト】仕事・依頼を掲載しました！(モックデータ)');
+                } else {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jobs'), jobData);
+                    alert('仕事・依頼を掲載しました！');
+                }
                 closeCreateModal('job');
                 loadJobs();
                 switchView('list-jobs'); // 掲載後リストへ遷移
