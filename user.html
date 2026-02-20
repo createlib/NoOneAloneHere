@@ -4,33 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>プロフィール | NOAH</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="img/icon.png">
+    
+    <!-- Google Fonts: Noto Serif JP -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'Noto Sans JP', 'sans-serif'] },
-                    colors: { brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 900: '#312e81' } }
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { 
+                        brand: { 
+                            50: '#f7f5f0',   // bg
+                            100: '#e8dfd1',  // border light
+                            200: '#dcd4c6',  // border medium
+                            300: '#c8b9a6',  // border dark
+                            400: '#a09080',  // text muted
+                            500: '#8b6a4f',  // accent
+                            600: '#725b3f',  // accent hover
+                            700: '#5c4a3d',  // text body
+                            800: '#4a3b32',  // text heading
+                            900: '#3e2723'   // text dark
+                        } 
+                    }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #f8fafc; }
+        body { 
+            font-family: 'Noto Serif JP', serif;
+            background-color: #f7f5f0; 
+            color: #4a3b32;
+        }
+        
+        .bg-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+
         @media (min-width: 1024px) {
             .profile-sidebar { position: sticky; top: 5rem; height: calc(100vh - 6rem); overflow-y: auto; scrollbar-width: none; }
             .profile-sidebar::-webkit-scrollbar { display: none; }
         }
-        .cover-gradient { background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%); }
-        .glass-header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        
+        .cover-gradient { 
+            background: linear-gradient(120deg, #dcd4c6 0%, #eae5d8 100%); 
+            position: relative;
+        }
+        .cover-gradient::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+        
         .shimmer {
-            background: #f6f7f8;
-            background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+            background: #e8dfd1;
+            background-image: linear-gradient(to right, #e8dfd1 0%, #f7f5f0 20%, #e8dfd1 40%, #e8dfd1 100%);
             background-repeat: no-repeat;
             background-size: 800px 100%; 
-            animation: placeholderShimmer 1s linear infinite forwards;
+            animation: placeholderShimmer 1.5s linear infinite forwards;
         }
         @keyframes placeholderShimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
         
@@ -40,8 +80,8 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: white;
-            border-top: 1px solid #e2e8f0;
+            background-color: #fffdf9;
+            border-top: 1px solid #e8dfd1;
             z-index: 50;
             height: 4rem;
             height: calc(4rem + env(safe-area-inset-bottom));
@@ -58,83 +98,84 @@
             padding-bottom: calc(5rem + env(safe-area-inset-bottom));
         }
 
-        .badge-walker { background-color: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
-        .badge-builder { background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%); color: #334155; border: 1px solid #94a3b8; }
-        .badge-guardian { background: linear-gradient(135deg, #fef9c3 0%, #fde047 100%); color: #854d0e; border: 1px solid #facc15; }
+        /* ランクバッジのNOAH風スタイリング */
+        .badge-walker { background-color: #f7f5f0; color: #5c4a3d; border: 1px solid #c8b9a6; }
+        .badge-builder { background: linear-gradient(135deg, #e8dfd1 0%, #dcd4c6 100%); color: #4a3b32; border: 1px solid #8b6a4f; }
+        .badge-guardian { background: linear-gradient(135deg, #fef9c3 0%, #d4af37 100%); color: #3e2723; border: 1px solid #b8860b; }
     </style>
 </head>
-<body class="text-slate-800 antialiased body-pb-nav lg:pb-0">
+<body class="antialiased body-pb-nav lg:pb-0 bg-texture">
 
     <!-- Navbar -->
-    <nav class="glass-header border-b border-slate-200 fixed w-full z-50 top-0 h-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
+    <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
             <div class="flex items-center gap-4">
-                <a href="javascript:history.back()" class="lg:hidden text-slate-500 hover:text-slate-900 transition-colors">
+                <a href="javascript:history.back()" class="lg:hidden text-brand-400 hover:text-brand-900 transition-colors">
                     <i class="fa-solid fa-arrow-left text-xl"></i>
                 </a>
-                <a href="user.html" class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                    <span class="bg-slate-900 text-white w-8 h-8 flex items-center justify-center rounded-lg text-sm"><i class="fa-solid fa-user"></i></span>
+                <a href="user.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
+                    <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-anchor"></i></span>
                     <span id="header-title">マイページ</span>
                 </a>
             </div>
             <div class="flex items-center gap-3">
                 <!-- PC Navigation Links -->
                 <div class="hidden lg:flex items-center gap-6 mr-4">
-                    <a href="home.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-house"></i> ホーム</a>
-                    <a href="events.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-map-location-dot"></i> イベント</a>
-                    <a href="search.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-magnifying-glass"></i> さがす</a>
-                    <a href="user.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-user"></i> マイページ</a>
+                    <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海(ホーム)</a>
+                    <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
+                    <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
+                    <a href="user.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
                 <!-- PC用 UPGRADEボタン -->
-                <a href="upgrade.html" class="hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold rounded-full shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-                    <i class="fa-solid fa-crown mr-1"></i> UPGRADE
+                <a href="upgrade.html" class="hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-white text-xs font-bold rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border border-[#996515]">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> 契約変更
                 </a>
                 
-                <a href="notifications.html" class="p-2 text-slate-400 hover:text-brand-600 transition-colors relative" title="通知">
+                <a href="notifications.html" class="p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
                     <i class="fa-regular fa-bell text-xl"></i>
-                    <span id="nav-badge" class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                    <span id="nav-badge" class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]"></span>
                 </a>
-                <button onclick="location.reload()" class="p-2 text-slate-400 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
-                <div class="h-6 w-px bg-slate-200 mx-1 hidden lg:block"></div>
-                <button onclick="handleLogout()" class="text-sm font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2"><span class="hidden sm:inline">ログアウト</span><i class="fa-solid fa-right-from-bracket text-lg"></i></button>
+                <button onclick="location.reload()" class="p-2 text-brand-300 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
+                <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
+                <button onclick="handleLogout()" class="text-sm font-bold text-brand-400 hover:text-red-800 transition-colors flex items-center gap-2"><span class="hidden sm:inline tracking-widest">下船する</span><i class="fa-solid fa-right-from-bracket text-lg"></i></button>
             </div>
         </div>
     </nav>
 
     <!-- Bottom Navigation -->
-    <nav class="lg:hidden bottom-nav-fixed">
+    <nav class="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="bottom-nav-content">
-            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
-                <i class="fa-solid fa-house text-xl mb-1"></i>
-                <span class="text-[10px] font-medium">ホーム</span>
+            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-ship text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">航海</span>
             </a>
-            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
-                <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
-                <span class="text-[10px] font-medium">イベント</span>
+            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-hourglass-half text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">イベント</span>
             </a>
-            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
-                <i class="fa-solid fa-magnifying-glass text-xl mb-1"></i>
-                <span class="text-[10px] font-medium">さがす</span>
+            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-compass text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">さがす</span>
             </a>
-            <button onclick="alert('マッチング機能は準備中です。\nComing Soon!')" class="flex flex-col items-center justify-center w-full h-full text-slate-300 hover:text-slate-400 transition-colors">
-                <i class="fa-solid fa-handshake-simple text-xl mb-1"></i>
-                <span class="text-[10px] font-medium">マッチ</span>
+            <button onclick="alert('マッチング機能は準備中です。\nComing Soon!')" class="flex flex-col items-center justify-center w-full h-full text-brand-300 hover:text-brand-500 transition-colors">
+                <i class="fa-solid fa-handshake text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">マッチ</span>
             </button>
             <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
-                <span class="text-[10px] font-bold">マイページ</span>
+                <span class="text-[10px] font-bold tracking-widest">マイページ</span>
             </a>
         </div>
     </nav>
 
     <!-- Error Container -->
-    <div id="error-container" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-        <div class="bg-white p-8 rounded-2xl shadow-xl border border-red-100 text-center max-w-sm mx-4">
-            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 text-2xl"><i class="fa-solid fa-user-slash"></i></div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">ユーザーが見つかりません</h3>
-            <p class="text-slate-500 text-sm mb-6">IDが間違っているか、データが取得できませんでした。</p>
-            <a href="user.html" class="inline-block w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition-colors">自分のページに戻る</a>
+    <div id="error-container" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-[#fffdf9]/80 backdrop-blur-sm">
+        <div class="bg-[#fffdf9] p-8 rounded-sm shadow-xl border border-brand-200 text-center max-w-sm mx-4">
+            <div class="w-16 h-16 bg-brand-50 rounded-full border border-brand-200 flex items-center justify-center mx-auto mb-4 text-brand-400 text-2xl"><i class="fa-solid fa-user-slash"></i></div>
+            <h3 class="text-lg font-bold text-brand-900 mb-2 font-serif">ユーザーが見つかりません</h3>
+            <p class="text-brand-500 text-sm mb-6">IDが間違っているか、データが取得できませんでした。</p>
+            <a href="user.html" class="inline-block w-full bg-brand-900 text-brand-50 font-bold py-3 rounded-sm hover:bg-brand-800 transition-colors tracking-widest">自分のページに戻る</a>
         </div>
     </div>
 
@@ -144,89 +185,93 @@
             
             <aside class="w-full lg:w-[360px] flex-shrink-0">
                 <div class="profile-sidebar">
-                    <div class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
-                        <div class="h-32 bg-slate-200 cover-gradient w-full"></div>
+                    <div class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 overflow-hidden relative">
+                        <!-- 装飾コーナー -->
+                        <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-brand-500 z-10 m-2"></div>
+                        <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+
+                        <div class="h-32 cover-gradient w-full border-b border-brand-200"></div>
                         <div class="px-6 relative">
                             <div class="-mt-12 flex justify-between items-end mb-4">
                                 <div class="relative">
-                                    <div class="h-24 w-24 rounded-2xl border-4 border-white bg-white shadow-sm overflow-hidden">
-                                        <i id="header-icon-placeholder" class="fa-solid fa-user text-4xl text-slate-200 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+                                    <div class="h-24 w-24 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20">
+                                        <i id="header-icon-placeholder" class="fa-solid fa-anchor text-4xl text-brand-200 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
                                         <img id="header-icon-img" src="" class="hidden w-full h-full object-cover" alt="Profile">
                                     </div>
                                 </div>
-                                <div id="header-actions" class="mb-1"></div>
+                                <div id="header-actions" class="mb-1 relative z-20"></div>
                             </div>
 
-                            <div class="mb-4">
-                                <h1 class="text-2xl font-bold text-slate-900 leading-tight"><span id="profile-name" class="shimmer block w-32 h-8 rounded mb-1"></span></h1>
+                            <div class="mb-4 relative z-20">
+                                <h1 class="text-2xl font-bold text-brand-900 leading-tight font-serif"><span id="profile-name" class="shimmer block w-32 h-8 rounded-sm mb-1"></span></h1>
                                 <div class="flex flex-wrap items-center gap-2 mt-1">
-                                    <p class="text-sm text-slate-500 font-medium" id="profile-id">@...</p>
-                                    <span id="rank-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border"></span>
-                                    <span id="mutual-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100"><i class="fa-solid fa-handshake mr-1"></i>相互フォロー</span>
-                                    <span id="admin-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100"><i class="fa-solid fa-crown mr-1"></i>管理者閲覧中</span>
+                                    <p class="text-sm text-brand-500 font-medium tracking-wide" id="profile-id">@...</p>
+                                    <span id="rank-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest"></span>
+                                    <span id="mutual-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7f5f0] text-brand-600 border border-brand-200 tracking-widest"><i class="fa-solid fa-handshake mr-1"></i>相互フォロー</span>
+                                    <span id="admin-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#3e2723] text-[#d4af37] border border-[#b8860b] tracking-widest"><i class="fa-solid fa-crown mr-1"></i>管理者</span>
                                 </div>
                             </div>
                             
-                            <!-- Bio Section (ID added) -->
-                            <div class="mb-6" id="section-bio"><p id="profile-bio" class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap"></p></div>
+                            <!-- Bio Section -->
+                            <div class="mb-6 relative z-20" id="section-bio"><p id="profile-bio" class="text-sm text-brand-700 leading-relaxed whitespace-pre-wrap"></p></div>
 
-                            <div class="flex items-center gap-6 py-4 border-t border-slate-100">
+                            <div class="flex items-center gap-6 py-4 border-t border-brand-100 relative z-20">
                                 <div class="text-center cursor-pointer hover:opacity-75 transition-opacity">
-                                    <span class="block font-bold text-slate-900 text-lg" id="count-following">-</span>
-                                    <span class="text-xs text-slate-500 font-medium">フォロー中</span>
+                                    <span class="block font-bold text-brand-900 text-lg font-serif" id="count-following">-</span>
+                                    <span class="text-xs text-brand-500 font-medium tracking-widest">フォロー中</span>
                                 </div>
                                 <div class="text-center cursor-pointer hover:opacity-75 transition-opacity">
-                                    <span class="block font-bold text-slate-900 text-lg" id="count-followers">-</span>
-                                    <span class="text-xs text-slate-500 font-medium">フォロワー</span>
+                                    <span class="block font-bold text-brand-900 text-lg font-serif" id="count-followers">-</span>
+                                    <span class="text-xs text-brand-500 font-medium tracking-widest">フォロワー</span>
                                 </div>
                             </div>
 
-                            <div class="py-4 border-t border-slate-100 space-y-3">
-                                <div class="flex items-center gap-3 text-sm text-slate-600"><div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0"><i class="fa-solid fa-briefcase"></i></div><span id="profile-job" class="font-medium">-</span></div>
-                                <div class="flex items-center gap-3 text-sm text-slate-600"><div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0"><i class="fa-solid fa-location-dot"></i></div><span id="profile-location" class="font-medium">-</span></div>
+                            <div class="py-4 border-t border-brand-100 space-y-3 relative z-20">
+                                <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-feather"></i></div><span id="profile-job" class="font-medium">-</span></div>
+                                <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div><span id="profile-location" class="font-medium">-</span></div>
                                 
                                 <div class="mutual-only hidden space-y-3">
-                                    <div class="flex items-center gap-3 text-sm text-slate-600"><div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0"><i class="fa-solid fa-venus-mars"></i></div><span id="data-gender" class="font-medium">-</span></div>
-                                    <div class="flex items-center gap-3 text-sm text-slate-600"><div class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0"><i class="fa-solid fa-cake-candles"></i></div><span id="data-birth" class="font-medium">-</span></div>
+                                    <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-venus-mars"></i></div><span id="data-gender" class="font-medium">-</span></div>
+                                    <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-hourglass"></i></div><span id="data-birth" class="font-medium">-</span></div>
                                 </div>
                                 <div id="profile-sns-links" class="flex gap-3 pt-2"></div>
                                 
                                 <!-- Personal Mask Overlay -->
-                                <div id="personal-mask" class="hidden mt-2 p-3 bg-gray-50 rounded border border-gray-100 text-center">
-                                    <p class="text-xs text-gray-500 font-medium"><i class="fa-solid fa-lock mr-1"></i>詳細は相互フォローで公開</p>
+                                <div id="personal-mask" class="hidden mt-2 p-3 bg-brand-50 border border-brand-200 border-dashed text-center">
+                                    <p class="text-xs text-brand-500 font-medium tracking-widest"><i class="fa-solid fa-lock mr-1"></i>詳細は相互フォローで公開</p>
                                 </div>
                             </div>
 
-                            <div id="completion-bar-container" class="hidden my-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-slate-500">プロフィール充実度</span><span id="score-text" class="text-sm font-bold text-brand-600">0%</span></div>
-                                <div class="w-full bg-slate-200 rounded-full h-2"><div id="score-bar" class="bg-brand-500 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div></div>
+                            <div id="completion-bar-container" class="hidden my-4 p-4 bg-brand-50 border border-brand-200 relative z-20">
+                                <div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-brand-500 tracking-widest">プロフィール充実度</span><span id="score-text" class="text-sm font-bold text-brand-600">0%</span></div>
+                                <div class="w-full bg-brand-200 h-1.5"><div id="score-bar" class="bg-brand-500 h-1.5 transition-all duration-1000 ease-out" style="width: 0%"></div></div>
                             </div>
 
-                            <!-- Upgrade CTA (Displayed if Walker and Self) -->
-                            <div id="upgrade-cta-container" class="hidden mt-4">
-                                <a href="upgrade.html" class="block w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                            <!-- Upgrade CTA -->
+                            <div id="upgrade-cta-container" class="hidden mt-4 mb-6 relative z-20">
+                                <a href="upgrade.html" class="block w-full bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] border border-[#996515] rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
                                     <div class="px-3 py-2.5 flex items-center justify-between">
                                         <div class="flex items-center gap-3">
-                                            <div class="bg-white/20 rounded-full p-1.5 group-hover:scale-110 transition-transform">
-                                                <i class="fa-solid fa-crown text-base text-white"></i>
+                                            <div class="bg-[#fffdf9]/30 rounded-full p-1.5 group-hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-shield-halved text-base text-[#2a1a17]"></i>
                                             </div>
                                             <div class="text-left">
-                                                <p class="text-[10px] font-medium text-white/90 leading-tight">機能制限を解除</p>
-                                                <p class="text-sm font-black tracking-wide leading-tight">プランをアップグレード</p>
+                                                <p class="text-[10px] font-bold text-[#2a1a17]/80 leading-tight tracking-widest">機能制限を解除</p>
+                                                <p class="text-sm font-black tracking-widest leading-tight mt-0.5 font-serif">契約をアップグレード</p>
                                             </div>
                                         </div>
-                                        <i class="fa-solid fa-chevron-right text-white/80 text-sm"></i>
+                                        <i class="fa-solid fa-chevron-right text-[#2a1a17]/80 text-sm"></i>
                                     </div>
                                 </a>
                             </div>
 
                             <!-- Debug: Rank Switcher (Admin Only) -->
-                            <div id="debug-rank-switcher" class="hidden mt-6 pt-6 border-t border-dashed border-gray-200">
-                                <p class="text-[10px] font-bold text-purple-600 mb-2 uppercase tracking-wide">【管理者用】ランク変更 (DB保存)</p>
+                            <div id="debug-rank-switcher" class="hidden mt-6 pt-6 border-t border-dashed border-brand-200 relative z-20 pb-4">
+                                <p class="text-[10px] font-bold text-[#b8860b] mb-2 uppercase tracking-widest">【管理者用】役割変更</p>
                                 <div class="flex gap-2">
-                                    <button onclick="changeRank('walker')" class="flex-1 py-1.5 text-[10px] font-bold bg-gray-100 text-gray-600 rounded hover:bg-gray-200 border border-gray-200">WALKER</button>
-                                    <button onclick="changeRank('builder')" class="flex-1 py-1.5 text-[10px] font-bold bg-slate-200 text-slate-700 rounded hover:bg-slate-300 border border-slate-300">BUILDER</button>
-                                    <button onclick="changeRank('guardian')" class="flex-1 py-1.5 text-[10px] font-bold bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 border border-yellow-300">GUARDIAN</button>
+                                    <button onclick="changeRank('walker')" class="flex-1 py-1 text-[9px] font-bold bg-brand-50 text-brand-600 rounded-sm hover:bg-brand-100 border border-brand-200">PASSENGER</button>
+                                    <button onclick="changeRank('builder')" class="flex-1 py-1 text-[9px] font-bold bg-brand-200 text-brand-800 rounded-sm hover:bg-brand-300 border border-brand-300">BUILDER</button>
+                                    <button onclick="changeRank('guardian')" class="flex-1 py-1 text-[9px] font-bold bg-[#d4af37] text-[#2a1a17] rounded-sm hover:bg-[#b8860b] border border-[#996515]">COVENANT</button>
                                 </div>
                             </div>
                         </div>
@@ -237,46 +282,65 @@
             <div class="flex-1 min-w-0">
                 <div class="space-y-6">
                     
-                    <!-- Message Section (ID added) -->
-                    <div id="section-message" class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8">
-                        <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">想い・メッセージ</h2><i id="message-lock-icon" class="fa-solid fa-lock text-slate-300 hidden"></i></div>
+                    <!-- Message Section -->
+                    <div id="section-message" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4 pb-2 border-b border-brand-200">
+                            <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest">想い・メッセージ</h2>
+                            <i id="message-lock-icon" class="fa-solid fa-lock text-brand-300 hidden"></i>
+                        </div>
                         <div id="message-container" class="hidden">
-                            <div class="relative"><i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-2 -left-2 z-0"></i><div id="profile-message" class="relative z-10 text-[15px] leading-8 text-slate-700 whitespace-pre-wrap font-medium pl-4"></div></div>
+                            <div class="relative mt-6">
+                                <i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-4 -left-2 z-0"></i>
+                                <div id="profile-message" class="relative z-10 text-[15px] leading-8 text-brand-700 whitespace-pre-wrap font-medium pl-6"></div>
+                            </div>
                         </div>
-                        <div id="message-mask" class="hidden py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center"><div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white mb-3 shadow-sm"><i class="fa-solid fa-lock text-slate-400"></i></div><p class="text-sm font-bold text-slate-500"></p></div>
+                        <div id="message-mask" class="hidden py-8 bg-brand-50 border border-dashed border-brand-200 text-center mt-4">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#fffdf9] border border-brand-100 mb-3 shadow-sm"><i class="fa-solid fa-lock text-brand-300"></i></div>
+                            <p class="text-sm font-bold text-brand-500 tracking-widest"></p>
+                        </div>
                     </div>
 
-                    <!-- Matching Section (ID added) -->
+                    <!-- Matching Section -->
                     <div id="section-matching" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-blue-200 transition-colors">
-                            <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                            <h3 class="text-sm font-bold text-slate-500 mb-4 uppercase tracking-wide relative z-10">提供できること</h3>
-                            <ul id="list-can-offer" class="space-y-3 relative z-10"><li class="text-slate-400 italic text-sm">未設定</li></ul>
+                        <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-[#f7f5f0] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-100"></div>
+                            <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">提供できること</h3>
+                            <ul id="list-can-offer" class="space-y-3 relative z-10"><li class="text-brand-300 italic text-sm">未設定</li></ul>
                         </div>
-                        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-pink-200 transition-colors">
-                            <div class="absolute top-0 right-0 w-24 h-24 bg-pink-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-                            <h3 class="text-sm font-bold text-slate-500 mb-4 uppercase tracking-wide relative z-10">求めていること</h3>
-                            <ul id="list-looking-for" class="space-y-3 relative z-10"><li class="text-slate-400 italic text-sm">未設定</li></ul>
+                        <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-[#eae5d8] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-200"></div>
+                            <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">求めていること</h3>
+                            <ul id="list-looking-for" class="space-y-3 relative z-10"><li class="text-brand-300 italic text-sm">未設定</li></ul>
                         </div>
                     </div>
 
-                    <!-- Tags Section (ID added) -->
-                    <div id="section-tags" class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 p-6">
-                        <h2 class="text-lg font-bold text-slate-900 mb-4">スキル・趣味</h2>
-                        <div id="tags-container" class="flex flex-wrap gap-2"><span class="text-sm text-slate-400 italic">未設定</span></div>
+                    <!-- Tags Section -->
+                    <div id="section-tags" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6">
+                        <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">スキル・趣味</h2>
+                        <div id="tags-container" class="flex flex-wrap gap-2"><span class="text-sm text-brand-300 italic">未設定</span></div>
                     </div>
 
-                    <!-- Goals Section (ID added) -->
-                    <div id="section-goals" class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 p-6">
-                        <h2 class="text-lg font-bold text-slate-900 mb-4">目標・ビジョン</h2>
-                        <div id="profile-goals" class="text-slate-700 text-sm leading-7 whitespace-pre-wrap">未設定</div>
+                    <!-- Goals Section -->
+                    <div id="section-goals" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6">
+                        <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">目標・ビジョン</h2>
+                        <div id="profile-goals" class="text-brand-700 text-sm leading-8 whitespace-pre-wrap mt-2">未設定</div>
                     </div>
 
-                    <!-- Career Section (ID added) -->
-                    <div id="section-career" class="bg-white sm:rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8">
-                        <div class="flex items-center justify-between mb-6"><h2 class="text-lg font-bold text-slate-900">経歴</h2><i id="career-lock-icon" class="fa-solid fa-lock text-slate-300"></i></div>
-                        <div id="career-container" class="space-y-8 mt-2 relative"><div class="absolute left-[7px] top-2 bottom-2 w-0.5 bg-slate-100"></div></div>
-                        <div id="career-mask" class="hidden py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center"><p class="text-sm font-bold text-slate-500">相互フォローで経歴を表示</p></div>
+                    <!-- Career Section -->
+                    <div id="section-career" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                        <!-- 装飾 -->
+                        <div class="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-brand-300 m-4 pointer-events-none opacity-50"></div>
+                        
+                        <div class="flex items-center justify-between mb-6 pb-2 border-b border-brand-200">
+                            <h2 class="text-lg font-bold text-brand-900 font-serif tracking-widest">経歴</h2>
+                            <i id="career-lock-icon" class="fa-solid fa-lock text-brand-300"></i>
+                        </div>
+                        <div id="career-container" class="space-y-8 mt-4 relative">
+                            <div class="absolute left-[7px] top-2 bottom-2 w-px bg-brand-200"></div>
+                        </div>
+                        <div id="career-mask" class="hidden py-10 bg-brand-50 border border-dashed border-brand-200 text-center mt-4">
+                            <p class="text-sm font-bold text-brand-500 tracking-widest">相互フォローで経歴を表示</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -285,7 +349,7 @@
 
     <!-- Notification Toast -->
     <div id="notification" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 hidden transition-all duration-300 translate-y-20">
-        <div class="bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-90"><i class="fa-solid fa-check-circle text-brand-400 text-lg"></i><span id="notif-message" class="text-sm font-bold"></span></div>
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-ship text-[#c8b9a6] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
     </div>
 
     <script type="module">
@@ -326,8 +390,8 @@
             if (!text) return '';
             let safeText = text.replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]; });
             return safeText.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)|(https?:\/\/[a-zA-Z0-9.\/?=&%#_:-]+)/g, (match, mdText, mdUrl, rawUrl) => {
-                if (mdText && mdUrl) return `<a href="${mdUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:underline cursor-pointer">${mdText}</a>`;
-                if (rawUrl) return `<a href="${rawUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:underline break-all cursor-pointer">${rawUrl}</a>`;
+                if (mdText && mdUrl) return `<a href="${mdUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:text-brand-800 underline transition-colors cursor-pointer">${mdText}</a>`;
+                if (rawUrl) return `<a href="${rawUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:text-brand-800 underline break-all transition-colors cursor-pointer">${rawUrl}</a>`;
                 return match;
             });
         }
@@ -397,22 +461,20 @@
             if(headerActions) {
                 headerActions.innerHTML = `
                 <div class="flex flex-col items-end gap-1 w-full lg:w-auto">
-                    <a href="profile.html" class="inline-flex items-center justify-center px-6 py-2 border border-slate-300 shadow-sm text-sm font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 transition-all active:scale-95">
-                        プロフィール編集
+                    <a href="profile.html" class="inline-flex items-center justify-center px-6 py-2 border border-brand-500 shadow-sm text-sm font-bold rounded-sm text-brand-900 bg-[#fffdf9] hover:bg-brand-50 transition-all active:scale-95 tracking-widest font-serif">
+                        航海録を編集
                     </a>
-                    <a href="upgrade.html" class="text-[10px] font-bold text-slate-400 hover:text-brand-600 transition-colors mr-1 underline decoration-dotted">
-                        プランの確認・変更
+                    <a href="upgrade.html" class="text-[10px] font-bold text-brand-400 hover:text-brand-600 transition-colors mr-1 underline decoration-dotted tracking-widest">
+                        契約の確認・変更
                     </a>
                 </div>`;
             }
             document.getElementById('completion-bar-container').classList.remove('hidden');
             
-            // ★管理者のみランク変更機能を表示
             if (isAdmin) {
                 document.getElementById('debug-rank-switcher').classList.remove('hidden');
             }
             
-            // ★ WALKER会員なら、目立つアップグレードバナーを表示
             if (currentRank === 'walker') {
                 document.getElementById('upgrade-cta-container').classList.remove('hidden');
             } else {
@@ -447,8 +509,6 @@
                     dataToUse = publicSnap.data();
                 }
                 
-                // 自分がWALKERなら詳細データ(Private)は取れない（制限のため）
-                // ただし管理者は取れる
                 if (isAdmin || (isMutual && myRank !== 'walker')) {
                     try {
                         const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
@@ -509,15 +569,13 @@
             if(!container) return;
             let btnHtml = '';
             if (isFollowing) {
-                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-bold rounded-xl text-slate-900 bg-white hover:bg-slate-50 transition-all mr-2">フォロー中</button>`;
+                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-brand-500 shadow-sm text-sm font-bold rounded-sm text-brand-900 bg-[#fffdf9] hover:bg-brand-50 transition-all mr-2 tracking-widest font-serif">フォロー中</button>`;
             } else {
-                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-bold rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition-all mr-2">フォロー</button>`;
+                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-bold rounded-sm text-[#f7f5f0] bg-[#3e2723] hover:bg-[#2a1a17] transition-all mr-2 tracking-widest font-serif">フォロー</button>`;
             }
             if (isAdmin && !isSelf) {
-                btnHtml += `<a href="profile.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-xl text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
+                btnHtml += `<a href="profile.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-brand-300 text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-sm text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
                 document.getElementById('admin-badge').classList.remove('hidden');
-                
-                // ★管理者用ランク変更パネル（他人閲覧時）
                 document.getElementById('debug-rank-switcher').classList.remove('hidden');
             }
             container.innerHTML = btnHtml;
@@ -608,21 +666,21 @@
                 }
             }
 
-            // Rank Badge
+            // Rank Badge (Styling & Text changed for NOAH)
             const rank = data.membershipRank || 'walker';
             const badgeEl = document.getElementById('rank-badge');
             if (badgeEl) {
-                badgeEl.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border';
+                badgeEl.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest';
                 badgeEl.classList.remove('hidden');
                 if (rank === 'guardian') {
                     badgeEl.classList.add('badge-guardian');
-                    badgeEl.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i>GUARDIAN';
+                    badgeEl.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i>COVENANT / GUARDIAN';
                 } else if (rank === 'builder') {
                     badgeEl.classList.add('badge-builder');
                     badgeEl.innerHTML = '<i class="fa-solid fa-hammer mr-1"></i>BUILDER';
                 } else {
                     badgeEl.classList.add('badge-walker');
-                    badgeEl.innerHTML = '<i class="fa-solid fa-person-walking mr-1"></i>WALKER';
+                    badgeEl.innerHTML = '<i class="fa-solid fa-anchor mr-1"></i>SETTLER / ARRIVAL';
                 }
             }
 
@@ -654,9 +712,9 @@
             if (applyWalkerRestriction) {
                 let maskMsg = '';
                 if (isViewerWalker) {
-                    maskMsg = '<span class="text-brand-600 font-bold cursor-pointer underline" onclick="location.href=\'upgrade.html\'">BUILDERにアップグレード</span>して詳細を表示';
+                    maskMsg = '<span class="text-brand-700 font-bold cursor-pointer underline hover:text-brand-900 transition-colors" onclick="location.href=\'upgrade.html\'">SETTLER / BUILDER にアップグレード</span> して詳細を表示';
                 } else {
-                    maskMsg = 'このユーザーはWALKER会員のため情報は制限されています';
+                    maskMsg = 'このユーザーの役割上、情報は制限されています';
                 }
                 document.querySelector('#message-mask p').innerHTML = maskMsg;
                 document.querySelector('#career-mask p').innerHTML = maskMsg;
@@ -697,34 +755,34 @@
                             const formattedDesc = formatText(c.description || '');
                             careerContainer.innerHTML += `
                                 <div class="relative pl-6 pb-2">
-                                    <div class="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-brand-500 ring-4 ring-white z-10 shadow-sm"></div>
-                                    <h4 class="font-bold text-slate-900 text-base">${c.company || '会社名不明'}</h4>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">${c.role || 'Role'}</span>
-                                        <span class="text-xs text-slate-400 font-medium">${c.start || '?'} 〜 ${c.end || '現在'}</span>
+                                    <div class="absolute left-[-5px] top-1.5 h-3 w-3 rounded-full bg-brand-500 ring-4 ring-[#fffdf9] z-10 shadow-sm border border-brand-300"></div>
+                                    <h4 class="font-bold text-brand-900 text-base font-serif tracking-widest">${c.company || '会社名不明'}</h4>
+                                    <div class="flex items-center gap-2 mb-3 mt-1">
+                                        <span class="text-[10px] font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded-sm tracking-widest border border-brand-200">${c.role || '役割'}</span>
+                                        <span class="text-xs text-brand-400 font-medium tracking-widest">${c.start || '?'} 〜 ${c.end || '現在'}</span>
                                     </div>
-                                    <div class="text-sm text-slate-600 leading-relaxed font-medium bg-slate-50 p-3 rounded-xl">${formattedDesc}</div>
+                                    <div class="text-sm text-brand-700 leading-relaxed font-medium bg-brand-50 p-4 rounded-sm border border-brand-100">${formattedDesc}</div>
                                 </div>
                             `;
                         });
                     } else {
-                        careerContainer.innerHTML = '<div class="text-slate-400 text-sm italic">経歴情報はありません</div>';
+                        careerContainer.innerHTML = '<div class="text-brand-300 text-sm italic pl-6">経歴情報はありません</div>';
                     }
                 }
                 
                 const snsContainer = document.getElementById('profile-sns-links');
                 if (snsContainer) {
                     snsContainer.innerHTML = '';
-                    if (data.websiteUrl) snsContainer.innerHTML += `<a href="${data.websiteUrl}" target="_blank" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"><i class="fa-solid fa-globe"></i></a>`;
-                    if (data.snsInstagram) snsContainer.innerHTML += `<a href="${data.snsInstagram.startsWith('http') ? data.snsInstagram : 'https://instagram.com/'+data.snsInstagram}" target="_blank" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-pink-50 hover:text-pink-500 transition-colors"><i class="fa-brands fa-instagram"></i></a>`;
-                    if (data.snsX) snsContainer.innerHTML += `<a href="${data.snsX.startsWith('http') ? data.snsX : 'https://twitter.com/'+data.snsX}" target="_blank" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors"><i class="fa-brands fa-x-twitter"></i></a>`;
+                    if (data.websiteUrl) snsContainer.innerHTML += `<a href="${data.websiteUrl}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors"><i class="fa-solid fa-globe"></i></a>`;
+                    if (data.snsInstagram) snsContainer.innerHTML += `<a href="${data.snsInstagram.startsWith('http') ? data.snsInstagram : 'https://instagram.com/'+data.snsInstagram}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors"><i class="fa-brands fa-instagram"></i></a>`;
+                    if (data.snsX) snsContainer.innerHTML += `<a href="${data.snsX.startsWith('http') ? data.snsX : 'https://twitter.com/'+data.snsX}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors"><i class="fa-brands fa-x-twitter"></i></a>`;
                 }
 
                 const messageEl = document.getElementById('profile-message');
                 if (messageEl) {
                     messageEl.innerHTML = data.message ? formatText(data.message) : 'まだメッセージがありません。';
-                    if (!data.message) messageEl.classList.add('text-slate-400');
-                    else messageEl.classList.remove('text-slate-400');
+                    if (!data.message) messageEl.classList.add('text-brand-300');
+                    else messageEl.classList.remove('text-brand-300');
                 }
             }
 
@@ -738,7 +796,7 @@
         // --- Debug: Change Rank Function ---
         window.changeRank = async (newRole) => {
             if (!currentUser) return;
-            const uid = targetUid; // 管理者が他人のページで操作する場合もあるため targetUid を使う
+            const uid = targetUid; 
             try {
                 const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
                 await updateDoc(privateRef, { membershipRank: newRole });
@@ -749,7 +807,7 @@
                     await updateDoc(publicRef, { membershipRank: newRole });
                 }
                 
-                alert(`ランクを ${newRole} に変更しました。\n画面をリロードします。`);
+                alert(`役割を ${newRole} に変更しました。\n画面をリロードします。`);
                 window.location.reload();
             } catch (e) {
                 console.error(e);
@@ -782,10 +840,10 @@
 
         function getAdminMockData() {
             return {
-                userId: 'admin', name: 'テスト管理者', jobTitle: 'システム開発', gender: '男性',
+                userId: 'admin', name: 'NOAH 運営', jobTitle: '航海士', gender: '男性',
                 profileScore: 90, hobbies: ['開発', 'デザイン'], skills: ['Firebase', 'HTML/CSS'], email: 'admin@test.com',
-                prefecture: '東京都', message: '管理者アカウントです。', bio: '自己紹介エリア', goals: '目標',
-                canOffer: ['技術'], lookingFor: ['デザイン'], career: [], membershipRank: 'guardian'
+                prefecture: '愛知県', message: 'ここでは誰も一人にならない。', bio: 'NOAHの航海を見守る管理者アカウントです。', goals: '誰も取り残さないシステムを作ること。',
+                canOffer: ['環境の提供', 'マッチングサポート'], lookingFor: ['共鳴できる仲間'], career: [], membershipRank: 'guardian'
             };
         }
     </script>
