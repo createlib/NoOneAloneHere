@@ -4,94 +4,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>プロフィール編集 | NOAH</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="img/icon.png">
+    
+    <!-- Google Fonts: Noto Serif JP -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { 
+                        brand: { 
+                            50: '#f7f5f0',   // bg
+                            100: '#e8dfd1',  // border light
+                            200: '#dcd4c6',  // border medium
+                            300: '#c8b9a6',  // border dark
+                            400: '#a09080',  // text muted
+                            500: '#8b6a4f',  // accent
+                            600: '#725b3f',  // accent hover
+                            700: '#5c4a3d',  // text body
+                            800: '#4a3b32',  // text heading
+                            900: '#3e2723'   // text dark
+                        } 
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Noto Sans JP', sans-serif; background-color: #f3f4f6; }
+        body { 
+            font-family: 'Noto Serif JP', serif;
+            background-color: #f7f5f0; 
+            color: #4a3b32;
+        }
+        
+        .bg-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] summary ~ * { animation: slideDown 0.3s ease-in-out; }
         @keyframes slideDown { 0% { opacity: 0; transform: translateY(-10px); } 100% { opacity: 1; transform: translateY(0); } }
         .accordion-arrow { transition: transform 0.3s ease; }
         details[open] .accordion-arrow { transform: rotate(180deg); }
-        .tag-checkbox:checked + div { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+        .tag-checkbox:checked + div { background-color: #8b6a4f; color: #fffdf9; border-color: #8b6a4f; }
+        
+        /* フォーム要素のフォーカススタイル上書き */
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #8b6a4f !important;
+            box-shadow: 0 0 0 1px #8b6a4f !important;
+        }
     </style>
 </head>
-<body class="min-h-screen bg-gray-100 text-gray-800 font-sans pb-24">
+<body class="min-h-screen bg-texture pb-24">
 
     <!-- Header -->
-    <header class="bg-white shadow sticky top-0 z-20">
-        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-gray-900 flex items-center">
-                プロフィール編集 
-                <span id="admin-label" class="hidden text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded ml-2 border border-purple-200">
-                    <i class="fa-solid fa-crown mr-1"></i>管理者モード
+    <header class="bg-[#fffdf9] bg-texture border-b border-brand-200 shadow-sm sticky top-0 z-20">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center relative z-10">
+            <h1 class="text-xl font-bold text-brand-900 flex items-center font-serif tracking-widest">
+                航海録の編集 
+                <span id="admin-label" class="hidden text-[10px] text-[#2a1a17] bg-[#d4af37] px-2 py-1 rounded-sm ml-3 border border-[#b8860b] font-sans tracking-widest">
+                    <i class="fa-solid fa-crown mr-1"></i>管理者
                 </span>
             </h1>
-            <div class="flex space-x-3">
-                <button onclick="history.back()" class="text-gray-600 hover:text-gray-900 text-sm font-medium py-2">キャンセル</button>
-                <button onclick="saveProfile()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors">
-                    保存する
+            <div class="flex space-x-4 items-center">
+                <button onclick="history.back()" class="text-brand-500 hover:text-brand-800 text-sm font-medium transition-colors tracking-widest">キャンセル</button>
+                <button onclick="saveProfile()" class="bg-[#3e2723] hover:bg-[#2a1a17] text-[#f7f5f0] px-5 py-2 rounded-sm text-sm font-bold shadow-md transition-colors tracking-widest border border-[#3e2723]">
+                    記録する
                 </button>
             </div>
         </div>
     </header>
 
-    <main class="max-w-3xl mx-auto mt-6 px-4">
+    <main class="max-w-3xl mx-auto mt-8 px-4">
+        <!-- 充実度に関する案内 -->
+        <div class="bg-brand-50 border border-brand-200 p-4 rounded-sm mb-8 text-sm text-brand-700 leading-relaxed shadow-sm">
+            <p class="font-bold text-brand-900 mb-1 tracking-widest"><i class="fa-solid fa-circle-info mr-2 text-brand-500"></i>プロフィール充実度について</p>
+            <p>各項目を詳細に記載することで「プロフィール充実度」が上昇します。<br>想いや目標（500字以上）、自己紹介（100字以上）、スキル・趣味（各3つ以上）などを満たすとパーセンテージが加算されます。</p>
+        </div>
+
         <form id="profile-form" class="space-y-8" onsubmit="event.preventDefault();">
             
             <!-- 0. 公開設定・職業 -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b">基本設定</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">基本設定</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">公開状態</label>
-                        <select name="profilePublic" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                        <label class="block text-sm font-medium text-brand-700 tracking-widest">公開状態</label>
+                        <select name="profilePublic" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                             <option value="true">公開する</option>
                             <option value="false">非公開（下書き）</option>
                         </select>
-                        <p class="text-xs text-gray-500 mt-1">※WALKER会員は設定に関わらず検索結果には表示されません</p>
+                        <p class="text-xs text-brand-500 mt-1">※ARRIVAL会員は設定に関わらず検索結果には表示されません</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">職業・肩書</label>
-                        <input type="text" name="jobTitle" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                        <label class="block text-sm font-medium text-brand-700 tracking-widest">職業・肩書</label>
+                        <input type="text" name="jobTitle" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                     </div>
                 </div>
             </div>
 
             <!-- 1. 基本情報 -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b">① 基本情報</h2>
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <h2 class="text-lg font-bold text-brand-900 mb-6 pb-2 border-b border-brand-200 font-serif tracking-widest">① 基本情報</h2>
                 
-                <div class="mb-6 flex flex-col items-center sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
-                    <div class="relative h-24 w-24 rounded-full border-2 border-gray-200 bg-gray-100 flex items-center justify-center overflow-hidden">
+                <div class="mb-8 flex flex-col items-center sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 relative z-10">
+                    <div class="relative h-24 w-24 rounded-sm border-4 border-brand-100 bg-[#f7f5f0] flex items-center justify-center overflow-hidden shadow-sm">
                         <img id="edit-icon-preview" src="" class="hidden w-full h-full object-cover">
-                        <i id="edit-icon-placeholder" class="fa-solid fa-user text-3xl text-gray-300"></i>
+                        <i id="edit-icon-placeholder" class="fa-solid fa-anchor text-3xl text-brand-300"></i>
                     </div>
-                    <div class="flex-1">
-                        <label class="block text-sm font-medium text-gray-700">プロフィールアイコン</label>
-                        <input type="file" id="icon-upload" accept="image/*" class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                        <p class="mt-1 text-xs text-gray-500">推奨: 正方形の画像 (JPG, PNG)</p>
+                    <div class="flex-1 w-full text-center sm:text-left">
+                        <label class="block text-sm font-medium text-brand-700 tracking-widest">肖像画（プロフィールアイコン）</label>
+                        <input type="file" id="icon-upload" accept="image/*" class="mt-2 block w-full text-sm text-brand-500 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-brand-800 hover:file:bg-brand-100 file:border file:border-brand-200 file:cursor-pointer">
+                        <p class="mt-2 text-xs text-brand-400">推奨: 正方形の画像 (JPG, PNG)</p>
                         <p id="upload-status" class="text-xs text-red-500 hidden mt-1"></p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-6">
+                <div class="grid grid-cols-1 gap-6 relative z-10">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">氏名（表示用） <span class="text-red-500">*</span></label>
-                            <input type="text" name="name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                            <label class="block text-sm font-medium text-brand-700 tracking-widest">氏名（表示用） <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" required class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">ふりがな</label>
-                            <input type="text" name="nameKana" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                            <label class="block text-sm font-medium text-brand-700 tracking-widest">ふりがな</label>
+                            <input type="text" name="nameKana" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">性別</label>
-                            <select name="gender" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                            <label class="block text-sm font-medium text-brand-700 tracking-widest">性別</label>
+                            <select name="gender" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                                 <option value="">未選択</option>
                                 <option value="男性">男性</option>
                                 <option value="女性">女性</option>
@@ -100,12 +155,12 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">生年月日</label>
-                            <input type="date" name="birthDate" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                            <label class="block text-sm font-medium text-brand-700 tracking-widest">生年月日</label>
+                            <input type="date" name="birthDate" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">公開範囲</label>
-                            <select name="birthVisibility" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                            <label class="block text-sm font-medium text-brand-700 tracking-widest">公開範囲</label>
+                            <select name="birthVisibility" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                                 <option value="private">非公開</option>
                                 <option value="monthDay">月日のみ公開</option>
                                 <option value="full">全て公開</option>
@@ -114,111 +169,148 @@
                     </div>
                     <!-- Bio -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">自己紹介（公開・369文字以内）</label>
-                        <textarea name="bio" rows="3" maxlength="369" class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border" placeholder="はじめまして！〇〇をしています。"></textarea>
+                        <label class="block text-sm font-medium text-brand-700 mb-1 tracking-widest">自己紹介（公開・369文字以内）</label>
+                        <textarea name="bio" rows="4" maxlength="369" class="block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-3 border bg-[#fffdf9] leading-relaxed" placeholder="はじめまして！〇〇をしています。"></textarea>
+                        <p class="text-xs text-brand-500 mt-1 text-right">※100文字以上で充実度UP</p>
                     </div>
                 </div>
             </div>
 
             <!-- 2. 連絡・外部リンク -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b">② 連絡先・SNS</h2>
-                <div class="space-y-4">
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">② 連絡先・SNS</h2>
+                <div class="space-y-4 relative z-10">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">メールアドレス（連絡用）</label>
-                        <input type="email" name="contactEmail" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                        <label class="block text-sm font-medium text-brand-700 tracking-widest">メールアドレス（連絡用）</label>
+                        <input type="email" name="contactEmail" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">WEBサイト (URL)</label>
-                            <input type="url" name="websiteUrl" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                            <label class="block text-sm font-medium text-brand-700 tracking-widest">WEBサイト (URL)</label>
+                            <input type="url" name="websiteUrl" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Instagram (ID/URL)</label>
-                            <input type="text" name="snsInstagram" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                            <label class="block text-sm font-medium text-brand-700 tracking-widest">Instagram (ID/URL)</label>
+                            <input type="text" name="snsInstagram" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">X (旧Twitter) (ID/URL)</label>
-                            <input type="text" name="snsX" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                            <label class="block text-sm font-medium text-brand-700 tracking-widest">X (旧Twitter) (ID/URL)</label>
+                            <input type="text" name="snsX" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. エリア -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b">③ エリア</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- 3. 出身地 (NEW) -->
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">③ 出身地</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">都道府県</label>
-                        <select name="prefecture" id="prefecture-select" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                        <label class="block text-sm font-medium text-brand-700 tracking-widest">都道府県</label>
+                        <select name="birthPrefecture" id="birth-prefecture-select" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                             <option value="">選択してください</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">市区町村</label>
-                        <input type="text" name="city" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
+                        <label class="block text-sm font-medium text-brand-700 tracking-widest">市区町村</label>
+                        <input type="text" name="birthCity" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                     </div>
                 </div>
             </div>
 
-            <!-- 4. 趣味 -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b">④ 趣味</h2>
-                <div id="hobbies-container" class="space-y-2"></div>
-                <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-700">その他</label>
-                    <input type="text" name="hobbyOtherText" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border">
-                </div>
-            </div>
-
-            <!-- 5. 特技 -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b">⑤ 特技・スキル</h2>
-                <div id="skills-container" class="space-y-2"></div>
-                <div class="mt-4">
-                    <label class="block text-sm font-medium text-gray-700">補足説明</label>
-                    <textarea name="skillDescription" rows="3" maxlength="300" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"></textarea>
-                </div>
-            </div>
-
-            <!-- 6. 経歴 -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <div class="flex justify-between items-center mb-4 border-b pb-2">
-                    <h2 class="text-lg font-bold text-gray-900">⑥ 経歴</h2>
-                    <button type="button" onclick="addCareerField()" class="text-sm text-blue-600 hover:underline">+ 追加する</button>
-                </div>
-                <div id="career-list" class="space-y-6"></div>
-            </div>
-
-            <!-- 7 & 8. 想い・目標 -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b">⑦ 想い・⑧ やりたいこと</h2>
-                <div class="space-y-6">
+            <!-- 4. エリア -->
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">④ 現在の活動エリア</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">想い・メッセージ <span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded ml-2">相互フォロワー限定</span></label>
-                        <textarea name="message" rows="5" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"></textarea>
+                        <label class="block text-sm font-medium text-brand-700 tracking-widest">都道府県</label>
+                        <select name="prefecture" id="prefecture-select" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
+                            <option value="">選択してください</option>
+                        </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">今後やりたいこと・目標</label>
-                        <textarea name="goals" rows="5" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"></textarea>
+                        <label class="block text-sm font-medium text-brand-700 tracking-widest">市区町村</label>
+                        <input type="text" name="city" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
                     </div>
                 </div>
             </div>
 
-            <!-- 9. マッチング -->
-            <div class="bg-white shadow rounded-lg p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b">⑨ マッチング情報</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 5. 趣味 -->
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <div class="flex justify-between items-end mb-4 border-b border-brand-200 pb-2 relative z-10">
+                    <h2 class="text-lg font-bold text-brand-900 font-serif tracking-widest">⑤ 趣味</h2>
+                    <span class="text-xs text-brand-500">※3つ以上選択で充実度UP</span>
+                </div>
+                <div id="hobbies-container" class="space-y-3 relative z-10"></div>
+                <div class="mt-4 relative z-10">
+                    <label class="block text-sm font-medium text-brand-700 tracking-widest">その他（自由入力）</label>
+                    <input type="text" name="hobbyOtherText" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-2 border bg-[#fffdf9]">
+                </div>
+            </div>
+
+            <!-- 6. 特技 -->
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <div class="flex justify-between items-end mb-4 border-b border-brand-200 pb-2 relative z-10">
+                    <h2 class="text-lg font-bold text-brand-900 font-serif tracking-widest">⑥ 特技・スキル</h2>
+                    <span class="text-xs text-brand-500">※3つ以上選択で充実度UP</span>
+                </div>
+                <div id="skills-container" class="space-y-3 relative z-10"></div>
+                <div class="mt-4 relative z-10">
+                    <label class="block text-sm font-medium text-brand-700 tracking-widest">補足説明</label>
+                    <textarea name="skillDescription" rows="3" maxlength="300" class="mt-1 block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-3 border bg-[#fffdf9] leading-relaxed"></textarea>
+                </div>
+            </div>
+
+            <!-- 7. 経歴 -->
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <div class="flex justify-between items-center mb-6 border-b border-brand-200 pb-2 relative z-10">
+                    <h2 class="text-lg font-bold text-brand-900 font-serif tracking-widest">⑦ 経歴</h2>
+                    <button type="button" onclick="addCareerField()" class="text-sm font-bold text-brand-600 hover:text-brand-800 transition-colors border border-brand-300 px-3 py-1 rounded-sm bg-[#f7f5f0] shadow-sm"><i class="fa-solid fa-plus mr-1"></i>追加する</button>
+                </div>
+                <div id="career-list" class="space-y-6 relative z-10"></div>
+            </div>
+
+            <!-- 8 & 9. 想い・目標 -->
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <h2 class="text-lg font-bold text-brand-900 mb-6 pb-2 border-b border-brand-200 font-serif tracking-widest">⑧ 想い・⑨ やりたいこと</h2>
+                <div class="space-y-8 relative z-10">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">提供できること</label>
-                        <p class="text-xs text-gray-500 mb-2">カンマ(,)区切り</p>
-                        <textarea name="canOffer" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"></textarea>
+                        <div class="flex items-center mb-2">
+                            <label class="block text-sm font-bold text-brand-800 tracking-widest">想い・メッセージ</label>
+                            <span class="bg-brand-50 border border-brand-200 text-brand-600 text-[10px] font-bold px-2 py-0.5 rounded-sm ml-3 tracking-widest"><i class="fa-solid fa-handshake mr-1"></i>相互フォロワー限定</span>
+                        </div>
+                        <textarea name="message" rows="6" class="block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-4 border bg-[#fffdf9] leading-relaxed"></textarea>
+                        <p class="text-xs text-brand-500 mt-1 text-right">※500文字以上で充実度UP</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">求めていること</label>
-                        <p class="text-xs text-gray-500 mb-2">カンマ(,)区切り</p>
-                        <textarea name="lookingFor" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"></textarea>
+                        <label class="block text-sm font-bold text-brand-800 tracking-widest mb-2">今後やりたいこと・目標</label>
+                        <textarea name="goals" rows="6" class="block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-4 border bg-[#fffdf9] leading-relaxed"></textarea>
+                        <p class="text-xs text-brand-500 mt-1 text-right">※500文字以上で充実度UP</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. マッチング -->
+            <div class="bg-[#fffdf9] shadow-md rounded-sm border border-brand-200 p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                <h2 class="text-lg font-bold text-brand-900 mb-6 pb-2 border-b border-brand-200 font-serif tracking-widest">⑩ マッチング情報</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                    <div>
+                        <label class="block text-sm font-bold text-brand-800 tracking-widest">提供できること</label>
+                        <p class="text-xs text-brand-500 mb-2 mt-1">カンマ(,)区切りで入力</p>
+                        <textarea name="canOffer" rows="4" class="block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-3 border bg-[#f7f5f0] leading-relaxed"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-brand-800 tracking-widest">求めていること</label>
+                        <p class="text-xs text-brand-500 mb-2 mt-1">カンマ(,)区切りで入力</p>
+                        <textarea name="lookingFor" rows="4" class="block w-full border-brand-200 rounded-sm shadow-sm sm:text-sm p-3 border bg-[#eae5d8] leading-relaxed"></textarea>
                     </div>
                 </div>
             </div>
@@ -227,12 +319,11 @@
     </main>
 
     <!-- Notification -->
-    <div id="notification" class="fixed top-4 right-4 z-50 hidden max-w-sm w-full bg-white shadow-lg rounded-lg p-4 border-l-4">
-        <p id="notif-message" class="text-sm font-medium"></p>
+    <div id="notification" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-sm w-[90%] shadow-xl rounded-sm p-4 border-l-4 backdrop-blur-md bg-opacity-95 text-center">
+        <p id="notif-message" class="text-sm font-bold tracking-widest font-serif"></p>
     </div>
 
     <script type="module">
-        // ★修正点: 正しいバージョン 10.13.1 を使用
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
@@ -335,11 +426,18 @@
         });
 
         function initUI() {
-            const select = document.getElementById('prefecture-select');
+            // 都道府県セレクトボックスの初期化（エリア用・出身地用）
+            const areaSelect = document.getElementById('prefecture-select');
+            const birthSelect = document.getElementById('birth-prefecture-select');
+            
             prefectures.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p; opt.textContent = p;
-                select.appendChild(opt);
+                const optArea = document.createElement('option');
+                optArea.value = p; optArea.textContent = p;
+                areaSelect.appendChild(optArea);
+                
+                const optBirth = document.createElement('option');
+                optBirth.value = p; optBirth.textContent = p;
+                if(birthSelect) birthSelect.appendChild(optBirth);
             });
             renderCategorySection('hobbies-container', hobbyCategories, 'hobbies');
             renderCategorySection('skills-container', skillCategories, 'skills');
@@ -350,11 +448,11 @@
             container.innerHTML = '';
             for (const [category, items] of Object.entries(categoriesData)) {
                 const details = document.createElement('details');
-                details.className = 'group border border-gray-200 rounded-lg bg-white overflow-hidden';
-                details.innerHTML = `<summary class="p-3 cursor-pointer hover:bg-gray-50 font-bold text-sm text-gray-700 flex justify-between">${category} <span class="accordion-arrow">▼</span></summary><div class="p-3 flex flex-wrap gap-2"></div>`;
+                details.className = 'group border border-brand-200 rounded-sm bg-[#fffdf9] overflow-hidden mb-2';
+                details.innerHTML = `<summary class="p-3 cursor-pointer hover:bg-brand-50 font-bold text-sm text-brand-800 flex justify-between tracking-widest">${category} <span class="accordion-arrow text-brand-400">▼</span></summary><div class="p-3 flex flex-wrap gap-2 border-t border-dashed border-brand-200 bg-brand-50"></div>`;
                 const div = details.querySelector('div');
                 items.forEach(item => {
-                    div.innerHTML += `<label class="cursor-pointer"><input type="checkbox" name="${inputName}" value="${item}" class="tag-checkbox hidden"><div class="px-3 py-1 rounded-full border border-gray-300 text-xs hover:bg-gray-100">${item}</div></label>`;
+                    div.innerHTML += `<label class="cursor-pointer"><input type="checkbox" name="${inputName}" value="${item}" class="tag-checkbox hidden"><div class="px-3 py-1.5 rounded-sm border border-brand-200 text-xs hover:bg-[#fffdf9] transition-colors tracking-widest text-brand-700 bg-white shadow-sm">${item}</div></label>`;
                 });
                 container.appendChild(details);
             }
@@ -362,19 +460,17 @@
 
         async function loadUserProfile(uid) {
             try {
-                // 正しいパス: /profile/data
                 const docRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     currentUserData = docSnap.data();
                 } else {
-                    // 新規の場合やデータがない場合
                     currentUserData = { userId: uid };
                 }
                 populateForm(currentUserData);
             } catch (e) {
                 console.error(e);
-                showNotification("データの読み込みに失敗しました: " + e.message, 'error');
+                showNotification("データの読み込みに失敗しました", 'error');
             }
         }
 
@@ -385,7 +481,13 @@
             Array.from(form.elements).forEach(el => {
                 if(el.name && data[el.name] !== undefined) {
                     if(el.type === 'checkbox' || el.type === 'radio' || el.type === 'file') return;
-                    el.value = data[el.name];
+                    
+                    // 配列の場合はカンマ区切り文字列に
+                    if (Array.isArray(data[el.name])) {
+                        el.value = data[el.name].join(', ');
+                    } else {
+                        el.value = data[el.name];
+                    }
                 }
             });
             
@@ -405,24 +507,26 @@
             }
 
             document.getElementById('career-list').innerHTML = '';
-            if(data.career) data.career.forEach(c => addCareerField(c));
+            if(data.career && data.career.length > 0) {
+                data.career.forEach(c => addCareerField(c));
+            }
         }
 
         window.addCareerField = (data = {}) => {
             const container = document.getElementById('career-list');
             const div = document.createElement('div');
-            div.className = 'bg-gray-50 p-4 rounded border border-gray-200 relative career-item';
+            div.className = 'bg-[#f7f5f0] p-5 rounded-sm border border-brand-200 relative career-item shadow-sm';
             div.innerHTML = `
-                <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                    <input type="text" class="career-company w-full border-gray-300 rounded p-2 text-sm" placeholder="会社名" value="${data.company||''}">
-                    <input type="text" class="career-role w-full border-gray-300 rounded p-2 text-sm" placeholder="役職" value="${data.role||''}">
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-2 right-3 text-brand-300 hover:text-red-800 transition-colors"><i class="fa-solid fa-trash"></i></button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3 mt-2">
+                    <input type="text" class="career-company w-full border-brand-200 rounded-sm p-2 text-sm bg-[#fffdf9]" placeholder="会社・組織名" value="${data.company||''}">
+                    <input type="text" class="career-role w-full border-brand-200 rounded-sm p-2 text-sm bg-[#fffdf9]" placeholder="役職・役割" value="${data.role||''}">
                 </div>
-                <div class="grid grid-cols-2 gap-4 mb-2">
-                    <input type="month" class="career-start w-full border-gray-300 rounded p-2 text-sm" value="${data.start||''}">
-                    <input type="month" class="career-end w-full border-gray-300 rounded p-2 text-sm" value="${data.end||''}">
+                <div class="grid grid-cols-2 gap-4 mb-3">
+                    <input type="month" class="career-start w-full border-brand-200 rounded-sm p-2 text-sm bg-[#fffdf9]" value="${data.start||''}">
+                    <input type="month" class="career-end w-full border-brand-200 rounded-sm p-2 text-sm bg-[#fffdf9]" value="${data.end||''}">
                 </div>
-                <textarea class="career-desc w-full border-gray-300 rounded p-2 text-sm" rows="2" placeholder="詳細">${data.description||''}</textarea>
+                <textarea class="career-desc w-full border-brand-200 rounded-sm p-3 text-sm bg-[#fffdf9] leading-relaxed" rows="3" placeholder="経歴の詳細な説明">${data.description||''}</textarea>
             `;
             container.appendChild(div);
         };
@@ -443,7 +547,7 @@
 
         window.saveProfile = async () => {
             if (!currentUser) return;
-            showNotification('保存中...', 'info');
+            showNotification('記録を保存中...', 'info');
 
             const form = document.getElementById('profile-form');
             const formData = new FormData(form);
@@ -463,8 +567,8 @@
                 });
             });
             
-            if(data.canOffer) data.canOffer = data.canOffer.split(',').map(s=>s.trim());
-            if(data.lookingFor) data.lookingFor = data.lookingFor.split(',').map(s=>s.trim());
+            if(data.canOffer) data.canOffer = data.canOffer.split(',').map(s=>s.trim()).filter(s=>s);
+            if(data.lookingFor) data.lookingFor = data.lookingFor.split(',').map(s=>s.trim()).filter(s=>s);
 
             const iconFile = document.getElementById('icon-upload').files[0];
             let photoURL = currentUserData.photoURL || null;
@@ -476,77 +580,83 @@
             }
             data.photoURL = photoURL;
             
-            data.profileScore = 80; 
+            // --- プロフィール充実度の計算ロジック (12項目・100%満点) ---
+            let scoreCount = 0;
+            const maxScore = 12;
+
+            if (data.jobTitle && data.jobTitle.trim() !== '') scoreCount++;
+            if (data.name && data.nameKana && data.gender && data.birthDate) scoreCount++;
+            if (data.bio && data.bio.trim().length >= 100) scoreCount++;
+            if (data.contactEmail || data.websiteUrl || data.snsInstagram || data.snsX) scoreCount++;
+            if (data.birthPrefecture && data.birthCity) scoreCount++;
+            if (data.prefecture && data.city) scoreCount++;
+            if (data.hobbies && data.hobbies.length >= 3) scoreCount++;
+            if (data.skills && data.skills.length >= 3) scoreCount++;
+            if (data.career && data.career.length >= 1) scoreCount++;
+            if (data.message && data.message.trim().length >= 500) scoreCount++;
+            if (data.goals && data.goals.trim().length >= 500) scoreCount++;
+            if (data.canOffer && data.canOffer.length >= 1 && data.lookingFor && data.lookingFor.length >= 1) scoreCount++;
+
+            data.profileScore = Math.floor((scoreCount / maxScore) * 100);
             data.updatedAt = new Date().toISOString();
 
             // --- データの引き継ぎ ---
             const finalData = { ...currentUserData, ...data };
             
-            // ★重要: userId が undefined になるのを防ぐ
             if (!finalData.userId) {
                 finalData.userId = targetUid;
             }
 
-            // ランクはフォームにないので既存を維持 (なければwalker)
-            finalData.membershipRank = currentUserData.membershipRank || 'walker';
-            
-            // 公開設定 (文字列 "true" / "false")
+            finalData.membershipRank = currentUserData.membershipRank || 'arrival'; // WALKERからARRIVALに変更
             finalData.profilePublic = data.profilePublic;
 
             if (currentUser.uid === 'test_admin_uid') {
-                showNotification('プロフィールを更新しました(テスト)', 'success');
-                setTimeout(() => window.location.href = 'user.html', 1000);
+                showNotification(`保存しました(テスト) 充実度: ${data.profileScore}%`, 'success');
+                setTimeout(() => window.location.href = 'user.html', 1500);
                 return;
             }
 
             try {
-                // 1. Private Data (マスター)
+                // 1. Private Data
                 const privateDocRef = doc(db, 'artifacts', appId, 'users', targetUid, 'profile', 'data');
                 await setDoc(privateDocRef, finalData);
-                console.log("Master data saved.");
 
-                // 2. Public Data (検索用)
+                // 2. Public Data
                 const publicDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', targetUid);
                 
-                const isPaidMember = (finalData.membershipRank === 'builder' || finalData.membershipRank === 'guardian');
+                const isPaidMember = (finalData.membershipRank !== 'arrival');
                 const isPublicSetting = (finalData.profilePublic === 'true');
-                // 管理者が編集した場合は強制的に公開可能
                 const canPublish = isPaidMember || isAdmin;
 
                 if (isPublicSetting && canPublish) {
                     const publicData = {
                         ...finalData,
                         updatedAt: new Date().toISOString(),
-                        isHidden: false // 明示的に表示
+                        isHidden: false
                     };
                     await setDoc(publicDocRef, publicData);
-                    console.log("Public data updated.");
                 } else {
-                    // 非公開条件 (WALKER または 設定OFF)
-                    // IDログイン維持のため、最小限のデータで上書きし、isHidden=trueにする
-                    // ★修正: undefined回避のため email がなければ null をセット
                     const minimalData = {
                         userId: finalData.userId,
                         email: finalData.email || null, 
                         isHidden: true 
                     };
                     await setDoc(publicDocRef, minimalData);
-                    console.log("Public data masked (Hidden).");
                 }
 
                 if (isPublicSetting && !canPublish) {
-                    alert('プロフィールを保存しました。\n※現在WALKER会員のため、設定を「公開」にしても検索結果には表示されません。');
+                    alert(`プロフィールを保存しました。(充実度: ${data.profileScore}%)\n※現在ARRIVAL会員のため、設定を「公開」にしても検索結果には表示されません。`);
                 } else {
-                    showNotification('プロフィールを更新しました', 'success');
+                    showNotification(`航海録を更新しました (充実度: ${data.profileScore}%)`, 'success');
                 }
 
-                setTimeout(() => window.location.href = `user.html?uid=${targetUid}`, 1000);
+                setTimeout(() => window.location.href = `user.html?uid=${targetUid}`, 1500);
 
             } catch (e) {
                 console.error("Save error details:", e);
                 let errorMsg = '保存に失敗しました';
                 if (e.code === 'permission-denied') errorMsg += ': 権限がありません。';
-                else if (e.message.includes('undefined')) errorMsg += ': 必須データ(UserIDなど)が不足しています。';
+                else if (e.message.includes('undefined')) errorMsg += ': 必須データが不足しています。';
                 else errorMsg += `: ${e.message}`;
                 showNotification(errorMsg, 'error');
             }
@@ -555,13 +665,19 @@
         window.showNotification = (msg, type) => {
             const notif = document.getElementById('notification');
             const msgEl = document.getElementById('notif-message');
-            notif.classList.remove('hidden', 'border-blue-500', 'border-red-500', 'border-green-500');
-            if(type === 'error') notif.classList.add('border-red-500', 'text-red-700');
-            else if (type === 'success') notif.classList.add('border-green-500', 'text-green-700');
-            else notif.classList.add('border-blue-500', 'text-blue-700');
+            notif.classList.remove('hidden', 'bg-[#f7f5f0]', 'bg-[#3e2723]', 'bg-[#8b6a4f]', 'text-[#4a3b32]', 'text-[#f7f5f0]', 'border-[#c8b9a6]', 'border-[#8b6a4f]', 'border-[#b8860b]');
+            
+            if(type === 'error') {
+                notif.classList.add('bg-[#f7f5f0]', 'border-[#c8b9a6]', 'text-[#3e2723]');
+            } else if (type === 'success') {
+                notif.classList.add('bg-[#3e2723]', 'border-[#8b6a4f]', 'text-[#f7f5f0]');
+            } else {
+                notif.classList.add('bg-[#3e2723]', 'border-[#b8860b]', 'text-[#d4af37]');
+            }
+            
             msgEl.textContent = msg;
             notif.classList.remove('hidden');
-            setTimeout(() => notif.classList.add('hidden'), 3000);
+            setTimeout(() => notif.classList.add('hidden'), 3500);
         };
     </script>
 </body>
