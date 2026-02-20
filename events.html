@@ -970,6 +970,17 @@
             } catch(e) { console.error("Job error:", e); }
             
             filterData();
+
+            // --- 追加: URLパラメータをチェックして特定のイベントを開く処理 ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetEventId = urlParams.get('eventId');
+            if (targetEventId) {
+                switchView('list-events');
+                // 少し遅延させて、リストの描画が安定してから詳細シートを開く
+                setTimeout(() => {
+                    window.showEventSheetById(targetEventId);
+                }, 300);
+            }
         }
 
         // ==========================================
