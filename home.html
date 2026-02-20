@@ -322,7 +322,7 @@
                     <i class="fa-brands fa-google mr-2"></i> カレンダーに追加
                 </a>
                 
-                <a href="events.html" class="block w-full text-center text-[10px] text-brand-500 mt-4 hover:text-brand-800 transition-colors tracking-widest underline">
+                <a id="modal-event-link" href="events.html" class="block w-full text-center text-[10px] text-brand-500 mt-4 hover:text-brand-800 transition-colors tracking-widest underline">
                     イベントページで詳細を確認する
                 </a>
             </div>
@@ -646,6 +646,9 @@
             
             const gcalBtn = document.getElementById('modal-gcal-btn');
             if (gcalBtn) gcalBtn.href = gcalUrl;
+            
+            const eventLinkBtn = document.getElementById('modal-event-link');
+            if (eventLinkBtn) eventLinkBtn.href = `events.html?eventId=${evt.id}`;
             
             modal.classList.remove('hidden');
         };
