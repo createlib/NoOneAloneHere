@@ -121,7 +121,7 @@
                 <!-- PC Navigation Links -->
                 <div class="hidden lg:flex items-center gap-6 mr-4">
                     <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海(ホーム)</a>
-                    <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
+                    <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント・仕事</a>
                     <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
                     <a href="user.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
@@ -161,7 +161,7 @@
                 <i class="fa-solid fa-handshake text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マッチ</span>
             </button>
-            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600">
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px]">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-bold tracking-widest">マイページ</span>
             </a>
@@ -349,7 +349,7 @@
     </div>
 
     <!-- Notification Toast -->
-    <div id="notification" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 hidden transition-all duration-300 translate-y-20">
+    <div id="notification" class="fixed bottom-24 lg:bottom-20 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
         <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-ship text-[#c8b9a6] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
     </div>
 
@@ -462,10 +462,10 @@
             if(headerActions) {
                 headerActions.innerHTML = `
                 <div class="flex flex-col items-end gap-1 w-full lg:w-auto">
-                    <a href="profile.html" class="inline-flex items-center justify-center px-6 py-2 border border-brand-500 shadow-sm text-sm font-bold rounded-sm text-brand-900 bg-[#fffdf9] hover:bg-brand-50 transition-all active:scale-95 tracking-widest font-serif">
+                    <a href="profile_edit.html" class="inline-flex items-center justify-center px-6 py-2 border border-brand-500 shadow-sm text-sm font-bold rounded-sm text-brand-900 bg-[#fffdf9] hover:bg-brand-50 transition-all active:scale-95 tracking-widest font-serif">
                         航海録を編集
                     </a>
-                    <a href="upgrade.html" class="text-[10px] font-bold text-brand-400 hover:text-brand-600 transition-colors mr-1 underline decoration-dotted tracking-widest">
+                    <a href="upgrade.html" class="text-[10px] font-bold text-brand-400 hover:text-brand-600 transition-colors mr-1 underline decoration-dotted tracking-widest mt-1">
                         契約の確認・変更
                     </a>
                 </div>`;
@@ -574,10 +574,10 @@
             if (isFollowing) {
                 btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-brand-500 shadow-sm text-sm font-bold rounded-sm text-brand-900 bg-[#fffdf9] hover:bg-brand-50 transition-all mr-2 tracking-widest font-serif">フォロー中</button>`;
             } else {
-                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-bold rounded-sm text-[#f7f5f0] bg-[#3e2723] hover:bg-[#2a1a17] transition-all mr-2 tracking-widest font-serif">フォロー</button>`;
+                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-bold rounded-sm text-[#f7f5f0] bg-[#3e2723] hover:bg-[#2a1a17] transition-all mr-2 tracking-widest font-serif">フォローする</button>`;
             }
             if (isAdmin && !isSelf) {
-                btnHtml += `<a href="profile.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-brand-300 text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-sm text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
+                btnHtml += `<a href="profile_edit.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-brand-300 text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-sm text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
                 document.getElementById('admin-badge').classList.remove('hidden');
                 document.getElementById('debug-rank-switcher').classList.remove('hidden');
             }
@@ -760,6 +760,53 @@
                 }
                 setElText('data-birth', birthDisplay);
 
+                // --- 追加：スキル・趣味の描画 ---
+                const tagsContainer = document.getElementById('tags-container');
+                if (tagsContainer) {
+                    tagsContainer.innerHTML = '';
+                    const allTags = [...(data.skills || []), ...(data.hobbies || [])];
+                    if (data.hobbyOtherText) allTags.push(data.hobbyOtherText);
+                    
+                    if (allTags.length > 0) {
+                        allTags.forEach(tag => {
+                            tagsContainer.innerHTML += `<span class="bg-brand-50 border border-brand-200 text-brand-700 px-3 py-1.5 rounded-sm text-[10px] font-bold tracking-widest shadow-sm">${tag}</span>`;
+                        });
+                    } else {
+                        tagsContainer.innerHTML = '<span class="text-sm text-brand-300 italic">未設定</span>';
+                    }
+                }
+
+                // --- 追加：マッチング情報の描画 ---
+                const offerList = document.getElementById('list-can-offer');
+                if (offerList) {
+                    offerList.innerHTML = '';
+                    if (data.canOffer && data.canOffer.length > 0) {
+                        data.canOffer.forEach(item => {
+                            offerList.innerHTML += `<li class="text-sm text-brand-700 tracking-wide font-medium flex items-start gap-2 mb-3"><i class="fa-solid fa-hand-holding-heart text-brand-500 mt-1"></i><span>${item}</span></li>`;
+                        });
+                    } else {
+                        offerList.innerHTML = '<li class="text-brand-300 italic text-sm">未設定</li>';
+                    }
+                }
+
+                const lookingList = document.getElementById('list-looking-for');
+                if (lookingList) {
+                    lookingList.innerHTML = '';
+                    if (data.lookingFor && data.lookingFor.length > 0) {
+                        data.lookingFor.forEach(item => {
+                            lookingList.innerHTML += `<li class="text-sm text-brand-700 tracking-wide font-medium flex items-start gap-2 mb-3"><i class="fa-solid fa-magnifying-glass text-brand-500 mt-1"></i><span>${item}</span></li>`;
+                        });
+                    } else {
+                        lookingList.innerHTML = '<li class="text-brand-300 italic text-sm">未設定</li>';
+                    }
+                }
+
+                // --- 追加：目標・ビジョンの描画 ---
+                const goalsEl = document.getElementById('profile-goals');
+                if (goalsEl) {
+                    goalsEl.innerHTML = data.goals ? formatText(data.goals) : '<span class="text-brand-300 italic">未設定</span>';
+                }
+
                 const careerContainer = document.getElementById('career-container');
                 if (careerContainer) {
                     careerContainer.innerHTML = '';
@@ -767,7 +814,7 @@
                         data.career.forEach(c => {
                             const formattedDesc = formatText(c.description || '');
                             careerContainer.innerHTML += `
-                                <div class="relative pl-6 pb-2">
+                                <div class="relative pl-6 pb-4">
                                     <div class="absolute left-[-5px] top-1.5 h-3 w-3 rounded-full bg-brand-500 ring-4 ring-[#fffdf9] z-10 shadow-sm border border-brand-300"></div>
                                     <h4 class="font-bold text-brand-900 text-base font-serif tracking-widest">${c.company || '会社名不明'}</h4>
                                     <div class="flex items-center gap-2 mb-3 mt-1">
