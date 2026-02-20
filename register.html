@@ -4,88 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>新規登録 | NOAH</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="img/icon.png">
+    
+    <!-- Google Fonts: Noto Serif JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'Noto Sans JP', 'sans-serif'] },
-                    colors: { brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 900: '#312e81' } }
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { 
+                        brand: { 
+                            50: '#f7f5f0',   
+                            100: '#e8dfd1',  
+                            200: '#dcd4c6',  
+                            300: '#c8b9a6',  
+                            400: '#a09080',  
+                            500: '#8b6a4f',  
+                            600: '#725b3f',  
+                            700: '#5c4a3d',  
+                            800: '#4a3b32',  
+                            900: '#3e2723'   
+                        } 
+                    }
                 }
             }
         }
     </script>
-    <style>body { background-color: #f8fafc; }</style>
+    <style>
+        body { 
+            font-family: 'Noto Serif JP', serif;
+            background-color: #f7f5f0; 
+            color: #4a3b32;
+        }
+        .bg-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+        input:focus {
+            outline: none;
+            border-color: #8b6a4f !important;
+            box-shadow: 0 0 0 1px #8b6a4f !important;
+        }
+    </style>
 </head>
-<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative text-slate-800">
+<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-texture">
 
-    <!-- トップページに戻るリンク -->
+    <!-- トップページ(LP)に戻るリンク -->
     <div class="absolute top-4 left-4 sm:top-8 sm:left-8">
-        <a href="home.html" class="inline-flex items-center text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors">
+        <a href="index.html" class="inline-flex items-center text-xs font-bold text-brand-500 hover:text-brand-800 transition-colors tracking-widest">
             <i class="fa-solid fa-arrow-left mr-2"></i>
-            ホームに戻る
+            NOAHについて
         </a>
     </div>
 
-    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
-        <div class="text-center">
-            <!-- アプリアイコン -->
-            <img src="NOAH.png" alt="Icon" class="w-16 h-16 rounded-xl object-cover mx-auto mb-6 shadow-sm">
-            <!-- タイポロゴ (横長表示用) -->
-            <img src="NOAH_typo.png" alt="NOAH" class="h-10 w-auto mx-auto mb-2 block object-contain">
-            <p class="mt-2 text-sm text-slate-500">新しいアカウントを作成</p>
+    <div class="max-w-md w-full space-y-8 bg-[#fffdf9] p-8 rounded-sm shadow-xl border border-brand-200 relative overflow-hidden">
+        <!-- アンティークな角飾り -->
+        <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-brand-300 m-2"></div>
+        <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-brand-300 m-2"></div>
+
+        <div class="text-center relative z-10">
+            <div class="w-16 h-16 bg-brand-50 rounded-full border border-brand-200 flex items-center justify-center mx-auto mb-4 text-brand-900 shadow-sm">
+                <i class="fa-solid fa-anchor text-2xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold tracking-[0.3em] text-brand-900 mb-1">NOAH</h1>
+            <p class="mt-2 text-xs font-bold text-brand-500 tracking-widest">新しい航海を始める</p>
         </div>
 
-        <form class="mt-8 space-y-5" onsubmit="handleRegister(event)">
+        <form class="mt-8 space-y-5 relative z-10" onsubmit="handleRegister(event)">
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1">紹介者ID (紹介者のユーザーID) <span class="text-red-500">*</span></label>
+                <label class="block text-xs font-bold text-brand-800 mb-1 tracking-widest">紹介者ID <span class="text-red-500">*</span></label>
                 <div class="relative">
-                    <input name="referrer" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this); checkReferrer(this.value);" class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="紹介者のIDを入力">
+                    <input id="referrer-input" name="referrer" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this); checkReferrer(this.value);" class="appearance-none block w-full px-4 py-3 border border-brand-200 rounded-sm shadow-sm bg-[#fffdf9] transition-all placeholder-brand-300 text-sm tracking-widest font-sans" placeholder="紹介者のIDを入力">
                     <div id="referrer-status-icon" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none hidden"></div>
                 </div>
-                <p id="referrer-msg" class="mt-1.5 text-xs text-slate-500 font-medium">半角英数字とアンダーバーのみ</p>
+                <p id="referrer-msg" class="mt-1.5 text-[10px] text-brand-500 font-bold tracking-widest">半角英数字とアンダーバーのみ。紹介リンクから来た場合は自動入力されます。</p>
             </div>
             
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1">ユーザーID (あなたのID) <span class="text-red-500">*</span></label>
-                <input name="userid" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this)" class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="希望ID（ログインに使用します）">
+                <label class="block text-xs font-bold text-brand-800 mb-1 tracking-widest">希望ユーザーID <span class="text-red-500">*</span></label>
+                <input name="userid" type="text" required pattern="^[a-zA-Z0-9_]+$" oninput="validateInput(this)" class="appearance-none block w-full px-4 py-3 border border-brand-200 rounded-sm shadow-sm bg-[#fffdf9] transition-all placeholder-brand-300 text-sm tracking-widest font-sans" placeholder="英数字の組み合わせ">
             </div>
             
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1">メールアドレス <span class="text-red-500">*</span></label>
-                <input name="email" type="email" required class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="example@mail.com">
+                <label class="block text-xs font-bold text-brand-800 mb-1 tracking-widest">メールアドレス <span class="text-red-500">*</span></label>
+                <input name="email" type="email" required class="appearance-none block w-full px-4 py-3 border border-brand-200 rounded-sm shadow-sm bg-[#fffdf9] transition-all placeholder-brand-300 text-sm tracking-widest font-sans" placeholder="example@mail.com">
             </div>
             
             <div>
-                <label class="block text-sm font-bold text-slate-700 mb-1">パスワード <span class="text-red-500">*</span></label>
+                <label class="block text-xs font-bold text-brand-800 mb-1 tracking-widest">パスワード <span class="text-red-500">*</span></label>
                 <div class="relative">
-                    <input id="reg-password" name="password" type="password" required minlength="6" class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="6文字以上">
-                    <button type="button" onclick="togglePassword('reg-password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+                    <input id="reg-password" name="password" type="password" required minlength="6" class="appearance-none block w-full px-4 py-3 border border-brand-200 rounded-sm shadow-sm bg-[#fffdf9] transition-all placeholder-brand-300 text-sm tracking-widest font-sans" placeholder="6文字以上">
+                    <button type="button" onclick="togglePassword('reg-password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-brand-400 hover:text-brand-700 transition-colors">
                         <i class="fa-regular fa-eye"></i>
                     </button>
                 </div>
             </div>
             
-            <button type="submit" id="btn-register" disabled class="w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-slate-300 cursor-not-allowed transition-all shadow-sm mt-6">
-                新規登録
+            <button type="submit" id="btn-register" disabled class="w-full flex justify-center items-center py-3.5 px-4 border border-[#b8860b] text-sm font-bold rounded-sm text-[#f7f5f0] bg-[#3e2723] hover:bg-[#2a1a17] opacity-50 cursor-not-allowed transition-all shadow-md mt-6 tracking-widest">
+                <i class="fa-solid fa-ship mr-2"></i> 乗船手続きへ
             </button>
         </form>
 
-        <div class="mt-6 text-center">
-            <p class="text-sm text-slate-600">すでにアカウントをお持ちの方は <a href="login.html" class="font-bold text-brand-600 hover:text-brand-500 hover:underline">ログインはこちら</a></p>
+        <div class="mt-6 text-center relative z-10 border-t border-brand-100 pt-6">
+            <p class="text-xs text-brand-600 font-bold tracking-widest">すでに船に乗っている方は <br class="sm:hidden"><a href="login.html" class="text-[#8b6a4f] hover:text-[#5c4a3d] border-b border-[#8b6a4f] pb-0.5 ml-2">ログイン画面へ</a></p>
         </div>
     </div>
 
     <!-- Notification -->
-    <div id="notification" class="fixed top-4 right-4 z-50 hidden max-w-sm w-full bg-white shadow-lg rounded-lg p-4 border-l-4">
-        <p id="notif-message" class="text-sm font-medium"></p>
+    <div id="notification" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-sm w-full bg-[#3e2723] text-[#f7f5f0] shadow-xl border border-[#b8860b] rounded-sm p-4 text-center">
+        <p id="notif-message" class="text-xs font-bold tracking-widest"></p>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         // ▼▼▼▼ Firebase Config ▼▼▼▼
@@ -97,7 +138,6 @@
             messagingSenderId: "803209683213",
             appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
         };
-        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -110,8 +150,21 @@
 
         signInAnonymously(auth).catch(e => console.log("Anon auth:", e));
 
-        onAuthStateChanged(auth, (user) => {
-            // リダイレクトなし
+        document.addEventListener('DOMContentLoaded', () => {
+            // URLパラメータから紹介者IDを取得して自動入力
+            const urlParams = new URLSearchParams(window.location.search);
+            const refId = urlParams.get('ref');
+            
+            if (refId) {
+                const refInput = document.getElementById('referrer-input');
+                if (refInput) {
+                    refInput.value = refId;
+                    refInput.setAttribute('readonly', 'true');
+                    refInput.classList.add('bg-brand-50', 'text-brand-600', 'font-bold');
+                    // 自動でバリデーションを走らせる
+                    window.checkReferrer(refId);
+                }
+            }
         });
 
         window.validateInput = (input) => {
@@ -127,16 +180,16 @@
             
             if (!value) {
                 msgElement.textContent = '半角英数字とアンダーバーのみ';
-                msgElement.className = 'mt-1.5 text-xs text-slate-500 font-medium';
+                msgElement.className = 'mt-1.5 text-[10px] text-brand-500 font-bold tracking-widest';
                 iconContainer.classList.add('hidden');
                 return;
             }
 
             if (value === ADMIN_SECRET) {
                 msgElement.textContent = '管理者モード: 紹介者チェックをスキップします';
-                msgElement.className = 'mt-1.5 text-xs text-purple-600 font-bold';
+                msgElement.className = 'mt-1.5 text-[10px] text-brand-600 font-bold tracking-widest';
                 iconContainer.classList.remove('hidden');
-                iconContainer.innerHTML = '<i class="fa-solid fa-crown text-purple-500"></i>';
+                iconContainer.innerHTML = '<i class="fa-solid fa-crown text-[#d4af37]"></i>';
                 isReferrerValid = true;
                 updateRegisterButton();
                 return;
@@ -144,7 +197,7 @@
 
             if (value === "admin") {
                 msgElement.textContent = 'このIDは紹介者として指定できません';
-                msgElement.className = 'mt-1.5 text-xs text-red-500 font-bold';
+                msgElement.className = 'mt-1.5 text-[10px] text-red-500 font-bold tracking-widest';
                 iconContainer.classList.remove('hidden');
                 iconContainer.innerHTML = '<i class="fa-solid fa-ban text-red-500"></i>';
                 isReferrerValid = false;
@@ -153,9 +206,9 @@
             }
 
             msgElement.textContent = '確認中...';
-            msgElement.className = 'mt-1.5 text-xs text-brand-500 font-medium';
+            msgElement.className = 'mt-1.5 text-[10px] text-brand-500 font-bold tracking-widest';
             iconContainer.classList.remove('hidden');
-            iconContainer.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-slate-400"></i>';
+            iconContainer.innerHTML = '<i class="fa-solid fa-compass fa-spin text-brand-400"></i>';
 
             if (referrerCheckTimeout) clearTimeout(referrerCheckTimeout);
 
@@ -169,18 +222,18 @@
                         const userData = querySnapshot.docs[0].data();
                         const displayName = userData.name || userData.userId || 'ユーザー';
                         msgElement.textContent = `紹介者: ${displayName} さんを確認しました`;
-                        msgElement.className = 'mt-1.5 text-xs text-green-600 font-bold';
-                        iconContainer.innerHTML = '<i class="fa-solid fa-circle-check text-green-500"></i>';
+                        msgElement.className = 'mt-1.5 text-[10px] text-green-700 font-bold tracking-widest';
+                        iconContainer.innerHTML = '<i class="fa-solid fa-circle-check text-green-600"></i>';
                         isReferrerValid = true;
                     } else {
                         msgElement.textContent = '該当する紹介者が見つかりません';
-                        msgElement.className = 'mt-1.5 text-xs text-red-500 font-bold';
+                        msgElement.className = 'mt-1.5 text-[10px] text-red-600 font-bold tracking-widest';
                         iconContainer.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
                     }
                 } catch (error) {
                     console.error("Referrer check error:", error);
                     msgElement.textContent = '確認できませんでした';
-                    msgElement.className = 'mt-1.5 text-xs text-red-500 font-bold';
+                    msgElement.className = 'mt-1.5 text-[10px] text-red-500 font-bold tracking-widest';
                     iconContainer.innerHTML = '<i class="fa-solid fa-circle-exclamation text-red-500"></i>';
                 }
                 updateRegisterButton();
@@ -191,12 +244,10 @@
             const btn = document.getElementById('btn-register');
             if (isReferrerValid) {
                 btn.disabled = false;
-                btn.classList.remove('bg-slate-300', 'cursor-not-allowed');
-                btn.classList.add('bg-brand-600', 'hover:bg-brand-700', 'shadow-lg');
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
                 btn.disabled = true;
-                btn.classList.add('bg-slate-300', 'cursor-not-allowed');
-                btn.classList.remove('bg-brand-600', 'hover:bg-brand-700', 'shadow-lg');
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }
 
@@ -210,7 +261,7 @@
             const email = form.email.value;
             const password = form.password.value;
 
-            showNotification('登録処理中...', 'info');
+            showNotification('乗船手続き中...', 'info');
 
             try {
                 const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
@@ -232,7 +283,7 @@
                     name: userId,
                     createdAt: timestamp,
                     profilePublic: "false",
-                    membershipRank: "walker"
+                    membershipRank: "arrival" // 初期ランクをARRIVALに変更
                 });
 
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid), {
@@ -243,7 +294,7 @@
                     updatedAt: timestamp,
                 });
 
-                showNotification('登録完了！ホームへ移動します', 'success');
+                showNotification('乗船手続き完了！ホームへ移動します', 'success');
                 setTimeout(() => {
                     window.location.href = 'home.html';
                 }, 1000);
@@ -274,14 +325,11 @@
         window.showNotification = (msg, type) => {
             const notif = document.getElementById('notification');
             const msgEl = document.getElementById('notif-message');
-            notif.classList.remove('hidden', 'border-blue-500', 'border-red-500', 'border-green-500');
             
             if(type === 'error') {
-                notif.classList.add('border-red-500', 'text-red-700');
-            } else if (type === 'success') {
-                notif.classList.add('border-green-500', 'text-green-700');
+                notif.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-[90%] bg-[#fffdf9] text-red-700 shadow-xl border border-brand-200 rounded-sm p-4 text-center';
             } else {
-                notif.classList.add('border-blue-500', 'text-blue-700');
+                notif.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-[90%] bg-[#3e2723] text-[#f7f5f0] shadow-xl border border-[#b8860b] rounded-sm p-4 text-center';
             }
             msgEl.textContent = msg;
             notif.classList.remove('hidden');
