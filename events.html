@@ -181,7 +181,7 @@
     <div class="fixed top-16 w-full z-[1400] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
         <div class="max-w-3xl mx-auto px-4 flex justify-between items-center">
             <div class="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
-                <!-- ① タブ名をスマホで1行に収まるよう短縮 -->
+                <!-- タブ名をスマホで1行に収まるよう短縮 -->
                 <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
                     <i class="fa-solid fa-map-location-dot"></i> マップ
                 </button>
@@ -215,7 +215,7 @@
 
             <div id="map" class="w-full h-full"></div>
             
-            <!-- Location Adjustment UI inside Map View (⑤ 位置調整UIの前面・固定化) -->
+            <!-- Location Adjustment UI inside Map View (位置調整UIの前面・固定化) -->
             <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
                 <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
                     <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-2 text-lg"></i>赤色のピンを動かして調整</p>
@@ -286,7 +286,7 @@
             </button>
         </div>
         <!-- FAB (ALWAYS SHOW) -->
-        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
+        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="hidden w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
             <i class="fa-solid fa-plus text-xl transition-transform duration-300" id="fab-icon"></i>
         </button>
     </div>
@@ -547,7 +547,7 @@
 
             <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
                 <button onclick="submitEvent()" id="event-submit-btn" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b]">
-                    イベントを企画する
+                    イベントを更新する
                 </button>
             </div>
         </div>
@@ -557,7 +557,7 @@
     <div id="job-modal" class="hidden fixed inset-0 z-[3000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
         <div class="bg-[#fffdf9] bg-texture w-full sm:w-[650px] h-[95vh] sm:h-[90vh] rounded-t-sm sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
             <div class="p-4 border-b border-brand-200 flex justify-between items-center flex-shrink-0 bg-[#fffdf9]">
-                <h3 class="font-bold text-lg text-brand-900 font-serif tracking-widest">仕事・依頼を掲載</h3>
+                <h3 class="font-bold text-lg text-brand-900 font-serif tracking-widest" id="job-modal-title">仕事・依頼を掲載</h3>
                 <button onclick="closeCreateModal('job')" class="p-2 text-brand-400 hover:text-brand-700"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
@@ -728,14 +728,14 @@
 
             <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
                 <button onclick="submitJob()" id="job-submit-btn" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b]">
-                    募集を掲載する
+                    募集情報を更新する
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] safe-area-pb shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+    <nav class="fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="flex justify-around items-center h-16">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-ship text-xl mb-1"></i>
@@ -766,7 +766,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
         // ▼▼▼▼ Firebase Config ▼▼▼▼
@@ -803,6 +803,8 @@
 
         let selectedTags = new Set();
         let isJoining = false;
+        let editingEventId = null;
+        let editingJobId = null;
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const presetTags = ["交流会", "勉強会", "スポーツ", "音楽", "アート", "グルメ", "アウトドア", "ビジネス", "初心者歓迎", "オンライン"];
@@ -1367,7 +1369,7 @@
             }
         };
 
-        window.openCreateModal = (type) => {
+        window.openCreateModal = (type, existingData = null) => {
             toggleCreateMenu(); 
             
             if (!myProfile) myProfile = { membershipRank: 'arrival' };
@@ -1378,42 +1380,66 @@
                 
                 const modal = document.getElementById('event-modal');
                 if(modal) modal.classList.remove('hidden');
-                editingEventId = null;
                 
-                // Form Reset safely
+                editingEventId = existingData ? existingData.id : null;
+                const titleEl = document.getElementById('event-modal-title');
+                if(titleEl) titleEl.textContent = existingData ? 'イベントを編集' : 'イベントを企画';
+                
+                const btnEl = document.getElementById('event-submit-btn');
+                if(btnEl) btnEl.innerHTML = existingData ? '<i class="fa-solid fa-pen mr-2"></i>イベントを更新する' : 'イベントを企画する';
+
                 try {
-                    setVal('event-title', "");
-                    setVal('event-price', "0");
+                    setVal('event-title', existingData?.title || "");
+                    setVal('event-price', existingData?.price || "0");
                     const todayStr = new Date().toISOString().split('T')[0];
-                    setVal('event-start-date', todayStr);
-                    setVal('event-end-date', todayStr);
-                    setVal('event-start-time', "");
-                    setVal('event-end-time', "");
-                    setVal('event-location-name', "");
-                    setVal('event-online-tool', "");
-                    setVal('event-online-url', "");
-                    setVal('event-desc', "");
-                    setVal('event-custom-tags', "");
-                    setVal('location-search-input', "");
-                    
-                    const locRes = document.getElementById('location-results');
-                    if(locRes) locRes.classList.add('hidden');
+                    setVal('event-start-date', existingData?.startDate || todayStr);
+                    setVal('event-end-date', existingData?.endDate || todayStr);
+                    setVal('event-start-time', existingData?.startTime || "");
+                    setVal('event-end-time', existingData?.endTime || "");
+                    setVal('event-desc', existingData?.description || "");
                     
                     const pubPart = document.getElementById('event-public-participants');
-                    if(pubPart) pubPart.checked = true;
+                    if(pubPart) pubPart.checked = existingData ? (existingData.isParticipantsPublic !== false) : true;
+                    
+                    selectedTags = new Set(existingData?.tags || []);
+                    const customTags = (existingData?.tags || []).filter(t => !presetTags.includes(t));
+                    setVal('event-custom-tags', customTags.join(', '));
+                    renderEventTagButtons();
+                    checkOnlineToggle();
+
+                    if (existingData?.isOnline) {
+                        setVal('event-online-tool', existingData.locationName ? existingData.locationName.replace("オンライン (", "").replace(")", "") : "");
+                        setVal('event-online-url', existingData.onlineUrl || "");
+                        setVal('event-location-name', "");
+                        selectedCoordsEvent = null;
+                    } else {
+                        setVal('event-online-tool', "");
+                        setVal('event-online-url', "");
+                        setVal('event-location-name', existingData?.locationName || "");
+                        selectedCoordsEvent = (existingData?.lat && existingData?.lng) ? { lat: existingData.lat, lng: existingData.lng } : null;
+                    }
+
+                    setVal('location-search-input', "");
+                    const locRes = document.getElementById('location-results');
+                    if(locRes) locRes.classList.add('hidden');
                     
                     setVal('event-image', "");
                     const imgPrev = document.getElementById('event-image-preview');
                     if(imgPrev) {
-                        imgPrev.src = "";
-                        imgPrev.classList.add('hidden');
+                        if (existingData?.thumbnailUrl) {
+                            imgPrev.src = existingData.thumbnailUrl;
+                            imgPrev.classList.remove('hidden');
+                        } else {
+                            imgPrev.src = "";
+                            imgPrev.classList.add('hidden');
+                        }
                     }
 
-                    selectedTags.clear();
-                    renderEventTagButtons();
-                    checkOnlineToggle();
                     if (tempMarker) map.removeLayer(tempMarker);
-                    selectedCoordsEvent = null;
+                    if (selectedCoordsEvent) {
+                        tempMarker = L.marker(selectedCoordsEvent, { draggable: true, icon: redIcon }).addTo(map);
+                        tempMarker.on('dragend', function(e) { selectedCoordsEvent = e.target.getLatLng(); });
+                    }
                 } catch(e) { console.log(e); }
 
             } else if (type === 'job') {
@@ -1424,27 +1450,39 @@
                 if(modal) modal.classList.remove('hidden');
                 const cont = document.getElementById('job-form-container');
                 if(cont) cont.scrollTop = 0;
+
+                editingJobId = existingData ? existingData.id : null;
+                const titleEl = document.getElementById('job-modal-title');
+                if(titleEl) titleEl.textContent = existingData ? '仕事・依頼を編集' : '仕事・依頼を掲載';
+                
+                const btnEl = document.getElementById('job-submit-btn');
+                if(btnEl) btnEl.innerHTML = existingData ? '<i class="fa-solid fa-pen mr-2"></i>募集情報を更新する' : '募集を掲載する';
                 
                 try {
-                    setVal('job-title', "");
-                    setVal('job-type', "業務委託");
-                    setVal('job-category', "デザイン");
-                    setVal('job-desc', "");
-                    setVal('job-reward-type', "固定報酬");
-                    setVal('job-reward-amount', "");
-                    setVal('job-period', "単発");
-                    setVal('job-work-style', "フルリモート");
-                    setVal('job-location', "");
-                    setVal('job-location-name', "");
-                    setVal('job-location-search-input', "");
-                    setVal('job-skills', "");
-                    setVal('job-deadline', "");
-                    setVal('job-flow', "面談1回");
-                    setVal('job-company', "");
-                    setVal('job-url', "");
+                    setVal('job-title', existingData?.title || "");
+                    setVal('job-type', existingData?.type || "業務委託");
+                    setVal('job-category', existingData?.category || "デザイン");
+                    setVal('job-desc', existingData?.desc || "");
+                    setVal('job-reward-type', existingData?.rewardType || "固定報酬");
+                    setVal('job-reward-amount', existingData?.rewardAmount || "");
+                    setVal('job-period', existingData?.period || "単発");
+                    setVal('job-work-style', existingData?.workStyle || "フルリモート");
+                    setVal('job-location', existingData?.location || "");
+                    setVal('job-location-name', existingData?.locationName || "");
+                    setVal('job-skills', existingData?.skills || "");
+                    setVal('job-deadline', existingData?.deadline || "");
+                    setVal('job-flow', existingData?.flow || "面談1回");
+                    setVal('job-company', existingData?.company || "");
+                    setVal('job-url', existingData?.url || "");
                     
+                    selectedCoordsJob = (existingData?.lat && existingData?.lng) ? { lat: existingData.lat, lng: existingData.lng } : null;
+
                     if (tempMarker) map.removeLayer(tempMarker);
-                    selectedCoordsJob = null;
+                    if (selectedCoordsJob) {
+                        tempMarker = L.marker(selectedCoordsJob, { draggable: true, icon: blueIcon }).addTo(map);
+                        tempMarker.on('dragend', function(e) { selectedCoordsJob = e.target.getLatLng(); });
+                    }
+
                     toggleJobLocationUI();
                 } catch(e){ console.log(e); }
             }
@@ -1459,7 +1497,7 @@
         // Shared Map Location Methods
         // ==========================================
         window.searchLocation = async (type) => {
-            const inputId = type === 'event' ? 'location-search-input' : 'job-location-search-input';
+            const inputId = type === 'event' ? 'event-location-search-input' : 'job-location-search-input';
             const query = getVal(inputId);
             if (!query) return;
 
@@ -1467,8 +1505,9 @@
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
                 const results = await response.json();
                 
-                const listId = type === 'event' ? 'location-results' : 'job-location-results';
+                const listId = type === 'event' ? 'event-location-results' : 'job-location-results';
                 const list = document.getElementById(listId);
+                if(!list) return;
                 list.innerHTML = '';
                 list.classList.remove('hidden');
 
@@ -1488,14 +1527,15 @@
         };
 
         function selectLocation(type, place) {
-            const listId = type === 'event' ? 'location-results' : 'job-location-results';
+            const listId = type === 'event' ? 'event-location-results' : 'job-location-results';
             const nameInputId = type === 'event' ? 'event-location-name' : 'job-location-name';
             const icon = type === 'event' ? redIcon : blueIcon;
 
             const coords = { lat: parseFloat(place.lat), lng: parseFloat(place.lon) };
             if (type === 'event') selectedCoordsEvent = coords; else selectedCoordsJob = coords;
 
-            document.getElementById(listId).classList.add('hidden');
+            const listEl = document.getElementById(listId);
+            if(listEl) listEl.classList.add('hidden');
             setVal(nameInputId, place.display_name.split(',')[0]);
             
             if (tempMarker) map.removeLayer(tempMarker);
@@ -1638,6 +1678,10 @@
                             return alert("画像のアップロードに失敗しました"); 
                         }
                     }
+                } else if (editingEventId) {
+                    // 編集時、画像がアップされなかったら元の画像を維持
+                    const oldEvt = allEvents.find(e => e.id === editingEventId);
+                    if(oldEvt) thumbnailUrl = oldEvt.thumbnailUrl;
                 }
 
                 const customTagsStr = getVal('event-custom-tags');
@@ -1660,9 +1704,13 @@
                     organizerId: currentUser.uid,
                     organizerName: safeName,
                     isParticipantsPublic: publicParts,
-                    createdAt: serverTimestamp(),
-                    participantCount: 0
+                    updatedAt: serverTimestamp()
                 };
+
+                if (!editingEventId) {
+                    eventData.createdAt = serverTimestamp();
+                    eventData.participantCount = 0;
+                }
 
                 if (isOnline) {
                     eventData.isOnline = true;
@@ -1675,20 +1723,27 @@
                     eventData.lat = selectedCoordsEvent.lat; eventData.lng = selectedCoordsEvent.lng;
                 }
 
-                if(btn) btn.textContent = "送信中...";
+                if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>送信中...';
+                
                 if (isAdminMock) {
-                    alert('【テスト】イベントを作成しました！(モックデータ)');
+                    alert('【テスト】イベントを保存しました！(モックデータ)');
                 } else {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'events'), eventData);
-                    alert('イベントを企画しました！');
+                    if (editingEventId) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'events', editingEventId), eventData);
+                        alert('イベントを更新しました！');
+                    } else {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'events'), eventData);
+                        alert('イベントを企画しました！');
+                    }
                 }
                 closeCreateModal('event');
+                closeDetail('event');
                 await loadAllData(); 
             } catch (e) {
                 console.error("Submit Event Error:", e);
                 alert('処理に失敗しました。\nエラー: ' + e.message);
             } finally {
-                if(btn) btn.textContent = "イベントを企画する";
+                if(btn) btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する";
             }
         };
 
@@ -1729,8 +1784,12 @@
                     organizerId: currentUser.uid,
                     organizerName: safeName,
                     organizerAvatar: safeAvatar,
-                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
                 };
+
+                if (!editingJobId) {
+                    jobData.createdAt = serverTimestamp();
+                }
 
                 if (style === 'フルリモート') {
                     jobData.locationName = "フルリモート";
@@ -1740,21 +1799,27 @@
                     jobData.lat = selectedCoordsJob.lat; jobData.lng = selectedCoordsJob.lng;
                 }
 
-                if(btn) btn.textContent = "送信中...";
+                if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>送信中...';
                 if (isAdminMock) {
-                    alert('【テスト】仕事・依頼を掲載しました！(モックデータ)');
+                    alert('【テスト】仕事・依頼を保存しました！(モックデータ)');
                 } else {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jobs'), jobData);
-                    alert('仕事・依頼を掲載しました！');
+                    if (editingJobId) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jobs', editingJobId), jobData);
+                        alert('仕事・依頼を更新しました！');
+                    } else {
+                        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'jobs'), jobData);
+                        alert('仕事・依頼を掲載しました！');
+                    }
                 }
                 closeCreateModal('job');
+                closeDetail('job');
                 await loadAllData(); 
                 switchView('list-jobs'); 
             } catch (e) {
                 console.error("Submit Job Error:", e);
                 alert('処理に失敗しました。\nエラー: ' + e.message);
             } finally {
-                if(btn) btn.textContent = "募集を掲載する";
+                if(btn) btn.textContent = editingJobId ? "募集情報を更新する" : "募集を掲載する";
             }
         };
 
@@ -1839,7 +1904,16 @@
                     let count = 0;
                     for (const uid of participants) {
                         if (count >= 6) break;
-                        partsHtml += `<div class="inline-block h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-100 border border-brand-300 flex items-center justify-center overflow-hidden"><i class="fa-solid fa-user text-brand-400 text-xs"></i></div>`;
+                        
+                        let avatarUrl = 'https://via.placeholder.com/32?text=U';
+                        if (!isAdminMock) {
+                            try {
+                                const uDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', uid));
+                                if(uDoc.exists() && uDoc.data().photoURL) avatarUrl = uDoc.data().photoURL;
+                            } catch(e){}
+                        }
+
+                        partsHtml += `<a href="user.html?uid=${uid}" class="inline-block h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-100 border border-brand-300 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"><img src="${avatarUrl}" class="w-full h-full object-cover"></a>`;
                         count++;
                     }
                     if (participants.length > 6) partsHtml += `<div class="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-50 text-[10px] font-bold text-brand-600 border border-brand-200">+${participants.length - 6}</div>`;
@@ -1857,8 +1931,12 @@
 
             let actionBtns = '';
             if (isOrganizer || isAdmin) {
+                const eventJson = JSON.stringify(evt).replace(/'/g, "&apos;");
                 actionBtns = `
-                    <div class="flex gap-2 mt-3">
+                    <div class="flex gap-2 mt-3 pt-4 border-t border-brand-200">
+                        <button onclick='openCreateModal("event", ${eventJson})' class="flex-1 py-2 rounded-sm text-brand-700 font-bold border border-brand-200 hover:bg-brand-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
+                            <i class="fa-solid fa-pen mr-1"></i> 編集
+                        </button>
                         <button onclick="deleteEvent('${evt.id}')" class="flex-1 py-2 rounded-sm text-red-700 font-bold border border-brand-200 hover:bg-red-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
                             <i class="fa-solid fa-trash mr-1"></i> 削除
                         </button>
@@ -1934,10 +2012,14 @@
             let actionBtns = '';
             const isOrganizer = currentUser && currentUser.uid === job.organizerId;
             if (isOrganizer || isAdmin) {
+                const jobJson = JSON.stringify(job).replace(/'/g, "&apos;");
                 actionBtns = `
-                    <div class="mt-4 pt-4 border-t border-brand-200">
-                        <button onclick="deleteJob('${job.id}')" class="w-full py-2 rounded-sm text-red-700 font-bold border border-brand-200 hover:bg-red-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
-                            <i class="fa-solid fa-trash mr-1"></i> この求人を削除
+                    <div class="flex gap-2 mt-4 pt-4 border-t border-brand-200">
+                        <button onclick='openCreateModal("job", ${jobJson})' class="flex-1 py-2 rounded-sm text-brand-700 font-bold border border-brand-200 hover:bg-brand-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
+                            <i class="fa-solid fa-pen mr-1"></i> 編集
+                        </button>
+                        <button onclick="deleteJob('${job.id}')" class="flex-1 py-2 rounded-sm text-red-700 font-bold border border-brand-200 hover:bg-red-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
+                            <i class="fa-solid fa-trash mr-1"></i> 削除
                         </button>
                     </div>`;
             }
