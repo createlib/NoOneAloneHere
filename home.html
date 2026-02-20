@@ -4,36 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ホーム | NOAH</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="img/icon.png">
+    
+    <!-- Google Fonts: Noto Serif JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'Noto Sans JP', 'sans-serif'] },
-                    colors: { brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 900: '#312e81' } }
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { 
+                        brand: { 
+                            50: '#f7f5f0',   // bg
+                            100: '#e8dfd1',  // border light
+                            200: '#dcd4c6',  // border medium
+                            300: '#c8b9a6',  // border dark
+                            400: '#a09080',  // text muted
+                            500: '#8b6a4f',  // accent
+                            600: '#725b3f',  // accent hover
+                            700: '#5c4a3d',  // text body
+                            800: '#4a3b32',  // text heading
+                            900: '#3e2723'   // text dark
+                        } 
+                    }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #f8fafc; }
-        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; border-radius: 9999px; transition: all 0.2s; }
-        .calendar-day:hover { background-color: #f1f5f9; }
-        .calendar-day.selected { background-color: #4f46e5; color: white; font-weight: bold; }
-        .calendar-day.has-event::after { content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #ef4444; border-radius: 50%; }
-        .calendar-day.selected.has-event::after { background-color: white; }
+        body { 
+            font-family: 'Noto Serif JP', serif;
+            background-color: #f7f5f0; 
+            color: #4a3b32;
+        }
         
-        /* ボトムナビの高さ固定設定 */
+        .bg-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+
+        .glass-header {
+            background: rgba(255, 253, 249, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Bottom Nav Safe Area */
+        .pb-safe-bottom { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
+        
         .bottom-nav-fixed {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            background-color: white;
-            border-top: 1px solid #e2e8f0;
-            z-index: 50;
+            background-color: #fffdf9;
+            border-top: 1px solid #e8dfd1;
+            z-index: 1900;
             height: 4rem;
             height: calc(4rem + env(safe-area-inset-bottom));
             padding-bottom: env(safe-area-inset-bottom);
@@ -47,29 +81,73 @@
             width: 100%;
         }
 
-        .body-pb-nav {
-            padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+        /* Calendar Styles */
+        .calendar-day { 
+            aspect-ratio: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            transition: all 0.2s; 
+            font-family: 'Noto Serif JP', serif; 
         }
+        .calendar-day:hover { background-color: #e8dfd1; }
+        .calendar-day.selected { 
+            background-color: #3e2723; 
+            color: #d4af37; 
+            font-weight: bold; 
+            border: 1px solid #b8860b; 
+        }
+        .calendar-day.has-event::after { 
+            content: ''; 
+            position: absolute; 
+            bottom: 4px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 4px; 
+            height: 4px; 
+            background-color: #8b6a4f; 
+            border-radius: 50%; 
+        }
+        .calendar-day.selected.has-event::after { background-color: #d4af37; }
+
     </style>
 </head>
-<body class="text-slate-800 antialiased body-pb-nav lg:pb-0">
+<body class="antialiased pb-safe-bottom lg:pb-0 bg-texture">
 
-    <!-- Header / Nav -->
-    <nav class="bg-white/90 backdrop-blur-md border-b border-slate-200 fixed w-full z-50 top-0 h-16">
-        <div class="max-w-7xl mx-auto px-4 h-full flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <img src="NOAH.png" alt="NOAH" class="w-8 h-8 rounded-lg object-cover">
-                <span class="text-xl font-black text-slate-900 tracking-tight">NOAH</span>
+    <!-- Navbar -->
+    <nav class="glass-header border-b border-brand-200 fixed w-full z-[1500] top-0 h-16 shadow-sm bg-texture">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
+            <div class="flex items-center gap-4">
+                <a href="home.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
+                    <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-anchor"></i></span>
+                    <span class="hidden sm:inline">NOAH</span>
+                </a>
             </div>
 
-            <!-- PC Navigation -->
+            <!-- PC Navigation Links -->
             <div class="hidden lg:flex items-center gap-6">
-                <a href="home.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-house"></i> ホーム</a>
-                <a href="events.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-map-location-dot"></i> イベント</a>
-                <a href="search.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-magnifying-glass"></i> さがす</a>
-                <a href="user.html" class="text-slate-500 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-user"></i> マイページ</a>
-                <div class="h-6 w-px bg-slate-200 mx-1"></div>
-                <button onclick="handleLogout()" class="text-sm font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> ログアウト</button>
+                <a href="home.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海(ホーム)</a>
+                <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント・仕事</a>
+                <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
+                <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                
+                <div class="h-6 w-px bg-brand-200 mx-1"></div>
+                
+                <button onclick="handleLogout()" class="text-sm font-bold text-brand-400 hover:text-red-800 transition-colors flex items-center gap-2">
+                    <span class="tracking-widest">下船する</span>
+                    <i class="fa-solid fa-right-from-bracket text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Header Action (Optional) -->
+            <div class="lg:hidden flex items-center">
+                <a href="notifications.html" class="p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]"></span>
+                </a>
             </div>
         </div>
     </nav>
@@ -80,37 +158,41 @@
             
             <!-- Left Column -->
             <div class="lg:col-span-2 space-y-8">
-                <!-- Welcome Card -->
-                <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden">
+                
+                <!-- Welcome Card (NOAH Style) -->
+                <div class="bg-[#3e2723] text-[#f7f5f0] rounded-sm p-8 shadow-md relative overflow-hidden border border-[#b8860b] bg-texture">
                     <div class="relative z-10">
-                        <h1 class="text-2xl font-bold mb-2">Welcome to NOAH</h1>
-                        <p class="text-slate-300 text-sm mb-6">つながり、学び、創り出すためのコミュニティプラットフォーム。</p>
-                        <div class="flex gap-3">
-                            <a href="search.html" class="bg-white text-slate-900 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-100 transition-colors">
-                                仲間を探す
+                        <h1 class="text-2xl font-bold mb-3 font-serif tracking-widest">NOAHへようこそ</h1>
+                        <p class="text-[#dcd4c6] text-sm mb-6 tracking-widest leading-relaxed">
+                            誰も一人にならない箱舟。<br>
+                            共鳴する仲間を見つけ、新たな世界を創り出しましょう。
+                        </p>
+                        <div class="flex flex-wrap gap-4">
+                            <a href="search.html" class="bg-[#d4af37] text-[#2a1a17] border border-[#b8860b] px-6 py-2.5 rounded-sm font-bold text-xs hover:bg-[#b8860b] hover:text-[#fffdf9] transition-colors tracking-widest shadow-sm">
+                                乗船者を探す
                             </a>
-                            <a href="events.html" class="bg-white/10 text-white border border-white/20 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-white/20 transition-colors">
-                                イベントへ
+                            <a href="events.html" class="bg-[#2a1a17] text-[#d4af37] border border-[#b8860b] px-6 py-2.5 rounded-sm font-bold text-xs hover:bg-black transition-colors tracking-widest shadow-sm">
+                                航海図(イベント)を見る
                             </a>
                         </div>
                     </div>
-                    <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10">
-                        <i class="fa-solid fa-brain text-[12rem]"></i>
+                    <div class="absolute right-0 bottom-0 opacity-[0.15] transform translate-x-4 translate-y-4">
+                        <i class="fa-solid fa-anchor text-[10rem] text-[#d4af37]"></i>
                     </div>
                 </div>
 
                 <!-- Participating Events -->
                 <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h2 class="font-bold text-lg text-slate-900 flex items-center gap-2 border-l-4 border-brand-500 pl-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <h2 class="font-bold text-lg text-brand-900 flex items-center gap-2 border-l-4 border-brand-500 pl-3 font-serif tracking-widest">
                             参加予定のイベント
                         </h2>
                         <!-- Toggle Switch -->
-                        <div class="flex bg-slate-100 p-1 rounded-lg">
-                            <button onclick="switchView('list')" id="btn-view-list" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all bg-white shadow text-brand-600">
+                        <div class="flex bg-brand-50 p-1 rounded-sm border border-brand-200 shadow-inner w-fit">
+                            <button onclick="switchView('list')" id="btn-view-list" class="px-4 py-1.5 rounded-sm text-[10px] sm:text-xs font-bold transition-all bg-[#3e2723] text-[#d4af37] tracking-widest font-serif border border-[#b8860b] shadow-sm">
                                 <i class="fa-solid fa-list mr-1"></i>リスト
                             </button>
-                            <button onclick="switchView('calendar')" id="btn-view-calendar" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all text-slate-500 hover:text-slate-700">
+                            <button onclick="switchView('calendar')" id="btn-view-calendar" class="px-4 py-1.5 rounded-sm text-[10px] sm:text-xs font-bold transition-all text-brand-700 hover:text-brand-900 tracking-widest font-serif border border-transparent">
                                 <i class="fa-regular fa-calendar mr-1"></i>カレンダー
                             </button>
                         </div>
@@ -119,46 +201,48 @@
                     <!-- List View -->
                     <div id="participating-events-list" class="space-y-3">
                         <!-- Loading -->
-                        <div class="animate-pulse flex space-x-4 p-4 bg-white rounded-xl border border-slate-100">
-                            <div class="rounded-lg bg-slate-200 h-16 w-16"></div>
+                        <div class="animate-pulse flex items-center gap-4 p-4 bg-[#fffdf9] rounded-sm border border-brand-200">
+                            <div class="rounded-sm bg-brand-100 h-16 w-16"></div>
                             <div class="flex-1 space-y-2 py-1">
-                                <div class="h-4 bg-slate-200 rounded w-3/4"></div>
-                                <div class="h-4 bg-slate-200 rounded w-1/2"></div>
+                                <div class="h-4 bg-brand-100 rounded w-3/4"></div>
+                                <div class="h-3 bg-brand-100 rounded w-1/2"></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Calendar View (Hidden by default) -->
-                    <div id="participating-events-calendar" class="hidden bg-white rounded-2xl border border-slate-100 p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-lg" id="calendar-month-year">2023年 12月</h3>
+                    <div id="participating-events-calendar" class="hidden bg-[#fffdf9] rounded-sm border border-brand-200 shadow-sm p-6">
+                        <div class="flex justify-between items-center mb-6 border-b border-brand-100 pb-3">
+                            <h3 class="font-bold text-lg text-brand-900 font-serif tracking-widest" id="calendar-month-year">2026年 1月</h3>
                             <div class="flex gap-2">
-                                <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-50 rounded-full"><i class="fa-solid fa-chevron-left"></i></button>
-                                <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-50 rounded-full"><i class="fa-solid fa-chevron-right"></i></button>
+                                <button onclick="changeMonth(-1)" class="p-2 border border-brand-200 rounded-sm text-brand-500 hover:bg-brand-50 transition-colors"><i class="fa-solid fa-chevron-left"></i></button>
+                                <button onclick="changeMonth(1)" class="p-2 border border-brand-200 rounded-sm text-brand-500 hover:bg-brand-50 transition-colors"><i class="fa-solid fa-chevron-right"></i></button>
                             </div>
                         </div>
-                        <div class="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
+                        <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-brand-400 mb-3 tracking-widest">
                             <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
                         </div>
-                        <div id="calendar-days" class="grid grid-cols-7 gap-1 text-sm text-slate-700">
+                        <div id="calendar-days" class="grid grid-cols-7 gap-1 text-sm text-brand-800">
                             <!-- JS injected -->
                         </div>
                         
                         <!-- Selected Date Events -->
-                        <div id="calendar-selected-events" class="mt-6 pt-4 border-t border-slate-100 hidden">
-                            <h4 class="text-xs font-bold text-slate-500 mb-2" id="selected-date-label">選択した日のイベント</h4>
-                            <div id="calendar-events-list" class="space-y-2"></div>
+                        <div id="calendar-selected-events" class="mt-6 pt-4 border-t border-brand-200 border-dashed hidden">
+                            <h4 class="text-xs font-bold text-brand-500 mb-3 tracking-widest" id="selected-date-label">選択した日のイベント</h4>
+                            <div id="calendar-events-list" class="space-y-3"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Hosting Events -->
                 <div class="space-y-4">
-                    <h2 class="font-bold text-lg text-slate-900 flex items-center gap-2 border-l-4 border-yellow-500 pl-3">
+                    <h2 class="font-bold text-lg text-brand-900 flex items-center gap-2 border-l-4 border-[#d4af37] pl-3 font-serif tracking-widest">
                         主催するイベント
                     </h2>
                     <div id="hosting-events-list" class="space-y-3">
-                        <div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">読み込み中...</div>
+                        <div class="text-xs text-brand-400 italic p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest">
+                            <i class="fa-solid fa-compass fa-spin mr-2"></i>読み込み中...
+                        </div>
                     </div>
                 </div>
             </div>
@@ -166,28 +250,29 @@
             <!-- Right Column (Sidebar) -->
             <div class="space-y-6">
                 <!-- User Card Mini -->
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-center">
-                    <div class="w-20 h-20 bg-slate-100 rounded-full mx-auto mb-3 overflow-hidden border-2 border-white shadow-sm">
+                <div class="bg-[#fffdf9] rounded-sm p-6 shadow-md border border-brand-200 text-center relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                    <div class="w-20 h-20 bg-brand-50 rounded-sm mx-auto mb-3 overflow-hidden border-2 border-brand-200 shadow-sm relative z-20">
                         <img id="home-user-icon" src="" class="w-full h-full object-cover hidden">
-                        <div id="home-user-placeholder" class="w-full h-full flex items-center justify-center text-slate-300"><i class="fa-solid fa-user text-3xl"></i></div>
+                        <div id="home-user-placeholder" class="w-full h-full flex items-center justify-center text-brand-300"><i class="fa-solid fa-anchor text-3xl"></i></div>
                     </div>
-                    <h3 class="font-bold text-slate-900" id="home-user-name">Guest</h3>
-                    <p class="text-xs text-slate-400 mb-4" id="home-user-id">@...</p>
-                    <a href="user.html" class="block w-full py-2 bg-slate-50 text-slate-600 text-sm font-bold rounded-lg hover:bg-slate-100 transition-colors">
-                        プロフィールを表示
+                    <h3 class="font-bold text-brand-900 font-serif tracking-widest relative z-20" id="home-user-name">Guest</h3>
+                    <p class="text-xs text-brand-500 mb-4 tracking-widest relative z-20" id="home-user-id">@...</p>
+                    <a href="user.html" class="block w-full py-2.5 bg-brand-50 text-brand-700 text-xs font-bold rounded-sm hover:bg-brand-100 transition-colors border border-brand-200 shadow-sm tracking-widest relative z-20">
+                        航海録(プロフィール)を表示
                     </a>
                 </div>
 
                 <!-- Info -->
-                <div class="bg-brand-50 rounded-2xl p-6 border border-brand-100">
-                    <h3 class="font-bold text-brand-900 mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-crown text-brand-600"></i> プランについて
+                <div class="bg-[#f7f5f0] rounded-sm p-6 border border-[#c8b9a6] shadow-sm">
+                    <h3 class="font-bold text-[#3e2723] mb-3 flex items-center gap-2 font-serif tracking-widest">
+                        <i class="fa-solid fa-shield-halved text-[#b8860b]"></i> プランについて
                     </h3>
-                    <p class="text-xs text-brand-700 leading-relaxed mb-4">
-                        有料会員になると、より詳細なプロフィール閲覧や検索機能が利用できます。
+                    <p class="text-xs text-brand-700 leading-relaxed mb-4 tracking-wide">
+                        有料の役割（SETTLER等）を引き受けることで、イベントの企画や詳細な情報の閲覧が可能になります。
                     </p>
-                    <a href="upgrade.html" class="text-xs font-bold text-brand-600 hover:underline">
-                        詳細を見る &rarr;
+                    <a href="upgrade.html" class="text-xs font-bold text-[#b8860b] hover:text-[#996515] hover:underline transition-colors tracking-widest">
+                        役割の詳細を見る &rarr;
                     </a>
                 </div>
             </div>
@@ -195,80 +280,77 @@
         </div>
     </main>
 
-    <!-- Event Detail Modal -->
-    <div id="event-detail-modal" class="hidden fixed inset-0 z-[2000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Event Detail Modal (Used in Home) -->
+    <div id="event-detail-modal" class="hidden fixed inset-0 z-[2000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#fffdf9] bg-texture w-full max-w-lg rounded-sm shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-brand-300">
             
-            <div class="relative h-40 bg-slate-200">
+            <div class="relative h-40 bg-brand-100 border-b border-brand-200">
                 <img id="modal-event-img" class="w-full h-full object-cover" src="">
-                <button onclick="closeDetailModal()" class="absolute top-3 right-3 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors">
+                <button onclick="closeDetailModal()" class="absolute top-3 right-3 w-8 h-8 bg-[#3e2723]/80 text-[#d4af37] rounded-sm flex items-center justify-center hover:bg-[#2a1a17] transition-colors border border-[#b8860b] shadow-sm">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             
             <div class="p-6 overflow-y-auto">
-                <h3 id="modal-event-title" class="text-xl font-bold text-slate-900 mb-2"></h3>
+                <h3 id="modal-event-title" class="text-xl font-bold text-brand-900 mb-3 font-serif tracking-widest"></h3>
                 
-                <div class="flex flex-wrap gap-2 mb-4" id="modal-event-tags"></div>
+                <div class="flex flex-wrap gap-2 mb-5" id="modal-event-tags"></div>
 
-                <div class="space-y-3 mb-6 text-sm text-slate-600">
-                    <div class="flex gap-3">
-                        <i class="fa-regular fa-calendar mt-0.5 text-slate-400 w-5 text-center"></i>
-                        <span id="modal-event-date" class="font-bold"></span>
+                <div class="space-y-3 mb-6 text-xs text-brand-800 bg-brand-50 p-4 rounded-sm border border-brand-200 shadow-sm relative">
+                    <div class="absolute top-0 right-0 w-6 h-6 border-t border-r border-brand-300 m-1"></div>
+                    <div class="flex gap-3 items-center">
+                        <i class="fa-regular fa-clock text-brand-400 w-4 text-center"></i>
+                        <span id="modal-event-date" class="font-bold tracking-widest"></span>
                     </div>
-                    <div class="flex gap-3">
-                        <i class="fa-regular fa-clock mt-0.5 text-slate-400 w-5 text-center"></i>
-                        <span id="modal-event-time"></span>
+                    <div class="flex gap-3 items-center">
+                        <i class="fa-solid fa-location-dot text-brand-400 w-4 text-center"></i>
+                        <span id="modal-event-location" class="tracking-widest"></span>
                     </div>
-                    <div class="flex gap-3">
-                        <i class="fa-solid fa-location-dot mt-0.5 text-slate-400 w-5 text-center"></i>
-                        <span id="modal-event-location"></span>
-                    </div>
-                    <div class="flex gap-3">
-                        <i class="fa-solid fa-user mt-0.5 text-slate-400 w-5 text-center"></i>
-                        <span>主催: <span id="modal-event-organizer"></span></span>
+                    <div class="flex gap-3 items-center pt-2 border-t border-brand-100">
+                        <i class="fa-solid fa-user text-brand-400 w-4 text-center"></i>
+                        <span class="tracking-widest">主催: <span id="modal-event-organizer" class="font-bold"></span></span>
                     </div>
                 </div>
 
                 <div class="mb-6">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">詳細</h4>
-                    <p id="modal-event-desc" class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"></p>
+                    <h4 class="text-[10px] font-bold text-brand-500 uppercase mb-2 tracking-widest border-b border-brand-200 pb-1">詳細</h4>
+                    <p id="modal-event-desc" class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap tracking-wide"></p>
                 </div>
 
                 <!-- Google Calendar Button -->
-                <a id="modal-gcal-btn" href="#" target="_blank" class="block w-full py-3 bg-brand-600 text-white text-center font-bold rounded-xl hover:bg-brand-700 transition-colors shadow-md">
-                    <i class="fa-brands fa-google mr-2"></i> Googleカレンダーに追加
+                <a id="modal-gcal-btn" href="#" target="_blank" class="block w-full py-3.5 bg-[#3e2723] text-[#d4af37] text-center font-bold rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md border border-[#b8860b] tracking-widest text-sm">
+                    <i class="fa-brands fa-google mr-2"></i> カレンダーに追加
                 </a>
                 
-                <a href="events.html" class="block w-full text-center text-xs text-slate-400 mt-4 hover:underline">
-                    イベントマップで位置を確認する
+                <a href="events.html" class="block w-full text-center text-[10px] text-brand-500 mt-4 hover:text-brand-800 transition-colors tracking-widest underline">
+                    イベントページで詳細を確認する
                 </a>
             </div>
         </div>
     </div>
 
     <!-- Bottom Navigation (Mobile Only) -->
-    <nav class="lg:hidden bottom-nav-fixed">
-        <div class="bottom-nav-content">
-            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600">
-                <i class="fa-solid fa-house text-xl mb-1"></i>
-                <span class="text-[10px] font-bold">ホーム</span>
+    <nav class="fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div class="flex justify-around items-center h-16">
+            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px] transition-colors">
+                <i class="fa-solid fa-ship text-xl mb-1"></i>
+                <span class="text-[10px] font-bold tracking-widest">航海</span>
             </a>
-            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
-                <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
-                <span class="text-[10px] font-medium">イベント</span>
+            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-hourglass-half text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">イベント</span>
             </a>
-            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
-                <i class="fa-solid fa-magnifying-glass text-xl mb-1"></i>
-                <span class="text-[10px] font-medium">さがす</span>
+            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-compass text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">さがす</span>
             </a>
-            <button onclick="alert('マッチング機能は準備中です。\nComing Soon!')" class="flex flex-col items-center justify-center w-full h-full text-slate-300 hover:text-slate-400 transition-colors">
-                <i class="fa-solid fa-handshake-simple text-xl mb-1"></i>
-                <span class="text-[10px] font-medium">マッチ</span>
+            <button onclick="alert('マッチング機能は準備中です。\nComing Soon!')" class="flex flex-col items-center justify-center w-full h-full text-brand-300 hover:text-brand-500 transition-colors">
+                <i class="fa-solid fa-handshake text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">マッチ</span>
             </button>
-            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-brand-600 transition-colors">
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
-                <span class="text-[10px] font-medium">マイページ</span>
+                <span class="text-[10px] font-medium tracking-widest">マイページ</span>
             </a>
         </div>
     </nav>
@@ -276,7 +358,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, query, orderBy, getDocs, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         // ▼▼▼▼ Firebase Config ▼▼▼▼
         const firebaseConfig = {
@@ -302,13 +384,12 @@
         onAuthStateChanged(auth, async (user) => {
             if (isAdminMock) {
                 updateUI({ name: 'テスト管理者', userId: 'admin' });
-                document.getElementById('participating-events-list').innerHTML = '<div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">管理者モード: 参加イベントなし</div>';
-                document.getElementById('hosting-events-list').innerHTML = '<div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">管理者モード: 主催イベントなし</div>';
+                document.getElementById('participating-events-list').innerHTML = '<div class="text-xs text-brand-400 italic p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest">管理者モード: 参加イベントなし</div>';
+                document.getElementById('hosting-events-list').innerHTML = '<div class="text-xs text-brand-400 italic p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest">管理者モード: 主催イベントなし</div>';
                 return;
             }
 
             if (user && !user.isAnonymous) {
-                // User Info
                 try {
                     const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                     if (docSnap.exists()) {
@@ -325,7 +406,7 @@
         });
 
         function updateUI(data) {
-            document.getElementById('home-user-name').textContent = data.name || 'User';
+            document.getElementById('home-user-name').textContent = data.name || '名称未設定';
             document.getElementById('home-user-id').textContent = '@' + (data.userId || '-');
             
             if (data.photoURL) {
@@ -337,39 +418,36 @@
         }
 
         async function loadEvents(uid) {
-            
-            // 現在時刻 (ISO文字列の比較用)
             const now = new Date().toISOString();
 
-            // 1. Hosting Events (自分が主催)
+            // 1. Hosting Events
             try {
                 const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
-                const qHost = query(eventsRef, where('organizerId', '==', uid), orderBy('createdAt', 'desc')); 
-                const snapHost = await getDocs(qHost);
+                // orderBy is removed safely to avoid missing index errors
+                const snapHost = await getDocs(eventsRef);
                 
-                // ★ フィルタリング: 終了日時が現在より未来のものだけ
-                const activeHostEvents = snapHost.docs
-                    .map(d => ({...d.data(), id: d.id}))
-                    .filter(evt => !evt.endTimestamp || evt.endTimestamp >= now);
+                let hostEvents = [];
+                snapHost.forEach(d => {
+                    const evt = d.data();
+                    if (evt.organizerId === uid && (!evt.endTimestamp || evt.endTimestamp >= now)) {
+                        evt.id = d.id;
+                        hostEvents.push(evt);
+                    }
+                });
 
-                renderEventList('hosting-events-list', activeHostEvents, '主催する予定のイベントはありません');
+                hostEvents.sort((a,b) => {
+                    const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+                    const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+                    return tB - tA;
+                });
+
+                renderEventList('hosting-events-list', hostEvents, '主催する予定のイベントはありません');
             } catch (e) { 
                 console.error("Host load err", e);
-                // Fallback for index error
-                try {
-                     const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
-                     const qAll = query(eventsRef, orderBy('createdAt', 'desc'));
-                     const snapAll = await getDocs(qAll);
-                     const hostEvents = snapAll.docs
-                        .map(d => ({...d.data(), id: d.id}))
-                        .filter(d => d.organizerId === uid && (!d.endTimestamp || d.endTimestamp >= now));
-                     renderEventList('hosting-events-list', hostEvents, '主催する予定のイベントはありません');
-                } catch (e2) {
-                     document.getElementById('hosting-events-list').innerHTML = '<div class="text-sm text-red-400 p-4">読み込みエラー</div>';
-                }
+                document.getElementById('hosting-events-list').innerHTML = '<div class="text-xs text-red-500 p-4 tracking-widest">読み込みエラーが発生しました</div>';
             }
 
-            // 2. Participating Events (自分が参加)
+            // 2. Participating Events
             try {
                 const myJoinColl = collection(db, 'artifacts', appId, 'users', uid, 'participating_events');
                 const snapJoin = await getDocs(myJoinColl);
@@ -379,9 +457,9 @@
 
                 if (snapJoin.empty) {
                     listEl.innerHTML = `
-                        <div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">
+                        <div class="text-xs text-brand-500 p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest shadow-sm">
                             参加予定のイベントはありません<br>
-                            <a href="events.html" class="text-brand-600 underline mt-2 inline-block">イベントを探す</a>
+                            <a href="events.html" class="text-brand-700 font-bold border-b border-brand-500 mt-3 inline-block hover:text-brand-900 transition-colors">イベントを探す</a>
                         </div>`;
                 } else {
                     const eventPromises = snapJoin.docs.map(async (joinDoc) => {
@@ -400,18 +478,16 @@
 
                     const allJoinedEvents = (await Promise.all(eventPromises)).filter(e => e !== null);
                     
-                    // 終了済みを除外
                     myEvents = allJoinedEvents.filter(evt => !evt.endTimestamp || evt.endTimestamp >= now);
                     
-                    // 日付順ソート (近い順)
                     myEvents.sort((a, b) => {
-                        const dateA = new Date(a.startDate).getTime();
-                        const dateB = new Date(b.startDate).getTime();
+                        const dateA = new Date(a.startDate).getTime() || 0;
+                        const dateB = new Date(b.startDate).getTime() || 0;
                         return dateA - dateB;
                     });
 
                     if (myEvents.length === 0) {
-                         listEl.innerHTML = '<div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">参加予定のイベントはありません（または終了しました）</div>';
+                         listEl.innerHTML = '<div class="text-xs text-brand-500 p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest shadow-sm">参加予定のイベントはありません（または終了しました）</div>';
                     } else {
                         myEvents.forEach(evt => renderEventItem(listEl, evt));
                         renderCalendar(); 
@@ -419,7 +495,7 @@
                 }
             } catch (e) { 
                 console.error("Join load err", e); 
-                document.getElementById('participating-events-list').innerHTML = '<div class="text-sm text-red-400 p-4">読み込みエラー</div>';
+                document.getElementById('participating-events-list').innerHTML = '<div class="text-xs text-red-500 p-4 tracking-widest">読み込みエラーが発生しました</div>';
             }
         }
 
@@ -427,7 +503,7 @@
             const container = document.getElementById(containerId);
             container.innerHTML = '';
             if (events.length === 0) {
-                container.innerHTML = `<div class="text-sm text-slate-400 italic p-6 bg-white rounded-xl border border-slate-100 text-center">${emptyMsg}</div>`;
+                container.innerHTML = `<div class="text-xs text-brand-400 italic p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest shadow-sm">${emptyMsg}</div>`;
                 return;
             }
             events.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
@@ -435,20 +511,25 @@
         }
 
         function renderEventItem(container, evt) {
-            const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/80?text=No+Image';
+            const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/150?text=NOAH';
             const el = document.createElement('div');
-            el.className = 'flex items-center gap-4 p-4 bg-white rounded-xl border border-slate-100 hover:border-brand-200 transition-colors shadow-sm cursor-pointer';
+            el.className = 'flex items-center gap-4 p-4 bg-[#fffdf9] rounded-sm border border-brand-200 hover:border-brand-500 transition-colors shadow-sm cursor-pointer';
             el.onclick = () => openEventDetail(evt);
+            
+            const dateStr = (evt.startDate === evt.endDate) 
+                    ? `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endTime || ''}`
+                    : `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
+                    
             el.innerHTML = `
-                <img src="${thumb}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0 bg-slate-100">
+                <img src="${thumb}" class="w-16 h-16 rounded-sm object-cover flex-shrink-0 bg-brand-50 border border-brand-100">
                 <div class="flex-1 min-w-0">
-                    <h4 class="font-bold text-slate-900 truncate text-sm mb-1">${evt.title}</h4>
-                    <p class="text-xs text-slate-500 flex items-center gap-2">
-                        <span><i class="fa-regular fa-calendar mr-1"></i>${evt.startDate}</span>
-                        <span class="truncate max-w-[120px]"><i class="fa-solid fa-location-dot mr-1"></i>${evt.locationName}</span>
+                    <h4 class="font-bold text-brand-900 truncate text-sm mb-1 font-serif tracking-widest">${evt.title || '名称未設定'}</h4>
+                    <p class="text-[10px] text-brand-500 flex flex-col gap-1 tracking-widest mt-1.5">
+                        <span class="truncate"><i class="fa-regular fa-clock mr-1 text-brand-400"></i>${dateStr}</span>
+                        <span class="truncate"><i class="fa-solid fa-location-dot mr-1 text-brand-400"></i>${evt.locationName || '未設定'}</span>
                     </p>
                 </div>
-                <i class="fa-solid fa-chevron-right text-slate-300 text-sm"></i>
+                <i class="fa-solid fa-chevron-right text-brand-300 text-xs"></i>
             `;
             container.appendChild(el);
         }
@@ -463,17 +544,21 @@
             if (view === 'list') {
                 listEl.classList.remove('hidden');
                 calEl.classList.add('hidden');
-                btnList.classList.add('bg-white', 'shadow', 'text-brand-600');
-                btnList.classList.remove('text-slate-500');
-                btnCal.classList.remove('bg-white', 'shadow', 'text-brand-600');
-                btnCal.classList.add('text-slate-500');
+                
+                btnList.classList.add('bg-[#3e2723]', 'text-[#d4af37]', 'border-[#b8860b]', 'shadow-sm');
+                btnList.classList.remove('text-brand-700', 'border-transparent');
+                
+                btnCal.classList.remove('bg-[#3e2723]', 'text-[#d4af37]', 'border-[#b8860b]', 'shadow-sm');
+                btnCal.classList.add('text-brand-700', 'border-transparent');
             } else {
                 listEl.classList.add('hidden');
                 calEl.classList.remove('hidden');
-                btnCal.classList.add('bg-white', 'shadow', 'text-brand-600');
-                btnCal.classList.remove('text-slate-500');
-                btnList.classList.remove('bg-white', 'shadow', 'text-brand-600');
-                btnList.classList.add('text-slate-500');
+                
+                btnCal.classList.add('bg-[#3e2723]', 'text-[#d4af37]', 'border-[#b8860b]', 'shadow-sm');
+                btnCal.classList.remove('text-brand-700', 'border-transparent');
+                
+                btnList.classList.remove('bg-[#3e2723]', 'text-[#d4af37]', 'border-[#b8860b]', 'shadow-sm');
+                btnList.classList.add('text-brand-700', 'border-transparent');
                 renderCalendar();
             }
         };
@@ -502,9 +587,7 @@
 
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const hasEvent = myEvents.some(e => {
-                    return e.startDate === dateStr;
-                });
+                const hasEvent = myEvents.some(e => e.startDate === dateStr);
                 
                 const dayEl = document.createElement('div');
                 dayEl.className = `calendar-day text-sm ${hasEvent ? 'has-event' : ''}`;
@@ -527,7 +610,7 @@
             document.getElementById('calendar-selected-events').classList.remove('hidden');
 
             if (eventsOnDate.length === 0) {
-                list.innerHTML = '<p class="text-xs text-slate-400 italic">予定はありません</p>';
+                list.innerHTML = '<p class="text-[10px] text-brand-400 italic tracking-widest">予定はありません</p>';
             } else {
                 eventsOnDate.forEach(evt => renderEventItem(list, evt));
             }
@@ -536,27 +619,34 @@
         // --- Detail Modal ---
         window.openEventDetail = (evt) => {
             const modal = document.getElementById('event-detail-modal');
-            document.getElementById('modal-event-title').textContent = evt.title;
-            document.getElementById('modal-event-img').src = evt.thumbnailUrl || 'https://via.placeholder.com/400x200';
-            document.getElementById('modal-event-date').textContent = `${evt.startDate} ${evt.startTime} ~ ${evt.endTime}`;
-            document.getElementById('modal-event-time').textContent = evt.startTime;
-            document.getElementById('modal-event-location').textContent = evt.locationName;
-            document.getElementById('modal-event-organizer').textContent = evt.organizerName;
-            document.getElementById('modal-event-desc').textContent = evt.description || '';
+            
+            document.getElementById('modal-event-title').textContent = evt.title || '名称未設定';
+            document.getElementById('modal-event-img').src = evt.thumbnailUrl || 'https://via.placeholder.com/400x200?text=NOAH';
+            
+            const dateStr = (evt.startDate === evt.endDate) 
+                    ? `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endTime || ''}`
+                    : `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
+            document.getElementById('modal-event-date').textContent = dateStr;
+            
+            document.getElementById('modal-event-location').textContent = evt.locationName || '未設定';
+            document.getElementById('modal-event-organizer').textContent = evt.organizerName || '不明';
+            document.getElementById('modal-event-desc').textContent = evt.description || '詳細はありません';
             
             const tagsEl = document.getElementById('modal-event-tags');
             tagsEl.innerHTML = '';
             if (evt.tags) {
                 evt.tags.forEach(tag => {
-                    tagsEl.innerHTML += `<span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs">#${tag}</span>`;
+                    tagsEl.innerHTML += `<span class="bg-brand-50 border border-brand-200 text-brand-600 px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">#${tag}</span>`;
                 });
             }
 
-            const startStr = evt.startDate.replace(/-/g, '') + 'T' + (evt.startTime ? evt.startTime.replace(/:/g, '') + '00' : '000000');
+            const startStr = (evt.startDate || '').replace(/-/g, '') + 'T' + (evt.startTime ? evt.startTime.replace(/:/g, '') + '00' : '000000');
             const endStr = (evt.endDate ? evt.endDate.replace(/-/g, '') : startStr.substring(0,8)) + 'T' + (evt.endTime ? evt.endTime.replace(/:/g, '') + '00' : '235900');
-            const gcalUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(evt.title)}&dates=${startStr}/${endStr}&details=${encodeURIComponent(evt.description || '')}&location=${encodeURIComponent(evt.locationName || '')}`;
+            const gcalUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(evt.title || '')}&dates=${startStr}/${endStr}&details=${encodeURIComponent(evt.description || '')}&location=${encodeURIComponent(evt.locationName || '')}`;
             
-            document.getElementById('modal-gcal-btn').href = gcalUrl;
+            const gcalBtn = document.getElementById('modal-gcal-btn');
+            if (gcalBtn) gcalBtn.href = gcalUrl;
+            
             modal.classList.remove('hidden');
         };
 
