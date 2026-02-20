@@ -95,8 +95,14 @@
 
         /* Detail Sheet */
         .detail-sheet { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .sheet-open { transform: translateY(0%) !important; }
         .sheet-closed { transform: translateY(100%); }
+        .sheet-open { transform: translateY(0%) !important; }
+        
+        /* PC用アニメーション（右からスライド） */
+        @media (min-width: 1024px) {
+            .sheet-closed { transform: translateX(100%); }
+            .sheet-open { transform: translateX(0%) !important; }
+        }
 
         /* Tag Selection */
         .tag-btn.selected { 
@@ -400,27 +406,27 @@
 
 
     <!-- Details Sheet (Event) -->
-    <div id="event-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:w-[450px] lg:left-4 lg:bottom-4 lg:rounded-sm lg:border lg:max-h-[85vh] lg:pb-0 lg:transform-none lg:hidden bg-texture">
-        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100" onclick="closeDetail('event')">
+    <div id="event-sheet" class="detail-sheet sheet-closed hidden fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture">
+        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onclick="closeDetail('event')">
             <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
-            <div class="hidden lg:flex w-full justify-between items-center px-4">
+            <div class="hidden lg:flex w-full justify-between items-center px-5">
                 <span class="text-xs font-bold text-brand-500 tracking-widest">イベント詳細</span>
-                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 cursor-pointer text-lg"></i>
+                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 text-lg"></i>
             </div>
         </div>
-        <div id="event-sheet-content" class="px-5 pb-20 lg:pb-5 pt-4"></div>
+        <div id="event-sheet-content" class="px-5 pb-20 lg:pb-8 pt-4"></div>
     </div>
 
     <!-- Details Sheet (Job) -->
-    <div id="job-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:w-[450px] lg:left-4 lg:bottom-4 lg:rounded-sm lg:border lg:max-h-[85vh] lg:pb-0 lg:transform-none lg:hidden bg-texture">
-        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100" onclick="closeDetail('job')">
+    <div id="job-sheet" class="detail-sheet sheet-closed hidden fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture">
+        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onclick="closeDetail('job')">
             <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
-            <div class="hidden lg:flex w-full justify-between items-center px-4">
+            <div class="hidden lg:flex w-full justify-between items-center px-5">
                 <span class="text-xs font-bold text-brand-500 tracking-widest">仕事・依頼 詳細</span>
-                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 cursor-pointer text-lg"></i>
+                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 text-lg"></i>
             </div>
         </div>
-        <div id="job-sheet-content" class="px-5 pb-20 lg:pb-5 pt-4"></div>
+        <div id="job-sheet-content" class="px-5 pb-20 lg:pb-8 pt-4"></div>
     </div>
 
     <!-- ========================================== -->
