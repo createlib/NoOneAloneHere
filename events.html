@@ -110,6 +110,13 @@
             border-color: #8b6a4f !important; 
         }
 
+        /* フィルター内のタグチェックボックス */
+        .event-filter-tag:checked + div {
+            background-color: #8b6a4f !important;
+            border-color: #8b6a4f !important;
+            color: #fffdf9 !important;
+        }
+
         /* Forms */
         input:focus, select:focus, textarea:focus {
             outline: none;
@@ -125,18 +132,11 @@
         .accordion-arrow { transition: transform 0.2s ease; }
         details[open] .accordion-arrow { transform: rotate(180deg); }
 
-        /* Custom Checkbox in Job Modal */
-        .job-checkbox:checked + div {
-            background-color: #8b6a4f;
-            border-color: #8b6a4f;
-            color: #fffdf9;
-        }
-
-        /* View Tab Active State */
+        /* View Tab Active State (スマホでも絶対色が変わるよう !important 指定) */
         .tab-btn.active {
-            background-color: #3e2723;
-            color: #d4af37;
-            border-color: #b8860b;
+            background-color: #3e2723 !important;
+            color: #d4af37 !important;
+            border-color: #b8860b !important;
         }
 
         /* Create Menu Anim */
@@ -186,19 +186,23 @@
 
     <!-- Top View Tabs -->
     <div class="fixed top-16 w-full z-[1400] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
-        <div class="max-w-3xl mx-auto px-4 flex justify-center">
+        <div class="max-w-3xl mx-auto px-4 flex justify-between items-center">
             <div class="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
-                <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-4 py-2 text-[11px] sm:text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
+                <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
                     <i class="fa-solid fa-map-location-dot"></i> マップ(イベント)
                 </button>
-                <button onclick="switchView('list-events')" id="tab-list-events" class="tab-btn flex-1 sm:flex-none px-4 py-2 text-[11px] sm:text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
+                <button onclick="switchView('list-events')" id="tab-list-events" class="tab-btn flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
                     <i class="fa-solid fa-list"></i> リスト(イベント)
                 </button>
-                <button onclick="switchView('list-jobs')" id="tab-list-jobs" class="tab-btn flex-1 sm:flex-none px-4 py-2 text-[11px] sm:text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 relative">
+                <button onclick="switchView('list-jobs')" id="tab-list-jobs" class="tab-btn flex-1 sm:flex-none px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 relative">
                     <i class="fa-solid fa-briefcase"></i> 仕事・依頼
                     <span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d4af37] opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-[#b8860b]"></span></span>
                 </button>
             </div>
+            <!-- Filter Button (Common) -->
+            <button onclick="toggleFilters()" class="ml-3 p-2 bg-[#fffdf9] border border-brand-200 text-brand-600 hover:bg-brand-50 rounded-sm transition-colors relative shadow-sm flex-shrink-0" title="絞り込み">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
         </div>
     </div>
 
@@ -207,6 +211,15 @@
         
         <!-- View 1: Map -->
         <div id="view-map" class="block relative">
+            <!-- Search in Map -->
+            <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md pointer-events-none">
+                <div class="relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
+                    <input type="text" id="map-search-input" placeholder="イベント名で検索..." 
+                        class="w-full bg-[#fffdf9]/95 backdrop-blur border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 shadow-sm font-serif tracking-widest">
+                </div>
+            </div>
+
             <div id="map" class="w-full h-full"></div>
             <!-- Location Adjustment UI inside Map View -->
             <div id="adjust-location-ui" class="hidden absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-sm pointer-events-auto">
@@ -229,7 +242,7 @@
                 <!-- List injected here -->
             </div>
             <div id="event-list-loading" class="text-center py-10 text-brand-400 hidden"><i class="fa-solid fa-compass fa-spin text-2xl mb-2"></i><p class="text-xs tracking-widest">探しています...</p></div>
-            <div id="event-list-empty" class="text-center py-10 text-brand-400 hidden">イベントが見つかりません。</div>
+            <div id="event-list-empty" class="text-center py-10 text-brand-400 hidden">条件に合うイベントが見つかりません。</div>
         </div>
 
         <!-- View 3: Job List -->
@@ -242,13 +255,14 @@
                 <!-- List injected here -->
             </div>
             <div id="job-list-loading" class="text-center py-10 text-brand-400 hidden"><i class="fa-solid fa-compass fa-spin text-2xl mb-2"></i><p class="text-xs tracking-widest">探しています...</p></div>
-            <div id="job-list-empty" class="text-center py-10 text-brand-400 hidden">掲載されている仕事・依頼がありません。</div>
+            <div id="job-list-empty" class="text-center py-10 text-brand-400 hidden">条件に合う仕事・依頼が見つかりません。</div>
         </div>
 
     </div>
 
     <!-- Create FAB & Menu -->
-    <div class="absolute bottom-24 lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
+    <!-- スマホ時のメニュー被り防止のため、計算式で高さを浮かせる -->
+    <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
         <!-- Floating Menu -->
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
             <button onclick="openCreateModal('event')" class="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest border-b border-brand-100 flex items-center justify-between">
@@ -264,6 +278,114 @@
             <i class="fa-solid fa-plus text-xl transition-transform duration-300" id="fab-icon"></i>
         </button>
     </div>
+
+    <!-- Filter Panel (Unified for both Events and Jobs) -->
+    <div id="filter-panel" class="fixed top-0 left-0 w-full h-full bg-[#2a1a17]/50 z-[3000] hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+        <div class="absolute right-0 top-0 h-full w-80 sm:w-96 bg-[#fffdf9] bg-texture shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col border-l border-brand-200" id="filter-content">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] z-10 relative">
+                <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-200 to-transparent opacity-50"></div>
+                <h3 class="font-bold text-lg flex items-center gap-2 text-brand-900 font-serif tracking-widest">
+                    <i class="fa-solid fa-filter text-brand-500 text-sm"></i> <span id="filter-title">絞り込み</span>
+                </h3>
+                <button onclick="toggleFilters()" class="p-2 text-brand-400 hover:text-brand-700 rounded-sm hover:bg-brand-50 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Event Filters Section -->
+            <div id="filter-section-event" class="flex-1 overflow-y-auto p-5 space-y-6">
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-regular fa-calendar mr-1"></i>開催時期</label>
+                    <select id="filter-event-date" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="all">すべて</option>
+                        <option value="today">今日</option>
+                        <option value="week">1週間以内</option>
+                        <option value="month">1ヶ月以内</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-location-dot mr-1"></i>開催形式</label>
+                    <select id="filter-event-format" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="all">すべて</option>
+                        <option value="offline">オフライン（現地）のみ</option>
+                        <option value="online">オンラインのみ</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-yen-sign mr-1"></i>参加費</label>
+                    <select id="filter-event-price" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="all">すべて</option>
+                        <option value="free">無料のみ</option>
+                        <option value="paid">有料のみ</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-3"><i class="fa-solid fa-tags mr-1"></i>タグで絞り込み</label>
+                    <div id="filter-event-tags" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <!-- Job Filters Section -->
+            <div id="filter-section-job" class="flex-1 overflow-y-auto p-5 space-y-6 hidden">
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-file-contract mr-1"></i>募集タイプ</label>
+                    <select id="filter-job-type" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="">指定なし</option>
+                        <option value="業務委託">業務委託</option>
+                        <option value="正社員">正社員</option>
+                        <option value="契約社員">契約社員</option>
+                        <option value="アルバイト">アルバイト</option>
+                        <option value="単発依頼">単発依頼</option>
+                        <option value="共同事業パートナー">共同事業パートナー</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-briefcase mr-1"></i>業種カテゴリ</label>
+                    <select id="filter-job-category" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="">指定なし</option>
+                        <option value="デザイン">デザイン</option>
+                        <option value="エンジニア">エンジニア</option>
+                        <option value="マーケティング">マーケティング</option>
+                        <option value="営業">営業</option>
+                        <option value="動画制作">動画制作</option>
+                        <option value="ライティング">ライティング</option>
+                        <option value="事務・サポート">事務・サポート</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-building-user mr-1"></i>勤務形態</label>
+                    <select id="filter-job-workstyle" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="">指定なし</option>
+                        <option value="フルリモート">フルリモート</option>
+                        <option value="一部出社">一部出社</option>
+                        <option value="出社必須">出社必須</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-coins mr-1"></i>報酬形態</label>
+                    <select id="filter-job-reward" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="">指定なし</option>
+                        <option value="固定報酬">固定報酬</option>
+                        <option value="時給">時給</option>
+                        <option value="月給">月給</option>
+                        <option value="成果報酬">成果報酬</option>
+                        <option value="無償・レベニューシェア">無償・レベニューシェア</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom relative z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <button onclick="applyFilters()" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723]">
+                    絞り込みを適用
+                </button>
+                <button onclick="resetFilters()" class="w-full mt-3 text-sm text-brand-500 hover:text-brand-800 py-2 font-bold tracking-widest transition-colors">
+                    条件をクリア
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Details Sheet/Panel (Event) -->
     <div id="event-sheet" class="detail-sheet sheet-closed absolute bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-sm shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:w-[400px] lg:left-4 lg:bottom-4 lg:rounded-sm lg:border lg:max-h-[85vh] lg:pb-0 lg:transform-none lg:hidden bg-texture">
@@ -290,7 +412,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- MODALS -->
+    <!-- MODALS (Create Event / Job) -->
     <!-- ========================================== -->
 
     <!-- Event Create Modal -->
@@ -641,8 +763,10 @@
         let allJobs = [];
         let currentUser = null;
         let myProfile = null;
-        let userLocation = null; // {lat, lng}
+        let userLocation = null; 
         
+        let currentViewMode = 'map'; // map, list-events, list-jobs
+
         // Form States
         let tempMarker = null; 
         let selectedCoords = null;
@@ -662,14 +786,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             initMap();
             renderEventTagButtons();
+            initFilterOptions();
             
-            // Search Bindings (Map mode only for now, can extend to lists)
             const pcSearch = document.getElementById('pc-map-search');
-            const mobileSearch = document.getElementById('mobile-map-search');
+            const mobileSearch = document.getElementById('map-search-input');
             const handleSearch = (e) => {
                 const val = e.target.value.toLowerCase();
                 const filtered = allEvents.filter(evt => evt.title.toLowerCase().includes(val));
                 renderMarkers(filtered);
+                renderEventList(filtered);
             };
             if(pcSearch) pcSearch.addEventListener('input', handleSearch);
             if(mobileSearch) mobileSearch.addEventListener('input', handleSearch);
@@ -713,12 +838,13 @@
         // View Switcher & Core Load
         // ==========================================
         window.switchView = (viewName) => {
+            currentViewMode = viewName;
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active', 'bg-[#3e2723]', 'text-[#d4af37]', 'border-[#b8860b]');
-                btn.classList.add('bg-white', 'text-brand-700', 'border-brand-300');
+                btn.classList.add('bg-[#fffdf9]', 'text-brand-700', 'border-transparent');
             });
             const activeBtn = document.getElementById(`tab-${viewName}`);
-            activeBtn.classList.remove('bg-white', 'text-brand-700', 'border-brand-300');
+            activeBtn.classList.remove('bg-[#fffdf9]', 'text-brand-700', 'border-transparent');
             activeBtn.classList.add('active', 'bg-[#3e2723]', 'text-[#d4af37]', 'border-[#b8860b]');
 
             document.getElementById('view-map').classList.add('hidden');
@@ -727,12 +853,140 @@
 
             document.getElementById(`view-${viewName}`).classList.remove('hidden');
 
-            // Map resize fix
             if (viewName === 'map' && map) setTimeout(() => map.invalidateSize(), 100);
         };
 
         async function loadAllData() {
             await Promise.all([loadEvents(), loadJobs()]);
+        }
+
+        // ==========================================
+        // Filter Logic
+        // ==========================================
+        function initFilterOptions() {
+            const container = document.getElementById('filter-event-tags');
+            presetTags.forEach(tag => {
+                const label = document.createElement('label');
+                label.className = 'cursor-pointer';
+                label.innerHTML = `
+                    <input type="checkbox" value="${tag}" class="event-filter-tag hidden">
+                    <div class="px-2 py-1 rounded-sm border border-brand-200 text-xs text-brand-700 hover:bg-[#fffdf9] transition-colors select-none tracking-widest shadow-sm bg-white">${tag}</div>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        window.toggleFilters = () => {
+            const panel = document.getElementById('filter-panel');
+            const content = document.getElementById('filter-content');
+            
+            const eventSec = document.getElementById('filter-section-event');
+            const jobSec = document.getElementById('filter-section-job');
+            const title = document.getElementById('filter-title');
+            
+            if (currentViewMode === 'list-jobs') {
+                eventSec.classList.add('hidden');
+                jobSec.classList.remove('hidden');
+                title.textContent = '仕事・依頼の絞り込み';
+            } else {
+                eventSec.classList.remove('hidden');
+                jobSec.classList.add('hidden');
+                title.textContent = 'イベントの絞り込み';
+            }
+
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                setTimeout(() => { panel.classList.remove('opacity-0'); content.classList.remove('translate-x-full'); }, 10);
+            } else {
+                panel.classList.add('opacity-0');
+                content.classList.add('translate-x-full');
+                setTimeout(() => panel.classList.add('hidden'), 300);
+            }
+        };
+
+        window.applyFilters = () => {
+            if (currentViewMode === 'list-jobs') {
+                filterJobs();
+            } else {
+                filterEvents();
+            }
+            toggleFilters();
+        };
+
+        window.resetFilters = () => {
+            if (currentViewMode === 'list-jobs') {
+                document.getElementById('filter-job-type').value = "";
+                document.getElementById('filter-job-category').value = "";
+                document.getElementById('filter-job-workstyle').value = "";
+                document.getElementById('filter-job-reward').value = "";
+                renderJobList(allJobs);
+            } else {
+                document.getElementById('filter-event-date').value = "all";
+                document.getElementById('filter-event-format').value = "all";
+                document.getElementById('filter-event-price').value = "all";
+                document.querySelectorAll('.event-filter-tag').forEach(cb => cb.checked = false);
+                document.getElementById('pc-map-search').value = "";
+                document.getElementById('map-search-input').value = "";
+                renderMarkers(allEvents);
+                renderEventList(allEvents);
+            }
+            toggleFilters();
+        };
+
+        function filterEvents() {
+            const term = document.getElementById('pc-map-search').value.toLowerCase() || document.getElementById('map-search-input').value.toLowerCase();
+            const dateVal = document.getElementById('filter-event-date').value;
+            const formatVal = document.getElementById('filter-event-format').value;
+            const priceVal = document.getElementById('filter-event-price').value;
+            const selectedTagsArr = Array.from(document.querySelectorAll('.event-filter-tag:checked')).map(cb => cb.value);
+
+            const now = new Date();
+            const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+            const filtered = allEvents.filter(evt => {
+                const matchTerm = !term || evt.title.toLowerCase().includes(term) || (evt.description && evt.description.toLowerCase().includes(term));
+                
+                let matchDate = true;
+                if (dateVal !== 'all' && evt.startDate) {
+                    const evtDate = new Date(evt.startDate);
+                    if (dateVal === 'today') matchDate = (evt.startDate === now.toISOString().split('T')[0]);
+                    else if (dateVal === 'week') matchDate = (evtDate <= nextWeek);
+                    else if (dateVal === 'month') matchDate = (evtDate <= nextMonth);
+                }
+
+                let matchFormat = true;
+                if (formatVal === 'offline') matchFormat = !evt.isOnline;
+                if (formatVal === 'online') matchFormat = !!evt.isOnline;
+
+                let matchPrice = true;
+                if (priceVal === 'free') matchPrice = (evt.price === 0 || !evt.price);
+                if (priceVal === 'paid') matchPrice = (evt.price > 0);
+
+                const matchTags = selectedTagsArr.length === 0 || (evt.tags && selectedTagsArr.every(tag => evt.tags.includes(tag)));
+
+                return matchTerm && matchDate && matchFormat && matchPrice && matchTags;
+            });
+
+            renderMarkers(filtered);
+            renderEventList(filtered);
+        }
+
+        function filterJobs() {
+            const type = document.getElementById('filter-job-type').value;
+            const cat = document.getElementById('filter-job-category').value;
+            const style = document.getElementById('filter-job-workstyle').value;
+            const rew = document.getElementById('filter-job-reward').value;
+
+            const filtered = allJobs.filter(job => {
+                const matchType = !type || job.type === type;
+                const matchCat = !cat || job.category === cat;
+                const matchStyle = !style || job.workStyle === style;
+                const matchRew = !rew || job.rewardType === rew;
+                return matchType && matchCat && matchStyle && matchRew;
+            });
+
+            renderJobList(filtered);
         }
 
         // ==========================================
@@ -749,7 +1003,7 @@
                     (position) => {
                         userLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
                         map.setView([userLocation.lat, userLocation.lng], 13);
-                        renderEventList(); // Re-render list to calculate distances
+                        renderEventList(allEvents); // Re-render list to calculate distances
                     },
                     () => { console.log("Location access denied or error"); }
                 );
@@ -774,7 +1028,7 @@
                     allEvents.push(data);
                 });
                 renderMarkers(allEvents);
-                renderEventList();
+                renderEventList(allEvents);
             } catch (e) { console.error("Event Load Error:", e); }
         }
 
@@ -789,23 +1043,23 @@
             return R * c;
         }
 
-        function renderEventList() {
+        function renderEventList(eventsToRender) {
             const container = document.getElementById('event-list-container');
             const emptyMsg = document.getElementById('event-list-empty');
             
-            if (allEvents.length === 0) {
+            if (!eventsToRender || eventsToRender.length === 0) {
                 container.innerHTML = '';
                 emptyMsg.classList.remove('hidden');
                 return;
             }
             emptyMsg.classList.add('hidden');
 
-            let displayEvents = [...allEvents];
+            let displayEvents = [...eventsToRender];
             
             if (userLocation) {
                 displayEvents.forEach(e => {
                     if(e.lat && e.lng) e._distance = calculateDistance(userLocation.lat, userLocation.lng, e.lat, e.lng);
-                    else e._distance = 99999; // Online or missing
+                    else e._distance = 99999; 
                 });
                 displayEvents.sort((a, b) => a._distance - b._distance);
                 document.getElementById('event-list-status').textContent = '現在地から近い順';
@@ -843,7 +1097,6 @@
             markers.forEach(m => map.removeLayer(m));
             markers = [];
             events.forEach(data => {
-                // オフライン設定で座標がある場合のみピン立て
                 if (data.lat && data.lng) {
                     const marker = L.marker([data.lat, data.lng]).addTo(map);
                     marker.on('click', () => {
@@ -867,11 +1120,8 @@
                 return targetPoint.distanceTo(evtPoint) < 30; 
             });
             
-            if (nearbyEvents.length > 1) {
-                showEventListSheet(nearbyEvents);
-            } else {
-                showEventSheet(targetEvent);
-            }
+            // 重なっている場合は複数表示のロジック（今回は簡略化のため直接Sheet表示へ）
+            showEventSheet(targetEvent);
         }
 
         // ==========================================
@@ -888,23 +1138,23 @@
                     data.id = doc.id;
                     allJobs.push(data);
                 });
-                renderJobList();
+                renderJobList(allJobs);
             } catch (e) { console.error("Job Load Error:", e); }
         }
 
-        function renderJobList() {
+        function renderJobList(jobsToRender) {
             const container = document.getElementById('job-list-container');
             const emptyMsg = document.getElementById('job-list-empty');
             
-            if (allJobs.length === 0) {
+            if (!jobsToRender || jobsToRender.length === 0) {
                 container.innerHTML = '';
                 emptyMsg.classList.remove('hidden');
                 return;
             }
             emptyMsg.classList.add('hidden');
 
-            container.innerHTML = allJobs.map(job => {
-                const badgeColor = job.type === '正社員' ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-brand-100 text-brand-800';
+            container.innerHTML = jobsToRender.map(job => {
+                const badgeColor = job.type === '正社員' ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-brand-50 text-brand-600 border border-brand-200';
                 return `
                 <div class="bg-[#fffdf9] border border-brand-200 rounded-sm p-4 shadow-sm hover:shadow-md hover:border-brand-300 transition-all cursor-pointer relative" onclick='showJobSheet(${JSON.stringify(job).replace(/'/g, "&apos;")})'>
                     <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-200 m-2"></div>
@@ -952,7 +1202,6 @@
                 
                 document.getElementById('event-modal').classList.remove('hidden');
                 editingEventId = null;
-                // Reset form
                 document.getElementById('event-title').value = "";
                 document.getElementById('event-price').value = "0";
                 const todayStr = new Date().toISOString().split('T')[0];
@@ -969,13 +1218,11 @@
                 selectedCoords = null;
 
             } else if (type === 'job') {
-                // Job requires BUILDER or higher (BUILDER, GUARDIAN, COVENANT)
                 const allowedRanks = ['builder', 'guardian', 'covenant'];
                 if (!allowedRanks.includes(rank) && !isAdmin) return alert('仕事・依頼の掲載は BUILDER 以上の機能です。契約変更をご検討ください。');
                 
                 document.getElementById('job-modal').classList.remove('hidden');
                 document.getElementById('job-form-container').scrollTop = 0;
-                // Form is HTML native, let it be empty for new
             }
         };
 
@@ -1176,17 +1423,10 @@
         // ==========================================
         window.showEventSheet = async (evt) => {
             const isPC = window.innerWidth >= 1024;
-            // For unified logic, let's just use the mobile sheet styling but placed centrally for both
             const sheet = document.getElementById('event-sheet');
             const content = document.getElementById('event-sheet-content');
 
-            let isJoined = false;
-            let partsHtml = '<div class="text-[10px] text-brand-400">読み込み中...</div>';
-            
-            // Note: omitting participant fetching logic here to keep code size manageable and focus on UI, 
-            // but structure remains for future implementation
-            partsHtml = '<div class="text-[10px] text-brand-500 bg-brand-50 p-2 rounded-sm border border-brand-200">現在参加者の表示機能は調整中です</div>';
-
+            let partsHtml = '<div class="text-[10px] text-brand-500 bg-brand-50 p-2 rounded-sm border border-brand-200">現在参加者の表示機能は調整中です</div>';
             const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/400x200?text=NOAH+Event';
             const tags = evt.tags ? evt.tags.map(t => `<span class="bg-brand-50 border border-brand-200 text-brand-600 px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">#${t}</span>`).join('') : '';
             const priceText = evt.price > 0 ? `¥${evt.price.toLocaleString()}` : '無料';
@@ -1273,9 +1513,6 @@
             sheet.classList.add('sheet-closed');
             setTimeout(() => sheet.classList.add('hidden'), 300);
         };
-
-        // Dummy filter toggles to prevent errors
-        window.toggleFilters = () => { alert('フィルター機能は準備中です'); };
 
         window.handleLogout = () => {
             if (isAdminMock) localStorage.removeItem('isAdminMock');
