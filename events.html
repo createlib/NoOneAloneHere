@@ -79,7 +79,7 @@
             width: 100%;
             background-color: #fffdf9;
             border-top: 1px solid #e8dfd1;
-            z-index: 50;
+            z-index: 1900;
             height: 4rem;
             height: calc(4rem + env(safe-area-inset-bottom));
             padding-bottom: env(safe-area-inset-bottom);
@@ -181,6 +181,7 @@
     <div class="fixed top-16 w-full z-[1400] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
         <div class="max-w-3xl mx-auto px-4 flex justify-between items-center">
             <div class="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
+                <!-- ① タブ名をスマホで1行に収まるよう短縮 -->
                 <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
                     <i class="fa-solid fa-map-location-dot"></i> マップ
                 </button>
@@ -214,7 +215,7 @@
 
             <div id="map" class="w-full h-full"></div>
             
-            <!-- Location Adjustment UI inside Map View -->
+            <!-- Location Adjustment UI inside Map View (⑤ 位置調整UIの前面・固定化) -->
             <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
                 <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
                     <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-2 text-lg"></i>赤色のピンを動かして調整</p>
@@ -272,6 +273,7 @@
     </div>
 
     <!-- Create FAB & Menu -->
+    <!-- スマホ時のメニュー被り防止のため、計算式で高さを浮かせる -->
     <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
         <!-- Floating Menu -->
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
@@ -284,7 +286,7 @@
             </button>
         </div>
         <!-- FAB (ALWAYS SHOW) -->
-        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
+        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="hidden w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
             <i class="fa-solid fa-plus text-xl transition-transform duration-300" id="fab-icon"></i>
         </button>
     </div>
@@ -801,7 +803,6 @@
 
         let selectedTags = new Set();
         let isJoining = false;
-        let editingEventId = null;
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const presetTags = ["交流会", "勉強会", "スポーツ", "音楽", "アート", "グルメ", "アウトドア", "ビジネス", "初心者歓迎", "オンライン"];
@@ -858,6 +859,7 @@
         onAuthStateChanged(auth, async (user) => {
             if (isAdminMock) {
                 currentUser = { uid: 'test_admin_uid' };
+                document.getElementById('create-fab-btn').classList.remove('hidden');
                 myProfile = { name: '管理者', userId: 'admin', membershipRank: 'covenant' };
                 loadAllData();
                 return;
@@ -869,11 +871,15 @@
                     const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                     if (docSnap.exists()) {
                         myProfile = docSnap.data();
+                        const rank = myProfile.membershipRank || 'arrival';
+                        if (rank !== 'arrival') {
+                            document.getElementById('create-fab-btn').classList.remove('hidden');
+                        }
                     } else {
                         myProfile = { membershipRank: 'arrival' };
                     }
                 } catch (e) { 
-                    console.error(e); 
+                    console.error("Profile Fetch Error:", e); 
                     myProfile = { membershipRank: 'arrival' };
                 }
                 loadAllData();
@@ -909,11 +915,13 @@
         };
 
         async function loadAllData() {
-            // Show loaders
             document.getElementById('event-list-loading').classList.remove('hidden');
             document.getElementById('job-list-loading').classList.remove('hidden');
             document.getElementById('event-list-container').classList.add('hidden');
             document.getElementById('job-list-container').classList.add('hidden');
+            
+            document.getElementById('event-list-empty').classList.add('hidden');
+            document.getElementById('job-list-empty').classList.add('hidden');
 
             try {
                 await loadEvents();
@@ -1026,8 +1034,9 @@
                 if (formatVal === 'online') matchFormat = !!evt.isOnline;
 
                 let matchPrice = true;
-                if (priceVal === 'free') matchPrice = (evt.price === 0 || !evt.price);
-                if (priceVal === 'paid') matchPrice = (evt.price > 0);
+                const priceNum = Number(evt.price || 0);
+                if (priceVal === 'free') matchPrice = (priceNum === 0);
+                if (priceVal === 'paid') matchPrice = (priceNum > 0);
 
                 const matchTags = selectedTagsArr.length === 0 || (evt.tags && selectedTagsArr.every(tag => evt.tags.includes(tag)));
 
@@ -1074,7 +1083,7 @@
                     },
                     (error) => {
                         console.log("Location access denied or error");
-                        filterData(); // Failed, but render anyway
+                        filterData(); 
                     }
                 );
             } else {
@@ -1083,7 +1092,6 @@
         }
 
         async function loadEvents() {
-            const nowIso = new Date().toISOString(); 
             const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
             
             try {
@@ -1099,7 +1107,6 @@
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     data.id = doc.id;
-                    if (data.endTimestamp && data.endTimestamp < nowIso) return; 
                     allEvents.push(data);
                 });
 
@@ -1161,7 +1168,7 @@
                 const tags = evt.tags ? evt.tags.slice(0,2).map(t => `<span class="text-[10px] bg-[#f7f5f0] border border-brand-200 text-brand-600 px-1 rounded-sm">#${t}</span>`).join('') : '';
 
                 return `
-                <div class="flex bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm hover:shadow-md cursor-pointer transition-shadow h-28" onclick='showEventSheet(${JSON.stringify(evt).replace(/'/g, "&apos;")})'>
+                <div class="flex bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm hover:shadow-md cursor-pointer transition-shadow h-28" onclick="showEventSheetById('${evt.id}')">
                     <div class="w-28 h-full flex-shrink-0 relative">
                         <img src="${thumb}" class="w-full h-full object-cover">
                     </div>
@@ -1172,7 +1179,7 @@
                         </div>
                         <div class="flex items-center justify-between">
                             <div class="flex gap-1 overflow-hidden">${tags}</div>
-                            <span class="text-[10px] font-bold ${evt.price > 0 ? 'text-[#b8860b]' : 'text-brand-600'}">${evt.price > 0 ? '¥'+evt.price.toLocaleString() : '無料'}</span>
+                            <span class="text-[10px] font-bold ${evt.price > 0 ? 'text-[#b8860b]' : 'text-brand-600'}">${evt.price > 0 ? '¥'+Number(evt.price).toLocaleString() : '無料'}</span>
                         </div>
                     </div>
                 </div>
@@ -1190,7 +1197,7 @@
                 if (data.lat && data.lng) {
                     const marker = L.marker([data.lat, data.lng], {icon: redIcon}).addTo(map);
                     marker.on('click', () => {
-                        showEventSheet(data);
+                        window.showEventSheetById(data.id);
                     });
                     markers.push(marker);
                 }
@@ -1201,7 +1208,7 @@
                 if (data.lat && data.lng) {
                     const marker = L.marker([data.lat, data.lng], {icon: blueIcon}).addTo(map);
                     marker.on('click', () => {
-                        showJobSheet(data);
+                        window.showJobSheetById(data.id);
                     });
                     markers.push(marker);
                 }
@@ -1260,7 +1267,7 @@
                 }
 
                 return `
-                <div class="bg-[#fffdf9] border border-brand-200 rounded-sm p-4 shadow-sm hover:shadow-md hover:border-brand-300 transition-all cursor-pointer relative" onclick='showJobSheet(${JSON.stringify(job).replace(/'/g, "&apos;")})'>
+                <div class="bg-[#fffdf9] border border-brand-200 rounded-sm p-4 shadow-sm hover:shadow-md hover:border-brand-300 transition-all cursor-pointer relative" onclick="showJobSheetById('${job.id}')">
                     <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-200 m-2"></div>
                     <div class="flex justify-between items-start mb-2 pr-4">
                         <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-sm tracking-widest ${badgeColor}">${job.type}</span>
@@ -1334,9 +1341,23 @@
 
         window.startLocationAdjust = (type) => {
             currentAdjustType = type;
-            const coords = type === 'event' ? selectedCoordsEvent : selectedCoordsJob;
-            if (!coords) return alert('先に場所を検索するか、地図をタップしてください');
             
+            // 初期のピンがなければ中心に置く
+            if (type === 'event' && !selectedCoordsEvent) {
+                const center = map.getCenter();
+                selectedCoordsEvent = { lat: center.lat, lng: center.lng };
+                if (tempMarker) map.removeLayer(tempMarker);
+                tempMarker = L.marker(selectedCoordsEvent, { draggable: true, icon: redIcon }).addTo(map);
+                tempMarker.on('dragend', function(e) { selectedCoordsEvent = e.target.getLatLng(); });
+            }
+            if (type === 'job' && !selectedCoordsJob) {
+                const center = map.getCenter();
+                selectedCoordsJob = { lat: center.lat, lng: center.lng };
+                if (tempMarker) map.removeLayer(tempMarker);
+                tempMarker = L.marker(selectedCoordsJob, { draggable: true, icon: blueIcon }).addTo(map);
+                tempMarker.on('dragend', function(e) { selectedCoordsJob = e.target.getLatLng(); });
+            }
+
             if (type === 'event') document.getElementById('event-modal').classList.add('hidden');
             if (type === 'job') document.getElementById('job-modal').classList.add('hidden');
             
@@ -1363,40 +1384,8 @@
         };
 
         // ==========================================
-        // Event Creation Logic
+        // Event/Job Creation Submits
         // ==========================================
-        function renderEventTagButtons() {
-            const container = document.getElementById('event-tag-area');
-            container.innerHTML = '';
-            presetTags.forEach(tag => {
-                const btn = document.createElement('button');
-                btn.type = "button";
-                btn.className = 'tag-btn px-3 py-1 rounded-sm border border-brand-200 text-[10px] font-bold text-brand-600 bg-[#fffdf9] transition-all tracking-widest';
-                btn.textContent = tag;
-                if(selectedTags.has(tag)) btn.classList.add('selected');
-
-                btn.onclick = () => {
-                    if (selectedTags.has(tag)) selectedTags.delete(tag);
-                    else selectedTags.add(tag);
-                    renderEventTagButtons();
-                    checkOnlineToggle();
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function checkOnlineToggle() {
-            const offlineGroup = document.getElementById('offline-location-group');
-            const onlineGroup = document.getElementById('online-url-group');
-            if (selectedTags.has('オンライン')) {
-                offlineGroup.classList.add('hidden');
-                onlineGroup.classList.remove('hidden');
-            } else {
-                offlineGroup.classList.remove('hidden');
-                onlineGroup.classList.add('hidden');
-            }
-        }
-
         window.submitEvent = async () => {
             if (!currentUser) return;
             const title = document.getElementById('event-title').value;
@@ -1432,7 +1421,6 @@
             const customTags = document.getElementById('event-custom-tags').value.split(',').map(s=>s.trim()).filter(s=>s);
             const finalTags = [...Array.from(selectedTags), ...customTags];
             
-            // 安全な名前の取得
             const safeName = (myProfile && (myProfile.name || myProfile.userId)) || '主催者';
 
             const eventData = {
@@ -1442,7 +1430,6 @@
                 startTime: startTime, 
                 endDate: endDate, 
                 endTime: endTime,
-                endTimestamp: new Date(`${endDate}T${endTime}`).toISOString(),
                 description: document.getElementById('event-desc').value || "",
                 tags: finalTags || [], 
                 thumbnailUrl: thumbnailUrl || null,
@@ -1473,8 +1460,7 @@
                     alert('イベントを企画しました！');
                 }
                 closeCreateModal('event');
-                await loadEvents();
-                filterData();
+                await loadAllData(); 
             } catch (e) {
                 console.error("Submit Event Error:", e);
                 alert('処理に失敗しました。\n必須データが不足しているか、権限がありません。');
@@ -1483,9 +1469,6 @@
             }
         };
 
-        // ==========================================
-        // Job Create Logic
-        // ==========================================
         window.submitJob = async () => {
             if (!currentUser) return;
             const title = document.getElementById('job-title').value;
@@ -1495,7 +1478,6 @@
             if (!title || !desc) return alert('必須項目(タイトル・詳細)を入力してください');
             if (style !== 'フルリモート' && !selectedCoordsJob) return alert('勤務地・活動場所をマップで検索して設定してください');
 
-            // 安全な名前・アイコンの取得
             const safeName = (myProfile && (myProfile.name || myProfile.userId)) || '投稿者';
             const safeAvatar = (myProfile && myProfile.photoURL) || null;
 
@@ -1538,9 +1520,8 @@
                     alert('仕事・依頼を掲載しました！');
                 }
                 closeCreateModal('job');
-                await loadJobs();
+                await loadAllData(); 
                 switchView('list-jobs'); 
-                filterData();
             } catch (e) {
                 console.error("Submit Job Error:", e);
                 alert('処理に失敗しました。\n必須データが不足しているか、権限がありません。');
@@ -1552,13 +1533,23 @@
         // ==========================================
         // Details Sheets Display & Participation
         // ==========================================
+        window.showEventSheetById = (id) => {
+            const evt = allEvents.find(e => e.id === id);
+            if(evt) showEventSheet(evt);
+        };
+        window.showJobSheetById = (id) => {
+            const job = allJobs.find(j => j.id === id);
+            if(job) showJobSheet(job);
+        };
+
         window.showEventSheet = async (evt) => {
             const sheet = document.getElementById('event-sheet');
             const content = document.getElementById('event-sheet-content');
 
             const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/400x200?text=NOAH+Event';
             const tags = evt.tags ? evt.tags.map(t => `<span class="bg-brand-50 border border-brand-200 text-brand-600 px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">#${t}</span>`).join('') : '';
-            const priceText = evt.price > 0 ? `¥${evt.price.toLocaleString()}` : '無料';
+            const priceNum = Number(evt.price || 0);
+            const priceText = priceNum > 0 ? `¥${priceNum.toLocaleString()}` : '無料';
             
             const dateStr = (evt.startDate === evt.endDate) 
                     ? `${evt.startDate} ${evt.startTime || ''} 〜 ${evt.endTime || ''}`
@@ -1697,8 +1688,7 @@
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'events', eventId));
                 alert('イベントを削除しました');
                 closeDetail('event');
-                await loadEvents();
-                filterData();
+                await loadAllData(); 
             } catch (e) { alert('削除に失敗しました'); }
         };
 
@@ -1772,8 +1762,7 @@
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'jobs', jobId));
                 alert('求人を削除しました');
                 closeDetail('job');
-                await loadJobs();
-                filterData();
+                await loadAllData(); 
             } catch (e) { alert('削除に失敗しました'); }
         };
 
