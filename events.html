@@ -181,7 +181,6 @@
     <div class="fixed top-16 w-full z-[1400] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
         <div class="max-w-3xl mx-auto px-4 flex justify-between items-center">
             <div class="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
-                <!-- ① タブ名をスマホで1行に収まるよう短縮 -->
                 <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
                     <i class="fa-solid fa-map-location-dot"></i> マップ
                 </button>
@@ -215,7 +214,7 @@
 
             <div id="map" class="w-full h-full"></div>
             
-            <!-- Location Adjustment UI inside Map View (⑤ 位置調整UIの前面・固定化) -->
+            <!-- Location Adjustment UI inside Map View -->
             <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
                 <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
                     <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-2 text-lg"></i>赤色のピンを動かして調整</p>
@@ -273,7 +272,6 @@
     </div>
 
     <!-- Create FAB & Menu -->
-    <!-- スマホ時のメニュー被り防止のため、計算式で高さを浮かせる -->
     <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
         <!-- Floating Menu -->
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
@@ -803,6 +801,7 @@
 
         let selectedTags = new Set();
         let isJoining = false;
+        let editingEventId = null;
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const presetTags = ["交流会", "勉強会", "スポーツ", "音楽", "アート", "グルメ", "アウトドア", "ビジネス", "初心者歓迎", "オンライン"];
@@ -838,22 +837,29 @@
 
             const startDateInput = document.getElementById('event-start-date');
             const endDateInput = document.getElementById('event-end-date');
-            startDateInput.addEventListener('change', () => {
-                if (!endDateInput.value) endDateInput.value = startDateInput.value;
-            });
+            if(startDateInput && endDateInput){
+                startDateInput.addEventListener('change', () => {
+                    if (!endDateInput.value) endDateInput.value = startDateInput.value;
+                });
+            }
             
-            document.getElementById('event-image').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        const img = document.getElementById('event-image-preview');
-                        img.src = ev.target.result;
-                        img.classList.remove('hidden');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
+            const eventImageInput = document.getElementById('event-image');
+            if(eventImageInput) {
+                eventImageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            const img = document.getElementById('event-image-preview');
+                            if(img){
+                                img.src = ev.target.result;
+                                img.classList.remove('hidden');
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
         });
 
         onAuthStateChanged(auth, async (user) => {
@@ -873,7 +879,8 @@
                         myProfile = docSnap.data();
                         const rank = myProfile.membershipRank || 'arrival';
                         if (rank !== 'arrival') {
-                            document.getElementById('create-fab-btn').classList.remove('hidden');
+                            const fab = document.getElementById('create-fab-btn');
+                            if(fab) fab.classList.remove('hidden');
                         }
                     } else {
                         myProfile = { membershipRank: 'arrival' };
@@ -898,30 +905,41 @@
                 btn.classList.add('bg-[#fffdf9]', 'text-brand-700', 'border-transparent');
             });
             const activeBtn = document.getElementById(`tab-${viewName}`);
-            activeBtn.classList.remove('bg-[#fffdf9]', 'text-brand-700', 'border-transparent');
-            activeBtn.classList.add('active', 'bg-[#3e2723]', 'text-[#d4af37]', 'border-[#b8860b]');
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-[#fffdf9]', 'text-brand-700', 'border-transparent');
+                activeBtn.classList.add('active', 'bg-[#3e2723]', 'text-[#d4af37]', 'border-[#b8860b]');
+            }
 
             document.getElementById('view-map').classList.add('hidden');
             document.getElementById('view-list-events').classList.add('hidden');
             document.getElementById('view-list-jobs').classList.add('hidden');
 
-            document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            const viewEl = document.getElementById(`view-${viewName}`);
+            if(viewEl) viewEl.classList.remove('hidden');
 
             if (viewName === 'map' && map) setTimeout(() => map.invalidateSize(), 100);
             
             const placeholderText = viewName === 'list-jobs' ? "仕事や依頼を検索..." : "イベントや仕事を検索...";
-            document.getElementById('pc-map-search').placeholder = placeholderText;
-            document.getElementById('map-search-input').placeholder = placeholderText;
+            const pcSearch = document.getElementById('pc-map-search');
+            const mapSearch = document.getElementById('map-search-input');
+            if(pcSearch) pcSearch.placeholder = placeholderText;
+            if(mapSearch) mapSearch.placeholder = placeholderText;
         };
 
         async function loadAllData() {
-            document.getElementById('event-list-loading').classList.remove('hidden');
-            document.getElementById('job-list-loading').classList.remove('hidden');
-            document.getElementById('event-list-container').classList.add('hidden');
-            document.getElementById('job-list-container').classList.add('hidden');
-            
-            document.getElementById('event-list-empty').classList.add('hidden');
-            document.getElementById('job-list-empty').classList.add('hidden');
+            const evLoad = document.getElementById('event-list-loading');
+            const jobLoad = document.getElementById('job-list-loading');
+            const evCont = document.getElementById('event-list-container');
+            const jobCont = document.getElementById('job-list-container');
+            const evEmp = document.getElementById('event-list-empty');
+            const jobEmp = document.getElementById('job-list-empty');
+
+            if(evLoad) evLoad.classList.remove('hidden');
+            if(jobLoad) jobLoad.classList.remove('hidden');
+            if(evCont) evCont.classList.add('hidden');
+            if(jobCont) jobCont.classList.add('hidden');
+            if(evEmp) evEmp.classList.add('hidden');
+            if(jobEmp) jobEmp.classList.add('hidden');
 
             try {
                 await loadEvents();
@@ -939,6 +957,7 @@
         // ==========================================
         function initFilterOptions() {
             const container = document.getElementById('filter-event-tags');
+            if(!container) return;
             presetTags.forEach(tag => {
                 const label = document.createElement('label');
                 label.className = 'cursor-pointer';
@@ -959,21 +978,24 @@
             const title = document.getElementById('filter-title');
             
             if (currentViewMode === 'list-jobs') {
-                eventSec.classList.add('hidden');
-                jobSec.classList.remove('hidden');
-                title.textContent = '仕事・依頼の絞り込み';
+                if(eventSec) eventSec.classList.add('hidden');
+                if(jobSec) jobSec.classList.remove('hidden');
+                if(title) title.textContent = '仕事・依頼の絞り込み';
             } else {
-                eventSec.classList.remove('hidden');
-                jobSec.classList.add('hidden');
-                title.textContent = 'イベントの絞り込み';
+                if(eventSec) eventSec.classList.remove('hidden');
+                if(jobSec) jobSec.classList.add('hidden');
+                if(title) title.textContent = 'イベントの絞り込み';
             }
 
-            if (panel.classList.contains('hidden')) {
+            if (panel && panel.classList.contains('hidden')) {
                 panel.classList.remove('hidden');
-                setTimeout(() => { panel.classList.remove('opacity-0'); content.classList.remove('translate-x-full'); }, 10);
-            } else {
+                setTimeout(() => { 
+                    panel.classList.remove('opacity-0'); 
+                    if(content) content.classList.remove('translate-x-full'); 
+                }, 10);
+            } else if(panel) {
                 panel.classList.add('opacity-0');
-                content.classList.add('translate-x-full');
+                if(content) content.classList.add('translate-x-full');
                 setTimeout(() => panel.classList.add('hidden'), 300);
             }
         };
@@ -984,91 +1006,124 @@
         };
 
         window.resetFilters = () => {
-            if (currentViewMode === 'list-jobs') {
-                document.getElementById('filter-job-type').value = "";
-                document.getElementById('filter-job-category').value = "";
-                document.getElementById('filter-job-workstyle').value = "";
-                document.getElementById('filter-job-reward').value = "";
-                document.getElementById('pc-map-search').value = "";
-                document.getElementById('map-search-input').value = "";
-            } else {
-                document.getElementById('filter-event-date').value = "all";
-                document.getElementById('filter-event-format').value = "all";
-                document.getElementById('filter-event-price').value = "all";
-                document.querySelectorAll('.event-filter-tag').forEach(cb => cb.checked = false);
-                document.getElementById('pc-map-search').value = "";
-                document.getElementById('map-search-input').value = "";
+            try {
+                if (currentViewMode === 'list-jobs') {
+                    const jobType = document.getElementById('filter-job-type');
+                    const jobCat = document.getElementById('filter-job-category');
+                    const jobWorkstyle = document.getElementById('filter-job-workstyle');
+                    const jobReward = document.getElementById('filter-job-reward');
+                    if(jobType) jobType.value = "";
+                    if(jobCat) jobCat.value = "";
+                    if(jobWorkstyle) jobWorkstyle.value = "";
+                    if(jobReward) jobReward.value = "";
+                } else {
+                    const evDate = document.getElementById('filter-event-date');
+                    const evFormat = document.getElementById('filter-event-format');
+                    const evPrice = document.getElementById('filter-event-price');
+                    if(evDate) evDate.value = "all";
+                    if(evFormat) evFormat.value = "all";
+                    if(evPrice) evPrice.value = "all";
+                    document.querySelectorAll('.event-filter-tag').forEach(cb => cb.checked = false);
+                }
+                const pcSearch = document.getElementById('pc-map-search');
+                const mapSearch = document.getElementById('map-search-input');
+                if(pcSearch) pcSearch.value = "";
+                if(mapSearch) mapSearch.value = "";
+                
+                filterData();
+                toggleFilters();
+            } catch(e){
+                console.error("Reset Filters Error: ", e);
             }
-            filterData();
-            toggleFilters();
         };
 
         function filterData() {
-            const term = (document.getElementById('pc-map-search').value || document.getElementById('map-search-input').value || '').toLowerCase();
-            
-            // --- Event Filter ---
-            const dateVal = document.getElementById('filter-event-date').value;
-            const formatVal = document.getElementById('filter-event-format').value;
-            const priceVal = document.getElementById('filter-event-price').value;
-            const selectedTagsArr = Array.from(document.querySelectorAll('.event-filter-tag:checked')).map(cb => cb.value);
-
-            const now = new Date();
-            const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-            const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-            const filteredEvents = allEvents.filter(evt => {
-                const title = evt.title || '';
-                const desc = evt.description || evt.desc || '';
-                const matchTerm = !term || title.toLowerCase().includes(term) || desc.toLowerCase().includes(term);
+            try {
+                const pcSearchEl = document.getElementById('pc-map-search');
+                const moSearchEl = document.getElementById('map-search-input');
+                const term = ((pcSearchEl ? pcSearchEl.value : '') || (moSearchEl ? moSearchEl.value : '')).toLowerCase();
                 
-                let matchDate = true;
-                if (dateVal !== 'all' && evt.startDate) {
-                    const evtDate = new Date(evt.startDate);
-                    if (dateVal === 'today') matchDate = (evt.startDate === now.toISOString().split('T')[0]);
-                    else if (dateVal === 'week') matchDate = (evtDate <= nextWeek);
-                    else if (dateVal === 'month') matchDate = (evtDate <= nextMonth);
-                }
+                // --- Event Filter ---
+                const dateValEl = document.getElementById('filter-event-date');
+                const formatValEl = document.getElementById('filter-event-format');
+                const priceValEl = document.getElementById('filter-event-price');
+                
+                const dateVal = dateValEl ? dateValEl.value : 'all';
+                const formatVal = formatValEl ? formatValEl.value : 'all';
+                const priceVal = priceValEl ? priceValEl.value : 'all';
+                const selectedTagsArr = Array.from(document.querySelectorAll('.event-filter-tag:checked')).map(cb => cb.value);
 
-                let matchFormat = true;
-                if (formatVal === 'offline') matchFormat = !evt.isOnline;
-                if (formatVal === 'online') matchFormat = !!evt.isOnline;
+                const now = new Date();
+                const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-                let matchPrice = true;
-                const priceNum = Number(evt.price || 0);
-                if (priceVal === 'free') matchPrice = (priceNum === 0);
-                if (priceVal === 'paid') matchPrice = (priceNum > 0);
+                const filteredEvents = allEvents.filter(evt => {
+                    const title = evt.title || '';
+                    const desc = evt.description || evt.desc || '';
+                    const matchTerm = !term || title.toLowerCase().includes(term) || desc.toLowerCase().includes(term);
+                    
+                    let matchDate = true;
+                    if (dateVal !== 'all' && evt.startDate) {
+                        const evtDate = new Date(evt.startDate);
+                        if (dateVal === 'today') {
+                            const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+                            matchDate = (evt.startDate === todayStr);
+                        }
+                        else if (dateVal === 'week') matchDate = (!isNaN(evtDate) && evtDate <= nextWeek);
+                        else if (dateVal === 'month') matchDate = (!isNaN(evtDate) && evtDate <= nextMonth);
+                    }
 
-                const matchTags = selectedTagsArr.length === 0 || (evt.tags && selectedTagsArr.every(tag => evt.tags.includes(tag)));
+                    let matchFormat = true;
+                    if (formatVal === 'offline') matchFormat = !evt.isOnline;
+                    if (formatVal === 'online') matchFormat = !!evt.isOnline;
 
-                return matchTerm && matchDate && matchFormat && matchPrice && matchTags;
-            });
+                    let matchPrice = true;
+                    const priceNum = Number(evt.price || 0);
+                    if (priceVal === 'free') matchPrice = (priceNum === 0);
+                    if (priceVal === 'paid') matchPrice = (priceNum > 0);
 
-            // --- Job Filter ---
-            const type = document.getElementById('filter-job-type').value;
-            const cat = document.getElementById('filter-job-category').value;
-            const style = document.getElementById('filter-job-workstyle').value;
-            const rew = document.getElementById('filter-job-reward').value;
+                    const matchTags = selectedTagsArr.length === 0 || (evt.tags && selectedTagsArr.every(tag => evt.tags.includes(tag)));
 
-            const filteredJobs = allJobs.filter(job => {
-                const title = job.title || '';
-                const desc = job.desc || '';
-                const matchTerm = !term || title.toLowerCase().includes(term) || desc.toLowerCase().includes(term);
-                const matchType = !type || job.type === type;
-                const matchCat = !cat || job.category === cat;
-                const matchStyle = !style || job.workStyle === style;
-                const matchRew = !rew || job.rewardType === rew;
-                return matchTerm && matchType && matchCat && matchStyle && matchRew;
-            });
+                    return matchTerm && matchDate && matchFormat && matchPrice && matchTags;
+                });
 
-            renderMarkers(filteredEvents, filteredJobs);
-            renderEventList(filteredEvents);
-            renderJobList(filteredJobs);
+                // --- Job Filter ---
+                const typeEl = document.getElementById('filter-job-type');
+                const catEl = document.getElementById('filter-job-category');
+                const styleEl = document.getElementById('filter-job-workstyle');
+                const rewEl = document.getElementById('filter-job-reward');
+
+                const type = typeEl ? typeEl.value : '';
+                const cat = catEl ? catEl.value : '';
+                const style = styleEl ? styleEl.value : '';
+                const rew = rewEl ? rewEl.value : '';
+
+                const filteredJobs = allJobs.filter(job => {
+                    const title = job.title || '';
+                    const desc = job.desc || '';
+                    const matchTerm = !term || title.toLowerCase().includes(term) || desc.toLowerCase().includes(term);
+                    const matchType = !type || job.type === type;
+                    const matchCat = !cat || job.category === cat;
+                    const matchStyle = !style || job.workStyle === style;
+                    const matchRew = !rew || job.rewardType === rew;
+                    return matchTerm && matchType && matchCat && matchStyle && matchRew;
+                });
+
+                renderMarkers(filteredEvents, filteredJobs);
+                renderEventList(filteredEvents);
+                renderJobList(filteredJobs);
+            } catch(e) {
+                console.error("Filter Data Error: ", e);
+            }
         }
 
         // ==========================================
         // Map & Event List Logic
         // ==========================================
         function initMap() {
+            const mapEl = document.getElementById('map');
+            if(!mapEl) return;
+
             map = L.map('map', { zoomControl: false }).setView([35.6895, 139.6917], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
@@ -1092,6 +1147,7 @@
         }
 
         async function loadEvents() {
+            const nowIso = new Date().toISOString(); 
             const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
             
             try {
@@ -1107,6 +1163,7 @@
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     data.id = doc.id;
+                    if (data.endTimestamp && data.endTimestamp < nowIso) return; 
                     allEvents.push(data);
                 });
 
@@ -1132,17 +1189,19 @@
             const emptyMsg = document.getElementById('event-list-empty');
             const loadingMsg = document.getElementById('event-list-loading');
             
-            loadingMsg.classList.add('hidden');
+            if(loadingMsg) loadingMsg.classList.add('hidden');
             
             if (!eventsToRender || eventsToRender.length === 0) {
-                container.innerHTML = '';
-                container.classList.add('hidden');
-                emptyMsg.classList.remove('hidden');
+                if(container){
+                    container.innerHTML = '';
+                    container.classList.add('hidden');
+                }
+                if(emptyMsg) emptyMsg.classList.remove('hidden');
                 return;
             }
             
-            emptyMsg.classList.add('hidden');
-            container.classList.remove('hidden');
+            if(emptyMsg) emptyMsg.classList.add('hidden');
+            if(container) container.classList.remove('hidden');
 
             let displayEvents = [...eventsToRender];
             
@@ -1152,9 +1211,11 @@
                     else e._distance = 99999; 
                 });
                 displayEvents.sort((a, b) => a._distance - b._distance);
-                document.getElementById('event-list-status').textContent = '現在地から近い順';
+                const statusEl = document.getElementById('event-list-status');
+                if(statusEl) statusEl.textContent = '現在地から近い順';
             } else {
-                document.getElementById('event-list-status').textContent = '新着順';
+                const statusEl = document.getElementById('event-list-status');
+                if(statusEl) statusEl.textContent = '新着順';
             }
 
             container.innerHTML = displayEvents.map(evt => {
@@ -1245,17 +1306,19 @@
             const emptyMsg = document.getElementById('job-list-empty');
             const loadingMsg = document.getElementById('job-list-loading');
             
-            loadingMsg.classList.add('hidden');
+            if(loadingMsg) loadingMsg.classList.add('hidden');
             
             if (!jobsToRender || jobsToRender.length === 0) {
-                container.innerHTML = '';
-                container.classList.add('hidden');
-                emptyMsg.classList.remove('hidden');
+                if(container){
+                    container.innerHTML = '';
+                    container.classList.add('hidden');
+                }
+                if(emptyMsg) emptyMsg.classList.remove('hidden');
                 return;
             }
             
-            emptyMsg.classList.add('hidden');
-            container.classList.remove('hidden');
+            if(emptyMsg) emptyMsg.classList.add('hidden');
+            if(container) container.classList.remove('hidden');
 
             container.innerHTML = jobsToRender.map(job => {
                 const badgeColor = job.type === '正社員' ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-brand-50 text-brand-600 border border-brand-200';
@@ -1270,20 +1333,120 @@
                 <div class="bg-[#fffdf9] border border-brand-200 rounded-sm p-4 shadow-sm hover:shadow-md hover:border-brand-300 transition-all cursor-pointer relative" onclick="showJobSheetById('${job.id}')">
                     <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-200 m-2"></div>
                     <div class="flex justify-between items-start mb-2 pr-4">
-                        <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-sm tracking-widest ${badgeColor}">${job.type}</span>
+                        <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-sm tracking-widest ${badgeColor}">${job.type || '未設定'}</span>
                         <span class="text-[10px] text-brand-400"><i class="fa-solid fa-clock-rotate-left mr-1"></i>${displayDate}</span>
                     </div>
                     <h3 class="font-bold text-brand-900 font-serif tracking-widest leading-tight mb-2">${job.title || '名称未設定'}</h3>
                     <p class="text-xs text-brand-500 line-clamp-2 leading-relaxed mb-3">${job.desc || ''}</p>
                     <div class="flex flex-wrap gap-x-4 gap-y-2 border-t border-brand-100 pt-3">
-                        <div class="text-[10px] font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-yen-sign text-brand-400 mr-1"></i>${job.rewardType}: ${job.rewardAmount || '応相談'}</div>
+                        <div class="text-[10px] font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-yen-sign text-brand-400 mr-1"></i>${job.rewardType || '応相談'}: ${job.rewardAmount || ''}</div>
                         <div class="text-[10px] font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-location-dot text-brand-400 mr-1"></i>${job.locationName || job.location || '-'}</div>
-                        <div class="text-[10px] font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-building text-brand-400 mr-1"></i>${job.company || job.organizerName}</div>
+                        <div class="text-[10px] font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-building text-brand-400 mr-1"></i>${job.company || job.organizerName || ''}</div>
                     </div>
                 </div>
                 `;
             }).join('');
         }
+
+        // ==========================================
+        // FAB & Menus & Modal Management
+        // ==========================================
+        window.toggleCreateMenu = () => {
+            const menu = document.getElementById('create-menu');
+            const icon = document.getElementById('fab-icon');
+            if(!menu || !icon) return;
+
+            if (menu.classList.contains('menu-closed')) {
+                menu.classList.remove('menu-closed');
+                menu.classList.add('menu-open');
+                icon.style.transform = 'rotate(45deg)';
+            } else {
+                menu.classList.add('menu-closed');
+                menu.classList.remove('menu-open');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        };
+
+        window.openCreateModal = (type) => {
+            toggleCreateMenu(); 
+            
+            if (!myProfile) myProfile = { membershipRank: 'arrival' };
+            const rank = myProfile.membershipRank || 'arrival';
+
+            if (type === 'event') {
+                if (rank === 'arrival' && !isAdmin) return alert('イベント企画は SETTLER 以上の機能です。契約変更をご検討ください。');
+                
+                const modal = document.getElementById('event-modal');
+                if(modal) modal.classList.remove('hidden');
+                editingEventId = null;
+                
+                // Form Reset safely
+                try {
+                    document.getElementById('event-title').value = "";
+                    document.getElementById('event-price').value = "0";
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    document.getElementById('event-start-date').value = todayStr;
+                    document.getElementById('event-end-date').value = todayStr;
+                    document.getElementById('event-start-time').value = "";
+                    document.getElementById('event-end-time').value = "";
+                    document.getElementById('event-location-name').value = "";
+                    document.getElementById('event-online-tool').value = "";
+                    document.getElementById('event-online-url').value = "";
+                    document.getElementById('event-desc').value = "";
+                    document.getElementById('event-custom-tags').value = "";
+                    document.getElementById('location-search-input').value = "";
+                    document.getElementById('location-results').classList.add('hidden');
+                    document.getElementById('event-public-participants').checked = true;
+                    
+                    document.getElementById('event-image').value = "";
+                    document.getElementById('event-image-preview').src = "";
+                    document.getElementById('event-image-preview').classList.add('hidden');
+
+                    selectedTags.clear();
+                    renderEventTagButtons();
+                    checkOnlineToggle();
+                    if (tempMarker) map.removeLayer(tempMarker);
+                    selectedCoordsEvent = null;
+                } catch(e) { console.log(e); }
+
+            } else if (type === 'job') {
+                const allowedRanks = ['builder', 'guardian', 'covenant'];
+                if (!allowedRanks.includes(rank) && !isAdmin) return alert('仕事・依頼の掲載は BUILDER 以上の機能です。契約変更をご検討ください。');
+                
+                const modal = document.getElementById('job-modal');
+                if(modal) modal.classList.remove('hidden');
+                const cont = document.getElementById('job-form-container');
+                if(cont) cont.scrollTop = 0;
+                
+                try {
+                    document.getElementById('job-title').value = "";
+                    document.getElementById('job-type').value = "業務委託";
+                    document.getElementById('job-category').value = "デザイン";
+                    document.getElementById('job-desc').value = "";
+                    document.getElementById('job-reward-type').value = "固定報酬";
+                    document.getElementById('job-reward-amount').value = "";
+                    document.getElementById('job-period').value = "単発";
+                    document.getElementById('job-work-style').value = "フルリモート";
+                    document.getElementById('job-location').value = "";
+                    document.getElementById('job-location-name').value = "";
+                    document.getElementById('job-location-search-input').value = "";
+                    document.getElementById('job-skills').value = "";
+                    document.getElementById('job-deadline').value = "";
+                    document.getElementById('job-flow').value = "面談1回";
+                    document.getElementById('job-company').value = "";
+                    document.getElementById('job-url').value = "";
+                    
+                    if (tempMarker) map.removeLayer(tempMarker);
+                    selectedCoordsJob = null;
+                    toggleJobLocationUI();
+                } catch(e){ console.log(e); }
+            }
+        };
+
+        window.closeCreateModal = (type) => {
+            const modal = document.getElementById(`${type}-modal`);
+            if(modal) modal.classList.add('hidden');
+        };
 
         // ==========================================
         // Shared Map Location Methods
@@ -1342,7 +1505,6 @@
         window.startLocationAdjust = (type) => {
             currentAdjustType = type;
             
-            // 初期のピンがなければ中心に置く
             if (type === 'event' && !selectedCoordsEvent) {
                 const center = map.getCenter();
                 selectedCoordsEvent = { lat: center.lat, lng: center.lng };
@@ -1358,25 +1520,39 @@
                 tempMarker.on('dragend', function(e) { selectedCoordsJob = e.target.getLatLng(); });
             }
 
-            if (type === 'event') document.getElementById('event-modal').classList.add('hidden');
-            if (type === 'job') document.getElementById('job-modal').classList.add('hidden');
+            const evtMod = document.getElementById('event-modal');
+            const jobMod = document.getElementById('job-modal');
+            const ui = document.getElementById('adjust-location-ui');
             
-            document.getElementById('adjust-location-ui').classList.remove('hidden');
+            if (type === 'event' && evtMod) evtMod.classList.add('hidden');
+            if (type === 'job' && jobMod) jobMod.classList.add('hidden');
+            if (ui) ui.classList.remove('hidden');
+            
             switchView('map');
             if (map) map.invalidateSize();
         };
 
         window.finishLocationAdjust = () => {
-            document.getElementById('adjust-location-ui').classList.add('hidden');
-            if (currentAdjustType === 'event') document.getElementById('event-modal').classList.remove('hidden');
-            if (currentAdjustType === 'job') document.getElementById('job-modal').classList.remove('hidden');
+            const ui = document.getElementById('adjust-location-ui');
+            if(ui) ui.classList.add('hidden');
+            
+            if (currentAdjustType === 'event') {
+                const mod = document.getElementById('event-modal');
+                if(mod) mod.classList.remove('hidden');
+            }
+            if (currentAdjustType === 'job') {
+                const mod = document.getElementById('job-modal');
+                if(mod) mod.classList.remove('hidden');
+            }
             currentAdjustType = null;
         };
 
         window.toggleJobLocationUI = () => {
-            const style = document.getElementById('job-work-style').value;
+            const styleEl = document.getElementById('job-work-style');
             const wrapper = document.getElementById('job-location-wrapper');
-            if (style === 'フルリモート') {
+            if(!styleEl || !wrapper) return;
+            
+            if (styleEl.value === 'フルリモート') {
                 wrapper.classList.add('hidden');
             } else {
                 wrapper.classList.remove('hidden');
@@ -1384,75 +1560,114 @@
         };
 
         // ==========================================
-        // Event/Job Creation Submits
+        // Event Creation Logic
         // ==========================================
+        function renderEventTagButtons() {
+            const container = document.getElementById('event-tag-area');
+            if(!container) return;
+            container.innerHTML = '';
+            presetTags.forEach(tag => {
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.className = 'tag-btn px-3 py-1 rounded-sm border border-brand-200 text-[10px] font-bold text-brand-600 bg-[#fffdf9] transition-all tracking-widest';
+                btn.textContent = tag;
+                if(selectedTags.has(tag)) btn.classList.add('selected');
+
+                btn.onclick = () => {
+                    if (selectedTags.has(tag)) selectedTags.delete(tag);
+                    else selectedTags.add(tag);
+                    renderEventTagButtons();
+                    checkOnlineToggle();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function checkOnlineToggle() {
+            const offlineGroup = document.getElementById('offline-location-group');
+            const onlineGroup = document.getElementById('online-url-group');
+            if(!offlineGroup || !onlineGroup) return;
+
+            if (selectedTags.has('オンライン')) {
+                offlineGroup.classList.add('hidden');
+                onlineGroup.classList.remove('hidden');
+            } else {
+                offlineGroup.classList.remove('hidden');
+                onlineGroup.classList.add('hidden');
+            }
+        }
+
         window.submitEvent = async () => {
             if (!currentUser) return;
-            const title = document.getElementById('event-title').value;
-            const priceStr = document.getElementById('event-price').value;
-            const price = priceStr ? parseInt(priceStr) : 0;
-            const startDate = document.getElementById('event-start-date').value;
-            const startTime = document.getElementById('event-start-time').value;
-            const endDate = document.getElementById('event-end-date').value;
-            const endTime = document.getElementById('event-end-time').value;
+            const btn = document.getElementById('event-submit-btn');
             
-            const isOnline = selectedTags.has('オンライン');
+            try {
+                const title = document.getElementById('event-title').value;
+                const priceStr = document.getElementById('event-price').value;
+                const price = priceStr ? parseInt(priceStr) : 0;
+                const startDate = document.getElementById('event-start-date').value;
+                const startTime = document.getElementById('event-start-time').value;
+                const endDate = document.getElementById('event-end-date').value;
+                const endTime = document.getElementById('event-end-time').value;
+                
+                const isOnline = selectedTags.has('オンライン');
 
-            if (!title || !startDate || !startTime || !endDate || !endTime) return alert('タイトルと日時は必須です');
-            if (!isOnline && !selectedCoordsEvent) return alert('オフライン開催の場合は場所を設定してください');
+                if (!title || !startDate || !startTime || !endDate || !endTime) return alert('タイトルと日時は必須です');
+                if (!isOnline && !selectedCoordsEvent) return alert('オフライン開催の場合は場所を設定してください');
 
-            let thumbnailUrl = null;
-            const file = document.getElementById('event-image').files[0];
-            
-            if (file) {
-                if (isAdminMock) {
-                    thumbnailUrl = 'https://via.placeholder.com/400x200?text=Mock+Image';
-                } else {
-                    try {
-                        const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${Date.now()}_${file.name}`), file);
-                        thumbnailUrl = await getDownloadURL(snap.ref);
-                    } catch (e) { 
-                        console.error(e);
-                        return alert("画像のアップロードに失敗しました"); 
+                let thumbnailUrl = null;
+                const fileEl = document.getElementById('event-image');
+                const file = fileEl ? fileEl.files[0] : null;
+                
+                if (file) {
+                    if (isAdminMock) {
+                        thumbnailUrl = 'https://via.placeholder.com/400x200?text=Mock+Image';
+                    } else {
+                        try {
+                            const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${Date.now()}_${file.name}`), file);
+                            thumbnailUrl = await getDownloadURL(snap.ref);
+                        } catch (e) { 
+                            console.error(e);
+                            return alert("画像のアップロードに失敗しました"); 
+                        }
                     }
                 }
-            }
 
-            const customTags = document.getElementById('event-custom-tags').value.split(',').map(s=>s.trim()).filter(s=>s);
-            const finalTags = [...Array.from(selectedTags), ...customTags];
-            
-            const safeName = (myProfile && (myProfile.name || myProfile.userId)) || '主催者';
+                const customTagsEl = document.getElementById('event-custom-tags');
+                const customTags = customTagsEl ? customTagsEl.value.split(',').map(s=>s.trim()).filter(s=>s) : [];
+                const finalTags = [...Array.from(selectedTags), ...customTags];
+                
+                const safeName = (myProfile && (myProfile.name || myProfile.userId)) || '主催者';
 
-            const eventData = {
-                title: title, 
-                price: price,
-                startDate: startDate, 
-                startTime: startTime, 
-                endDate: endDate, 
-                endTime: endTime,
-                description: document.getElementById('event-desc').value || "",
-                tags: finalTags || [], 
-                thumbnailUrl: thumbnailUrl || null,
-                organizerId: currentUser.uid,
-                organizerName: safeName,
-                isParticipantsPublic: document.getElementById('event-public-participants').checked,
-                createdAt: serverTimestamp(),
-                participantCount: 0
-            };
+                let descVal = "";
+                const descEl = document.getElementById('event-desc');
+                if(descEl) descVal = descEl.value;
 
-            if (isOnline) {
-                eventData.isOnline = true;
-                eventData.locationName = "オンライン (" + (document.getElementById('event-online-tool').value || "ツール未定") + ")";
-                eventData.onlineUrl = document.getElementById('event-online-url').value || "";
-                eventData.lat = null; eventData.lng = null;
-            } else {
-                eventData.isOnline = false;
-                eventData.locationName = document.getElementById('event-location-name').value || "場所名未設定";
-                eventData.lat = selectedCoordsEvent.lat; eventData.lng = selectedCoordsEvent.lng;
-            }
+                const eventData = {
+                    title: title, price: price,
+                    startDate: startDate, startTime: startTime, endDate: endDate, endTime: endTime,
+                    endTimestamp: new Date(`${endDate}T${endTime}`).toISOString(),
+                    description: descVal,
+                    tags: finalTags, thumbnailUrl: thumbnailUrl,
+                    organizerId: currentUser.uid,
+                    organizerName: safeName,
+                    isParticipantsPublic: document.getElementById('event-public-participants').checked,
+                    createdAt: serverTimestamp(),
+                    participantCount: 0
+                };
 
-            try {
-                document.getElementById('event-submit-btn').textContent = "送信中...";
+                if (isOnline) {
+                    eventData.isOnline = true;
+                    eventData.locationName = "オンライン (" + (document.getElementById('event-online-tool').value || "ツール未定") + ")";
+                    eventData.onlineUrl = document.getElementById('event-online-url').value || "";
+                    eventData.lat = null; eventData.lng = null;
+                } else {
+                    eventData.isOnline = false;
+                    eventData.locationName = document.getElementById('event-location-name').value || "場所名未設定";
+                    eventData.lat = selectedCoordsEvent.lat; eventData.lng = selectedCoordsEvent.lng;
+                }
+
+                if(btn) btn.textContent = "送信中...";
                 if (isAdminMock) {
                     alert('【テスト】イベントを作成しました！(モックデータ)');
                 } else {
@@ -1463,56 +1678,61 @@
                 await loadAllData(); 
             } catch (e) {
                 console.error("Submit Event Error:", e);
-                alert('処理に失敗しました。\n必須データが不足しているか、権限がありません。');
+                alert('処理に失敗しました。\nエラー: ' + e.message);
             } finally {
-                document.getElementById('event-submit-btn').textContent = "イベントを企画する";
+                if(btn) btn.textContent = "イベントを企画する";
             }
         };
 
+        // ==========================================
+        // Job Create Logic
+        // ==========================================
         window.submitJob = async () => {
             if (!currentUser) return;
-            const title = document.getElementById('job-title').value;
-            const desc = document.getElementById('job-desc').value;
-            const style = document.getElementById('job-work-style').value;
-
-            if (!title || !desc) return alert('必須項目(タイトル・詳細)を入力してください');
-            if (style !== 'フルリモート' && !selectedCoordsJob) return alert('勤務地・活動場所をマップで検索して設定してください');
-
-            const safeName = (myProfile && (myProfile.name || myProfile.userId)) || '投稿者';
-            const safeAvatar = (myProfile && myProfile.photoURL) || null;
-
-            const jobData = {
-                title: title, 
-                type: document.getElementById('job-type').value || "その他", 
-                category: document.getElementById('job-category').value || "その他", 
-                desc: desc,
-                rewardType: document.getElementById('job-reward-type').value || "応相談",
-                rewardAmount: document.getElementById('job-reward-amount').value || "",
-                period: document.getElementById('job-period').value || "期間未定",
-                workStyle: style || "指定なし",
-                location: document.getElementById('job-location').value || "", 
-                skills: document.getElementById('job-skills').value || "",
-                deadline: document.getElementById('job-deadline').value || "",
-                flow: document.getElementById('job-flow').value || "その他",
-                company: document.getElementById('job-company').value || "",
-                url: document.getElementById('job-url').value || "",
-                
-                organizerId: currentUser.uid,
-                organizerName: safeName,
-                organizerAvatar: safeAvatar,
-                createdAt: serverTimestamp(),
-            };
-
-            if (style === 'フルリモート') {
-                jobData.locationName = "フルリモート";
-                jobData.lat = null; jobData.lng = null;
-            } else {
-                jobData.locationName = document.getElementById('job-location-name').value || "場所名未設定";
-                jobData.lat = selectedCoordsJob.lat; jobData.lng = selectedCoordsJob.lng;
-            }
+            const btn = document.getElementById('job-submit-btn');
 
             try {
-                document.getElementById('job-submit-btn').textContent = "送信中...";
+                const title = document.getElementById('job-title').value;
+                const desc = document.getElementById('job-desc').value;
+                const style = document.getElementById('job-work-style').value;
+
+                if (!title || !desc) return alert('必須項目(タイトル・詳細)を入力してください');
+                if (style !== 'フルリモート' && !selectedCoordsJob) return alert('勤務地・活動場所をマップで検索して設定してください');
+
+                const safeName = (myProfile && (myProfile.name || myProfile.userId)) || '投稿者';
+                const safeAvatar = (myProfile && myProfile.photoURL) || null;
+
+                const jobData = {
+                    title: title, 
+                    type: document.getElementById('job-type').value || "その他", 
+                    category: document.getElementById('job-category').value || "その他", 
+                    desc: desc,
+                    rewardType: document.getElementById('job-reward-type').value || "応相談",
+                    rewardAmount: document.getElementById('job-reward-amount').value || "",
+                    period: document.getElementById('job-period').value || "期間未定",
+                    workStyle: style || "指定なし",
+                    location: document.getElementById('job-location').value || "", 
+                    skills: document.getElementById('job-skills').value || "",
+                    deadline: document.getElementById('job-deadline').value || "",
+                    flow: document.getElementById('job-flow').value || "その他",
+                    company: document.getElementById('job-company').value || "",
+                    url: document.getElementById('job-url').value || "",
+                    
+                    organizerId: currentUser.uid,
+                    organizerName: safeName,
+                    organizerAvatar: safeAvatar,
+                    createdAt: serverTimestamp(),
+                };
+
+                if (style === 'フルリモート') {
+                    jobData.locationName = "フルリモート";
+                    jobData.lat = null; jobData.lng = null;
+                } else {
+                    jobData.locationName = document.getElementById('job-location-name').value || "場所名未設定";
+                    jobData.lat = selectedCoordsJob.lat; jobData.lng = selectedCoordsJob.lng;
+                }
+
+                if(btn) btn.textContent = "送信中...";
                 if (isAdminMock) {
                     alert('【テスト】仕事・依頼を掲載しました！(モックデータ)');
                 } else {
@@ -1524,9 +1744,9 @@
                 switchView('list-jobs'); 
             } catch (e) {
                 console.error("Submit Job Error:", e);
-                alert('処理に失敗しました。\n必須データが不足しているか、権限がありません。');
+                alert('処理に失敗しました。\nエラー: ' + e.message);
             } finally {
-                document.getElementById('job-submit-btn').textContent = "募集を掲載する";
+                if(btn) btn.textContent = "募集を掲載する";
             }
         };
 
@@ -1545,6 +1765,7 @@
         window.showEventSheet = async (evt) => {
             const sheet = document.getElementById('event-sheet');
             const content = document.getElementById('event-sheet-content');
+            if(!sheet || !content) return;
 
             const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/400x200?text=NOAH+Event';
             const tags = evt.tags ? evt.tags.map(t => `<span class="bg-brand-50 border border-brand-200 text-brand-600 px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">#${t}</span>`).join('') : '';
@@ -1552,13 +1773,13 @@
             const priceText = priceNum > 0 ? `¥${priceNum.toLocaleString()}` : '無料';
             
             const dateStr = (evt.startDate === evt.endDate) 
-                    ? `${evt.startDate} ${evt.startTime || ''} 〜 ${evt.endTime || ''}`
-                    : `${evt.startDate} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
+                    ? `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endTime || ''}`
+                    : `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
 
             let locHtml = evt.isOnline 
-                ? `<div class="flex items-center gap-3"><i class="fa-solid fa-laptop text-brand-400 w-4 text-center"></i><span class="tracking-widest">${evt.locationName}</span></div>
+                ? `<div class="flex items-center gap-3"><i class="fa-solid fa-laptop text-brand-400 w-4 text-center"></i><span class="tracking-widest">${evt.locationName || 'オンライン'}</span></div>
                    ${evt.onlineUrl ? `<div class="flex items-center gap-3 mt-2"><i class="fa-solid fa-link text-brand-400 w-4 text-center"></i><a href="${evt.onlineUrl}" target="_blank" class="text-blue-600 underline truncate tracking-widest text-xs">${evt.onlineUrl}</a></div>` : ''}`
-                : `<div class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-brand-400 w-4 text-center"></i><span class="tracking-widest">${evt.locationName}</span></div>`;
+                : `<div class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-brand-400 w-4 text-center"></i><span class="tracking-widest">${evt.locationName || '未設定'}</span></div>`;
 
             // Basic UI Loading State
             content.innerHTML = `
@@ -1572,7 +1793,7 @@
                     <div class="absolute top-0 right-0 w-6 h-6 border-t border-r border-brand-300 m-1"></div>
                     <div class="flex items-center gap-3"><i class="fa-regular fa-clock text-brand-400 w-4 text-center"></i><span class="tracking-widest">${dateStr}</span></div>
                     ${locHtml}
-                    <div class="flex items-center gap-3 pt-2 border-t border-brand-100"><i class="fa-solid fa-user text-brand-400 w-4 text-center"></i><a href="user.html?uid=${evt.organizerId}" class="text-brand-600 font-bold hover:underline tracking-widest">主催: ${evt.organizerName}</a></div>
+                    <div class="flex items-center gap-3 pt-2 border-t border-brand-100"><i class="fa-solid fa-user text-brand-400 w-4 text-center"></i><a href="user.html?uid=${evt.organizerId}" class="text-brand-600 font-bold hover:underline tracking-widest">主催: ${evt.organizerName || '不明'}</a></div>
                 </div>
                 <div class="mb-6"><h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">詳細</h3><p class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap tracking-wide">${evt.description || '詳細はありません'}</p></div>
                 <div id="event-dynamic-area"><div class="text-center text-brand-400 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i> 情報を読み込み中...</div></div>
@@ -1599,7 +1820,9 @@
             }
 
             const isOrganizer = currentUser && currentUser.uid === evt.organizerId;
-            
+            const dynArea = document.getElementById('event-dynamic-area');
+            if(!dynArea) return;
+
             if (evt.isParticipantsPublic || isOrganizer || isAdmin) {
                 if (participants.length === 0) {
                     partsHtml = '<div class="text-[10px] text-brand-500">まだ参加者はいません</div>';
@@ -1634,7 +1857,7 @@
                     </div>`;
             }
 
-            document.getElementById('event-dynamic-area').innerHTML = `
+            dynArea.innerHTML = `
                 <div class="mb-6"><h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">参加者 (${participants.length}名)</h3>${partsHtml}</div>
                 ${btnHtml}
                 ${actionBtns}
@@ -1649,7 +1872,8 @@
             if (isAdminMock) {
                 alert('【テスト】参加状況を変更しました');
                 isJoining = false;
-                closeDetail('event');
+                const evt = allEvents.find(e => e.id === eventId);
+                if (evt) showEventSheet(evt);
                 return;
             }
 
@@ -1668,7 +1892,6 @@
                     alert('イベントに参加しました！');
                 }
                 
-                // Refresh Modal View
                 const evt = allEvents.find(e => e.id === eventId);
                 if (evt) showEventSheet(evt);
 
@@ -1695,6 +1918,7 @@
         window.showJobSheet = (job) => {
             const sheet = document.getElementById('job-sheet');
             const content = document.getElementById('job-sheet-content');
+            if(!sheet || !content) return;
             
             const badgeColor = job.type === '正社員' ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-brand-50 text-brand-600 border border-brand-200';
 
@@ -1716,23 +1940,23 @@
                     </div>
                     <div>
                         <h2 class="text-lg font-bold text-brand-900 leading-tight font-serif tracking-widest mb-1">${job.title || '名称未設定'}</h2>
-                        <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-sm tracking-widest ${badgeColor}">${job.type}</span>
-                        <span class="text-[10px] text-brand-500 ml-2 tracking-widest">${job.category}</span>
+                        <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded-sm tracking-widest ${badgeColor}">${job.type || '未設定'}</span>
+                        <span class="text-[10px] text-brand-500 ml-2 tracking-widest">${job.category || ''}</span>
                     </div>
                 </div>
 
                 <div class="bg-[#f7f5f0] border border-brand-200 p-4 rounded-sm mb-6 space-y-3 text-xs tracking-widest text-brand-800 shadow-inner">
-                    <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">報酬</span><span class="font-bold">${job.rewardType}: ${job.rewardAmount || '応相談'}</span></div>
-                    <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">働き方</span><span>${job.workStyle}</span></div>
+                    <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">報酬</span><span class="font-bold">${job.rewardType || '応相談'}: ${job.rewardAmount || ''}</span></div>
+                    <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">働き方</span><span>${job.workStyle || '-'}</span></div>
                     <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">勤務地</span><span>${job.locationName || job.location || '-'}</span></div>
                     <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">期間</span><span>${job.period || '-'}</span></div>
                     <div class="flex justify-between border-b border-brand-100 pb-1"><span class="text-brand-500 font-bold">締切</span><span>${job.deadline || '未定'}</span></div>
-                    <div class="flex justify-between"><span class="text-brand-500 font-bold">掲載元</span><span><a href="user.html?uid=${job.organizerId}" class="hover:underline">${job.company || job.organizerName}</a></span></div>
+                    <div class="flex justify-between"><span class="text-brand-500 font-bold">掲載元</span><span><a href="user.html?uid=${job.organizerId}" class="hover:underline">${job.company || job.organizerName || '不明'}</a></span></div>
                 </div>
 
                 <div class="mb-6">
                     <h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">業務内容詳細</h3>
-                    <p class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap tracking-wide bg-[#fffdf9] p-3 border border-brand-100 rounded-sm">${job.desc || ''}</p>
+                    <p class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap tracking-wide bg-[#fffdf9] p-3 border border-brand-100 rounded-sm">${job.desc || '詳細はありません'}</p>
                 </div>
                 
                 ${job.skills ? `
@@ -1768,6 +1992,7 @@
 
         window.closeDetail = (type) => {
             const sheet = document.getElementById(`${type}-sheet`);
+            if(!sheet) return;
             sheet.classList.remove('sheet-open');
             sheet.classList.add('sheet-closed');
             setTimeout(() => sheet.classList.add('hidden'), 300);
