@@ -4,70 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログイン | NOAH</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="img/icon.png">
+    
+    <!-- Google Fonts: Noto Serif JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'Noto Sans JP', 'sans-serif'] },
-                    colors: { brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 900: '#312e81' } }
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { 
+                        brand: { 
+                            50: '#f7f5f0',   
+                            100: '#e8dfd1',  
+                            200: '#dcd4c6',  
+                            300: '#c8b9a6',  
+                            400: '#a09080',  
+                            500: '#8b6a4f',  
+                            600: '#725b3f',  
+                            700: '#5c4a3d',  
+                            800: '#4a3b32',  
+                            900: '#3e2723'   
+                        } 
+                    }
                 }
             }
         }
     </script>
-    <style>body { background-color: #f8fafc; }</style>
+    <style>
+        body { 
+            font-family: 'Noto Serif JP', serif;
+            background-color: #f7f5f0; 
+            color: #4a3b32;
+        }
+        .bg-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+        input:focus {
+            outline: none;
+            border-color: #8b6a4f !important;
+            box-shadow: 0 0 0 1px #8b6a4f !important;
+        }
+    </style>
 </head>
-<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative text-slate-800">
+<body class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative bg-texture">
 
-    <!-- トップページに戻るリンク -->
-    <div class="absolute top-4 left-4 sm:top-8 sm:left-8">
-        <a href="home.html" class="inline-flex items-center text-sm font-medium text-slate-500 hover:text-brand-600 transition-colors">
+    <!-- トップページ(LP)に戻るリンク -->
+    <div class="absolute top-4 left-4 sm:top-8 sm:left-8 z-10">
+        <a href="index.html" class="inline-flex items-center text-xs font-bold text-brand-500 hover:text-brand-800 transition-colors tracking-widest">
             <i class="fa-solid fa-arrow-left mr-2"></i>
-            ホームに戻る
+            NOAHについて
         </a>
     </div>
 
-    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
-        <div class="text-center">
-            <!-- アプリアイコン -->
-            <img src="NOAH.png" alt="Icon" class="w-16 h-16 rounded-xl object-cover mx-auto mb-6 shadow-sm">
-            <!-- タイポロゴ (横長表示用) -->
-            <img src="NOAH_typo.png" alt="NOAH" class="h-10 w-auto mx-auto mb-2 block object-contain">
-            <p class="mt-2 text-sm text-slate-500">コミュニティにログイン</p>
+    <div class="max-w-md w-full space-y-8 bg-[#fffdf9] p-8 rounded-sm shadow-xl border border-brand-200 relative overflow-hidden">
+        <!-- アンティークな角飾り -->
+        <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-brand-300 m-2"></div>
+        <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-brand-300 m-2"></div>
+
+        <div class="text-center relative z-10">
+            <div class="w-16 h-16 bg-brand-50 rounded-full border border-brand-200 flex items-center justify-center mx-auto mb-4 text-brand-900 shadow-sm">
+                <i class="fa-solid fa-anchor text-2xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold tracking-[0.3em] text-brand-900 mb-1">NOAH</h1>
+            <p class="mt-2 text-xs font-bold text-brand-500 tracking-widest">再び航海へ</p>
         </div>
 
-        <form class="mt-8 space-y-6" onsubmit="handleLogin(event)">
-            <div class="space-y-4">
+        <form class="mt-8 space-y-6 relative z-10" onsubmit="handleLogin(event)">
+            <div class="space-y-5">
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">ユーザーID または メールアドレス</label>
-                    <input name="userid" type="text" required class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="ユーザーID / email">
+                    <label class="block text-xs font-bold text-brand-800 mb-1 tracking-widest">ユーザーID または メールアドレス</label>
+                    <input name="userid" type="text" required class="appearance-none block w-full px-4 py-3 border border-brand-200 rounded-sm shadow-sm bg-[#fffdf9] transition-all placeholder-brand-300 text-sm tracking-widest font-sans" placeholder="ユーザーID / email">
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">パスワード</label>
+                    <label class="block text-xs font-bold text-brand-800 mb-1 tracking-widest">パスワード</label>
                     <div class="relative">
-                        <input id="password" name="password" type="password" required class="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-slate-50 transition-all placeholder-slate-400" placeholder="パスワードを入力">
-                        <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+                        <input id="password" name="password" type="password" required class="appearance-none block w-full px-4 py-3 border border-brand-200 rounded-sm shadow-sm bg-[#fffdf9] transition-all placeholder-brand-300 text-sm tracking-widest font-sans" placeholder="パスワードを入力">
+                        <button type="button" onclick="togglePassword('password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-brand-400 hover:text-brand-700 transition-colors">
                             <i class="fa-regular fa-eye"></i>
                         </button>
                     </div>
                 </div>
             </div>
             
-            <button type="submit" class="w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 shadow-lg transition-all transform hover:-translate-y-0.5">
-                ログイン
+            <button type="submit" id="btn-login" class="w-full flex justify-center items-center py-3.5 px-4 border border-[#b8860b] text-sm font-bold rounded-sm text-[#f7f5f0] bg-[#3e2723] hover:bg-[#2a1a17] transition-all shadow-md mt-6 tracking-widest">
+                <i class="fa-solid fa-ship mr-2"></i> 乗船する
             </button>
         </form>
 
-        <div class="mt-6 text-center">
-            <p class="text-sm text-slate-600">アカウントをお持ちでない方は <a href="register.html" class="font-bold text-brand-600 hover:text-brand-500 hover:underline">新規登録はこちら</a></p>
+        <div class="mt-6 text-center relative z-10 border-t border-brand-100 pt-6">
+            <p class="text-xs text-brand-600 font-bold tracking-widest">まだ船に乗っていない方は <br class="sm:hidden"><a href="register.html" class="text-[#8b6a4f] hover:text-[#5c4a3d] border-b border-[#8b6a4f] pb-0.5 ml-2">乗船手続きへ</a></p>
         </div>
     </div>
 
     <!-- Notification -->
-    <div id="notification" class="fixed top-4 right-4 z-50 hidden max-w-sm w-full bg-white shadow-lg rounded-lg p-4 border-l-4">
-        <p id="notif-message" class="text-sm font-medium"></p>
+    <div id="notification" class="fixed top-10 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-sm w-[90%] bg-[#3e2723] text-[#f7f5f0] shadow-xl border border-[#b8860b] rounded-sm p-4 text-center">
+        <p id="notif-message" class="text-xs font-bold tracking-widest"></p>
     </div>
 
     <script type="module">
@@ -84,7 +125,6 @@
             messagingSenderId: "803209683213",
             appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
         };
-        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -102,6 +142,7 @@
             e.preventDefault();
             const userInput = e.target.userid.value.trim();
             const password = e.target.password.value;
+            const btn = document.getElementById('btn-login');
 
             // Admin Backdoor
             if (userInput === 'admin' && password === 'admin') {
@@ -110,14 +151,13 @@
                 return;
             }
 
-            showNotification('ログイン中...', 'info');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> ログイン中...';
 
             try {
                 let email = userInput;
 
                 // 入力値がメールアドレスでない場合（@がない場合）、ユーザーIDとして検索
                 if (!userInput.includes('@')) {
-                    // ID検索
                     const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
                     const q = query(usersRef, where("userId", "==", userInput));
                     const querySnapshot = await getDocs(q);
@@ -134,9 +174,9 @@
                     }
                 }
 
-                // Emailとパスワードでログイン実行
                 await signInWithEmailAndPassword(auth, email, password);
-                showNotification('ログイン成功！', 'success');
+                showNotification('乗船しました。ホームへ移動します', 'success');
+                // redirect is handled by onAuthStateChanged
             } catch (error) {
                 console.error(error);
                 let msg = 'ログインに失敗しました。';
@@ -145,6 +185,7 @@
                 else if (error.message) msg = error.message;
                 
                 showNotification(msg, 'error');
+                btn.innerHTML = '<i class="fa-solid fa-ship mr-2"></i> 乗船する';
             }
         };
 
@@ -165,14 +206,11 @@
         window.showNotification = (msg, type) => {
             const notif = document.getElementById('notification');
             const msgEl = document.getElementById('notif-message');
-            notif.classList.remove('hidden', 'border-blue-500', 'border-red-500', 'border-green-500');
             
             if(type === 'error') {
-                notif.classList.add('border-red-500', 'text-red-700');
-            } else if (type === 'success') {
-                notif.classList.add('border-green-500', 'text-green-700');
+                notif.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-[90%] bg-[#fffdf9] text-red-700 shadow-xl border border-brand-200 rounded-sm p-4 text-center';
             } else {
-                notif.classList.add('border-blue-500', 'text-blue-700');
+                notif.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-[90%] bg-[#3e2723] text-[#f7f5f0] shadow-xl border border-[#b8860b] rounded-sm p-4 text-center';
             }
             msgEl.textContent = msg;
             notif.classList.remove('hidden');
