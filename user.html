@@ -12,8 +12,8 @@
     <!-- Tailwind CSS with Typography Plugin (マークダウン装飾用) -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     
-    <!-- Marked.js (Markdown変換) & DOMPurify (セキュリティ保護) -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- ★修正: Marked.js (Markdown変換) UMD版を確実に読み込む -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
     <!-- FontAwesome -->
@@ -424,15 +424,23 @@
 
             let rawHtml = '';
             try {
-                // 最新のmarked.jsに対応するため、parseメソッドの第2引数でオプションを渡す
-                rawHtml = marked.parse(processedText, { breaks: true, gfm: true });
+                // CDNから読み込んだ marked.umd.js は window.marked に展開される
+                if (window.marked && typeof window.marked.parse === 'function') {
+                    rawHtml = window.marked.parse(processedText, { breaks: true, gfm: true });
+                } else if (typeof window.marked === 'function') {
+                    // 古いバージョンの場合
+                    rawHtml = window.marked(processedText, { breaks: true, gfm: true });
+                } else {
+                    // markedが読み込めていない場合のフォールバック（改行だけ反映）
+                    rawHtml = processedText.replace(/\n/g, '<br>');
+                }
             } catch (e) {
                 console.error("Markdown Parse Error:", e);
-                rawHtml = processedText; // 万が一エラーになった場合は元のテキストを表示
+                rawHtml = processedText.replace(/\n/g, '<br>'); 
             }
             
-            // DOMPurifyで安全なHTMLのみを許可してサニタイズ（<code>や<pre>も許可）
-            return DOMPurify.sanitize(rawHtml, { 
+            // DOMPurifyで安全なHTMLのみを許可してサニタイズ
+            return window.DOMPurify.sanitize(rawHtml, { 
                 ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote', 'code', 'pre'],
                 ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
             });
