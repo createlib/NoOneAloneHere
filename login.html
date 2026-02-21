@@ -167,7 +167,7 @@
                         if (userData.email) {
                             email = userData.email;
                         } else {
-                            throw new Error("このIDでのログインは現在サポートされていません。");
+                            throw new Error("データエラー：登録した「メールアドレス」を直接入力してログインしてください。");
                         }
                     } else {
                         throw new Error("指定されたユーザーIDは見つかりません。");
