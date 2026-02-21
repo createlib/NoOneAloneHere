@@ -135,7 +135,7 @@
                         <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">活動拠点 (都道府県)</label>
                         <select id="prefecture" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]"></select>
                     </div>
-                    <!-- 出身地 -->
+                    <!-- 出身地を追加 -->
                     <div>
                         <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">出身地</label>
                         <select id="birthplace" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]"></select>
@@ -178,7 +178,7 @@
                 
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-bold text-brand-700 tracking-widest">想い・メッセージ <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローに公開 / 300字以上で評価)</span></label>
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">想い・メッセージ <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 300字以上で評価)</span></label>
                         <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
                     </div>
                     <textarea id="message" rows="5" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="コミュニティの仲間に向けた熱い想いや価値観を語ってください。"></textarea>
@@ -186,7 +186,7 @@
 
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-bold text-brand-700 tracking-widest">目標・ビジョン <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローに公開 / 300字以上で評価)</span></label>
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">目標・ビジョン <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 300字以上で評価)</span></label>
                         <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
                     </div>
                     <textarea id="goals" rows="3" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="将来成し遂げたいことや、次に進みたい世界について。"></textarea>
@@ -366,10 +366,10 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0",
@@ -421,8 +421,16 @@
             "🌿 その他": ["瞑想", "マインドフルネス", "占い", "スピリチュアル", "その他"]
         };
 
-        const getVal = (id, def = '') => { const el = document.getElementById(id); return el ? el.value : def; };
-        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val !== undefined && val !== null ? val : ''; };
+        // ★修正: undefinedが返るのを防ぎ、必ず文字列（または設定したデフォルト値）を返すように安全化
+        const getVal = (id, def = '') => { 
+            const el = document.getElementById(id); 
+            if (!el) return def;
+            return (el.value === undefined || el.value === null) ? def : el.value; 
+        };
+        const setVal = (id, val) => { 
+            const el = document.getElementById(id); 
+            if (el) el.value = (val === undefined || val === null) ? '' : val; 
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             initSelects();
@@ -485,7 +493,7 @@
                                 const tData = targetSnap.data();
                                 myRank = tData.membershipRank || 'arrival';
                                 existingReferrerId = tData.referrerId || null;
-                                populateForm(tData);
+                                populateForm(tData, user.email); // ★管理者のemailではなく対象者のデータを保持
                             } else {
                                 alert("対象ユーザーのデータが見つかりません。");
                             }
@@ -498,7 +506,7 @@
                         if (myData) {
                             myRank = myData.membershipRank || 'arrival';
                             existingReferrerId = myData.referrerId || null;
-                            populateForm(myData);
+                            populateForm(myData, user.email);
                         }
                     }
                 } catch (e) { console.error(e); }
@@ -585,7 +593,11 @@
             }
         }
 
-        function populateForm(data) {
+        // 第2引数として、現在のログインユーザーのemail情報などを渡す（管理者の上書き防止用）
+        function populateForm(data, fallbackEmail = null) {
+            // ★ グローバル変数に元のメールアドレスを保持しておく
+            window._originalEmail = data.email || fallbackEmail || null;
+            
             setVal('name', data.name);
             setVal('furigana', data.furigana);
             setVal('jobTitle', data.jobTitle);
@@ -702,6 +714,12 @@
             return Math.min(score, 100);
         }
 
+        // ★修正: 値を安全に文字列化する関数（undefinedがFirebaseに入らないようにする）
+        const safeStr = (val) => {
+            if (val === undefined || val === null) return '';
+            return String(val);
+        };
+
         window.saveProfile = async (e) => {
             e.preventDefault();
             if (!currentUser || !editUid) return;
@@ -712,8 +730,10 @@
                 const uid = editUid; // 保存先を対象のUIDにする
                 const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
                 const oldSnap = await getDoc(privateRef);
+                
                 let currentPhotoUrl = oldSnap.exists() ? oldSnap.data().photoURL : null;
-                const finalUserId = oldSnap.exists() ? oldSnap.data().userId : uid; // userIDは変更不可
+                // userIDが存在しない場合は今のUIDを使用
+                const finalUserId = (oldSnap.exists() && oldSnap.data().userId) ? oldSnap.data().userId : uid; 
 
                 // Photo Upload
                 const fileEl = document.getElementById('photo-upload');
@@ -722,47 +742,49 @@
                         const snap = await uploadBytes(ref(storage, `profiles/${uid}/${Date.now()}_${fileEl.files[0].name}`), fileEl.files[0]);
                         currentPhotoUrl = await getDownloadURL(snap.ref);
                     } catch(err) {
-                        console.error(err);
+                        console.error("Upload error:", err);
                         showNotification('画像のアップロードに失敗しました', true);
                     }
                 }
 
                 // Gather Tags
                 const checkedSkills = Array.from(document.querySelectorAll('input[name="skill-tag"]:checked')).map(cb => cb.value);
-                const customSkills = getVal('custom-skills').split(',').map(s=>s.trim()).filter(s=>s);
+                const customSkillsStr = getVal('custom-skills');
+                const customSkills = customSkillsStr ? customSkillsStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 const finalSkills = [...new Set([...checkedSkills, ...customSkills])];
 
                 const checkedHobbies = Array.from(document.querySelectorAll('input[name="hobby-tag"]:checked')).map(cb => cb.value);
-                const customHobbies = getVal('custom-hobbies').split(',').map(s=>s.trim()).filter(s=>s);
+                const customHobbiesStr = getVal('custom-hobbies');
+                const customHobbies = customHobbiesStr ? customHobbiesStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 const finalHobbies = [...new Set([...checkedHobbies, ...customHobbies])];
 
-                // Gather Final Data
+                // Gather Final Data (全ての項目に安全対策を施す)
                 const finalData = {
-                    userId: finalUserId,
-                    referrerId: existingReferrerId,
-                    membershipRank: myRank,
-                    email: currentUser.email, // ★追加：ログインに必要なメールアドレス情報を維持する
-                    name: getVal('name'),
-                    furigana: getVal('furigana'),
-                    jobTitle: getVal('jobTitle'),
-                    prefecture: getVal('prefecture'),
-                    birthplace: getVal('birthplace'),
-                    gender: getVal('gender'),
-                    birthDate: getVal('birthDate'),
-                    birthVisibility: getVal('birthVisibility'),
-                    bio: getVal('bio'),
-                    message: getVal('message'),
-                    canOffer: getVal('canOffer').split(',').map(s=>s.trim()).filter(s=>s),
-                    lookingFor: getVal('lookingFor').split(',').map(s=>s.trim()).filter(s=>s),
-                    goals: getVal('goals'),
-                    websiteUrl: getVal('websiteUrl'),
-                    snsInstagram: getVal('snsInstagram'),
-                    snsX: getVal('snsX'),
-                    profilePublic: getVal('profilePublic'),
-                    photoURL: currentPhotoUrl,
-                    skills: finalSkills,
-                    hobbies: finalHobbies,
-                    career: careerList,
+                    userId: safeStr(finalUserId),
+                    referrerId: existingReferrerId || null,
+                    membershipRank: safeStr(myRank || 'arrival'),
+                    email: window._originalEmail || currentUser.email || null, // ★管理者のアドレスに上書きされるバグを防止
+                    name: safeStr(getVal('name')),
+                    furigana: safeStr(getVal('furigana')),
+                    jobTitle: safeStr(getVal('jobTitle')),
+                    prefecture: safeStr(getVal('prefecture')),
+                    birthplace: safeStr(getVal('birthplace')),
+                    gender: safeStr(getVal('gender')),
+                    birthDate: safeStr(getVal('birthDate')),
+                    birthVisibility: safeStr(getVal('birthVisibility')) || 'full',
+                    bio: safeStr(getVal('bio')),
+                    message: safeStr(getVal('message')),
+                    canOffer: getVal('canOffer') ? getVal('canOffer').split(',').map(s=>s.trim()).filter(s=>s) : [],
+                    lookingFor: getVal('lookingFor') ? getVal('lookingFor').split(',').map(s=>s.trim()).filter(s=>s) : [],
+                    goals: safeStr(getVal('goals')),
+                    websiteUrl: safeStr(getVal('websiteUrl')),
+                    snsInstagram: safeStr(getVal('snsInstagram')),
+                    snsX: safeStr(getVal('snsX')),
+                    profilePublic: safeStr(getVal('profilePublic')) || 'true',
+                    photoURL: currentPhotoUrl || null,
+                    skills: finalSkills || [],
+                    hobbies: finalHobbies || [],
+                    career: careerList || [],
                     updatedAt: new Date().toISOString()
                 };
 
@@ -806,12 +828,13 @@
                     }, 1000);
                 }
             } catch (e) {
-                console.error(e);
-                showNotification('保存に失敗しました', true);
+                console.error("Profile Save Error:", e);
+                showNotification('保存に失敗しました。時間をおいて再試行してください。', true);
             } finally {
                 btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> 航海録を保存する';
             }
         };
+
     </script>
 </body>
 </html>
