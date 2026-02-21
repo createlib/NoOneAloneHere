@@ -81,7 +81,7 @@
     <nav class="glass-header border-b border-brand-200 fixed w-full z-[1500] top-0 h-16 shadow-sm">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <a href="user.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest">
+                <a href="user.html" id="back-link" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest">
                     <i class="fa-solid fa-arrow-left"></i>
                     <span class="hidden sm:inline">マイページへ戻る</span>
                 </a>
@@ -390,6 +390,9 @@
         let myRank = 'arrival';
         let isAdmin = false;
         
+        let targetUid = null;
+        let editUid = null;
+        
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
         // Const Arrays
@@ -422,6 +425,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             initSelects();
             
+            const urlParams = new URLSearchParams(window.location.search);
+            targetUid = urlParams.get('uid');
+            if (targetUid) {
+                const backLink = document.getElementById('back-link');
+                if (backLink) backLink.href = `user.html?uid=${targetUid}`;
+            }
+            
             // Image Preview
             const photoInput = document.getElementById('photo-upload');
             if(photoInput) {
@@ -445,20 +455,49 @@
                 currentUser = { uid: 'test_admin_uid' };
                 isAdmin = true;
                 myRank = 'covenant';
+                editUid = targetUid || currentUser.uid;
                 return;
             }
 
             if (user && !user.isAnonymous) {
                 currentUser = user;
+                editUid = user.uid; // デフォルトは自分自身を編集
+                
                 try {
-                    const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
-                    const snap = await getDoc(docRef);
-                    if (snap.exists()) {
-                        const data = snap.data();
-                        if (data.userId === 'admin') isAdmin = true;
-                        myRank = data.membershipRank || 'arrival';
-                        existingReferrerId = data.referrerId || null;
-                        populateForm(data);
+                    // まず自分のプロフィールを取得して管理者権限を確認
+                    const myDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+                    const mySnap = await getDoc(myDocRef);
+                    let myData = null;
+                    if (mySnap.exists()) {
+                        myData = mySnap.data();
+                        if (myData.userId === 'admin') isAdmin = true;
+                    }
+
+                    // ターゲットUIDの指定がある場合
+                    if (targetUid && targetUid !== user.uid) {
+                        if (isAdmin) {
+                            editUid = targetUid;
+                            const targetRef = doc(db, 'artifacts', appId, 'users', editUid, 'profile', 'data');
+                            const targetSnap = await getDoc(targetRef);
+                            if (targetSnap.exists()) {
+                                const tData = targetSnap.data();
+                                myRank = tData.membershipRank || 'arrival';
+                                existingReferrerId = tData.referrerId || null;
+                                populateForm(tData);
+                            } else {
+                                alert("対象ユーザーのデータが見つかりません。");
+                            }
+                        } else {
+                            alert("他のユーザーを編集する権限がありません。");
+                            window.location.href = 'user.html';
+                        }
+                    } else {
+                        // ターゲット指定がない（自分のプロフィールを編集）場合
+                        if (myData) {
+                            myRank = myData.membershipRank || 'arrival';
+                            existingReferrerId = myData.referrerId || null;
+                            populateForm(myData);
+                        }
                     }
                 } catch (e) { console.error(e); }
             } else {
@@ -657,12 +696,12 @@
 
         window.saveProfile = async (e) => {
             e.preventDefault();
-            if (!currentUser) return;
+            if (!currentUser || !editUid) return;
             const btn = document.getElementById('btn-save');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>保存中...';
 
             try {
-                const uid = currentUser.uid;
+                const uid = editUid; // ★保存先・画像アップロード先を対象のUIDにする
                 const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
                 const oldSnap = await getDoc(privateRef);
                 let currentPhotoUrl = oldSnap.exists() ? oldSnap.data().photoURL : null;
@@ -753,7 +792,9 @@
                     }
 
                     showNotification('航海録を保存しました！');
-                    setTimeout(() => { window.location.href = 'user.html'; }, 1000);
+                    setTimeout(() => { 
+                        window.location.href = targetUid ? `user.html?uid=${targetUid}` : 'user.html'; 
+                    }, 1000);
                 }
             } catch (e) {
                 console.error(e);
