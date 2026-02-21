@@ -153,7 +153,7 @@
     <nav class="glass-header border-b border-brand-200 fixed w-full z-[1500] top-0 h-16 shadow-sm bg-texture">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
             <div class="flex items-center gap-4">
-                <a href="events.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
+                <a href="home.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
                     <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-anchor"></i></span>
                     <span class="hidden sm:inline">NOAH</span>
                 </a>
@@ -166,18 +166,18 @@
                     <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海(ホーム)</a>
                     <a href="events.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント・仕事</a>
                     <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
-                    <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                    <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
-                <a href="notifications.html" class="p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
+                <a href="notifications.html" class="auth-required p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
                     <i class="fa-regular fa-bell text-xl"></i>
                     <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]"></span>
                 </a>
 
                 <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
-                <button onclick="handleLogout()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-red-800 transition-colors flex items-center gap-2">
-                    <span class="hidden sm:inline tracking-widest">下船する</span>
-                    <i class="fa-solid fa-right-from-bracket text-lg"></i>
+                <button onclick="handleAuthAction()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-brand-800 transition-colors flex items-center gap-2">
+                    <span class="hidden sm:inline tracking-widest" id="nav-auth-text">下船する</span>
+                    <i class="fa-solid fa-right-from-bracket text-lg" id="nav-auth-icon"></i>
                 </button>
             </div>
         </div>
@@ -187,7 +187,6 @@
     <div class="fixed top-16 w-full z-[1400] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
         <div class="max-w-3xl mx-auto px-4 flex justify-between items-center">
             <div class="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
-                <!-- タブ名をスマホで1行に収まるよう短縮 -->
                 <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
                     <i class="fa-solid fa-map-location-dot"></i> マップ
                 </button>
@@ -279,8 +278,7 @@
     </div>
 
     <!-- Create FAB & Menu -->
-    <!-- スマホ時のメニュー被り防止のため、計算式で高さを浮かせる -->
-    <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
+    <div class="auth-required fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end hidden">
         <!-- Floating Menu -->
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
             <button onclick="openCreateModal('event')" class="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest border-b border-brand-100 flex items-center justify-between">
@@ -291,13 +289,13 @@
                 <i class="fa-solid fa-lock text-brand-300 text-xs group-hover:text-brand-500" title="BUILDER以上限定"></i>
             </button>
         </div>
-        <!-- FAB (ALWAYS SHOW) -->
-        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="hidden w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
+        <!-- FAB -->
+        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
             <i class="fa-solid fa-plus text-xl transition-transform duration-300" id="fab-icon"></i>
         </button>
     </div>
 
-    <!-- Filter Panel (Unified for both Events and Jobs) -->
+    <!-- Filter Panel -->
     <div id="filter-panel" class="fixed top-0 left-0 w-full h-full bg-[#2a1a17]/50 z-[3000] hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm">
         <div class="absolute right-0 top-0 h-full w-80 sm:w-96 bg-[#fffdf9] bg-texture shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col border-l border-brand-200" id="filter-content">
             <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] z-10 relative">
@@ -406,27 +404,27 @@
 
 
     <!-- Details Sheet (Event) -->
-    <div id="event-sheet" class="detail-sheet sheet-closed hidden fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture">
-        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onclick="closeDetail('event')">
+    <div id="event-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:w-[450px] lg:left-4 lg:bottom-4 lg:rounded-sm lg:border lg:max-h-[85vh] lg:pb-0 lg:transform-none lg:hidden bg-texture">
+        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100" onclick="closeDetail('event')">
             <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
-            <div class="hidden lg:flex w-full justify-between items-center px-5">
+            <div class="hidden lg:flex w-full justify-between items-center px-4">
                 <span class="text-xs font-bold text-brand-500 tracking-widest">イベント詳細</span>
-                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 text-lg"></i>
+                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 cursor-pointer text-lg"></i>
             </div>
         </div>
-        <div id="event-sheet-content" class="px-5 pb-20 lg:pb-8 pt-4"></div>
+        <div id="event-sheet-content" class="px-5 pb-20 lg:pb-5 pt-4"></div>
     </div>
 
     <!-- Details Sheet (Job) -->
-    <div id="job-sheet" class="detail-sheet sheet-closed hidden fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture">
-        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onclick="closeDetail('job')">
+    <div id="job-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:w-[450px] lg:left-4 lg:bottom-4 lg:rounded-sm lg:border lg:max-h-[85vh] lg:pb-0 lg:transform-none lg:hidden bg-texture">
+        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100" onclick="closeDetail('job')">
             <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
-            <div class="hidden lg:flex w-full justify-between items-center px-5">
+            <div class="hidden lg:flex w-full justify-between items-center px-4">
                 <span class="text-xs font-bold text-brand-500 tracking-widest">仕事・依頼 詳細</span>
-                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 text-lg"></i>
+                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 cursor-pointer text-lg"></i>
             </div>
         </div>
-        <div id="job-sheet-content" class="px-5 pb-20 lg:pb-8 pt-4"></div>
+        <div id="job-sheet-content" class="px-5 pb-20 lg:pb-5 pt-4"></div>
     </div>
 
     <!-- ========================================== -->
@@ -553,7 +551,7 @@
 
             <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
                 <button onclick="submitEvent()" id="event-submit-btn" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b]">
-                    イベントを更新する
+                    イベントを企画する
                 </button>
             </div>
         </div>
@@ -740,7 +738,7 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Navigation (Mobile Only) -->
     <nav class="fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="flex justify-around items-center h-16">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
@@ -759,15 +757,17 @@
                 <i class="fa-solid fa-handshake text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マッチ</span>
             </button>
-            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+            <a href="user.html" class="auth-required flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マイページ</span>
             </a>
         </div>
     </nav>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#c8b9a6] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
@@ -889,6 +889,7 @@
                 const fab = document.getElementById('create-fab-btn');
                 if(fab) fab.classList.remove('hidden');
                 myProfile = { name: '管理者', userId: 'admin', membershipRank: 'covenant' };
+                updateNavForAuth(true);
                 loadAllData();
                 return;
             }
@@ -911,11 +912,65 @@
                     console.error("Profile Fetch Error:", e); 
                     myProfile = { membershipRank: 'arrival' };
                 }
+                updateNavForAuth(true);
                 loadAllData();
+            } else {
+                currentUser = null;
+                myProfile = null;
+                updateNavForAuth(false);
+                const fab = document.getElementById('create-fab-btn');
+                if(fab) fab.classList.add('hidden');
+                // 未ログインでもデータは表示する
+                loadAllData();
+            }
+        });
+
+        function updateNavForAuth(isLoggedIn) {
+            document.querySelectorAll('.auth-required').forEach(el => {
+                el.style.display = isLoggedIn ? '' : 'none';
+            });
+            const authText = document.getElementById('nav-auth-text');
+            const authIcon = document.getElementById('nav-auth-icon');
+            if (authText && authIcon) {
+                if (isLoggedIn) {
+                    authText.textContent = '下船する';
+                    authIcon.className = 'fa-solid fa-right-from-bracket text-lg';
+                } else {
+                    authText.textContent = '乗船する';
+                    authIcon.className = 'fa-solid fa-right-to-bracket text-lg';
+                }
+            }
+        }
+
+        window.handleAuthAction = () => {
+            if (currentUser) {
+                if (isAdminMock) localStorage.removeItem('isAdminMock');
+                signOut(auth);
+                window.location.reload(); 
             } else {
                 window.location.href = 'login.html';
             }
-        });
+        };
+
+        window.copyToClipboard = (text) => {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed"; 
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const notif = document.getElementById('notification');
+                document.getElementById('notif-message').textContent = 'URLをコピーしました！';
+                notif.classList.remove('hidden');
+                setTimeout(() => notif.classList.add('hidden'), 3000);
+            } catch (err) {
+                console.error('Copy error', err);
+                alert('URLのコピーに失敗しました。');
+            }
+            document.body.removeChild(textArea);
+        };
 
         // ==========================================
         // View Switcher & Core Load
@@ -977,15 +1032,17 @@
             
             filterData();
 
-            // --- 追加: URLパラメータをチェックして特定のイベントを開く処理 ---
+            // URLパラメータをチェックして特定のイベントを開く
             const urlParams = new URLSearchParams(window.location.search);
             const targetEventId = urlParams.get('eventId');
+            const targetJobId = urlParams.get('jobId');
+            
             if (targetEventId) {
                 switchView('list-events');
-                // 少し遅延させて、リストの描画が安定してから詳細シートを開く
-                setTimeout(() => {
-                    window.showEventSheetById(targetEventId);
-                }, 300);
+                setTimeout(() => { window.showEventSheetById(targetEventId); }, 300);
+            } else if (targetJobId) {
+                switchView('list-jobs');
+                setTimeout(() => { window.showJobSheetById(targetJobId); }, 300);
             }
         }
 
@@ -1486,6 +1543,7 @@
                     setVal('job-work-style', existingData?.workStyle || "フルリモート");
                     setVal('job-location', existingData?.location || "");
                     setVal('job-location-name', existingData?.locationName || "");
+                    setVal('job-location-search-input', "");
                     setVal('job-skills', existingData?.skills || "");
                     setVal('job-deadline', existingData?.deadline || "");
                     setVal('job-flow', existingData?.flow || "面談1回");
@@ -1852,6 +1910,26 @@
             if(job) showJobSheet(job);
         };
 
+        window.copyToClipboard = (text) => {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed"; 
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const notif = document.getElementById('notification');
+                document.getElementById('notif-message').textContent = 'URLをコピーしました！';
+                notif.classList.remove('hidden');
+                setTimeout(() => notif.classList.add('hidden'), 3000);
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+                alert('URLのコピーに失敗しました。');
+            }
+            document.body.removeChild(textArea);
+        };
+
         window.showEventSheet = async (evt) => {
             const sheet = document.getElementById('event-sheet');
             const content = document.getElementById('event-sheet-content');
@@ -1871,12 +1949,22 @@
                    ${evt.onlineUrl ? `<div class="flex items-center gap-3 mt-2"><i class="fa-solid fa-link text-brand-400 w-4 text-center"></i><a href="${evt.onlineUrl}" target="_blank" class="text-blue-600 underline truncate tracking-widest text-xs">${evt.onlineUrl}</a></div>` : ''}`
                 : `<div class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-brand-400 w-4 text-center"></i><span class="tracking-widest">${evt.locationName || '未設定'}</span></div>`;
 
+            const shareUrl = `${window.location.origin}${window.location.pathname}?eventId=${evt.id}`;
+            const shareBtn = `
+                <div class="flex gap-2 mb-4">
+                    <button onclick="copyToClipboard('${shareUrl}')" class="flex-1 py-2 bg-brand-50 text-brand-600 border border-brand-200 rounded-sm font-bold text-xs tracking-widest hover:bg-brand-100 transition-colors shadow-sm">
+                        <i class="fa-solid fa-share-nodes mr-1"></i> URLをコピー
+                    </button>
+                </div>
+            `;
+
             // Basic UI Loading State
             content.innerHTML = `
                 <div class="relative h-48 w-full rounded-sm overflow-hidden mb-4 shadow-sm border border-brand-200">
                     <img src="${thumb}" class="w-full h-full object-cover">
                     <div class="absolute top-2 right-2 bg-[#3e2723]/80 backdrop-blur text-[#d4af37] px-3 py-1 rounded-sm text-xs font-bold tracking-widest border border-[#b8860b] shadow-sm">${priceText}</div>
                 </div>
+                ${shareBtn}
                 <h2 class="text-xl font-bold text-brand-900 leading-tight mb-3 font-serif tracking-widest">${evt.title || '名称未設定'}</h2>
                 <div class="flex flex-wrap gap-2 mb-5">${tags}</div>
                 <div class="space-y-3 text-xs text-brand-800 bg-[#fffdf9] p-4 rounded-sm mb-5 border border-brand-200 shadow-sm relative">
@@ -1968,7 +2056,12 @@
         };
 
         window.toggleJoinEvent = async (eventId, isJoined) => {
-            if (!currentUser) return alert('ログインが必要です');
+            if (!currentUser) {
+                if (confirm('参加するには乗船（ログイン）が必要です。\nログイン画面に移動しますか？')) {
+                    window.location.href = 'login.html';
+                }
+                return;
+            }
             if (isJoining) return;
             isJoining = true;
 
@@ -2026,6 +2119,15 @@
             
             const badgeColor = job.type === '正社員' ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-brand-50 text-brand-600 border border-brand-200';
 
+            const shareUrl = `${window.location.origin}${window.location.pathname}?jobId=${job.id}`;
+            const shareBtn = `
+                <div class="flex gap-2 mb-4">
+                    <button onclick="copyToClipboard('${shareUrl}')" class="flex-1 py-2 bg-brand-50 text-brand-600 border border-brand-200 rounded-sm font-bold text-xs tracking-widest hover:bg-brand-100 transition-colors shadow-sm">
+                        <i class="fa-solid fa-share-nodes mr-1"></i> URLをコピー
+                    </button>
+                </div>
+            `;
+
             let actionBtns = '';
             const isOrganizer = currentUser && currentUser.uid === job.organizerId;
             if (isOrganizer || isAdmin) {
@@ -2042,6 +2144,7 @@
             }
 
             content.innerHTML = `
+                ${shareBtn}
                 <div class="flex items-start gap-3 mb-4 mt-2">
                     <div class="w-12 h-12 rounded-sm bg-brand-100 overflow-hidden flex-shrink-0 border border-brand-200">
                         ${job.organizerAvatar ? `<img src="${job.organizerAvatar}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-brand-400"><i class="fa-solid fa-building"></i></div>`}
