@@ -577,7 +577,7 @@
                 btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-bold rounded-sm text-[#f7f5f0] bg-[#3e2723] hover:bg-[#2a1a17] transition-all mr-2 tracking-widest font-serif">フォローする</button>`;
             }
             if (isAdmin && !isSelf) {
-                btnHtml += `<a href="profile_edit.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-brand-300 text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-sm text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
+                btnHtml += `<a href="profile.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-brand-300 text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-sm text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
                 document.getElementById('admin-badge').classList.remove('hidden');
                 document.getElementById('debug-rank-switcher').classList.remove('hidden');
             }
