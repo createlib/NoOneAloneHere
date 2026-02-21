@@ -135,7 +135,7 @@
                         <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">活動拠点 (都道府県)</label>
                         <select id="prefecture" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]"></select>
                     </div>
-                    <!-- 出身地を追加 -->
+                    <!-- 出身地 -->
                     <div>
                         <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">出身地</label>
                         <select id="birthplace" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]"></select>
@@ -170,7 +170,7 @@
                 
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-bold text-brand-700 tracking-widest">自己紹介 (Bio) <span class="text-brand-400 text-[10px] font-normal ml-1">(※300文字以上で充実度に加算)</span></label>
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">自己紹介 (Bio) <span class="text-brand-400 text-[10px] font-normal ml-1">(※300字以上で評価)</span></label>
                         <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
                     </div>
                     <textarea id="bio" rows="4" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="これまでの歩みや現在の活動内容を簡潔に。"></textarea>
@@ -178,7 +178,7 @@
                 
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-bold text-brand-700 tracking-widest">想い・メッセージ <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 300文字以上で充実度に加算)</span></label>
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">想い・メッセージ <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローに公開 / 300字以上で評価)</span></label>
                         <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
                     </div>
                     <textarea id="message" rows="5" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="コミュニティの仲間に向けた熱い想いや価値観を語ってください。"></textarea>
@@ -186,7 +186,7 @@
 
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-bold text-brand-700 tracking-widest">目標・ビジョン <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 300文字以上で充実度に加算)</span></label>
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">目標・ビジョン <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローに公開 / 300字以上で評価)</span></label>
                         <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
                     </div>
                     <textarea id="goals" rows="3" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="将来成し遂げたいことや、次に進みたい世界について。"></textarea>
@@ -214,7 +214,7 @@
                 <h3 class="text-sm font-bold text-brand-800 mb-4 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-tags text-brand-400 mr-2"></i>スキルと趣味</h3>
                 
                 <div>
-                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">スキルの選択</label>
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">スキルの選択 <span class="text-brand-400 text-[10px] font-normal ml-1">(※3つ以上で評価)</span></label>
                     <div id="skills-checkbox-container" class="space-y-3">
                         <!-- カテゴリ別のスキルチェックボックスがここに挿入されます -->
                     </div>
@@ -222,7 +222,7 @@
                 </div>
 
                 <div class="mt-8">
-                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">趣味の選択</label>
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">趣味の選択 <span class="text-brand-400 text-[10px] font-normal ml-1">(※3つ以上で評価)</span></label>
                     <div id="hobbies-checkbox-container" class="space-y-3">
                         <!-- カテゴリ別の趣味チェックボックスがここに挿入されます -->
                     </div>
@@ -233,7 +233,7 @@
             <!-- 経歴 -->
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200">
                 <h3 class="text-sm font-bold text-brand-800 mb-4 tracking-widest border-b border-brand-100 pb-2 flex items-center justify-between">
-                    <span><i class="fa-solid fa-timeline text-brand-400 mr-2"></i>経歴 <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開)</span></span>
+                    <span><i class="fa-solid fa-timeline text-brand-400 mr-2"></i>経歴 <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローに公開 / 1つ以上で評価)</span></span>
                 </h3>
                 
                 <div id="career-list-container" class="space-y-3 mb-4"></div>
@@ -261,7 +261,7 @@
 
             <!-- SNSリンク -->
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-4">
-                <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-link text-brand-400 mr-2"></i>SNS・外部リンク</h3>
+                <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-link text-brand-400 mr-2"></i>SNS・外部リンク <span class="text-brand-400 text-[10px] font-normal ml-1">(※どれか1つ以上で評価)</span></h3>
                 <div class="space-y-3">
                     <div class="flex items-center gap-3">
                         <div class="w-8 flex justify-center text-brand-400 text-xl"><i class="fa-solid fa-globe"></i></div>
@@ -294,10 +294,12 @@
             <div class="bg-brand-50 p-6 sm:p-8 rounded-sm shadow-inner border border-brand-200 mb-8">
                 <h3 class="text-sm font-bold text-brand-900 tracking-widest mb-2"><i class="fa-solid fa-chart-pie text-brand-500 mr-2"></i>プロフィール充実度について</h3>
                 <p class="text-xs text-brand-700 leading-relaxed tracking-wide">
-                    すべての項目（基本情報、パーソナリティ、マッチング情報、スキル・趣味、経歴、SNS・リンク）を入力・設定することで、プロフィール充実度が <strong>100%</strong> になります。<br>
-                    <span class="text-[10px] text-brand-500 mt-1 block">
-                        ※「自己紹介」「想い・メッセージ」「目標・ビジョン」はそれぞれ300文字以上入力することで充実度に加算されます。<br>
-                        ※配点目安: 画像(10%), 経歴(10%), 各長文テキスト項目(10%), その他選択・入力項目(各2〜5%)
+                    すべての項目（基本情報、パーソナリティ、マッチング情報、スキル・趣味、経歴、SNS・リンク）を設定・入力することで、充実度が <strong>100%</strong> になります。<br>
+                    <span class="text-[10px] text-brand-500 mt-2 block space-y-1">
+                        ・「自己紹介」「想い・メッセージ」「目標・ビジョン」は各300文字以上で評価されます。<br>
+                        ・「スキル」「趣味」は各3つ以上で評価されます。<br>
+                        ・「経歴」「SNS・外部リンク」は1つ以上の入力で評価されます。<br>
+                        ※ 基本情報の項目は入力されている項目ごとに加算されます。
                     </span>
                 </p>
             </div>
@@ -365,7 +367,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
@@ -398,7 +400,7 @@
         // Const Arrays
         const prefectures = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県","海外","その他"];
         
-        // ★ バリエーション豊かなカテゴリ分けされたスキル・趣味データ
+        // バリエーション豊かなカテゴリ分けされたスキル・趣味データ
         const skillCategories = {
             "💻 IT・エンジニアリング": ["Web制作", "WordPress", "Firebase", "ノーコード (Bubble等)", "ローコード", "アプリ開発", "プログラミング (フロントエンド)", "プログラミング (バックエンド)", "インフラ・サーバー", "データ分析", "AI・機械学習活用", "UI/UXデザイン", "セキュリティ"],
             "🎨 クリエイティブ・デザイン": ["グラフィックデザイン", "Webデザイン", "ロゴ作成", "イラストレーション", "動画撮影", "動画編集", "写真撮影", "画像加工", "3Dモデリング", "アニメーション", "サウンドクリエイト", "コピーライティング", "シナリオライティング"],
@@ -558,7 +560,7 @@
             }
         }
 
-        // ★ カテゴリ分けされたチェックボックス群を生成する関数
+        // カテゴリ分けされたチェックボックス群を生成する関数
         function createCategoryCheckboxes(data, container, nameAttr) {
             container.innerHTML = '';
             for (const [category, items] of Object.entries(data)) {
@@ -664,32 +666,38 @@
             `).join('');
         }
 
-        // ★ 充実度の計算（合計100%になるように配分）
+        // ★ 充実度の計算ロジック (合計100点)
         function calculateProfileScore(data) {
             let score = 0;
-            // 配点: 画像(10), 経歴(10), 各テキスト項目(10〜10), その他選択項目(各2〜5)
-            const w = { 
-                name: 3, furigana: 2, jobTitle: 5, prefecture: 5, birthplace: 5, gender: 5, birthDate: 5, 
-                photoURL: 10, bio: 10, message: 10, goals: 10, 
-                canOffer: 5, lookingFor: 5, skills: 5, hobbies: 5, career: 10 
-            };
             
-            if (data.name) score += w.name;
-            if (data.furigana) score += w.furigana;
-            if (data.jobTitle) score += w.jobTitle;
-            if (data.prefecture) score += w.prefecture;
-            if (data.birthplace) score += w.birthplace;
-            if (data.gender && data.gender !== '無回答') score += w.gender;
-            if (data.birthDate) score += w.birthDate;
-            if (data.photoURL) score += w.photoURL;
-            if (data.bio && data.bio.length >= 300) score += w.bio;
-            if (data.message && data.message.length >= 300) score += w.message;
-            if (data.canOffer && data.canOffer.length > 0) score += w.canOffer;
-            if (data.lookingFor && data.lookingFor.length > 0) score += w.lookingFor;
-            if (data.skills && data.skills.length > 0) score += w.skills;
-            if (data.hobbies && data.hobbies.length > 0) score += w.hobbies;
-            if (data.goals && data.goals.length >= 300) score += w.goals;
-            if (data.career && data.career.length > 0) score += w.career;
+            // 基本情報 (計40点: 各5点)
+            if (data.photoURL) score += 5;
+            if (data.name) score += 5;
+            if (data.furigana) score += 5;
+            if (data.jobTitle) score += 5;
+            if (data.prefecture) score += 5;
+            if (data.birthplace) score += 5;
+            if (data.gender && data.gender !== '無回答') score += 5;
+            if (data.birthDate) score += 5;
+            
+            // パーソナリティ (計30点: 各300文字以上で10点)
+            if (data.bio && data.bio.length >= 300) score += 10;
+            if (data.message && data.message.length >= 300) score += 10;
+            if (data.goals && data.goals.length >= 300) score += 10;
+            
+            // マッチング情報 (計10点: 各1つ以上で5点)
+            if (data.canOffer && data.canOffer.length > 0) score += 5;
+            if (data.lookingFor && data.lookingFor.length > 0) score += 5;
+            
+            // スキルと趣味 (計10点: 各3つ以上で5点)
+            if (data.skills && data.skills.length >= 3) score += 5;
+            if (data.hobbies && data.hobbies.length >= 3) score += 5;
+            
+            // 経歴 (計5点: 1つ以上で5点)
+            if (data.career && data.career.length > 0) score += 5;
+            
+            // SNSリンク (計5点: どれか1つ以上で5点)
+            if (data.websiteUrl || data.snsInstagram || data.snsX) score += 5;
             
             return Math.min(score, 100);
         }
@@ -701,7 +709,7 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>保存中...';
 
             try {
-                const uid = editUid; // ★保存先・画像アップロード先を対象のUIDにする
+                const uid = editUid; // 保存先を対象のUIDにする
                 const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
                 const oldSnap = await getDoc(privateRef);
                 let currentPhotoUrl = oldSnap.exists() ? oldSnap.data().photoURL : null;
@@ -737,7 +745,7 @@
                     furigana: getVal('furigana'),
                     jobTitle: getVal('jobTitle'),
                     prefecture: getVal('prefecture'),
-                    birthplace: getVal('birthplace'), // 出身地を追加
+                    birthplace: getVal('birthplace'),
                     gender: getVal('gender'),
                     birthDate: getVal('birthDate'),
                     birthVisibility: getVal('birthVisibility'),
@@ -803,7 +811,6 @@
                 btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> 航海録を保存する';
             }
         };
-
     </script>
 </body>
 </html>
