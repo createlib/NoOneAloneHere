@@ -344,10 +344,16 @@
                         </div>
                     </div>
 
-                    <!-- Tags Section -->
-                    <div id="section-tags" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6">
-                        <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">スキル・趣味</h2>
-                        <div id="tags-container" class="flex flex-wrap gap-2"><span class="text-sm text-brand-300 italic">未設定</span></div>
+                    <!-- Skills & Hobbies Section -->
+                    <div id="section-tags" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
+                            <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">スキル</h3>
+                            <div id="skills-container" class="flex flex-wrap gap-2 relative z-10"><span class="text-sm text-brand-300 italic">未設定</span></div>
+                        </div>
+                        <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
+                            <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">趣味</h3>
+                            <div id="hobbies-container" class="flex flex-wrap gap-2 relative z-10"><span class="text-sm text-brand-300 italic">未設定</span></div>
+                        </div>
                     </div>
 
                     <!-- Goals Section -->
@@ -761,17 +767,28 @@
             }
 
             if (!applyRestriction) {
-                // Tags
-                const tagsContainer = document.getElementById('tags-container');
-                if (tagsContainer) {
-                    tagsContainer.innerHTML = '';
-                    const allTags = [...(data.skills || []), ...(data.hobbies || [])];
-                    if (allTags.length > 0) {
-                        allTags.forEach(tag => {
-                            tagsContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
+                // Skills & Hobbies
+                const skillsContainer = document.getElementById('skills-container');
+                if (skillsContainer) {
+                    skillsContainer.innerHTML = '';
+                    if (data.skills && data.skills.length > 0) {
+                        data.skills.forEach(tag => {
+                            skillsContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
                         });
                     } else {
-                        tagsContainer.innerHTML = '<span class="text-sm text-brand-300 italic">未設定</span>';
+                        skillsContainer.innerHTML = '<span class="text-sm text-brand-300 italic">未設定</span>';
+                    }
+                }
+                
+                const hobbiesContainer = document.getElementById('hobbies-container');
+                if (hobbiesContainer) {
+                    hobbiesContainer.innerHTML = '';
+                    if (data.hobbies && data.hobbies.length > 0) {
+                        data.hobbies.forEach(tag => {
+                            hobbiesContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
+                        });
+                    } else {
+                        hobbiesContainer.innerHTML = '<span class="text-sm text-brand-300 italic">未設定</span>';
                     }
                 }
                 
