@@ -26,16 +26,16 @@
                     fontFamily: { serif: ['Noto Serif JP', 'serif'] },
                     colors: { 
                         brand: { 
-                            50: '#f7f5f0',   // bg
-                            100: '#e8dfd1',  // border light
-                            200: '#dcd4c6',  // border medium
-                            300: '#c8b9a6',  // border dark
-                            400: '#a09080',  // text muted
-                            500: '#8b6a4f',  // accent
-                            600: '#725b3f',  // accent hover
-                            700: '#5c4a3d',  // text body
-                            800: '#4a3b32',  // text heading
-                            900: '#3e2723'   // text dark
+                            50: '#f7f5f0',   
+                            100: '#e8dfd1',  
+                            200: '#dcd4c6',  
+                            300: '#c8b9a6',  
+                            400: '#a09080',  
+                            500: '#8b6a4f',  
+                            600: '#725b3f',  
+                            700: '#5c4a3d',  
+                            800: '#4a3b32',  
+                            900: '#3e2723'   
                         } 
                     }
                 }
@@ -153,7 +153,7 @@
                 </div>
 
                 <!-- PC用 UPGRADEボタン -->
-                <a href="upgrade.html" class="hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-white text-xs font-bold rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border border-[#996515]">
+                <a href="upgrade.html" class="hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] text-xs font-bold rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border border-[#996515]">
                     <i class="fa-solid fa-shield-halved mr-1"></i> 契約変更
                 </a>
                 
@@ -187,7 +187,7 @@
                 <i class="fa-solid fa-handshake text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マッチ</span>
             </button>
-            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600">
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px]">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-bold tracking-widest">マイページ</span>
             </a>
@@ -320,7 +320,7 @@
                         <div id="message-container" class="hidden">
                             <div class="relative mt-6">
                                 <i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-4 -left-2 z-0"></i>
-                                <!-- マークダウン対応クラスを追加 -->
+                                <!-- マークダウン対応クラスを付与 -->
                                 <div id="profile-message" class="relative z-10 prose prose-sm max-w-none prose-stone text-brand-700 pl-6"></div>
                             </div>
                         </div>
@@ -344,7 +344,7 @@
                         </div>
                     </div>
 
-                    <!-- Skills & Hobbies Section -->
+                    <!-- Skills & Hobbies Section (2カラム分割対応) -->
                     <div id="section-tags" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
                             <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">スキル</h3>
@@ -359,7 +359,7 @@
                     <!-- Goals Section -->
                     <div id="section-goals" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6">
                         <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">目標・ビジョン</h2>
-                        <!-- マークダウン対応クラスを追加 -->
+                        <!-- マークダウン対応クラスを付与 -->
                         <div id="profile-goals" class="prose prose-sm max-w-none prose-stone text-brand-700 mt-2">未設定</div>
                     </div>
 
@@ -687,7 +687,17 @@
             setElText('profile-name', data.name || data.userId || '（名称未設定）');
             setElText('profile-id', '@' + (data.userId || '-'));
             setElText('profile-job', data.jobTitle || '職業未設定');
-            setElText('profile-location', data.prefecture || '未設定');
+            
+            // 出身地と活動拠点の表示統合
+            let locStr = '-';
+            if(data.prefecture && data.birthplace) {
+                locStr = `${data.prefecture} (出身: ${data.birthplace})`;
+            } else if (data.prefecture) {
+                locStr = data.prefecture;
+            } else if (data.birthplace) {
+                locStr = `出身: ${data.birthplace}`;
+            }
+            setElText('profile-location', locStr);
             
             // ★ Bio をリッチテキスト(Markdown)としてパース
             setElHtml('profile-bio', formatText(data.bio || ''));
@@ -791,7 +801,7 @@
                         hobbiesContainer.innerHTML = '<span class="text-sm text-brand-300 italic">未設定</span>';
                     }
                 }
-                
+
                 // Matching
                 const canOfferList = document.getElementById('list-can-offer');
                 if (canOfferList) {
