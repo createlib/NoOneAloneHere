@@ -107,14 +107,14 @@
     </div>
 
     <!-- Notification -->
-    <div id="notification" class="fixed top-10 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-sm w-[90%] bg-[#3e2723] text-[#f7f5f0] shadow-xl border border-[#b8860b] rounded-sm p-4 text-center">
+    <div id="notification" class="fixed top-10 left-1/2 transform -translate-x-1/2 z-50 hidden max-w-sm w-[90%] bg-[#3e2723] text-[#f7f5f0] shadow-xl border border-[#b8860b] rounded-sm p-4 text-center transition-all duration-300">
         <p id="notif-message" class="text-xs font-bold tracking-widest"></p>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ▼▼▼▼ Firebase Config ▼▼▼▼
         const firebaseConfig = {
@@ -125,6 +125,7 @@
             messagingSenderId: "803209683213",
             appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
         };
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -167,7 +168,7 @@
                         if (userData.email) {
                             email = userData.email;
                         } else {
-                            throw new Error("データエラー：登録した「メールアドレス」を直接入力してログインしてください。");
+                            throw new Error("初期設定が完了していません。一度「メールアドレス」でログインし、プロフィールを保存し直してください。");
                         }
                     } else {
                         throw new Error("指定されたユーザーIDは見つかりません。");
@@ -180,7 +181,7 @@
             } catch (error) {
                 console.error(error);
                 let msg = 'ログインに失敗しました。';
-                if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') msg = 'メールアドレスまたはパスワードが間違っています。';
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') msg = 'ID・メールアドレス、またはパスワードが間違っています。';
                 else if (error.code === 'auth/user-not-found') msg = 'ユーザーが見つかりません。';
                 else if (error.message) msg = error.message;
                 
@@ -208,13 +209,16 @@
             const msgEl = document.getElementById('notif-message');
             
             if(type === 'error') {
-                notif.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-[90%] bg-[#fffdf9] text-red-700 shadow-xl border border-brand-200 rounded-sm p-4 text-center';
+                notif.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-[90%] bg-[#fffdf9] text-red-700 shadow-xl border border-brand-200 rounded-sm p-4 text-center transition-all duration-300';
             } else {
-                notif.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-[90%] bg-[#3e2723] text-[#f7f5f0] shadow-xl border border-[#b8860b] rounded-sm p-4 text-center';
+                notif.className = 'fixed top-10 left-1/2 transform -translate-x-1/2 z-50 max-w-sm w-[90%] bg-[#3e2723] text-[#f7f5f0] shadow-xl border border-[#b8860b] rounded-sm p-4 text-center transition-all duration-300';
             }
             msgEl.textContent = msg;
-            notif.classList.remove('hidden');
-            setTimeout(() => notif.classList.add('hidden'), 3000);
+            notif.classList.remove('hidden', 'translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                notif.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => notif.classList.add('hidden'), 300);
+            }, 3000);
         };
     </script>
 </body>
