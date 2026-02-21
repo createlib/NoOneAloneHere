@@ -488,29 +488,20 @@
                 }
                 
                 try {
+                    // ★ 修正：公開データから「紹介者IDが自分のID」であるユーザーを一括取得
                     const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
-                    const snap = await getDocs(usersRef);
+                    const q = query(usersRef, where("referrerId", "==", myProfile.userId));
+                    const snap = await getDocs(q);
                     
-                    const promises = snap.docs.map(async (d) => {
-                        try {
-                            const uid = d.id;
-                            const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
-                            const profileSnap = await getDoc(profileRef);
-                            if (profileSnap.exists()) {
-                                const pData = profileSnap.data();
-                                if (pData.referrerId === myProfile.userId) {
-                                    return pData;
-                                }
-                            }
-                        } catch(err) {
-                            // セキュリティルール等で読み取れない場合はスキップ
-                        }
-                        return null;
+                    snap.forEach(d => {
+                        const data = d.data();
+                        referrals.push({
+                            name: data.name,
+                            userId: data.userId,
+                            photoURL: data.photoURL || '',
+                            profileScore: data.profileScore || 0
+                        });
                     });
-                    
-                    const results = await Promise.all(promises);
-                    referrals = results.filter(r => r !== null);
-                    
                 } catch (e) {
                     console.error("Referral fetch error", e);
                     listContainer.innerHTML = '<div class="text-center text-red-500 py-8 text-xs font-bold tracking-widest">データの取得に失敗しました。</div>';
