@@ -27,16 +27,16 @@
                     fontFamily: { serif: ['Noto Serif JP', 'serif'] },
                     colors: { 
                         brand: { 
-                            50: '#f7f5f0',   // bg
-                            100: '#e8dfd1',  // border light
-                            200: '#dcd4c6',  // border medium
-                            300: '#c8b9a6',  // border dark
-                            400: '#a09080',  // text muted
-                            500: '#8b6a4f',  // accent
-                            600: '#725b3f',  // accent hover
-                            700: '#5c4a3d',  // text body
-                            800: '#4a3b32',  // text heading
-                            900: '#3e2723'   // text dark
+                            50: '#f7f5f0',   
+                            100: '#e8dfd1',  
+                            200: '#dcd4c6',  
+                            300: '#c8b9a6',  
+                            400: '#a09080',  
+                            500: '#8b6a4f',  
+                            600: '#725b3f',  
+                            700: '#5c4a3d',  
+                            800: '#4a3b32',  
+                            900: '#3e2723'   
                         } 
                     }
                 }
@@ -62,7 +62,7 @@
         }
 
         /* View Areas */
-        #view-map { height: calc(100vh - 120px); width: 100%; z-index: 0; }
+        #view-map { height: calc(100vh - 120px - env(safe-area-inset-bottom)); width: 100%; z-index: 0; }
         #view-list-events, #view-list-jobs { 
             height: calc(100vh - 120px - env(safe-area-inset-bottom)); 
             overflow-y: auto; 
@@ -220,7 +220,7 @@
 
             <div id="map" class="w-full h-full"></div>
             
-            <!-- Location Adjustment UI inside Map View (位置調整UIの前面・固定化) -->
+            <!-- Location Adjustment UI inside Map View -->
             <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
                 <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
                     <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-2 text-lg"></i>赤色のピンを動かして調整</p>
@@ -278,7 +278,7 @@
     </div>
 
     <!-- Create FAB & Menu -->
-    <div class="auth-required fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end hidden">
+    <div class="auth-required fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end" style="display: none;">
         <!-- Floating Menu -->
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
             <button onclick="openCreateModal('event')" class="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest border-b border-brand-100 flex items-center justify-between">
@@ -290,7 +290,7 @@
             </button>
         </div>
         <!-- FAB -->
-        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
+        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="hidden w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
             <i class="fa-solid fa-plus text-xl transition-transform duration-300" id="fab-icon"></i>
         </button>
     </div>
@@ -799,7 +799,7 @@
         let currentUser = null;
         let myProfile = null;
         let userLocation = null; 
-        let isAdmin = false; // エラー防止のためトップレベルで定義
+        let isAdmin = false; 
         
         let currentViewMode = 'map'; 
 
@@ -819,6 +819,22 @@
         
         let redIcon, blueIcon;
 
+        function initLeafletIcons() {
+            if (typeof L !== 'undefined' && !redIcon) {
+                redIcon = new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                });
+
+                blueIcon = new L.Icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                });
+            }
+        }
+
         // ---------------------------------------------------------
         // Safe DOM Getter Helper
         // ---------------------------------------------------------
@@ -832,21 +848,6 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Leafletのアイコン初期化（L is not defined エラーを防止）
-            if (typeof L !== 'undefined') {
-                redIcon = new L.Icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                });
-
-                blueIcon = new L.Icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                });
-            }
-
             initMap();
             renderEventTagButtons();
             initFilterOptions();
@@ -911,9 +912,11 @@
                         if (myProfile.userId === 'admin') isAdmin = true;
                         
                         const rank = myProfile.membershipRank || 'arrival';
+                        const fab = document.getElementById('create-fab-btn');
                         if (rank !== 'arrival' || isAdmin) {
-                            const fab = document.getElementById('create-fab-btn');
                             if(fab) fab.classList.remove('hidden');
+                        } else {
+                            if(fab) fab.classList.add('hidden');
                         }
                     } else {
                         myProfile = { membershipRank: 'arrival' };
@@ -954,7 +957,7 @@
         }
 
         window.handleAuthAction = () => {
-            if (currentUser) {
+            if (currentUser || isAdminMock) {
                 if (isAdminMock) localStorage.removeItem('isAdminMock');
                 signOut(auth);
                 window.location.reload(); 
@@ -1214,7 +1217,14 @@
         // ==========================================
         function initMap() {
             const mapEl = document.getElementById('map');
-            if(!mapEl || typeof L === 'undefined') return;
+            if(!mapEl) return;
+
+            if (typeof L === 'undefined') {
+                setTimeout(initMap, 500); 
+                return;
+            }
+
+            initLeafletIcons();
 
             map = L.map('map', { zoomControl: false }).setView([35.6895, 139.6917], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1231,7 +1241,8 @@
                     (error) => {
                         console.log("Location access denied or error");
                         filterData(); 
-                    }
+                    },
+                    { timeout: 5000 }
                 );
             } else {
                 filterData();
@@ -1342,6 +1353,8 @@
 
         function renderMarkers(eventsToRender = [], jobsToRender = []) {
             if (!map || typeof L === 'undefined') return;
+            initLeafletIcons();
+
             markers.forEach(m => map.removeLayer(m));
             markers = [];
             
@@ -1532,8 +1545,9 @@
                         }
                     }
 
-                    if (tempMarker) map.removeLayer(tempMarker);
-                    if (selectedCoordsEvent && typeof L !== 'undefined') {
+                    if (tempMarker && map) map.removeLayer(tempMarker);
+                    if (selectedCoordsEvent && typeof L !== 'undefined' && map) {
+                        initLeafletIcons();
                         tempMarker = L.marker(selectedCoordsEvent, { draggable: true, icon: redIcon }).addTo(map);
                         tempMarker.on('dragend', function(e) { selectedCoordsEvent = e.target.getLatLng(); });
                     }
@@ -1575,8 +1589,9 @@
                     
                     selectedCoordsJob = (existingData?.lat && existingData?.lng) ? { lat: existingData.lat, lng: existingData.lng } : null;
 
-                    if (tempMarker) map.removeLayer(tempMarker);
-                    if (selectedCoordsJob && typeof L !== 'undefined') {
+                    if (tempMarker && map) map.removeLayer(tempMarker);
+                    if (selectedCoordsJob && typeof L !== 'undefined' && map) {
+                        initLeafletIcons();
                         tempMarker = L.marker(selectedCoordsJob, { draggable: true, icon: blueIcon }).addTo(map);
                         tempMarker.on('dragend', function(e) { selectedCoordsJob = e.target.getLatLng(); });
                     }
@@ -1636,8 +1651,9 @@
             if(listEl) listEl.classList.add('hidden');
             setVal(nameInputId, place.display_name.split(',')[0]);
             
-            if (tempMarker) map.removeLayer(tempMarker);
-            if (typeof L !== 'undefined') {
+            if (tempMarker && map) map.removeLayer(tempMarker);
+            if (typeof L !== 'undefined' && map) {
+                initLeafletIcons();
                 tempMarker = L.marker(coords, { draggable: true, icon: icon }).addTo(map);
                 tempMarker.on('dragend', function(e) { 
                     if (type === 'event') selectedCoordsEvent = e.target.getLatLng(); 
@@ -1651,6 +1667,7 @@
             currentAdjustType = type;
             
             if (typeof L === 'undefined' || !map) return alert("マップの読み込みに失敗しました");
+            initLeafletIcons();
 
             if (type === 'event' && !selectedCoordsEvent) {
                 const center = map.getCenter();
@@ -2053,9 +2070,10 @@
 
             let actionBtns = '';
             if (isOrganizer || isAdmin) {
+                const eventJson = JSON.stringify(evt).replace(/'/g, "&apos;");
                 actionBtns = `
                     <div class="flex gap-2 mt-3 pt-4 border-t border-brand-200">
-                        <button onclick="openCreateModal('event', allEvents.find(e => e.id === '${evt.id}'))" class="flex-1 py-2 rounded-sm text-brand-700 font-bold border border-brand-200 hover:bg-brand-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
+                        <button onclick='openCreateModal("event", ${eventJson})' class="flex-1 py-2 rounded-sm text-brand-700 font-bold border border-brand-200 hover:bg-brand-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
                             <i class="fa-solid fa-pen mr-1"></i> 編集
                         </button>
                         <button onclick="deleteEvent('${evt.id}')" class="flex-1 py-2 rounded-sm text-red-700 font-bold border border-brand-200 hover:bg-red-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
@@ -2146,9 +2164,10 @@
             let actionBtns = '';
             const isOrganizer = currentUser && currentUser.uid === job.organizerId;
             if (isOrganizer || isAdmin) {
+                const jobJson = JSON.stringify(job).replace(/'/g, "&apos;");
                 actionBtns = `
                     <div class="flex gap-2 mt-4 pt-4 border-t border-brand-200">
-                        <button onclick="openCreateModal('job', allJobs.find(j => j.id === '${job.id}'))" class="flex-1 py-2 rounded-sm text-brand-700 font-bold border border-brand-200 hover:bg-brand-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
+                        <button onclick='openCreateModal("job", ${jobJson})' class="flex-1 py-2 rounded-sm text-brand-700 font-bold border border-brand-200 hover:bg-brand-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
                             <i class="fa-solid fa-pen mr-1"></i> 編集
                         </button>
                         <button onclick="deleteJob('${job.id}')" class="flex-1 py-2 rounded-sm text-red-700 font-bold border border-brand-200 hover:bg-red-50 transition-colors text-xs tracking-widest bg-white shadow-sm">
