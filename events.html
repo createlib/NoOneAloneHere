@@ -17,8 +17,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Leaflet CSS (Map) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet CSS & JS (Map) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
     <script>
         tailwind.config = {
@@ -63,6 +64,8 @@
 
         /* View Areas */
         #view-map { height: calc(100vh - 120px - env(safe-area-inset-bottom)); width: 100%; z-index: 0; }
+        #map { height: 100%; width: 100%; }
+        
         #view-list-events, #view-list-jobs { 
             height: calc(100vh - 120px - env(safe-area-inset-bottom)); 
             overflow-y: auto; 
@@ -98,25 +101,14 @@
         .sheet-closed { transform: translateY(100%); }
         .sheet-open { transform: translateY(0%) !important; }
         
-        /* PC用アニメーション（右からスライド） */
         @media (min-width: 1024px) {
             .sheet-closed { transform: translateX(100%); }
             .sheet-open { transform: translateX(0%) !important; }
         }
 
         /* Tag Selection */
-        .tag-btn.selected { 
-            background-color: #8b6a4f !important; 
-            color: #fffdf9 !important; 
-            border-color: #8b6a4f !important; 
-        }
-
-        /* フィルター内のタグチェックボックス */
-        .event-filter-tag:checked + div {
-            background-color: #8b6a4f !important;
-            border-color: #8b6a4f !important;
-            color: #fffdf9 !important;
-        }
+        .tag-btn.selected { background-color: #8b6a4f !important; color: #fffdf9 !important; border-color: #8b6a4f !important; }
+        .event-filter-tag:checked + div { background-color: #8b6a4f !important; border-color: #8b6a4f !important; color: #fffdf9 !important; }
 
         /* Forms */
         input:focus, select:focus, textarea:focus {
@@ -125,7 +117,7 @@
             box-shadow: 0 0 0 1px #8b6a4f !important;
         }
 
-        /* Accordion in Modals */
+        /* Accordion */
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] summary ~ * { animation: slideDown 0.3s ease-in-out; }
@@ -159,9 +151,7 @@
                 </a>
             </div>
 
-            <!-- Header Actions -->
             <div class="flex items-center gap-3">
-                <!-- PC Navigation Links -->
                 <div class="hidden lg:flex items-center gap-6 mr-4">
                     <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海(ホーム)</a>
                     <a href="events.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント・仕事</a>
@@ -197,7 +187,7 @@
                     <i class="fa-solid fa-briefcase"></i> 仕事・依頼
                 </button>
             </div>
-            <!-- Filter Button (Common) -->
+            <!-- Filter Button -->
             <button onclick="toggleFilters()" class="ml-3 p-2 bg-[#fffdf9] border border-brand-200 text-brand-600 hover:bg-brand-50 rounded-sm transition-colors relative shadow-sm flex-shrink-0" title="絞り込み">
                 <i class="fa-solid fa-sliders"></i>
             </button>
@@ -205,11 +195,10 @@
     </div>
 
     <!-- Main Content Area -->
-    <div class="mt-[120px] w-full h-full relative z-0">
+    <div class="mt-[120px] w-full flex-1 relative z-0">
         
         <!-- View 1: Map -->
-        <div id="view-map" class="block relative h-full">
-            <!-- Search in Map -->
+        <div id="view-map" class="block relative">
             <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md pointer-events-none">
                 <div class="relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
@@ -218,9 +207,8 @@
                 </div>
             </div>
 
-            <div id="map" class="w-full h-full"></div>
+            <div id="map"></div>
             
-            <!-- Location Adjustment UI inside Map View -->
             <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
                 <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
                     <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-2 text-lg"></i>赤色のピンを動かして調整</p>
@@ -243,10 +231,7 @@
                 <p class="text-xs tracking-widest font-bold">航海図を読み込み中...</p>
             </div>
             
-            <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
-                <!-- List injected here -->
-            </div>
-            
+            <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden"></div>
             <div id="event-list-empty" class="text-center py-10 text-brand-400 hidden">
                 <i class="fa-solid fa-anchor-circle-xmark text-3xl mb-3 opacity-50"></i>
                 <p class="text-sm font-bold tracking-widest">条件に合うイベントが見つかりません。</p>
@@ -265,10 +250,7 @@
                 <p class="text-xs tracking-widest font-bold">依頼書を探しています...</p>
             </div>
             
-            <div id="job-list-container" class="space-y-4 hidden">
-                <!-- List injected here -->
-            </div>
-            
+            <div id="job-list-container" class="space-y-4 hidden"></div>
             <div id="job-list-empty" class="text-center py-10 text-brand-400 hidden">
                 <i class="fa-solid fa-anchor-circle-xmark text-3xl mb-3 opacity-50"></i>
                 <p class="text-sm font-bold tracking-widest">条件に合う仕事・依頼が見つかりません。</p>
@@ -277,9 +259,8 @@
 
     </div>
 
-    <!-- Create FAB & Menu -->
-    <div class="auth-required fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end" style="display: none;">
-        <!-- Floating Menu -->
+    <!-- Create FAB & Menu (常に表示するよう修正) -->
+    <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
             <button onclick="openCreateModal('event')" class="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest border-b border-brand-100 flex items-center justify-between">
                 <span><i class="fa-solid fa-champagne-glasses text-brand-500 w-5"></i> イベントを企画</span>
@@ -289,8 +270,7 @@
                 <i class="fa-solid fa-lock text-brand-300 text-xs group-hover:text-brand-500" title="BUILDER以上限定"></i>
             </button>
         </div>
-        <!-- FAB -->
-        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="hidden w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
+        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
             <i class="fa-solid fa-plus text-xl transition-transform duration-300" id="fab-icon"></i>
         </button>
     </div>
@@ -401,7 +381,6 @@
             </div>
         </div>
     </div>
-
 
     <!-- Details Sheet (Event) -->
     <div id="event-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture hidden">
@@ -738,7 +717,7 @@
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Navigation (Mobile Only) -->
     <nav class="fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="flex justify-around items-center h-16">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
@@ -819,6 +798,7 @@
         
         let redIcon, blueIcon;
 
+        // Leafletアイコンの安全な初期化
         function initLeafletIcons() {
             if (typeof L !== 'undefined' && !redIcon) {
                 redIcon = new L.Icon({
@@ -848,6 +828,7 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            initLeafletIcons();
             initMap();
             renderEventTagButtons();
             initFilterOptions();
@@ -895,8 +876,6 @@
             if (isAdminMock) {
                 currentUser = { uid: 'test_admin_uid' };
                 isAdmin = true;
-                const fab = document.getElementById('create-fab-btn');
-                if(fab) fab.classList.remove('hidden');
                 myProfile = { name: '管理者', userId: 'admin', membershipRank: 'covenant' };
                 updateNavForAuth(true);
                 loadAllData();
@@ -910,14 +889,6 @@
                     if (docSnap.exists()) {
                         myProfile = docSnap.data();
                         if (myProfile.userId === 'admin') isAdmin = true;
-                        
-                        const rank = myProfile.membershipRank || 'arrival';
-                        const fab = document.getElementById('create-fab-btn');
-                        if (rank !== 'arrival' || isAdmin) {
-                            if(fab) fab.classList.remove('hidden');
-                        } else {
-                            if(fab) fab.classList.add('hidden');
-                        }
                     } else {
                         myProfile = { membershipRank: 'arrival' };
                     }
@@ -932,8 +903,6 @@
                 myProfile = null;
                 isAdmin = false;
                 updateNavForAuth(false);
-                const fab = document.getElementById('create-fab-btn');
-                if(fab) fab.classList.add('hidden');
                 // 未ログインでもデータは表示する
                 loadAllData();
             }
@@ -1241,8 +1210,7 @@
                     (error) => {
                         console.log("Location access denied or error");
                         filterData(); 
-                    },
-                    { timeout: 5000 }
+                    }
                 );
             } else {
                 filterData();
@@ -1486,7 +1454,10 @@
             const rank = myProfile.membershipRank || 'arrival';
 
             if (type === 'event') {
-                if (rank === 'arrival' && !isAdminMock && !isAdmin) return alert('イベント企画は SETTLER 以上の機能です。契約変更をご検討ください。');
+                if (rank === 'arrival' && !isAdminMock && !isAdmin) {
+                    alert('イベント企画は SETTLER 以上の機能です。契約変更をご検討ください。');
+                    return;
+                }
                 
                 const modal = document.getElementById('event-modal');
                 if(modal) modal.classList.remove('hidden');
@@ -1554,8 +1525,10 @@
                 } catch(e) { console.log(e); }
 
             } else if (type === 'job') {
-                const allowedRanks = ['builder', 'guardian', 'covenant'];
-                if (!allowedRanks.includes(rank) && !isAdminMock && !isAdmin) return alert('仕事・依頼の掲載は BUILDER 以上の機能です。契約変更をご検討ください。');
+                if (rank !== 'covenant' && rank !== 'guardian' && rank !== 'builder' && !isAdminMock && !isAdmin) {
+                    alert('仕事・依頼の掲載は BUILDER 以上の機能です。契約変更をご検討ください。');
+                    return;
+                }
                 
                 const modal = document.getElementById('job-modal');
                 if(modal) modal.classList.remove('hidden');
