@@ -245,14 +245,19 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        
         <!-- ARRIVAL -->
-        <div class="bg-[#fffdf9] p-8 border border-[#c8b9a6] flex flex-col relative overflow-hidden">
-          <div class="flex items-baseline gap-2 mb-4">
-            <h3 class="text-2xl font-bold text-[#3e2723]">ARRIVAL</h3>
-            <span class="text-sm text-[#8b6a4f]">たどり着いた人</span>
+        <div class="bg-[#fffdf9] p-6 sm:p-8 border border-[#c8b9a6] flex flex-col relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow">
+          <!-- Image -->
+          <div class="w-full h-48 sm:h-56 mb-6 overflow-hidden bg-[#f7f5f0] border border-[#e8dfd1] rounded-sm relative flex items-center justify-center">
+            <img src="img/ARRIVAL.png" alt="ARRIVAL" class="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-105 p-4" onerror="this.src='img/icon.png'; this.classList.add('opacity-20');" />
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+            <h3 class="text-2xl font-bold text-[#3e2723] tracking-widest font-serif">ARRIVAL</h3>
+            <span class="text-sm text-[#8b6a4f] font-bold tracking-widest">たどり着いた人</span>
           </div>
           <div class="mb-2 flex-grow">
-            <p class="font-bold text-[#4a3b32] mb-2 border-b border-[#e8dfd1] pb-2">「この箱舟に、たどり着いた。」</p>
+            <p class="font-bold text-[#4a3b32] mb-3 border-b border-[#e8dfd1] pb-2">「この箱舟に、たどり着いた。」</p>
             <p class="text-sm text-[#5c4a3d] leading-relaxed mb-4">
               まだ役割は持たないが、世界の一部になっている。<br />
               箱舟の存在を知り、この航海に身を委ねることを選んだ人。
@@ -264,13 +269,17 @@
         </div>
 
         <!-- SETTLER -->
-        <div class="bg-[#fffdf9] p-8 border-2 border-[#8b6a4f] flex flex-col relative shadow-lg">
-          <div class="flex items-baseline gap-2 mb-4">
-            <h3 class="text-2xl font-bold text-[#3e2723]">SETTLER</h3>
-            <span class="text-sm text-[#8b6a4f]">暮らす人</span>
+        <div class="bg-[#fffdf9] p-6 sm:p-8 border-2 border-[#8b6a4f] flex flex-col relative shadow-lg group hover:shadow-xl transition-shadow">
+          <!-- Image -->
+          <div class="w-full h-48 sm:h-56 mb-6 overflow-hidden bg-[#f7f5f0] border border-[#e8dfd1] rounded-sm relative flex items-center justify-center">
+            <img src="img/SETTLER.png" alt="SETTLER" class="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-105 p-4" onerror="this.src='img/icon.png'; this.classList.add('opacity-20');" />
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+            <h3 class="text-2xl font-bold text-[#3e2723] tracking-widest font-serif">SETTLER</h3>
+            <span class="text-sm text-[#8b6a4f] font-bold tracking-widest">暮らす人</span>
           </div>
           <div class="mb-2 flex-grow">
-            <p class="font-bold text-[#4a3b32] mb-2 border-b border-[#e8dfd1] pb-2">「ここで暮らすことを選んだ。」</p>
+            <p class="font-bold text-[#4a3b32] mb-3 border-b border-[#e8dfd1] pb-2">「ここで暮らすことを選んだ。」</p>
             <p class="text-sm text-[#5c4a3d] leading-relaxed mb-4">
               ただの乗客から一歩進んだ存在。<br />
               箱舟の中でただ生き延びるだけでなく、生活を営み始めた人。
@@ -285,61 +294,88 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 opacity-70">
+        
         <!-- BUILDER -->
-        <div class="bg-gray-100 p-8 border border-gray-300 flex flex-col relative grayscale">
-          <div class="flex items-baseline gap-2 mb-4">
-            <h3 class="text-xl font-bold text-gray-700">BUILDER</h3>
-            <span class="text-sm text-gray-500">創る人</span>
+        <div class="bg-gray-100 p-6 sm:p-8 border border-gray-300 flex flex-col relative grayscale group">
+          <div class="w-full h-40 sm:h-48 mb-6 overflow-hidden bg-gray-50 border border-gray-200 rounded-sm relative flex items-center justify-center">
+            <img src="img/BUILDER.png" alt="BUILDER" class="max-w-full max-h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-105 p-2" onerror="this.src='img/icon.png'; this.classList.add('opacity-20');" />
           </div>
-          <p class="font-bold text-gray-600 mb-2">「未来を創る側に回った。」</p>
+          <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+            <h3 class="text-xl font-bold text-gray-700 tracking-widest font-serif">BUILDER</h3>
+            <span class="text-sm text-gray-500 font-bold tracking-widest">創る人</span>
+          </div>
+          <p class="font-bold text-gray-600 mb-3 border-b border-gray-200 pb-2">「未来を創る側に回った。」</p>
           <p class="text-sm text-gray-500 leading-relaxed">
             仕組み・文化・プロジェクトを生む側。<br/>航海のあいだ、次の世界に何を持ち込むかを形にし始めた人。
           </p>
         </div>
 
         <!-- GUARDIAN -->
-        <div class="bg-gray-100 p-8 border border-gray-300 flex flex-col relative grayscale">
-          <div class="flex items-baseline gap-2 mb-4">
-            <h3 class="text-xl font-bold text-gray-700">GUARDIAN</h3>
-            <span class="text-sm text-gray-500">守る人</span>
+        <div class="bg-gray-100 p-6 sm:p-8 border border-gray-300 flex flex-col relative grayscale group">
+          <div class="w-full h-40 sm:h-48 mb-6 overflow-hidden bg-gray-50 border border-gray-200 rounded-sm relative flex items-center justify-center">
+            <img src="img/GUARDIAN.png" alt="GUARDIAN" class="max-w-full max-h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-105 p-2" onerror="this.src='img/icon.png'; this.classList.add('opacity-20');" />
           </div>
-          <p class="font-bold text-gray-600 mb-2">「共同体を守る責任を引き受けた。」</p>
+          <div class="flex flex-col sm:flex-row sm:items-baseline gap-2 mb-4">
+            <h3 class="text-xl font-bold text-gray-700 tracking-widest font-serif">GUARDIAN</h3>
+            <span class="text-sm text-gray-500 font-bold tracking-widest">守る人</span>
+          </div>
+          <p class="font-bold text-gray-600 mb-3 border-b border-gray-200 pb-2">「共同体を守る責任を引き受けた。」</p>
           <p class="text-sm text-gray-500 leading-relaxed">
             判断・秩序・倫理に関与する立場。<br/>嵐の中でも箱舟が進み続けるよう見張り、支え、守る人。
           </p>
         </div>
+
       </div>
 
       <!-- COVENANT -->
-      <div class="bg-gradient-to-br from-[#2a1a17] to-[#3e2723] p-1 shadow-2xl relative mt-16 max-w-3xl mx-auto">
-        <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-6 py-1 font-bold text-sm tracking-widest flex items-center gap-2 border border-[#8b6a4f]">
+      <div class="bg-gradient-to-br from-[#2a1a17] to-[#3e2723] p-1 shadow-2xl relative mt-16 max-w-5xl mx-auto group">
+        <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-6 py-1 font-bold text-sm tracking-widest flex items-center gap-2 border border-[#8b6a4f] z-10 shadow-md">
           <i data-lucide="shield" class="w-4 h-4"></i> 特別枠
         </div>
-        <div class="bg-[#fffdf9] p-8 md:p-12 border border-[#d4af37] relative h-full">
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-[#e8dfd1] pb-6 mb-6">
-            <div>
-              <div class="flex items-baseline gap-2 mb-1">
-                <h3 class="text-3xl font-bold text-[#3e2723]">COVENANT</h3>
-                <span class="text-sm text-[#8b6a4f]">託される人</span>
+        
+        <div class="bg-[#fffdf9] border border-[#d4af37] relative h-full flex flex-col md:flex-row overflow-hidden">
+          
+          <!-- Image -->
+          <div class="md:w-[45%] h-64 md:h-auto bg-[#f7f5f0] border-b md:border-b-0 md:border-r border-[#e8dfd1] flex items-center justify-center p-6 sm:p-10 relative overflow-hidden">
+            <!-- 背景の装飾 -->
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.05)_0%,transparent_100%)] pointer-events-none z-0"></div>
+            <img src="img/COVENANT.png" alt="COVENANT" class="max-w-full max-h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-[1.03] relative z-10 drop-shadow-md" onerror="this.src='img/icon.png'; this.classList.add('opacity-20');" />
+          </div>
+
+          <!-- Content -->
+          <div class="md:w-[55%] p-8 md:p-12 flex flex-col justify-center">
+            <div class="border-b border-[#e8dfd1] pb-4 mb-6">
+              <div class="flex items-baseline gap-3 mb-1">
+                <h3 class="text-3xl font-bold text-[#3e2723] tracking-widest font-serif">COVENANT</h3>
+                <span class="text-sm text-[#8b6a4f] font-bold tracking-widest">託される人</span>
               </div>
-              <p class="text-sm text-[#725b3f] italic">ノアと神が結んだ「契約」から</p>
+              <p class="text-xs text-[#725b3f] italic tracking-widest mt-2">ノアと神が結んだ「契約」から</p>
+            </div>
+            
+            <div>
+              <p class="text-lg font-bold text-[#4a3b32] mb-4">「世界を託された。」</p>
+              <p class="text-[#5c4a3d] leading-relaxed mb-8 text-sm">
+                この航海が終わったあと、どんな世界を残すか。その責任を引き受けた人。<br />
+                中核メンバーとして意思決定に関与し、世界観・方針を保持します。
+              </p>
+              <ul class="space-y-3 text-sm text-[#5c4a3d]">
+                <li class="flex items-center bg-[#f7f5f0] p-3.5 border border-[#e8dfd1] rounded-sm"><i data-lucide="award" class="w-5 h-5 mr-3 text-[#b8860b]"></i>中核メンバーとしての参画</li>
+                <li class="flex items-center bg-[#f7f5f0] p-3.5 border border-[#e8dfd1] rounded-sm"><i data-lucide="award" class="w-5 h-5 mr-3 text-[#b8860b]"></i>コミュニティの意思決定に関与</li>
+                <li class="flex items-center bg-[#f7f5f0] p-3.5 border border-[#e8dfd1] rounded-sm"><i data-lucide="award" class="w-5 h-5 mr-3 text-[#b8860b]"></i>世界観・方針の保持者としての権利</li>
+              </ul>
             </div>
           </div>
-          
-          <div class="mb-4">
-            <p class="text-lg font-bold text-[#4a3b32] mb-3">「世界を託された。」</p>
-            <p class="text-[#5c4a3d] leading-relaxed mb-6">
-              この航海が終わったあと、どんな世界を残すか。その責任を引き受けた人。<br />
-              中核メンバーとして意思決定に関与し、世界観・方針を保持します。
-            </p>
-            <ul class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-[#5c4a3d]">
-              <li class="flex items-center bg-[#f7f5f0] p-3 border border-[#e8dfd1]"><i data-lucide="award" class="w-5 h-5 mr-3 text-[#b8860b]"></i>中核メンバーとしての参画</li>
-              <li class="flex items-center bg-[#f7f5f0] p-3 border border-[#e8dfd1]"><i data-lucide="award" class="w-5 h-5 mr-3 text-[#b8860b]"></i>コミュニティの意思決定に関与</li>
-              <li class="flex items-center bg-[#f7f5f0] p-3 border border-[#e8dfd1]"><i data-lucide="award" class="w-5 h-5 mr-3 text-[#b8860b]"></i>世界観・方針の保持者としての権利</li>
-            </ul>
-          </div>
+
         </div>
       </div>
+
+      <!-- 料金ページへのリンクボタン -->
+      <!-- <div class="mt-20 text-center">
+        <a href="pricing.html" class="inline-flex items-center gap-3 px-10 py-5 bg-[#3e2723] text-[#d4af37] font-bold text-lg md:text-xl rounded-sm hover:bg-[#2a1a17] transition-colors shadow-xl tracking-widest border border-[#b8860b]">
+          乗船手続き・料金プランはこちら
+          <i data-lucide="arrow-right" class="w-6 h-6"></i>
+        </a>
+      </div> -->
 
     </div>
   </section>
