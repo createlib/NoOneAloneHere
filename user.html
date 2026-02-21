@@ -9,8 +9,12 @@
     <!-- Google Fonts: Noto Serif JP -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS with Typography Plugin (マークダウン装飾用) -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    
+    <!-- Marked.js (Markdown変換) & DOMPurify (セキュリティ保護) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -98,12 +102,34 @@
             padding-bottom: calc(5rem + env(safe-area-inset-bottom));
         }
 
-        /* ランクバッジのNOAH風スタイリング (5段階) */
+        /* ランクバッジのNOAH風スタイリング */
         .badge-arrival { background-color: #f7f5f0; color: #5c4a3d; border: 1px solid #c8b9a6; }
         .badge-settler { background: linear-gradient(135deg, #e8dfd1 0%, #dcd4c6 100%); color: #4a3b32; border: 1px solid #8b6a4f; }
         .badge-builder { background: linear-gradient(135deg, #dcd4c6 0%, #c8b9a6 100%); color: #3e2723; border: 1px solid #725b3f; }
         .badge-guardian { background: linear-gradient(135deg, #c8b9a6 0%, #a09080 100%); color: #f7f5f0; border: 1px solid #5c4a3d; }
         .badge-covenant { background: linear-gradient(135deg, #fef9c3 0%, #d4af37 100%); color: #3e2723; border: 1px solid #b8860b; }
+
+        /* リッチテキスト(Markdown)用のカスタムスタイル */
+        .prose h1, .prose h2, .prose h3 {
+            color: #3e2723;
+            font-family: 'Noto Serif JP', serif;
+            letter-spacing: 0.05em;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            font-weight: 700;
+        }
+        .prose h1 { font-size: 1.25rem; border-bottom: 1px solid #e8dfd1; padding-bottom: 0.3em; }
+        .prose h2 { font-size: 1.1rem; }
+        .prose p { margin-top: 0.5em; margin-bottom: 0.5em; line-height: 1.8; }
+        .prose a { color: #8b6a4f; text-decoration: underline; transition: color 0.2s; }
+        .prose a:hover { color: #5c4a3d; }
+        .prose strong, .prose b { color: #3e2723; font-weight: 700; }
+        .prose em, .prose i { font-style: italic; }
+        .prose u { text-decoration: underline; text-decoration-color: #8b6a4f; text-underline-offset: 2px; }
+        .prose ul { list-style-type: disc; padding-left: 1.25em; margin-top: 0.5em; margin-bottom: 0.5em; }
+        .prose ol { list-style-type: decimal; padding-left: 1.25em; margin-top: 0.5em; margin-bottom: 0.5em; }
+        .prose li { margin-top: 0.25em; margin-bottom: 0.25em; }
+        .prose blockquote { border-left: 3px solid #c8b9a6; padding-left: 1em; color: #725b3f; font-style: italic; margin-top: 1em; margin-bottom: 1em; }
     </style>
 </head>
 <body class="antialiased body-pb-nav lg:pb-0 bg-texture">
@@ -121,7 +147,7 @@
                 <!-- PC Navigation Links -->
                 <div class="hidden lg:flex items-center gap-6 mr-4">
                     <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海(ホーム)</a>
-                    <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント・仕事</a>
+                    <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
                     <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
                     <a href="user.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
@@ -161,7 +187,7 @@
                 <i class="fa-solid fa-handshake text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マッチ</span>
             </button>
-            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px]">
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-bold tracking-widest">マイページ</span>
             </a>
@@ -211,8 +237,10 @@
                                 </div>
                             </div>
                             
-                            <!-- Bio Section -->
-                            <div class="mb-6 relative z-20" id="section-bio"><p id="profile-bio" class="text-sm text-brand-700 leading-relaxed whitespace-pre-wrap"></p></div>
+                            <!-- Bio Section (マークダウン対応) -->
+                            <div class="mb-6 relative z-20" id="section-bio">
+                                <div id="profile-bio" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
+                            </div>
 
                             <div class="flex items-center gap-6 py-4 border-t border-brand-100 relative z-20">
                                 <div class="text-center cursor-pointer hover:opacity-75 transition-opacity">
@@ -292,7 +320,8 @@
                         <div id="message-container" class="hidden">
                             <div class="relative mt-6">
                                 <i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-4 -left-2 z-0"></i>
-                                <div id="profile-message" class="relative z-10 text-[15px] leading-8 text-brand-700 whitespace-pre-wrap font-medium pl-6"></div>
+                                <!-- マークダウン対応クラスを追加 -->
+                                <div id="profile-message" class="relative z-10 prose prose-sm max-w-none prose-stone text-brand-700 pl-6"></div>
                             </div>
                         </div>
                         <div id="message-mask" class="hidden py-8 bg-brand-50 border border-dashed border-brand-200 text-center mt-4">
@@ -324,12 +353,12 @@
                     <!-- Goals Section -->
                     <div id="section-goals" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6">
                         <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">目標・ビジョン</h2>
-                        <div id="profile-goals" class="text-brand-700 text-sm leading-8 whitespace-pre-wrap mt-2">未設定</div>
+                        <!-- マークダウン対応クラスを追加 -->
+                        <div id="profile-goals" class="prose prose-sm max-w-none prose-stone text-brand-700 mt-2">未設定</div>
                     </div>
 
                     <!-- Career Section -->
                     <div id="section-career" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
-                        <!-- 装飾 -->
                         <div class="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-brand-300 m-4 pointer-events-none opacity-50"></div>
                         
                         <div class="flex items-center justify-between mb-6 pb-2 border-b border-brand-200">
@@ -348,11 +377,6 @@
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="notification" class="fixed bottom-24 lg:bottom-20 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
-        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-ship text-[#c8b9a6] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
@@ -367,7 +391,6 @@
             messagingSenderId: "803209683213",
             appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
         };
-        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -380,22 +403,34 @@
         let targetUid = null;
         let isFollowing = false;
         let isMutual = false;
-        let myRank = 'arrival'; // デフォルトをarrivalに変更
+        let myRank = 'arrival';
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const urlParams = new URLSearchParams(window.location.search);
         targetUid = urlParams.get('uid');
 
-        // Helper
+        // ★★★ 強化されたテキストフォーマット関数 (Markdown対応) ★★★
         function formatText(text) {
             if (!text) return '';
-            let safeText = text.replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]; });
-            return safeText.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)|(https?:\/\/[a-zA-Z0-9.\/?=&%#_:-]+)/g, (match, mdText, mdUrl, rawUrl) => {
-                if (mdText && mdUrl) return `<a href="${mdUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:text-brand-800 underline transition-colors cursor-pointer">${mdText}</a>`;
-                if (rawUrl) return `<a href="${rawUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:text-brand-800 underline break-all transition-colors cursor-pointer">${rawUrl}</a>`;
-                return match;
+            
+            // 独自拡張: __下線__ を <u>下線</u> に変換
+            let processedText = text.replace(/__(.*?)__/g, '<u>$1</u>');
+
+            // markedの設定 (改行を<br>に変換するなど)
+            marked.setOptions({
+                breaks: true,
+                gfm: true
+            });
+            
+            const rawHtml = marked.parse(processedText);
+            
+            // DOMPurifyで安全なHTMLのみを許可してサニタイズ
+            return DOMPurify.sanitize(rawHtml, { 
+                ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote'],
+                ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
             });
         }
+
         function setElText(id, text) { const el = document.getElementById(id); if(el) el.textContent = text || '-'; }
         function setElHtml(id, html) { const el = document.getElementById(id); if(el) el.innerHTML = html || ''; }
 
@@ -403,7 +438,7 @@
             if (isAdminMock) {
                 currentUser = { uid: 'test_admin_uid', displayName: '管理者' };
                 isAdmin = true;
-                myRank = 'covenant'; // 管理者モックは最高ランク
+                myRank = 'covenant';
                 if (targetUid && targetUid !== 'test_admin_uid') {
                     isSelf = false;
                     setupViewForOtherUser();
@@ -426,7 +461,7 @@
                     const myData = myProfileSnap.data();
                     if (myData.userId === 'admin') isAdmin = true;
                     if (isAdmin) document.getElementById('admin-badge').classList.remove('hidden');
-                    myRank = myData.membershipRank || 'arrival'; // デフォルト
+                    myRank = myData.membershipRank || 'arrival'; 
                 } else {
                     myRank = 'arrival';
                 }
@@ -476,7 +511,6 @@
                 document.getElementById('debug-rank-switcher').classList.remove('hidden');
             }
             
-            // ARRIVAL（無料）の場合のみアップグレードを促す
             if (currentRank === 'arrival') {
                 document.getElementById('upgrade-cta-container').classList.remove('hidden');
             } else {
@@ -511,7 +545,6 @@
                     dataToUse = publicSnap.data();
                 }
                 
-                // 自分がARRIVALでない、または管理者の場合は詳細データを取得
                 if (isAdmin || (isMutual && myRank !== 'arrival')) {
                     try {
                         const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
@@ -574,7 +607,7 @@
             if (isFollowing) {
                 btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-brand-500 shadow-sm text-sm font-bold rounded-sm text-brand-900 bg-[#fffdf9] hover:bg-brand-50 transition-all mr-2 tracking-widest font-serif">フォロー中</button>`;
             } else {
-                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-bold rounded-sm text-[#f7f5f0] bg-[#3e2723] hover:bg-[#2a1a17] transition-all mr-2 tracking-widest font-serif">フォローする</button>`;
+                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-bold rounded-sm text-[#f7f5f0] bg-[#3e2723] hover:bg-[#2a1a17] transition-all mr-2 tracking-widest font-serif">フォロー</button>`;
             }
             if (isAdmin && !isSelf) {
                 btnHtml += `<a href="profile.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-brand-300 text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-sm text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
@@ -586,7 +619,7 @@
 
         window.toggleFollow = async () => {
             if (!currentUser || isAdminMock) {
-                if(isAdminMock) { isFollowing = !isFollowing; renderFollowButton(); showNotification('Mock Action'); }
+                if(isAdminMock) { isFollowing = !isFollowing; renderFollowButton(); alert('Mock Action'); }
                 return;
             }
             const myUid = currentUser.uid;
@@ -599,7 +632,6 @@
                     await deleteDoc(myFollowingRef);
                     await deleteDoc(targetFollowerRef);
                     isFollowing = false;
-                    showNotification('フォローを解除しました');
                 } else {
                     const timestamp = serverTimestamp();
                     await setDoc(myFollowingRef, { createdAt: timestamp });
@@ -613,14 +645,12 @@
                         });
                     } catch (e) { console.warn("Notify err:", e); }
                     isFollowing = true;
-                    showNotification('フォローしました');
                 }
                 await checkFollowStatus(myUid, targetUid);
                 updateFollowCounts(targetUid);
                 loadPublicProfile(targetUid);
             } catch (e) {
                 console.error(e);
-                showNotification('エラーが発生しました');
             }
         };
 
@@ -646,14 +676,14 @@
         }
 
         function updateDashboardUI(data) {
-            setElText('nav-name', data.name || 'User');
-            if (data.userId) setElText('nav-id', '@' + data.userId);
             document.querySelectorAll('.shimmer').forEach(el => el.classList.remove('shimmer', 'w-32', 'h-8'));
 
             setElText('profile-name', data.name || data.userId || '（名称未設定）');
             setElText('profile-id', '@' + (data.userId || '-'));
             setElText('profile-job', data.jobTitle || '職業未設定');
             setElText('profile-location', data.prefecture || '未設定');
+            
+            // ★ Bio をリッチテキスト(Markdown)としてパース
             setElHtml('profile-bio', formatText(data.bio || ''));
             
             const iconImg = document.getElementById('header-icon-img');
@@ -669,35 +699,20 @@
                 }
             }
 
-            // 5段階のランクバッジ描画
             const rank = data.membershipRank || 'arrival';
             const badgeEl = document.getElementById('rank-badge');
             if (badgeEl) {
                 badgeEl.className = 'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest';
                 badgeEl.classList.remove('hidden');
-                
-                // 既存のクラスをリセット
                 badgeEl.classList.remove('badge-arrival', 'badge-settler', 'badge-builder', 'badge-guardian', 'badge-covenant');
                 
-                if (rank === 'covenant') {
-                    badgeEl.classList.add('badge-covenant');
-                    badgeEl.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i>COVENANT';
-                } else if (rank === 'guardian') {
-                    badgeEl.classList.add('badge-guardian');
-                    badgeEl.innerHTML = '<i class="fa-solid fa-gavel mr-1"></i>GUARDIAN';
-                } else if (rank === 'builder') {
-                    badgeEl.classList.add('badge-builder');
-                    badgeEl.innerHTML = '<i class="fa-solid fa-hammer mr-1"></i>BUILDER';
-                } else if (rank === 'settler') {
-                    badgeEl.classList.add('badge-settler');
-                    badgeEl.innerHTML = '<i class="fa-solid fa-house mr-1"></i>SETTLER';
-                } else {
-                    badgeEl.classList.add('badge-arrival');
-                    badgeEl.innerHTML = '<i class="fa-solid fa-anchor mr-1"></i>ARRIVAL';
-                }
+                if (rank === 'covenant') { badgeEl.classList.add('badge-covenant'); badgeEl.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i>COVENANT'; } 
+                else if (rank === 'guardian') { badgeEl.classList.add('badge-guardian'); badgeEl.innerHTML = '<i class="fa-solid fa-gavel mr-1"></i>GUARDIAN'; } 
+                else if (rank === 'builder') { badgeEl.classList.add('badge-builder'); badgeEl.innerHTML = '<i class="fa-solid fa-hammer mr-1"></i>BUILDER'; } 
+                else if (rank === 'settler') { badgeEl.classList.add('badge-settler'); badgeEl.innerHTML = '<i class="fa-solid fa-house mr-1"></i>SETTLER'; } 
+                else { badgeEl.classList.add('badge-arrival'); badgeEl.innerHTML = '<i class="fa-solid fa-anchor mr-1"></i>ARRIVAL'; }
             }
 
-            // Restriction Logic: ARRIVAL(無料)は情報制限
             const isTargetArrival = rank === 'arrival';
             const isViewerArrival = myRank === 'arrival';
             const isViewerPrivileged = isSelf || isAdmin;
@@ -745,6 +760,42 @@
                 document.querySelector('#personal-mask p').textContent = normalMsg;
             }
 
+            if (!applyRestriction) {
+                // Tags
+                const tagsContainer = document.getElementById('tags-container');
+                if (tagsContainer) {
+                    tagsContainer.innerHTML = '';
+                    const allTags = [...(data.skills || []), ...(data.hobbies || [])];
+                    if (allTags.length > 0) {
+                        allTags.forEach(tag => {
+                            tagsContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
+                        });
+                    } else {
+                        tagsContainer.innerHTML = '<span class="text-sm text-brand-300 italic">未設定</span>';
+                    }
+                }
+                
+                // Matching
+                const canOfferList = document.getElementById('list-can-offer');
+                if (canOfferList) {
+                    canOfferList.innerHTML = data.canOffer && data.canOffer.length > 0 
+                        ? data.canOffer.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-check text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
+                        : '<li class="text-brand-300 italic text-sm">未設定</li>';
+                }
+                const lookingForList = document.getElementById('list-looking-for');
+                if (lookingForList) {
+                    lookingForList.innerHTML = data.lookingFor && data.lookingFor.length > 0 
+                        ? data.lookingFor.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-magnifying-glass text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
+                        : '<li class="text-brand-300 italic text-sm">未設定</li>';
+                }
+
+                // ★ Goals (Markdown対応)
+                const goalsEl = document.getElementById('profile-goals');
+                if (goalsEl) {
+                    goalsEl.innerHTML = data.goals ? formatText(data.goals) : '未設定';
+                }
+            }
+
             if (showRestricted) {
                 setElText('data-gender', data.gender);
                 
@@ -760,68 +811,22 @@
                 }
                 setElText('data-birth', birthDisplay);
 
-                // --- 追加：スキル・趣味の描画 ---
-                const tagsContainer = document.getElementById('tags-container');
-                if (tagsContainer) {
-                    tagsContainer.innerHTML = '';
-                    const allTags = [...(data.skills || []), ...(data.hobbies || [])];
-                    if (data.hobbyOtherText) allTags.push(data.hobbyOtherText);
-                    
-                    if (allTags.length > 0) {
-                        allTags.forEach(tag => {
-                            tagsContainer.innerHTML += `<span class="bg-brand-50 border border-brand-200 text-brand-700 px-3 py-1.5 rounded-sm text-[10px] font-bold tracking-widest shadow-sm">${tag}</span>`;
-                        });
-                    } else {
-                        tagsContainer.innerHTML = '<span class="text-sm text-brand-300 italic">未設定</span>';
-                    }
-                }
-
-                // --- 追加：マッチング情報の描画 ---
-                const offerList = document.getElementById('list-can-offer');
-                if (offerList) {
-                    offerList.innerHTML = '';
-                    if (data.canOffer && data.canOffer.length > 0) {
-                        data.canOffer.forEach(item => {
-                            offerList.innerHTML += `<li class="text-sm text-brand-700 tracking-wide font-medium flex items-start gap-2 mb-3"><i class="fa-solid fa-hand-holding-heart text-brand-500 mt-1"></i><span>${item}</span></li>`;
-                        });
-                    } else {
-                        offerList.innerHTML = '<li class="text-brand-300 italic text-sm">未設定</li>';
-                    }
-                }
-
-                const lookingList = document.getElementById('list-looking-for');
-                if (lookingList) {
-                    lookingList.innerHTML = '';
-                    if (data.lookingFor && data.lookingFor.length > 0) {
-                        data.lookingFor.forEach(item => {
-                            lookingList.innerHTML += `<li class="text-sm text-brand-700 tracking-wide font-medium flex items-start gap-2 mb-3"><i class="fa-solid fa-magnifying-glass text-brand-500 mt-1"></i><span>${item}</span></li>`;
-                        });
-                    } else {
-                        lookingList.innerHTML = '<li class="text-brand-300 italic text-sm">未設定</li>';
-                    }
-                }
-
-                // --- 追加：目標・ビジョンの描画 ---
-                const goalsEl = document.getElementById('profile-goals');
-                if (goalsEl) {
-                    goalsEl.innerHTML = data.goals ? formatText(data.goals) : '<span class="text-brand-300 italic">未設定</span>';
-                }
-
                 const careerContainer = document.getElementById('career-container');
                 if (careerContainer) {
                     careerContainer.innerHTML = '';
                     if (data.career && data.career.length > 0) {
                         data.career.forEach(c => {
+                            // ★ Career Description (Markdown対応)
                             const formattedDesc = formatText(c.description || '');
                             careerContainer.innerHTML += `
-                                <div class="relative pl-6 pb-4">
+                                <div class="relative pl-6 pb-2">
                                     <div class="absolute left-[-5px] top-1.5 h-3 w-3 rounded-full bg-brand-500 ring-4 ring-[#fffdf9] z-10 shadow-sm border border-brand-300"></div>
                                     <h4 class="font-bold text-brand-900 text-base font-serif tracking-widest">${c.company || '会社名不明'}</h4>
                                     <div class="flex items-center gap-2 mb-3 mt-1">
                                         <span class="text-[10px] font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded-sm tracking-widest border border-brand-200">${c.role || '役割'}</span>
                                         <span class="text-xs text-brand-400 font-medium tracking-widest">${c.start || '?'} 〜 ${c.end || '現在'}</span>
                                     </div>
-                                    <div class="text-sm text-brand-700 leading-relaxed font-medium bg-brand-50 p-4 rounded-sm border border-brand-100">${formattedDesc}</div>
+                                    <div class="prose prose-sm max-w-none prose-stone text-brand-700 bg-brand-50 p-4 rounded-sm border border-brand-100 shadow-sm">${formattedDesc}</div>
                                 </div>
                             `;
                         });
@@ -833,11 +838,12 @@
                 const snsContainer = document.getElementById('profile-sns-links');
                 if (snsContainer) {
                     snsContainer.innerHTML = '';
-                    if (data.websiteUrl) snsContainer.innerHTML += `<a href="${data.websiteUrl}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors"><i class="fa-solid fa-globe"></i></a>`;
-                    if (data.snsInstagram) snsContainer.innerHTML += `<a href="${data.snsInstagram.startsWith('http') ? data.snsInstagram : 'https://instagram.com/'+data.snsInstagram}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors"><i class="fa-brands fa-instagram"></i></a>`;
-                    if (data.snsX) snsContainer.innerHTML += `<a href="${data.snsX.startsWith('http') ? data.snsX : 'https://twitter.com/'+data.snsX}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors"><i class="fa-brands fa-x-twitter"></i></a>`;
+                    if (data.websiteUrl) snsContainer.innerHTML += `<a href="${data.websiteUrl}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors shadow-sm"><i class="fa-solid fa-globe"></i></a>`;
+                    if (data.snsInstagram) snsContainer.innerHTML += `<a href="${data.snsInstagram.startsWith('http') ? data.snsInstagram : 'https://instagram.com/'+data.snsInstagram}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors shadow-sm"><i class="fa-brands fa-instagram"></i></a>`;
+                    if (data.snsX) snsContainer.innerHTML += `<a href="${data.snsX.startsWith('http') ? data.snsX : 'https://twitter.com/'+data.snsX}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors shadow-sm"><i class="fa-brands fa-x-twitter"></i></a>`;
                 }
 
+                // ★ Message (Markdown対応)
                 const messageEl = document.getElementById('profile-message');
                 if (messageEl) {
                     messageEl.innerHTML = data.message ? formatText(data.message) : 'まだメッセージがありません。';
@@ -853,7 +859,6 @@
             }
         }
 
-        // --- Debug: Change Rank Function ---
         window.changeRank = async (newRole) => {
             if (!currentUser) return;
             const uid = targetUid; 
@@ -883,19 +888,6 @@
             }
             signOut(auth);
             window.location.href = 'login.html';
-        };
-
-        window.showNotification = (msg) => {
-            const notif = document.getElementById('notification');
-            const msgEl = document.getElementById('notif-message');
-            if(notif && msgEl) {
-                notif.classList.remove('hidden', 'translate-y-20');
-                msgEl.textContent = msg;
-                setTimeout(() => {
-                    notif.classList.add('translate-y-20');
-                    setTimeout(() => notif.classList.add('hidden'), 300);
-                }, 3000);
-            }
         };
 
         function getAdminMockData() {
