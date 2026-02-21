@@ -636,10 +636,15 @@
                     };
                     await setDoc(publicDocRef, publicData);
                 } else {
+                    // ★修正：非公開の場合でも、紹介者リスト等で必要な最低限の情報は残す
                     const minimalData = {
                         userId: finalData.userId,
+                        name: finalData.name || finalData.userId,
+                        photoURL: finalData.photoURL || null,
                         email: finalData.email || null, 
-                        isHidden: true 
+                        isHidden: true,
+                        referrerId: finalData.referrerId || null,
+                        profileScore: finalData.profileScore || 0
                     };
                     await setDoc(publicDocRef, minimalData);
                 }
