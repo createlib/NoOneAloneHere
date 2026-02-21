@@ -422,7 +422,7 @@
         };
 
         const getVal = (id, def = '') => { const el = document.getElementById(id); return el ? el.value : def; };
-        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val !== undefined && val !== null ? val : ''; };
 
         document.addEventListener('DOMContentLoaded', () => {
             initSelects();
