@@ -132,7 +132,7 @@
                 <a href="home.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海(ホーム)</a>
                 <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント・仕事</a>
                 <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
-                <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide auth-required"><i class="fa-solid fa-user"></i> マイページ</a>
                 
                 <div class="h-6 w-px bg-brand-200 mx-1"></div>
                 
@@ -167,13 +167,15 @@
                             誰も一人にならない箱舟。<br>
                             共鳴する仲間を見つけ、新たな世界を創り出しましょう。
                         </p>
-                        <div class="flex flex-wrap gap-4">
-                            <a href="search.html" class="bg-[#d4af37] text-[#2a1a17] border border-[#b8860b] px-6 py-2.5 rounded-sm font-bold text-xs hover:bg-[#b8860b] hover:text-[#fffdf9] transition-colors tracking-widest shadow-sm">
-                                乗船者を探す
-                            </a>
-                            <a href="events.html" class="bg-[#2a1a17] text-[#d4af37] border border-[#b8860b] px-6 py-2.5 rounded-sm font-bold text-xs hover:bg-black transition-colors tracking-widest shadow-sm">
-                                航海図(イベント)を見る
-                            </a>
+                        
+                        <!-- ★ 変更点: 招待リンクコピーと招待者リストのボタンに変更 -->
+                        <div class="flex flex-col sm:flex-row gap-4 mt-4">
+                            <button onclick="copyInviteLink()" class="flex-1 bg-[#d4af37] text-[#2a1a17] border border-[#b8860b] px-4 py-3 rounded-sm font-bold text-xs hover:bg-[#b8860b] hover:text-[#fffdf9] transition-colors tracking-widest shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-link"></i> 招待リンクをコピー
+                            </button>
+                            <button onclick="openReferralsModal()" class="flex-1 bg-[#2a1a17] text-[#d4af37] border border-[#b8860b] px-4 py-3 rounded-sm font-bold text-xs hover:bg-black transition-colors tracking-widest shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-users"></i> 招待した人を見る
+                            </button>
                         </div>
                     </div>
                     <div class="absolute right-0 bottom-0 opacity-[0.15] transform translate-x-4 translate-y-4">
@@ -329,6 +331,25 @@
         </div>
     </div>
 
+    <!-- ★ 追加: 招待した人一覧モーダル -->
+    <div id="referrals-modal" class="hidden fixed inset-0 z-[3000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-[#fffdf9] bg-texture w-full sm:w-[500px] max-h-[85vh] rounded-t-md sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center flex-shrink-0 bg-[#fffdf9]">
+                <h3 class="font-bold text-lg text-brand-900 font-serif tracking-widest"><i class="fa-solid fa-users text-[#b8860b] mr-2"></i>招待した乗船者</h3>
+                <button onclick="closeReferralsModal()" class="p-2 text-brand-400 hover:text-brand-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-5 flex-shrink-0 bg-[#f7f5f0] border-b border-brand-200 text-center">
+                <p class="text-xs text-brand-700 tracking-widest font-bold">あなたが招待した総人数</p>
+                <p class="text-3xl font-serif text-[#3e2723] mt-1"><span id="referrals-count" class="text-4xl text-[#b8860b]">0</span> <span class="text-sm text-brand-500">人</span></p>
+            </div>
+
+            <div class="p-5 overflow-y-auto flex-1 bg-[#fffdf9]" id="referrals-list">
+                <!-- List injected here -->
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation (Mobile Only) -->
     <nav class="fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="flex justify-around items-center h-16">
@@ -348,12 +369,17 @@
                 <i class="fa-solid fa-handshake text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マッチ</span>
             </button>
-            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+            <a href="user.html" class="auth-required flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マイページ</span>
             </a>
         </div>
     </nav>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#c8b9a6] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
@@ -380,10 +406,12 @@
 
         let myEvents = []; 
         let currentCalendarDate = new Date();
+        let myProfile = null;
 
         onAuthStateChanged(auth, async (user) => {
             if (isAdminMock) {
-                updateUI({ name: 'テスト管理者', userId: 'admin' });
+                myProfile = { name: 'テスト管理者', userId: 'admin' };
+                updateUI(myProfile);
                 document.getElementById('participating-events-list').innerHTML = '<div class="text-xs text-brand-400 italic p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest">管理者モード: 参加イベントなし</div>';
                 document.getElementById('hosting-events-list').innerHTML = '<div class="text-xs text-brand-400 italic p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest">管理者モード: 主催イベントなし</div>';
                 return;
@@ -393,7 +421,8 @@
                 try {
                     const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                     if (docSnap.exists()) {
-                        updateUI(docSnap.data());
+                        myProfile = docSnap.data();
+                        updateUI(myProfile);
                     } else {
                         updateUI({ name: 'User', userId: user.uid });
                     }
@@ -404,6 +433,124 @@
                 window.location.href = 'login.html';
             }
         });
+
+        // --- 追加: 招待リンクコピー機能 ---
+        window.copyInviteLink = () => {
+            if (!myProfile || !myProfile.userId) return alert('ユーザーIDが取得できませんでした');
+            
+            const currentUrl = new URL(window.location.href);
+            currentUrl.pathname = currentUrl.pathname.replace('home.html', 'register.html');
+            if(!currentUrl.pathname.includes('register.html')) {
+                currentUrl.pathname = '/register.html';
+            }
+            currentUrl.search = `?ref=${myProfile.userId}`;
+            const url = currentUrl.toString();
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const notif = document.getElementById('notification');
+                document.getElementById('notif-message').textContent = '招待リンクをコピーしました！';
+                notif.classList.remove('hidden', 'translate-y-20');
+                setTimeout(() => notif.classList.add('translate-y-20'), 3000);
+                setTimeout(() => notif.classList.add('hidden'), 3300);
+            } catch (err) {
+                console.error('Copy error', err);
+                alert('コピーに失敗しました。\n' + url);
+            }
+            document.body.removeChild(textArea);
+        };
+
+        // --- 追加: 招待した人一覧を表示する機能 ---
+        window.openReferralsModal = async () => {
+            const modal = document.getElementById('referrals-modal');
+            modal.classList.remove('hidden');
+            
+            const listContainer = document.getElementById('referrals-list');
+            listContainer.innerHTML = '<div class="text-center text-brand-400 py-8"><i class="fa-solid fa-spinner fa-spin text-2xl mb-3"></i><p class="text-xs tracking-widest font-bold">乗船記録を検索中...</p></div>';
+            
+            let referrals = [];
+            
+            if (isAdminMock) {
+                referrals = [
+                    { name: "テストユーザーA", userId: "user_a", profileScore: 85, photoURL: "" },
+                    { name: "テストユーザーB", userId: "user_b", profileScore: 40, photoURL: "" },
+                ];
+            } else {
+                if (!myProfile || !myProfile.userId) {
+                    listContainer.innerHTML = '<div class="text-center text-red-500 py-8 text-xs font-bold tracking-widest">ユーザーIDが設定されていません。</div>';
+                    return;
+                }
+                
+                try {
+                    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                    const snap = await getDocs(usersRef);
+                    
+                    const promises = snap.docs.map(async (d) => {
+                        try {
+                            const uid = d.id;
+                            const profileRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
+                            const profileSnap = await getDoc(profileRef);
+                            if (profileSnap.exists()) {
+                                const pData = profileSnap.data();
+                                if (pData.referrerId === myProfile.userId) {
+                                    return pData;
+                                }
+                            }
+                        } catch(err) {
+                            // セキュリティルール等で読み取れない場合はスキップ
+                        }
+                        return null;
+                    });
+                    
+                    const results = await Promise.all(promises);
+                    referrals = results.filter(r => r !== null);
+                    
+                } catch (e) {
+                    console.error("Referral fetch error", e);
+                    listContainer.innerHTML = '<div class="text-center text-red-500 py-8 text-xs font-bold tracking-widest">データの取得に失敗しました。</div>';
+                    return;
+                }
+            }
+            
+            document.getElementById('referrals-count').textContent = referrals.length;
+            
+            if (referrals.length === 0) {
+                listContainer.innerHTML = '<div class="text-center text-brand-500 py-8 text-xs tracking-widest font-bold">まだ招待した乗船者はいません。</div>';
+            } else {
+                listContainer.innerHTML = '';
+                referrals.forEach(refUser => {
+                    const score = refUser.profileScore || 0;
+                    const thumb = refUser.photoURL || 'https://via.placeholder.com/150?text=U';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center gap-4 p-4 bg-[#f7f5f0] border border-brand-200 rounded-sm mb-3 shadow-sm';
+                    item.innerHTML = `
+                        <img src="${thumb}" class="w-12 h-12 rounded-sm object-cover bg-brand-50 border border-brand-100 flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <h4 class="font-bold text-brand-900 truncate text-sm font-serif tracking-widest">${refUser.name || '名称未設定'}</h4>
+                                <span class="text-[10px] text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded-sm border border-brand-200 font-bold tracking-widest">@${refUser.userId || '未設定'}</span>
+                            </div>
+                            <div class="w-full bg-brand-200 h-1.5 mt-2 rounded-full overflow-hidden flex items-center relative">
+                                <div class="bg-[#b8860b] h-1.5" style="width: ${score}%"></div>
+                            </div>
+                            <p class="text-[9px] text-brand-500 mt-1.5 text-right tracking-widest">プロフィール充実度: <span class="font-bold text-[#b8860b]">${score}%</span></p>
+                        </div>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            }
+        };
+
+        window.closeReferralsModal = () => {
+            document.getElementById('referrals-modal').classList.add('hidden');
+        };
 
         function updateUI(data) {
             document.getElementById('home-user-name').textContent = data.name || '名称未設定';
@@ -423,7 +570,6 @@
             // 1. Hosting Events
             try {
                 const eventsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events');
-                // orderBy is removed safely to avoid missing index errors
                 const snapHost = await getDocs(eventsRef);
                 
                 let hostEvents = [];
@@ -526,7 +672,7 @@
                     <h4 class="font-bold text-brand-900 truncate text-sm mb-1 font-serif tracking-widest">${evt.title || '名称未設定'}</h4>
                     <p class="text-[10px] text-brand-500 flex flex-col gap-1 tracking-widest mt-1.5">
                         <span class="truncate"><i class="fa-regular fa-clock mr-1 text-brand-400"></i>${dateStr}</span>
-                        <span class="truncate"><i class="fa-solid fa-location-dot mr-1 text-brand-400"></i>${evt.locationName || '未設定'}</span>
+                        <span class="truncate max-w-[120px]"><i class="fa-solid fa-location-dot mr-1 text-brand-400"></i>${evt.locationName || '未設定'}</span>
                     </p>
                 </div>
                 <i class="fa-solid fa-chevron-right text-brand-300 text-xs"></i>
@@ -616,7 +762,7 @@
             }
         }
 
-        // --- Detail Modal ---
+        // --- Detail Modal (Home画面用) ---
         window.openEventDetail = (evt) => {
             const modal = document.getElementById('event-detail-modal');
             
@@ -647,6 +793,7 @@
             const gcalBtn = document.getElementById('modal-gcal-btn');
             if (gcalBtn) gcalBtn.href = gcalUrl;
             
+            // events.html への直接リンク
             const eventLinkBtn = document.getElementById('modal-event-link');
             if (eventLinkBtn) eventLinkBtn.href = `events.html?eventId=${evt.id}`;
             
