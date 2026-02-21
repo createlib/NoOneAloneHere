@@ -344,7 +344,7 @@
                         </div>
                     </div>
 
-                    <!-- Skills & Hobbies Section (2カラム分割対応) -->
+                    <!-- Skills & Hobbies Section -->
                     <div id="section-tags" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
                             <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">スキル</h3>
@@ -415,29 +415,32 @@
         const urlParams = new URLSearchParams(window.location.search);
         targetUid = urlParams.get('uid');
 
-        // ★★★ 強化されたテキストフォーマット関数 (Markdown対応) ★★★
+        // ★★★ 強化されたテキストフォーマット関数 (Markdown対応 完全版) ★★★
         function formatText(text) {
             if (!text) return '';
             
             // 独自拡張: __下線__ を <u>下線</u> に変換
             let processedText = text.replace(/__(.*?)__/g, '<u>$1</u>');
 
-            // markedの設定 (改行を<br>に変換するなど)
-            marked.setOptions({
-                breaks: true,
-                gfm: true
-            });
+            let rawHtml = '';
+            try {
+                // 最新のmarked.jsに対応するため、parseメソッドの第2引数でオプションを渡す
+                rawHtml = marked.parse(processedText, { breaks: true, gfm: true });
+            } catch (e) {
+                console.error("Markdown Parse Error:", e);
+                rawHtml = processedText; // 万が一エラーになった場合は元のテキストを表示
+            }
             
-            const rawHtml = marked.parse(processedText);
-            
-            // DOMPurifyで安全なHTMLのみを許可してサニタイズ
+            // DOMPurifyで安全なHTMLのみを許可してサニタイズ（<code>や<pre>も許可）
             return DOMPurify.sanitize(rawHtml, { 
-                ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote'],
+                ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote', 'code', 'pre'],
                 ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
             });
         }
 
         function setElText(id, text) { const el = document.getElementById(id); if(el) el.textContent = text || '-'; }
+        
+        // ★ HTMLとして挿入するための関数
         function setElHtml(id, html) { const el = document.getElementById(id); if(el) el.innerHTML = html || ''; }
 
         onAuthStateChanged(auth, async (user) => {
@@ -699,7 +702,7 @@
             }
             setElText('profile-location', locStr);
             
-            // ★ Bio をリッチテキスト(Markdown)としてパース
+            // ★ Bio をリッチテキスト(Markdown)としてパースしてHTMLで挿入
             setElHtml('profile-bio', formatText(data.bio || ''));
             
             const iconImg = document.getElementById('header-icon-img');
@@ -819,7 +822,11 @@
                 // ★ Goals (Markdown対応)
                 const goalsEl = document.getElementById('profile-goals');
                 if (goalsEl) {
-                    goalsEl.innerHTML = data.goals ? formatText(data.goals) : '未設定';
+                    if (data.goals) {
+                        setElHtml('profile-goals', formatText(data.goals));
+                    } else {
+                        setElText('profile-goals', '未設定');
+                    }
                 }
             }
 
@@ -873,9 +880,13 @@
                 // ★ Message (Markdown対応)
                 const messageEl = document.getElementById('profile-message');
                 if (messageEl) {
-                    messageEl.innerHTML = data.message ? formatText(data.message) : 'まだメッセージがありません。';
-                    if (!data.message) messageEl.classList.add('text-brand-300');
-                    else messageEl.classList.remove('text-brand-300');
+                    if (data.message) {
+                        setElHtml('profile-message', formatText(data.message));
+                        messageEl.classList.remove('text-brand-300');
+                    } else {
+                        setElText('profile-message', 'まだメッセージがありません。');
+                        messageEl.classList.add('text-brand-300');
+                    }
                 }
             }
 
