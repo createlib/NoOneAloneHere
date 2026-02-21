@@ -125,9 +125,9 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ▼▼▼▼ Firebase Config ▼▼▼▼
         const firebaseConfig = {
@@ -276,22 +276,26 @@
                 const user = userCredential.user;
                 const timestamp = new Date().toISOString();
                 
+                // 1. Private Data
                 await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'), {
                     userId: userId,
-                    referrerId: referrerId,
+                    referrerId: referrerId || null, // ★追加：非公開データにも確実に保存
                     email: email,
                     name: userId,
                     createdAt: timestamp,
                     profilePublic: "false",
-                    membershipRank: "arrival" // 初期ランクをARRIVALに変更
+                    membershipRank: "arrival" 
                 });
 
+                // 2. Public Data
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid), {
                     userId: userId,
                     name: userId,
                     email: email,
                     isHidden: true,
                     updatedAt: timestamp,
+                    referrerId: referrerId || null, // ★追加：検索用に確実に保存
+                    profileScore: 0                 // ★追加：初期スコアを保存
                 });
 
                 showNotification('乗船手続き完了！ホームへ移動します', 'success');
