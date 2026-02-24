@@ -120,12 +120,16 @@
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">表示名 <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">表示名 (SNS名) <span class="text-red-500">*</span></label>
                         <input type="text" id="name" required class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]" placeholder="例: 航海 太郎">
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">本名 <span class="text-red-500">*</span> <span class="text-brand-400 text-[10px] font-normal ml-1">(※公開されません)</span></label>
+                        <input type="text" id="realName" required class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]" placeholder="例: 山田 太郎">
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">ふりがな <span class="text-red-500">*</span></label>
-                        <input type="text" id="furigana" required class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]" placeholder="例: こうかい たろう">
+                        <input type="text" id="furigana" required class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]" placeholder="例: やまだ たろう">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">職業・肩書</label>
@@ -299,7 +303,7 @@
                         ・「自己紹介」「想い・メッセージ」「目標・ビジョン」は各300文字以上で評価されます。<br>
                         ・「スキル」「趣味」は各3つ以上で評価されます。<br>
                         ・「経歴」「SNS・外部リンク」は1つ以上の入力で評価されます。<br>
-                        ※ 基本情報の項目は入力されている項目ごとに加算されます。
+                        ※ 基本情報の項目は入力されている項目ごとに加算されます。(画像8点、他各4点)
                     </span>
                 </p>
             </div>
@@ -599,6 +603,7 @@
             window._originalEmail = data.email || fallbackEmail || null;
             
             setVal('name', data.name);
+            setVal('realName', data.realName);
             setVal('furigana', data.furigana);
             setVal('jobTitle', data.jobTitle);
             setVal('prefecture', data.prefecture);
@@ -682,15 +687,16 @@
         function calculateProfileScore(data) {
             let score = 0;
             
-            // 基本情報 (計40点: 各5点)
-            if (data.photoURL) score += 5;
-            if (data.name) score += 5;
-            if (data.furigana) score += 5;
-            if (data.jobTitle) score += 5;
-            if (data.prefecture) score += 5;
-            if (data.birthplace) score += 5;
-            if (data.gender && data.gender !== '無回答') score += 5;
-            if (data.birthDate) score += 5;
+            // 基本情報 (計40点: 画像8点、他各4点)
+            if (data.photoURL) score += 8;
+            if (data.name) score += 4;
+            if (data.realName) score += 4;
+            if (data.furigana) score += 4;
+            if (data.jobTitle) score += 4;
+            if (data.prefecture) score += 4;
+            if (data.birthplace) score += 4;
+            if (data.gender && data.gender !== '無回答') score += 4;
+            if (data.birthDate) score += 4;
             
             // パーソナリティ (計30点: 各300文字以上で10点)
             if (data.bio && data.bio.length >= 300) score += 10;
@@ -765,6 +771,7 @@
                     membershipRank: safeStr(myRank || 'arrival'),
                     email: window._originalEmail || currentUser.email || null, // ★管理者のアドレスに上書きされるバグを防止
                     name: safeStr(getVal('name')),
+                    realName: safeStr(getVal('realName')), // 本名を追加
                     furigana: safeStr(getVal('furigana')),
                     jobTitle: safeStr(getVal('jobTitle')),
                     prefecture: safeStr(getVal('prefecture')),
@@ -807,6 +814,8 @@
                             ...finalData,
                             isHidden: false
                         };
+                        // ★公開データからは本名を削除（プライバシー保護）
+                        delete publicData.realName;
                         await setDoc(publicRef, publicData);
                     } else {
                         // 検索非公開、または無料会員の場合はミニマルデータのみ更新
@@ -822,7 +831,12 @@
                         await setDoc(publicRef, minimalData);
                     }
 
-                    showNotification('航海録を保存しました！');
+                    if (isPublicSetting && !canPublish) {
+                        alert(`プロフィールを保存しました。\n※現在「無料会員(ARRIVAL)」のため、設定を「公開」にしても検索結果には表示されません。表示するにはプランのアップグレードをご検討ください。`);
+                    } else {
+                        showNotification('航海録を保存しました！');
+                    }
+                    
                     setTimeout(() => { 
                         window.location.href = targetUid ? `user.html?uid=${targetUid}` : 'user.html'; 
                     }, 1000);
