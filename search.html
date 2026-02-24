@@ -393,12 +393,7 @@
                         const mySnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                         if (mySnap.exists()) {
                             if (mySnap.data().userId === 'admin') isAdmin = true;
-                            // ARRIVAL(旧WALKER)チェック (管理者は免除)
-                            if (mySnap.data().membershipRank === 'arrival' && !isAdmin) {
-                                alert("検索機能はSETTLER以上の会員限定です。");
-                                window.location.href = "upgrade.html";
-                                return;
-                            }
+                            // ★変更: ARRIVALの閲覧制限を解除し、無料会員でも他のユーザーを検索できるようにしました。
                         }
                     } catch(e){}
                 }
