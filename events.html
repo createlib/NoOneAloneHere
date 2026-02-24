@@ -2034,8 +2034,8 @@
                                     const data = uDoc.data();
                                     if(data.photoURL) avatarUrl = data.photoURL;
                                     
-                                    // 主催者は常に表示
-                                    if (uid === evt.organizerId) {
+                                    // ★変更: 主催者だけでなく「管理者(isAdmin)」も常に表示対象に含める
+                                    if (uid === evt.organizerId || isAdmin) {
                                         isVisible = true;
                                     } else {
                                         // 検索非公開（無料会員含む）のユーザーはアイコン非表示
