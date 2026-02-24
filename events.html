@@ -151,18 +151,28 @@
                 </a>
             </div>
 
+            <!-- Header Actions -->
             <div class="flex items-center gap-3">
+                <!-- PC Navigation Links -->
                 <div class="hidden lg:flex items-center gap-6 mr-4">
                     <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海(ホーム)</a>
                     <a href="events.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント・仕事</a>
                     <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
+                    <button onclick="alert('マッチング機能は準備中です。\nComing Soon!')" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-handshake"></i> マッチ</button>
                     <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
+                <!-- PC用 UPGRADEボタン -->
+                <a href="upgrade.html" class="auth-required hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] text-xs font-bold rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border border-[#996515]">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> 契約変更
+                </a>
+
                 <a href="notifications.html" class="auth-required p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
                     <i class="fa-regular fa-bell text-xl"></i>
-                    <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]"></span>
+                    <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]" id="nav-badge"></span>
                 </a>
+                
+                <button onclick="location.reload()" class="p-2 text-brand-300 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
 
                 <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
                 <button onclick="handleAuthAction()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-brand-800 transition-colors flex items-center gap-2">
@@ -2011,24 +2021,54 @@
                     partsHtml = '<div class="text-[10px] text-brand-500">まだ参加者はいません</div>';
                 } else {
                     partsHtml = '<div class="flex -space-x-2 overflow-hidden py-1 pl-1">';
-                    let count = 0;
-                    for (const uid of participants) {
-                        if (count >= 6) break;
-                        
+                    
+                    // 各参加者の公開情報を取得し、アイコン表示可能か判定する
+                    const participantDataPromises = participants.map(async (uid) => {
                         let avatarUrl = 'https://via.placeholder.com/32?text=U';
+                        let isVisible = true;
+                        
                         if (!isAdminMock) {
                             try {
                                 const uDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', uid));
-                                if(uDoc.exists() && uDoc.data().photoURL) avatarUrl = uDoc.data().photoURL;
-                            } catch(e){}
+                                if(uDoc.exists()) {
+                                    const data = uDoc.data();
+                                    if(data.photoURL) avatarUrl = data.photoURL;
+                                    
+                                    // 主催者は常に表示
+                                    if (uid === evt.organizerId) {
+                                        isVisible = true;
+                                    } else {
+                                        // 検索非公開（無料会員含む）のユーザーはアイコン非表示
+                                        if (data.isHidden === true) {
+                                            isVisible = false;
+                                        }
+                                    }
+                                } else {
+                                    isVisible = false;
+                                }
+                            } catch(e){
+                                isVisible = false;
+                            }
                         }
+                        return { uid, avatarUrl, isVisible };
+                    });
 
-                        // アイコンクリック時の保護
-                        const userLinkAction = currentUser ? `window.location.href='user.html?uid=${uid}'` : `if(confirm('プロフィールを見るにはログインが必要です。ログイン画面へ移動しますか？')) window.location.href='login.html'`;
-                        partsHtml += `<div onclick="${userLinkAction}" class="cursor-pointer inline-block h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-100 border border-brand-300 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"><img src="${avatarUrl}" class="w-full h-full object-cover"></div>`;
+                    const resolvedParticipants = await Promise.all(participantDataPromises);
+                    const visibleList = resolvedParticipants.filter(p => p.isVisible);
+
+                    let count = 0;
+                    for (const p of visibleList) {
+                        if (count >= 6) break;
+                        const userLinkAction = currentUser ? `window.location.href='user.html?uid=${p.uid}'` : `if(confirm('プロフィールを見るにはログインが必要です。ログイン画面へ移動しますか？')) window.location.href='login.html'`;
+                        partsHtml += `<div onclick="${userLinkAction}" class="cursor-pointer inline-block h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-100 border border-brand-300 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"><img src="${p.avatarUrl}" class="w-full h-full object-cover"></div>`;
                         count++;
                     }
-                    if (participants.length > 6) partsHtml += `<div class="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-50 text-[10px] font-bold text-brand-600 border border-brand-200">+${participants.length - 6}</div>`;
+                    
+                    // 全参加者数から、表示したアイコンの数を引いたものを「+〇〇名」として表示
+                    const remainingCount = participants.length - count;
+                    if (remainingCount > 0) {
+                        partsHtml += `<div class="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-50 text-[10px] font-bold text-brand-600 border border-brand-200">+${remainingCount}</div>`;
+                    }
                     partsHtml += '</div>';
                 }
             } else {
