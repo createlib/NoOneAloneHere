@@ -319,6 +319,12 @@
                     <p id="modal-event-desc" class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap tracking-wide"></p>
                 </div>
 
+                <!-- ★追加: 参加者一覧エリア -->
+                <div class="mb-6">
+                    <h4 class="text-[10px] font-bold text-brand-500 uppercase mb-2 tracking-widest border-b border-brand-200 pb-1">参加者 (<span id="modal-event-participants-count">0</span>名)</h4>
+                    <div id="modal-event-participants" class="flex flex-wrap gap-2 min-h-[40px]"></div>
+                </div>
+
                 <!-- Google Calendar Button -->
                 <a id="modal-gcal-btn" href="#" target="_blank" class="block w-full py-3.5 bg-[#3e2723] text-[#d4af37] text-center font-bold rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md border border-[#b8860b] tracking-widest text-sm">
                     <i class="fa-brands fa-google mr-2"></i> カレンダーに追加
@@ -754,7 +760,7 @@
         }
 
         // --- Detail Modal (Home画面用) ---
-        window.openEventDetail = (evt) => {
+        window.openEventDetail = async (evt) => {
             const modal = document.getElementById('event-detail-modal');
             
             document.getElementById('modal-event-title').textContent = evt.title || '名称未設定';
@@ -788,7 +794,86 @@
             const eventLinkBtn = document.getElementById('modal-event-link');
             if (eventLinkBtn) eventLinkBtn.href = `events.html?eventId=${evt.id}`;
             
+            // ★追加: 参加者一覧の読み込みと表示
+            const partsContainer = document.getElementById('modal-event-participants');
+            const countEl = document.getElementById('modal-event-participants-count');
+            partsContainer.innerHTML = '<div class="text-[10px] text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i>読み込み中...</div>';
+            countEl.textContent = '0';
+            
             modal.classList.remove('hidden');
+
+            let participants = [];
+            if (isAdminMock) {
+                participants = ['user1', 'user2']; // Dummy
+            } else {
+                try {
+                    const partsRef = collection(db, 'artifacts', appId, 'public', 'data', 'events', evt.id, 'participants');
+                    const partsSnap = await getDocs(partsRef);
+                    partsSnap.forEach(d => participants.push(d.id));
+                } catch(e) {
+                    console.error("Parts fetch error:", e);
+                }
+            }
+
+            countEl.textContent = participants.length;
+            const isOrganizer = currentUser && currentUser.uid === evt.organizerId;
+
+            if (evt.isParticipantsPublic || isOrganizer || isAdmin) {
+                if (participants.length === 0) {
+                    partsContainer.innerHTML = '<div class="text-[10px] text-brand-500">まだ参加者はいません</div>';
+                } else {
+                    partsContainer.innerHTML = '<div class="flex -space-x-2 overflow-hidden py-1 pl-1" id="modal-participants-icons"></div>';
+                    const iconsContainer = document.getElementById('modal-participants-icons');
+                    
+                    const participantDataPromises = participants.map(async (uid) => {
+                        let avatarUrl = 'https://via.placeholder.com/32?text=U';
+                        let isVisible = true;
+                        
+                        if (!isAdminMock) {
+                            try {
+                                const uDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', uid));
+                                if(uDoc.exists()) {
+                                    const data = uDoc.data();
+                                    if(data.photoURL) avatarUrl = data.photoURL;
+                                    
+                                    if (uid === evt.organizerId || isAdmin) {
+                                        isVisible = true;
+                                    } else {
+                                        if (data.isHidden === true) {
+                                            isVisible = false;
+                                        }
+                                    }
+                                } else {
+                                    isVisible = false;
+                                }
+                            } catch(e){
+                                isVisible = false;
+                            }
+                        }
+                        return { uid, avatarUrl, isVisible };
+                    });
+
+                    const resolvedParticipants = await Promise.all(participantDataPromises);
+                    const visibleList = resolvedParticipants.filter(p => p.isVisible);
+
+                    let partsHtml = '';
+                    let count = 0;
+                    for (const p of visibleList) {
+                        if (count >= 10) break; // ホーム画面のモーダルでは最大10件までアイコン表示
+                        const userLinkAction = currentUser ? `window.location.href='user.html?uid=${p.uid}'` : `if(confirm('プロフィールを見るにはログインが必要です。ログイン画面へ移動しますか？')) window.location.href='login.html'`;
+                        partsHtml += `<div onclick="${userLinkAction}" class="cursor-pointer inline-block h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-100 border border-brand-300 flex items-center justify-center overflow-hidden hover:scale-110 transition-transform"><img src="${p.avatarUrl}" class="w-full h-full object-cover"></div>`;
+                        count++;
+                    }
+                    
+                    const remainingCount = participants.length - count;
+                    if (remainingCount > 0) {
+                        partsHtml += `<div class="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-50 text-[10px] font-bold text-brand-600 border border-brand-200">+${remainingCount}</div>`;
+                    }
+                    iconsContainer.innerHTML = partsHtml;
+                }
+            } else {
+                partsContainer.innerHTML = '<div class="text-[10px] text-brand-500 bg-brand-50 px-2 py-1.5 rounded-sm border border-brand-200"><i class="fa-solid fa-lock mr-1"></i>参加者は主催者のみ確認できます</div>';
+            }
         };
 
         window.closeDetailModal = () => {
