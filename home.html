@@ -403,9 +403,11 @@
         let myEvents = []; 
         let currentCalendarDate = new Date();
         let myProfile = null;
+        let isAdmin = false;
 
         onAuthStateChanged(auth, async (user) => {
             if (isAdminMock) {
+                isAdmin = true;
                 myProfile = { name: 'テスト管理者', userId: 'admin' };
                 document.getElementById('participating-events-list').innerHTML = '<div class="text-xs text-brand-400 italic p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest">管理者モード: 参加イベントなし</div>';
                 document.getElementById('hosting-events-list').innerHTML = '<div class="text-xs text-brand-400 italic p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest">管理者モード: 主催イベントなし</div>';
@@ -417,6 +419,7 @@
                     const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                     if (docSnap.exists()) {
                         myProfile = docSnap.data();
+                        if (myProfile.userId === 'admin') isAdmin = true;
                     } else {
                         myProfile = { name: 'User', userId: user.uid };
                     }
