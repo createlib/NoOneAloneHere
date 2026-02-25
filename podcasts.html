@@ -26,10 +26,9 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .video-card { transition: all 0.3s ease; }
-        .video-card:hover { transform: translateY(-4px); }
-        .video-card:hover .thumb-overlay { opacity: 1; backdrop-filter: blur(2px); }
-        .video-card:hover .play-icon { transform: scale(1.1); }
+        .podcast-card { transition: all 0.3s ease; }
+        .podcast-card:hover { transform: translateY(-4px); }
+        .podcast-card:hover .play-icon { transform: scale(1.1); background-color: #b8860b; color: #fffdf9; border-color: #b8860b; }
         
         .glass-bar {
             background: rgba(247, 245, 240, 0.85);
@@ -81,7 +80,8 @@
                     <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
-                <button id="btn-post" onclick="alert('音声配信機能は準備中です。Coming Soon!')" class="hidden items-center px-4 py-1.5 bg-[#b8860b] text-[#fffdf9] text-xs font-bold rounded-sm shadow-md hover:bg-[#996515] transition-colors tracking-widest">
+                <!-- ★修正: リンク先を podcast_post.html に変更 -->
+                <button id="btn-post" onclick="window.location.href='podcast_post.html'" class="hidden items-center px-4 py-1.5 bg-[#b8860b] text-[#fffdf9] text-xs font-bold rounded-sm shadow-md hover:bg-[#996515] transition-colors tracking-widest">
                     <i class="fa-solid fa-microphone mr-1"></i> 音声を配信
                 </button>
 
@@ -190,14 +190,9 @@
             </div>
         </div>
 
-        <!-- Podcast Grid (Mock) -->
-        <div id="podcast-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8 pb-12">
-            <!-- 開発中のためモックデータを表示 -->
-            <div class="col-span-full flex flex-col items-center justify-center text-brand-500 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-[#b8860b]">
-                <i class="fa-solid fa-headphones text-5xl mb-4 text-[#d4af37]"></i>
-                <p class="font-bold tracking-widest text-lg text-[#3e2723] mb-2 font-serif">NOAH CAST は現在準備中です</p>
-                <p class="text-sm">音声配信機能のリリースまで、もうしばらくお待ちください。</p>
-            </div>
+        <!-- Podcast Grid -->
+        <div id="podcast-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 pb-12">
+            <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>音声を読み込み中...</div>
         </div>
 
     </main>
@@ -205,7 +200,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
@@ -215,6 +210,9 @@
 
         let currentUser = null;
         let isAdmin = false;
+        let myRank = 'arrival';
+        let allPodcasts = [];
+        let currentTag = '';
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
@@ -225,6 +223,7 @@
                 document.getElementById('btn-post').classList.remove('hidden');
                 document.getElementById('btn-post').classList.add('inline-flex');
                 updateNavForAuth(true);
+                fetchPodcasts();
                 return;
             }
 
@@ -244,8 +243,10 @@
                     }
                 } catch(e) {}
                 updateNavForAuth(true);
+                fetchPodcasts();
             } else {
                 updateNavForAuth(false);
+                fetchPodcasts();
             }
         });
 
@@ -289,8 +290,27 @@
             }
         };
 
+        async function fetchPodcasts() {
+            try {
+                const podRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
+                const snap = await getDocs(podRef);
+                
+                allPodcasts = [];
+                snap.forEach(doc => {
+                    allPodcasts.push({ id: doc.id, ...doc.data() });
+                });
+                
+                allPodcasts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                renderPodcasts();
+            } catch (error) {
+                console.error("Error fetching podcasts:", error);
+                document.getElementById('podcast-grid').innerHTML = '<div class="col-span-full text-center text-red-500 py-10">音声の取得に失敗しました</div>';
+            }
+        }
+
         window.filterByTag = (tag) => {
-            // モック用のUI更新のみ
+            currentTag = tag;
+            
             document.querySelectorAll('.tag-btn').forEach(btn => {
                 if ((tag === '' && btn.textContent === 'すべて') || btn.textContent.includes(tag) && tag !== '') {
                     btn.className = 'tag-btn active whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#3e2723] text-[#d4af37] border border-[#b8860b] transform scale-105';
@@ -298,7 +318,64 @@
                     btn.className = 'tag-btn whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#fffdf9] text-brand-600 border border-brand-200 hover:bg-brand-50 hover:border-[#b8860b] transform hover:scale-105';
                 }
             });
+            renderPodcasts();
         };
+
+        document.getElementById('search-input').addEventListener('input', renderPodcasts);
+
+        function renderPodcasts() {
+            const grid = document.getElementById('podcast-grid');
+            const searchQ = document.getElementById('search-input').value.toLowerCase();
+            
+            let filtered = allPodcasts.filter(p => {
+                const matchTag = currentTag === '' || (p.tags && p.tags.includes(currentTag));
+                const matchSearch = searchQ === '' || 
+                                    (p.title && p.title.toLowerCase().includes(searchQ)) || 
+                                    (p.guests && p.guests.join(',').toLowerCase().includes(searchQ));
+                return matchTag && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-microphone-slash text-4xl mb-3 text-brand-200"></i><p>該当する配信がありません。</p></div>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(p => {
+                const date = new Date(p.createdAt);
+                const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+                const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
+                
+                html += `
+                <a href="javascript:alert('CASTの再生画面は準備中です (ID: ${p.id})')" class="podcast-card flex items-stretch bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-200 shadow-sm hover:shadow-md cursor-pointer group h-32">
+                    <div class="w-32 h-full flex-shrink-0 relative bg-[#1a110f] border-r border-brand-100">
+                        <img src="${thumbUrl}" class="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="play-icon w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-all duration-300">
+                                <i class="fa-solid fa-play text-white text-sm ml-0.5"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col justify-between flex-1 min-w-0">
+                        <div>
+                            <div class="flex flex-wrap gap-1 mb-1 h-4 overflow-hidden">
+                                ${(p.tags || []).slice(0,2).map(t => `<span class="text-[8px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('')}
+                            </div>
+                            <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 font-serif tracking-wide group-hover:text-[#b8860b] transition-colors">${p.title}</h3>
+                        </div>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-5 h-5 rounded-full border border-brand-200 object-cover flex-shrink-0" onerror="this.src='https://via.placeholder.com/24?text=U'">
+                                <span class="text-[10px] text-brand-600 truncate font-bold">${p.authorName || '名無し'}</span>
+                            </div>
+                            <span class="text-[9px] text-brand-400 font-mono flex-shrink-0">${dateStr}</span>
+                        </div>
+                    </div>
+                </a>
+                `;
+            });
+            grid.innerHTML = html;
+        }
     </script>
 </body>
 </html>
