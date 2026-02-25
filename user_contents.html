@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>オウンドメディアCH | NOAH</title>
+    <!-- ★変更: タイトルを世界観に合わせて変更 -->
+    <title>MEDIA LOG | NOAH</title>
     <link rel="icon" href="img/icon.png">
     
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
@@ -43,29 +44,56 @@
 
     <!-- Navbar -->
     <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
             <div class="flex items-center gap-4">
                 <a href="javascript:history.back()" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest mr-2">
                     <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">戻る</span>
                 </a>
                 <a href="home.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
-                    <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-photo-film"></i></span>
-                    <span class="hidden sm:inline">MEDIA CH</span>
+                    <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-photo-film text-[#d4af37]"></i></span>
+                    <!-- ★変更: ヘッダー表記をMEDIA LOGに変更 -->
+                    <span class="hidden sm:inline">MEDIA LOG</span>
                 </a>
             </div>
             
-            <div class="flex items-center gap-3">
-                <div class="hidden lg:flex items-center gap-6 mr-4">
+            <div class="flex items-center gap-3 h-full">
+                <!-- ★変更: PC Navigation Links を他ページと完全に統一 -->
+                <div class="hidden lg:flex items-center gap-6 mr-4 h-full">
                     <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海</a>
                     <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
                     <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
+                    
+                    <!-- メディア ドロップダウン (PC) -->
+                    <div class="relative group h-full flex items-center">
+                        <button class="text-[#b8860b] transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
+                            <i class="fa-solid fa-photo-film"></i> メディア
+                        </button>
+                        <div class="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-[#fffdf9] border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity">
+                            <a href="videos.html" class="block px-4 py-3 text-sm font-bold text-brand-400 hover:bg-brand-50 hover:text-brand-700 border-b border-brand-100 transition-colors tracking-widest"><i class="fa-solid fa-film mr-2 text-brand-500"></i>THEATER</a>
+                            <a href="podcasts.html" class="block px-4 py-3 text-sm font-bold text-brand-400 hover:bg-brand-50 hover:text-brand-700 transition-colors tracking-widest"><i class="fa-solid fa-podcast mr-2 text-[#b8860b]"></i>CAST</a>
+                        </div>
+                    </div>
+
                     <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
+
+                <a href="notifications.html" class="auth-required p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]" id="nav-badge"></span>
+                </a>
+                
+                <button onclick="location.reload()" class="p-2 text-brand-300 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
+
+                <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
+                <button onclick="handleAuthAction()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-brand-800 transition-colors flex items-center gap-2">
+                    <span class="hidden sm:inline tracking-widest" id="nav-auth-text">下船する</span>
+                    <i class="fa-solid fa-right-from-bracket text-lg" id="nav-auth-icon"></i>
+                </button>
             </div>
         </div>
     </nav>
 
-    <!-- Bottom Nav (SP) -->
+    <!-- ★変更: Bottom Nav (SP) を他ページと統一し、メディアポップアップを追加 -->
     <nav class="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="bottom-nav-content">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
@@ -80,12 +108,43 @@
                 <i class="fa-solid fa-compass text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">さがす</span>
             </a>
-            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+            <a href="javascript:void(0)" onclick="toggleTheaterMenu()" class="flex flex-col items-center justify-center w-full h-full text-[#b8860b] border-t-2 border-[#b8860b] pt-[2px] transition-colors">
+                <i class="fa-solid fa-photo-film text-xl mb-1"></i>
+                <span class="text-[10px] font-bold tracking-widest">メディア</span>
+            </a>
+            <a href="user.html" class="auth-required flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マイページ</span>
             </a>
         </div>
     </nav>
+
+    <!-- SP用 メディア選択ポップアップ -->
+    <div id="sp-theater-menu" class="hidden fixed inset-0 z-[6000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end justify-center">
+        <div class="absolute inset-0" onclick="toggleTheaterMenu()"></div>
+        <div class="bg-[#fffdf9] bg-texture w-full rounded-t-xl p-6 transform transition-transform translate-y-full relative shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sp-theater-menu-content">
+            <div class="flex justify-between items-center mb-4 border-b border-brand-200 pb-3">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center"><i class="fa-solid fa-photo-film text-brand-500 mr-2"></i>メディアを選択</h3>
+                <button onclick="toggleTheaterMenu()" class="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors border border-brand-200 shadow-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3">
+                <a href="videos.html" class="flex items-center gap-4 p-4 border border-brand-200 rounded-sm hover:bg-brand-50 transition-colors shadow-sm bg-white">
+                    <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-film"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH THEATER</h4>
+                        <p class="text-[10px] text-brand-500 mt-1 font-bold">動画で想いや活動の軌跡を共有</p>
+                    </div>
+                </a>
+                <a href="podcasts.html" class="flex items-center gap-4 p-4 border border-[#b8860b] bg-brand-50 rounded-sm shadow-sm">
+                    <div class="w-12 h-12 bg-[#3e2723] text-[#d4af37] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-podcast"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH CAST</h4>
+                        <p class="text-[10px] text-[#b8860b] mt-1 font-bold">音声で深い考えや対話を配信</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Content -->
     <main class="w-full max-w-[1600px] mx-auto pt-20 px-4 sm:px-6 lg:px-8">
@@ -192,6 +251,28 @@
             loadUserInfo();
             loadMyContents();
         });
+
+        window.handleAuthAction = () => {
+            if (currentUser || isAdminMock) {
+                if (isAdminMock) localStorage.removeItem('isAdminMock');
+                signOut(auth);
+                window.location.reload(); 
+            } else {
+                window.location.href = 'login.html';
+            }
+        };
+
+        window.toggleTheaterMenu = () => {
+            const menu = document.getElementById('sp-theater-menu');
+            const content = document.getElementById('sp-theater-menu-content');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => content.classList.remove('translate-y-full'), 10);
+            } else {
+                content.classList.add('translate-y-full');
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            }
+        };
 
         async function loadUserInfo() {
             try {
