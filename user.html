@@ -249,11 +249,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Bio Section (マークダウン対応) -->
-                            <div class="mb-6 relative z-20" id="section-bio">
-                                <div id="profile-bio" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
-                            </div>
-
+                            <!-- ★変更: フォロー・フォロワーを自己紹介の上に移動 -->
                             <div class="flex items-center gap-6 py-4 border-t border-brand-100 relative z-20">
                                 <div class="text-center cursor-pointer hover:opacity-75 transition-opacity">
                                     <span class="block font-bold text-brand-900 text-lg font-serif" id="count-following">-</span>
@@ -263,6 +259,11 @@
                                     <span class="block font-bold text-brand-900 text-lg font-serif" id="count-followers">-</span>
                                     <span class="text-xs text-brand-500 font-medium tracking-widest">フォロワー</span>
                                 </div>
+                            </div>
+
+                            <!-- Bio Section (マークダウン対応) -->
+                            <div class="py-4 border-t border-brand-100 relative z-20" id="section-bio">
+                                <div id="profile-bio" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
                             </div>
 
                             <div class="py-4 border-t border-brand-100 space-y-3 relative z-20">
@@ -369,10 +370,20 @@
                     </div>
 
                     <!-- Goals Section -->
-                    <div id="section-goals" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6">
-                        <h2 class="text-lg font-bold text-brand-900 mb-4 pb-2 border-b border-brand-200 font-serif tracking-widest">目標・ビジョン</h2>
-                        <!-- マークダウン対応クラスを付与 -->
-                        <div id="profile-goals" class="prose prose-sm max-w-none prose-stone text-brand-700 mt-2">未設定</div>
+                    <div id="section-goals" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4 pb-2 border-b border-brand-200">
+                            <h2 class="text-lg font-bold text-brand-900 font-serif tracking-widest">目標・ビジョン</h2>
+                            <i id="goals-lock-icon" class="fa-solid fa-lock text-brand-300 hidden"></i>
+                        </div>
+                        <div id="goals-container" class="hidden">
+                            <div class="relative mt-2">
+                                <div id="profile-goals" class="prose prose-sm max-w-none prose-stone text-brand-700"></div>
+                            </div>
+                        </div>
+                        <div id="goals-mask" class="hidden py-8 bg-brand-50 border border-dashed border-brand-200 text-center mt-4">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#fffdf9] border border-brand-100 mb-3 shadow-sm"><i class="fa-solid fa-lock text-brand-300"></i></div>
+                            <p class="text-sm font-bold text-brand-500 tracking-widest"></p>
+                        </div>
                     </div>
 
                     <!-- Career Section -->
@@ -907,7 +918,7 @@
         };
 
         function toggleRestrictedContent(show) {
-            const masks = ['message-mask', 'career-mask', 'personal-mask'];
+            const masks = ['message-mask', 'career-mask', 'personal-mask', 'goals-mask'];
             document.querySelectorAll('.mutual-only').forEach(el => {
                 if(show) el.classList.remove('hidden');
                 else el.classList.add('hidden');
@@ -917,12 +928,16 @@
                 document.getElementById('message-lock-icon')?.classList.add('hidden');
                 document.getElementById('career-container')?.classList.remove('hidden');
                 document.getElementById('career-lock-icon')?.classList.add('hidden');
+                document.getElementById('goals-container')?.classList.remove('hidden');
+                document.getElementById('goals-lock-icon')?.classList.add('hidden');
                 masks.forEach(id => document.getElementById(id)?.classList.add('hidden'));
             } else {
                 document.getElementById('message-container')?.classList.add('hidden');
                 document.getElementById('message-lock-icon')?.classList.remove('hidden');
                 document.getElementById('career-container')?.classList.add('hidden');
                 document.getElementById('career-lock-icon')?.classList.remove('hidden');
+                document.getElementById('goals-container')?.classList.add('hidden');
+                document.getElementById('goals-lock-icon')?.classList.remove('hidden');
                 masks.forEach(id => document.getElementById(id)?.classList.remove('hidden'));
             }
         }
@@ -991,8 +1006,6 @@
 
             hideIfRestricted('section-tags');
             hideIfRestricted('section-matching');
-            hideIfRestricted('section-goals');
-            hideIfRestricted('section-message'); 
 
             const showRestricted = (isMutual || isViewerPrivileged) && !applyRestriction;
             toggleRestrictedContent(showRestricted);
@@ -1006,17 +1019,22 @@
                 }
                 document.querySelector('#message-mask p').innerHTML = maskMsg;
                 document.querySelector('#career-mask p').innerHTML = maskMsg;
+                document.querySelector('#goals-mask p').innerHTML = maskMsg;
                 document.querySelector('#personal-mask p').innerHTML = '<i class="fa-solid fa-lock mr-2"></i>' + maskMsg;
 
                 if (!isViewerPrivileged) {
                     document.getElementById('section-message').classList.remove('hidden');
+                    document.getElementById('section-goals').classList.remove('hidden');
                     document.getElementById('message-mask').classList.remove('hidden');
+                    document.getElementById('career-mask').classList.remove('hidden');
+                    document.getElementById('goals-mask').classList.remove('hidden');
                     document.getElementById('personal-mask').classList.remove('hidden');
                 }
             } else if (!isMutual && !isViewerPrivileged) {
                 const normalMsg = '相互フォローで詳細を表示';
                 document.querySelector('#message-mask p').textContent = normalMsg;
                 document.querySelector('#career-mask p').textContent = normalMsg;
+                document.querySelector('#goals-mask p').textContent = normalMsg;
                 document.querySelector('#personal-mask p').textContent = normalMsg;
             }
 
