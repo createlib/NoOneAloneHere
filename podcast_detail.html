@@ -38,6 +38,17 @@
         .prose-invert h1, .prose-invert h2, .prose-invert h3 { color: #f7f5f0; border-color: rgba(255,255,255,0.2); }
         .prose-invert strong { color: #d4af37; }
 
+        /* ★追加: スマホ画面での文字サイズ最適化（改行を防ぐ） */
+        @media (max-width: 640px) {
+            .prose p, .prose ul, .prose ol, .prose li {
+                font-size: 0.75rem; /* text-xs 相当 */
+                line-height: 1.6;
+            }
+            .prose h1 { font-size: 1.1rem; }
+            .prose h2 { font-size: 1rem; }
+            .prose h3 { font-size: 0.9rem; }
+        }
+
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(212, 175, 55, 0.3); border-radius: 10px; }
@@ -166,28 +177,25 @@
                         </div>
                     </div>
 
-                    <!-- 裏面 (エピソードメモ) -->
-                    <div class="absolute inset-0 w-full h-full bg-[#2a1a17]/95 backdrop-blur-2xl rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.7)] border border-[#b8860b]/40 p-5 sm:p-6 overflow-hidden flex flex-col" style="backface-visibility: hidden; transform: rotateY(180deg);">
+                    <!-- ★変更: 裏面 (エピソードメモ) のデザインをシンプルで読みやすく変更 -->
+                    <div class="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden flex flex-col p-5 sm:p-8 border border-white/5" style="backface-visibility: hidden; transform: rotateY(180deg);">
                         
-                        <div class="flex items-center justify-between border-b border-[#b8860b]/30 pb-3 mb-4 shrink-0">
-                            <h3 class="text-[#d4af37] text-sm font-bold tracking-widest flex items-center gap-2 font-serif">
+                        <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-2 text-left" onclick="event.stopPropagation()">
+                            <h3 class="text-[#d4af37] text-sm sm:text-base font-bold tracking-widest flex items-center gap-2 font-serif mb-4 border-b border-white/10 pb-2">
                                 <i class="fa-solid fa-align-left"></i> エピソードメモ
                             </h3>
-                            <div class="flex items-center gap-2 text-white/40 text-[10px] tracking-widest font-bold">
-                                <span>タップで戻る</span>
-                                <i class="fa-solid fa-rotate text-xs"></i>
-                            </div>
-                        </div>
-
-                        <!-- スクロール可能なメモ領域（クリックイベントの伝播を止めてフリップ誤爆を防ぐ） -->
-                        <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-2 text-left" onclick="event.stopPropagation()">
                             <div id="guests-area-full" class="mb-4 hidden">
                                 <p class="text-[10px] font-bold text-[#b8860b] tracking-widest mb-1">GUEST</p>
                                 <p id="guests-text-full" class="text-xs text-white font-bold bg-white/10 px-2 py-1 rounded-sm inline-block tracking-widest border border-white/5"></p>
                             </div>
-                            <div id="full-podcast-desc" class="prose prose-sm prose-invert max-w-none text-white/80 leading-relaxed tracking-wide"></div>
+                            <div id="full-podcast-desc" class="prose prose-sm md:prose-base prose-invert max-w-none text-white/90 leading-relaxed tracking-wide font-medium drop-shadow-sm"></div>
                         </div>
-                        
+
+                        <div class="mt-3 text-center shrink-0 pt-2 border-t border-white/10">
+                            <span class="text-white/40 text-[10px] tracking-widest font-bold flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-rotate"></i> タップして画像に戻る
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -225,7 +233,8 @@
     </div>
 
     <!-- Main Content (背景となるスクロール領域) -->
-    <main class="max-w-4xl mx-auto pt-24 px-4 sm:px-6 lg:px-8 pb-[300px] lg:pb-[200px]">
+    <!-- ★変更: max-w-4xl から max-w-6xl に変更し横幅を拡張 -->
+    <main class="max-w-6xl mx-auto pt-24 px-4 sm:px-6 lg:px-8 pb-[300px] lg:pb-[200px]">
         
         <div class="bg-brand-50 p-3 rounded-sm border border-brand-200 text-center mb-8 shadow-sm">
             <p class="text-[10px] sm:text-xs text-brand-600 font-bold tracking-widest"><i class="fa-solid fa-circle-info mr-1"></i> 音声を再生しながら、下の詳細やコメントを読むことができます。</p>
@@ -718,8 +727,8 @@
                         delBtn = `<button onclick="deleteComment('${docSnap.id}')" class="text-red-400 hover:text-red-600 text-xs transition-colors ml-4"><i class="fa-solid fa-trash"></i></button>`;
                     }
 
-                    // 鍵コメントの表示制御
-                    let textHtml = `<p class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap">${c.text}</p>`;
+                    // ★変更: コメントテキストのサイズをスマホ時に小さく設定
+                    let textHtml = `<p class="text-[11px] sm:text-xs text-brand-700 leading-relaxed whitespace-pre-wrap">${c.text}</p>`;
                     let bgClass = "bg-brand-50 border-brand-100";
                     
                     if (c.isPrivate) {
@@ -729,13 +738,13 @@
                         if (isAdmin || isOwner || isAuthor) {
                             bgClass = "bg-red-50 border-red-200";
                             textHtml = `
-                                <div class="mb-1.5 text-[10px] text-red-500 font-bold tracking-widest flex items-center gap-1 border-b border-red-200 pb-1 w-fit"><i class="fa-solid fa-lock"></i> 投稿者にのみ公開されています</div>
-                                <p class="text-xs text-brand-900 leading-relaxed whitespace-pre-wrap">${c.text}</p>
+                                <div class="mb-1.5 text-[9px] sm:text-[10px] text-red-500 font-bold tracking-widest flex items-center gap-1 border-b border-red-200 pb-1 w-fit"><i class="fa-solid fa-lock"></i> 投稿者にのみ公開されています</div>
+                                <p class="text-[11px] sm:text-xs text-brand-900 leading-relaxed whitespace-pre-wrap">${c.text}</p>
                             `;
                         } else {
                             // 権限がない場合は中身を隠す
                             textHtml = `
-                                <div class="py-2 text-xs text-brand-400 italic flex items-center gap-2 tracking-widest font-bold"><i class="fa-solid fa-lock"></i> このコメントは投稿者のみ公開されています</div>
+                                <div class="py-2 text-[10px] sm:text-xs text-brand-400 italic flex items-center gap-2 tracking-widest font-bold"><i class="fa-solid fa-lock"></i> このコメントは投稿者のみ公開されています</div>
                             `;
                         }
                     }
