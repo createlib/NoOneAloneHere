@@ -274,10 +274,10 @@
                                 <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-feather"></i></div><span id="profile-job" class="font-medium">-</span></div>
                                 <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div><span id="profile-location" class="font-medium">-</span></div>
                                 
-                                <!-- ★追加: 投稿した動画がある場合のみ表示されるリンク -->
+                                <!-- ★変更: リンクの名称とアイコンをオウンドメディアCHに変更 -->
                                 <a id="profile-video-link" href="#" class="hidden items-center gap-3 text-sm font-bold text-brand-600 hover:text-brand-800 transition-colors group w-fit">
-                                    <div class="w-8 h-8 rounded-full bg-[#3e2723] flex items-center justify-center text-[#d4af37] border border-[#b8860b] flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm"><i class="fa-solid fa-play ml-0.5 text-xs"></i></div>
-                                    <span class="border-b border-transparent group-hover:border-[#b8860b] tracking-widest">投稿した動画を見る</span>
+                                    <div class="w-8 h-8 rounded-full bg-[#3e2723] flex items-center justify-center text-[#d4af37] border border-[#b8860b] flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm"><i class="fa-solid fa-photo-film text-xs"></i></div>
+                                    <span class="border-b border-transparent group-hover:border-[#b8860b] tracking-widest">オウンドメディアCH</span>
                                 </a>
                                 
                                 <div class="mutual-only hidden space-y-3 pt-1">
@@ -573,7 +573,7 @@
                     if (myProfileSnap.exists()) updateDashboardUI(myProfileSnap.data());
                     else updateDashboardUI({ userId: user.uid, name: '（未設定）' });
                     
-                    checkUserVideos(user.uid); // ★追加
+                    checkUserContents(user.uid); // ★変更: 動画・音声両方のチェックに変更
                 } else {
                     isSelf = false;
                     await checkFollowStatus(user.uid, targetUid); 
@@ -586,7 +586,7 @@
                         memoBtn.classList.add('inline-flex');
                     }
                     
-                    checkUserVideos(targetUid); // ★追加
+                    checkUserContents(targetUid); // ★変更: 同上
                 }
                 updateFollowCounts(targetUid);
             } else {
@@ -594,33 +594,45 @@
             }
         });
 
-        // ★★★ 追加: 対象ユーザーの動画が存在するかチェックする関数 ★★★
-        async function checkUserVideos(uid) {
-            const videoLink = document.getElementById('profile-video-link');
-            if (!videoLink) return;
+        // ★★★ 変更: 対象ユーザーの動画または音声が存在するかチェックする関数 ★★★
+        async function checkUserContents(uid) {
+            const mediaLink = document.getElementById('profile-video-link');
+            if (!mediaLink) return;
 
             if (isAdminMock) {
-                videoLink.href = `user_videos.html?uid=${uid}`;
-                videoLink.classList.remove('hidden');
-                videoLink.classList.add('flex');
+                mediaLink.href = `user_contents.html?uid=${uid}`;
+                mediaLink.classList.remove('hidden');
+                mediaLink.classList.add('flex');
                 return;
             }
 
             try {
-                const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
-                const q = query(videosRef, where("authorId", "==", uid));
-                const snap = await getCountFromServer(q);
+                let hasContent = false;
                 
-                if (snap.data().count > 0) {
-                    videoLink.href = `user_videos.html?uid=${uid}`;
-                    videoLink.classList.remove('hidden');
-                    videoLink.classList.add('flex');
+                // 動画のチェック
+                const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
+                const qV = query(videosRef, where("authorId", "==", uid));
+                const snapV = await getCountFromServer(qV);
+                if (snapV.data().count > 0) hasContent = true;
+
+                // 音声のチェック
+                if (!hasContent) {
+                    const podRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
+                    const qP = query(podRef, where("authorId", "==", uid));
+                    const snapP = await getCountFromServer(qP);
+                    if (snapP.data().count > 0) hasContent = true;
+                }
+
+                if (hasContent) {
+                    mediaLink.href = `user_contents.html?uid=${uid}`; // ★変更: 新しいページへリンク
+                    mediaLink.classList.remove('hidden');
+                    mediaLink.classList.add('flex');
                 } else {
-                    videoLink.classList.add('hidden');
-                    videoLink.classList.remove('flex');
+                    mediaLink.classList.add('hidden');
+                    mediaLink.classList.remove('flex');
                 }
             } catch (e) {
-                console.error("Video check error:", e);
+                console.error("Content check error:", e);
             }
         }
 
