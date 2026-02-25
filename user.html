@@ -467,7 +467,9 @@
         function formatText(text) {
             if (!text) return '';
             
-            let processedText = text.replace(/__(.*?)__/g, '<u>$1</u>');
+            // ★追加: テキストが文字列以外（数値など）だった場合に文字列に変換してエラーを防ぐ
+            const textStr = String(text);
+            let processedText = textStr.replace(/__(.*?)__/g, '<u>$1</u>');
 
             let rawHtml = '';
             try {
@@ -978,8 +980,10 @@
                 const skillsContainer = document.getElementById('skills-container');
                 if (skillsContainer) {
                     skillsContainer.innerHTML = '';
-                    if (data.skills && data.skills.length > 0) {
-                        data.skills.forEach(tag => {
+                    // ★追加: 配列かどうかを確実にチェックする
+                    const skillsArray = Array.isArray(data.skills) ? data.skills : (data.skills ? [data.skills] : []);
+                    if (skillsArray.length > 0) {
+                        skillsArray.forEach(tag => {
                             skillsContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
                         });
                     } else {
@@ -990,8 +994,10 @@
                 const hobbiesContainer = document.getElementById('hobbies-container');
                 if (hobbiesContainer) {
                     hobbiesContainer.innerHTML = '';
-                    if (data.hobbies && data.hobbies.length > 0) {
-                        data.hobbies.forEach(tag => {
+                    // ★追加: 配列かどうかを確実にチェックする
+                    const hobbiesArray = Array.isArray(data.hobbies) ? data.hobbies : (data.hobbies ? [data.hobbies] : []);
+                    if (hobbiesArray.length > 0) {
+                        hobbiesArray.forEach(tag => {
                             hobbiesContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
                         });
                     } else {
@@ -1002,14 +1008,18 @@
                 // Matching
                 const canOfferList = document.getElementById('list-can-offer');
                 if (canOfferList) {
-                    canOfferList.innerHTML = data.canOffer && data.canOffer.length > 0 
-                        ? data.canOffer.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-check text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
+                    // ★追加: 過去の文字データ等に対応するための配列化
+                    const canOfferArray = Array.isArray(data.canOffer) ? data.canOffer : (data.canOffer ? [data.canOffer] : []);
+                    canOfferList.innerHTML = canOfferArray.length > 0 
+                        ? canOfferArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-check text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
                         : '<li class="text-brand-300 italic text-sm">未設定</li>';
                 }
                 const lookingForList = document.getElementById('list-looking-for');
                 if (lookingForList) {
-                    lookingForList.innerHTML = data.lookingFor && data.lookingFor.length > 0 
-                        ? data.lookingFor.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-magnifying-glass text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
+                    // ★追加: 過去の文字データ等に対応するための配列化
+                    const lookingForArray = Array.isArray(data.lookingFor) ? data.lookingFor : (data.lookingFor ? [data.lookingFor] : []);
+                    lookingForList.innerHTML = lookingForArray.length > 0 
+                        ? lookingForArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-magnifying-glass text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
                         : '<li class="text-brand-300 italic text-sm">未設定</li>';
                 }
 
@@ -1041,8 +1051,10 @@
                 const careerContainer = document.getElementById('career-container');
                 if (careerContainer) {
                     careerContainer.innerHTML = '';
-                    if (data.career && data.career.length > 0) {
-                        data.career.forEach(c => {
+                    // ★追加: 経歴が配列かどうかをチェック
+                    const careerArray = Array.isArray(data.career) ? data.career : [];
+                    if (careerArray.length > 0) {
+                        careerArray.forEach(c => {
                             const formattedDesc = formatText(c.description || '');
                             careerContainer.innerHTML += `
                                 <div class="relative pl-6 pb-2">
