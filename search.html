@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ユーザー検索 | NOAH</title>
+    <title>さがす | NOAH</title>
     <link rel="icon" href="img/icon.png">
     
     <!-- Google Fonts: Noto Serif JP -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Font Awesome -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
         tailwind.config = {
             theme: {
@@ -23,16 +22,16 @@
                     fontFamily: { serif: ['Noto Serif JP', 'serif'] },
                     colors: { 
                         brand: { 
-                            50: '#f7f5f0',   // bg
-                            100: '#e8dfd1',  // border light
-                            200: '#dcd4c6',  // border medium
-                            300: '#c8b9a6',  // border dark
-                            400: '#a09080',  // text muted
-                            500: '#8b6a4f',  // accent
-                            600: '#725b3f',  // accent hover
-                            700: '#5c4a3d',  // text body
-                            800: '#4a3b32',  // text heading
-                            900: '#3e2723'   // text dark
+                            50: '#f7f5f0',   
+                            100: '#e8dfd1',  
+                            200: '#dcd4c6',  
+                            300: '#c8b9a6',  
+                            400: '#a09080',  
+                            500: '#8b6a4f',  
+                            600: '#725b3f',  
+                            700: '#5c4a3d',  
+                            800: '#4a3b32',  
+                            900: '#3e2723'   
                         } 
                     }
                 }
@@ -45,33 +44,14 @@
             background-color: #f7f5f0; 
             color: #4a3b32;
         }
-        
         .bg-texture {
             background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
         }
+        /* 横スクロールバー非表示 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .glass-header {
-            background: rgba(255, 253, 249, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-
-        /* スマホでの3列表示調整 */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-        }
-        @media (min-width: 640px) {
-            .card-grid { grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-        }
-        @media (min-width: 1024px) {
-            .card-grid { grid-template-columns: repeat(5, 1fr); gap: 1.5rem; }
-        }
-        
-        /* Bottom Nav Safe Area */
-        .pb-safe-bottom { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
-        
+        /* ボトムナビの高さ固定設定 */
         .bottom-nav-fixed {
             position: fixed;
             bottom: 0;
@@ -84,7 +64,6 @@
             height: calc(4rem + env(safe-area-inset-bottom));
             padding-bottom: env(safe-area-inset-bottom);
         }
-        
         .bottom-nav-content {
             height: 4rem;
             display: flex;
@@ -92,220 +71,44 @@
             align-items: center;
             width: 100%;
         }
-        
-        /* Custom Checkbox */
-        .filter-checkbox:checked + div {
-            background-color: #8b6a4f;
-            border-color: #8b6a4f;
-            color: #fffdf9;
+        .body-pb-nav {
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom));
         }
-        
-        /* フォーム要素のフォーカススタイル上書き */
-        input:focus, select:focus {
-            outline: none;
-            border-color: #8b6a4f !important;
-            box-shadow: 0 0 0 1px #8b6a4f !important;
+
+        .filter-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a09080' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1em;
         }
-        
-        details > summary { list-style: none; }
-        details > summary::-webkit-details-marker { display: none; }
-        .accordion-arrow { transition: transform 0.2s ease; }
-        details[open] .accordion-arrow { transform: rotate(180deg); }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col pb-safe-bottom lg:pb-0 bg-texture">
+<body class="antialiased overflow-x-hidden body-pb-nav lg:pb-0 bg-texture">
 
     <!-- Navbar -->
-    <nav class="glass-header border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
+    <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
             <div class="flex items-center gap-4">
-                <a href="search.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
-                    <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-anchor"></i></span>
-                    <span class="hidden sm:inline">NOAH</span>
+                <a href="home.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
+                    <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-compass"></i></span>
+                    <span class="hidden sm:inline">SEARCH</span>
                 </a>
             </div>
-            
-            <!-- Search Bar (Desktop Only) -->
-            <div class="hidden lg:block flex-1 max-w-md mx-8 relative z-10">
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
-                    <input type="text" id="desktop-search" placeholder="キーワードで検索 (名前, ID, 職業...)" 
-                        class="w-full bg-[#fffdf9] border border-brand-200 rounded-sm py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-brand-500 transition-all font-serif tracking-widest">
-                </div>
-            </div>
-
-            <!-- Header Actions -->
             <div class="flex items-center gap-3">
                 <!-- PC Navigation Links -->
                 <div class="hidden lg:flex items-center gap-6 mr-4">
-                    <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海(ホーム)</a>
+                    <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海</a>
                     <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
                     <a href="search.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
+                    <a href="videos.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-video"></i> シアター</a>
                     <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
-
-                <!-- Filter Button (Desktop Only) -->
-                <button onclick="toggleFilters()" class="hidden lg:flex p-2 text-brand-600 hover:bg-brand-50 rounded-sm transition-colors relative border border-transparent hover:border-brand-200" title="絞り込み">
-                    <i class="fa-solid fa-sliders"></i>
-                    <span id="filter-badge-desktop" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand-500 rounded-full border border-[#fffdf9]"></span>
-                </button>
-                
-                <!-- Notification Bell -->
-                <a href="notifications.html" class="p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
-                    <i class="fa-regular fa-bell text-xl"></i>
-                    <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]"></span>
-                </a>
-
-                <!-- Logout (Desktop) -->
-                <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
-                <button onclick="handleLogout()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-red-800 transition-colors flex items-center gap-2">
-                    <span class="hidden sm:inline tracking-widest">下船する</span>
-                    <i class="fa-solid fa-right-from-bracket text-lg"></i>
-                </button>
             </div>
         </div>
     </nav>
 
-    <!-- Search Bar & Filter (Mobile Only) -->
-    <div class="lg:hidden fixed top-16 w-full bg-[#fffdf9]/95 backdrop-blur-sm z-40 px-4 py-3 border-b border-brand-200 shadow-sm bg-texture">
-        <div class="flex gap-3">
-            <div class="relative flex-1">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
-                <input type="text" id="mobile-search" placeholder="キーワードで検索" 
-                    class="w-full bg-[#fffdf9] border border-brand-200 rounded-sm py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-brand-500 transition-all font-serif tracking-widest">
-            </div>
-            <!-- Mobile Filter Button -->
-            <button onclick="toggleFilters()" class="flex-shrink-0 w-10 h-10 bg-brand-50 rounded-sm flex items-center justify-center text-brand-700 hover:bg-brand-100 transition-colors relative border border-brand-200 shadow-sm">
-                <i class="fa-solid fa-sliders"></i>
-                <span id="filter-badge-mobile" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand-500 rounded-full border border-[#fffdf9]"></span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Filter Panel -->
-    <div id="filter-panel" class="fixed top-0 left-0 w-full h-full bg-[#2a1a17]/50 z-[60] hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm">
-        <div class="absolute right-0 top-0 h-full w-80 sm:w-96 bg-[#fffdf9] bg-texture shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col border-l border-brand-200" id="filter-content">
-            <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] z-10 relative">
-                <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-200 to-transparent opacity-50"></div>
-                <h3 class="font-bold text-lg flex items-center gap-2 text-brand-900 font-serif tracking-widest">
-                    <i class="fa-solid fa-filter text-brand-500 text-sm"></i> 絞り込み
-                </h3>
-                <button onclick="toggleFilters()" class="p-2 text-brand-400 hover:text-brand-700 rounded-sm hover:bg-brand-50 transition-colors">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto p-5 space-y-6">
-                <!-- Sort -->
-                <div>
-                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-arrow-down-a-z mr-1"></i>並び順</label>
-                    <select id="filter-sort" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
-                        <option value="random">おすすめ順（ランダム）</option>
-                        <option value="newest">新着順</option>
-                    </select>
-                </div>
-                <hr class="border-brand-200 border-dashed">
-                
-                <!-- Basic Profile -->
-                <div>
-                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-3"><i class="fa-solid fa-id-card mr-1"></i>基本情報</label>
-                    <div class="space-y-4">
-                        <div>
-                            <span class="block text-xs font-bold text-brand-800 tracking-widest mb-1.5">エリア (都道府県)</span>
-                            <select id="filter-prefecture" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
-                                <option value="">指定なし</option>
-                            </select>
-                        </div>
-                        <div>
-                            <span class="block text-xs font-bold text-brand-800 tracking-widest mb-1.5">性別</span>
-                            <select id="filter-gender" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
-                                <option value="">指定なし</option>
-                                <option value="男性">男性</option>
-                                <option value="女性">女性</option>
-                                <option value="その他">その他</option>
-                            </select>
-                        </div>
-                        <div>
-                            <span class="block text-xs font-bold text-brand-800 tracking-widest mb-1.5">職業・肩書</span>
-                            <input type="text" id="filter-job" placeholder="例: エンジニア" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
-                        </div>
-                    </div>
-                </div>
-                <hr class="border-brand-200 border-dashed">
-                
-                <!-- Matching -->
-                <div>
-                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-3"><i class="fa-solid fa-handshake mr-1"></i>マッチング</label>
-                    <div class="space-y-4">
-                        <div>
-                            <span class="block text-xs font-bold text-brand-800 tracking-widest mb-1.5 flex items-center gap-1">提供できること</span>
-                            <input type="text" id="filter-can-offer" placeholder="キーワード (例: デザイン)" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
-                        </div>
-                        <div>
-                            <span class="block text-xs font-bold text-brand-800 tracking-widest mb-1.5 flex items-center gap-1">求めていること</span>
-                            <input type="text" id="filter-looking-for" placeholder="キーワード (例: 相談)" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
-                        </div>
-                    </div>
-                </div>
-                <hr class="border-brand-200 border-dashed">
-                
-                <!-- Skills & Hobbies (Accordion) -->
-                <div>
-                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-3"><i class="fa-solid fa-tags mr-1"></i>詳細タグ検索</label>
-                    <div class="space-y-3">
-                        <details class="group bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm">
-                            <summary class="flex justify-between items-center p-3 cursor-pointer hover:bg-brand-50 transition-colors select-none">
-                                <span class="font-bold text-sm text-brand-800 tracking-widest">スキル</span>
-                                <span class="accordion-arrow text-brand-400"><i class="fa-solid fa-chevron-down text-xs"></i></span>
-                            </summary>
-                            <div class="p-3 border-t border-brand-200 bg-brand-50 max-h-60 overflow-y-auto" id="filter-skills-container"></div>
-                        </details>
-                        <details class="group bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm">
-                            <summary class="flex justify-between items-center p-3 cursor-pointer hover:bg-brand-50 transition-colors select-none">
-                                <span class="font-bold text-sm text-brand-800 tracking-widest">趣味</span>
-                                <span class="accordion-arrow text-brand-400"><i class="fa-solid fa-chevron-down text-xs"></i></span>
-                            </summary>
-                            <div class="p-3 border-t border-brand-200 bg-brand-50 max-h-60 overflow-y-auto" id="filter-hobbies-container"></div>
-                        </details>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom relative z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <button onclick="applyFilters()" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723]">
-                    検索結果を表示
-                </button>
-                <button onclick="resetFilters()" class="w-full mt-3 text-sm text-brand-500 hover:text-brand-800 py-2 font-bold tracking-widest transition-colors">
-                    条件をクリア
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl mx-auto w-full pt-32 lg:pt-24 px-3 pb-20 relative z-0">
-        
-        <div id="loading-indicator" class="flex flex-col items-center justify-center py-20">
-            <i class="fa-solid fa-compass fa-spin text-4xl text-brand-400 mb-4 opacity-70"></i>
-            <p class="text-brand-500 text-sm tracking-widest font-serif">乗船者を探しています...</p>
-        </div>
-
-        <div id="users-grid" class="card-grid hidden"></div>
-
-        <div id="no-results" class="hidden text-center py-20">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-brand-50 border border-brand-200 mb-4 text-brand-300 shadow-inner">
-                <i class="fa-solid fa-anchor-circle-xmark text-3xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-brand-900 mb-2 font-serif tracking-widest">該当する乗船者が見つかりません</h3>
-            <p class="text-brand-500 text-sm tracking-widest">検索条件を変えて試してみてください</p>
-            <button onclick="resetFilters()" class="mt-8 text-[#8b6a4f] font-bold text-sm hover:text-[#5c4a3d] transition-colors border-b border-[#8b6a4f] pb-0.5 tracking-widest">
-                すべてのユーザーを表示
-            </button>
-        </div>
-
-    </main>
-
-    <!-- Bottom Navigation (Mobile Only) -->
+    <!-- Bottom Navigation -->
     <nav class="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="bottom-nav-content">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
@@ -316,15 +119,14 @@
                 <i class="fa-solid fa-hourglass-half text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">イベント</span>
             </a>
-            <!-- Active Search -->
-            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600">
+            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px]">
                 <i class="fa-solid fa-compass text-xl mb-1"></i>
                 <span class="text-[10px] font-bold tracking-widest">さがす</span>
             </a>
-            <button onclick="alert('マッチング機能は準備中です。\nComing Soon!')" class="flex flex-col items-center justify-center w-full h-full text-brand-300 hover:text-brand-500 transition-colors">
-                <i class="fa-solid fa-handshake text-xl mb-1"></i>
-                <span class="text-[10px] font-medium tracking-widest">マッチ</span>
-            </button>
+            <a href="videos.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-video text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">シアター</span>
+            </a>
             <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マイページ</span>
@@ -332,10 +134,53 @@
         </div>
     </nav>
 
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8 pb-10">
+        
+        <!-- Search & Filter Header -->
+        <div class="mb-8 bg-[#fffdf9] p-4 sm:p-6 rounded-sm shadow-md border border-brand-200 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+            
+            <div class="flex flex-col lg:flex-row gap-4 relative z-10">
+                <!-- Free Word Search -->
+                <div class="flex-1 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
+                    <input type="text" id="search-input" placeholder="名前、職業、スキルで検索..." class="w-full pl-10 pr-4 py-3 rounded-sm border border-brand-200 shadow-sm text-sm focus:ring-brand-500 focus:border-brand-500 bg-[#f7f5f0]" oninput="filterUsers()">
+                </div>
+                
+                <!-- Filters -->
+                <div class="flex flex-wrap sm:flex-nowrap gap-2">
+                    <select id="filter-purpose" class="filter-select flex-1 sm:w-40 border border-brand-200 rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-brand-700 shadow-sm focus:ring-brand-500 font-medium tracking-widest" onchange="filterUsers()">
+                        <option value="">全ての目的</option>
+                        <option value="business">ビジネス</option>
+                        <option value="hobby">趣味・交流</option>
+                        <option value="skill">スキル交換</option>
+                    </select>
+                    
+                    <select id="filter-area" class="filter-select flex-1 sm:w-40 border border-brand-200 rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-brand-700 shadow-sm focus:ring-brand-500 font-medium tracking-widest" onchange="filterUsers()">
+                        <option value="">全てのエリア</option>
+                        <!-- JSで挿入 -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mt-4 pt-4 border-t border-brand-100 flex justify-between items-center text-xs text-brand-500">
+                <span class="tracking-widest"><i class="fa-solid fa-users mr-1"></i> <span id="result-count">0</span> 名の乗客</span>
+                <span class="tracking-widest">※非公開設定のユーザーは表示されません</span>
+            </div>
+        </div>
+
+        <!-- Users Grid -->
+        <div id="users-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div class="col-span-full text-center py-10 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>探索中...</div>
+        </div>
+
+    </main>
+
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, query, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         // ▼▼▼▼ Firebase Config ▼▼▼▼
         const firebaseConfig = {
@@ -346,43 +191,29 @@
             messagingSenderId: "803209683213",
             appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
         };
-        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = 'default-app-id';
 
-        let allUsers = []; 
-        let filteredUsers = [];
+        let currentUser = null;
+        let allUsers = [];
         let isAdmin = false;
 
-        const hobbyCategories = {
-            "🏃 スポーツ・運動系": ["ランニング", "ウォーキング", "筋トレ", "ヨガ", "ピラティス", "ダンス", "バスケットボール", "サッカー", "フットサル", "野球", "テニス", "バドミントン", "卓球", "ゴルフ", "ボルダリング", "登山", "サーフィン", "スノーボード", "スキー", "サイクリング", "水泳", "格闘技", "武道"],
-            "🎵 音楽・エンタメ": ["カラオケ", "楽器演奏（ギター）", "楽器演奏（ピアノ）", "作曲", "歌", "ライブ鑑賞", "フェス", "DJ", "映画鑑賞", "アニメ鑑賞", "漫画", "ゲーム", "ボードゲーム"],
-            "🎨 文化・アート": ["絵画", "イラスト", "デザイン", "写真撮影", "動画編集", "手芸", "DIY", "小説執筆", "ブログ"],
-            "📚 学び": ["読書", "自己啓発", "歴史", "心理学", "投資", "マーケティング", "プログラミング", "英語学習", "資格取得"],
-            "🍳 食・暮らし": ["料理", "お菓子作り", "カフェ巡り", "食べ歩き", "お酒", "コーヒー", "インテリア", "ミニマリズム"],
-            "✈️ 旅行": ["国内旅行", "海外旅行", "一人旅", "キャンプ", "温泉巡り", "神社仏閣巡り"],
-            "🤝 人": ["交流会", "ボランティア", "地域活動", "コーチング", "子育て"],
-            "🌿 その他": ["瞑想", "占い", "その他"]
-        };
-        const skillCategories = {
-            "💻 IT": ["Web制作", "WordPress", "Firebase", "ノーコード", "アプリ開発", "プログラミング", "データ分析", "AI活用"],
-            "🎤 コミュニケーション": ["プレゼン", "ファシリテーション", "講師", "コーチング", "営業", "交渉", "インタビュー"],
-            "✍️ 発信": ["ライティング", "SNS運用", "ブログ運営", "動画編集", "デザイン"],
-            "💼 ビジネス": ["起業", "経営", "マーケティング", "会計", "人事", "英語"],
-            "🧘 その他": ["料理指導", "整理収納", "健康管理"]
-        };
-        const prefectures = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県","海外","その他"];
+        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initFilterOptions();
-            const dInput = document.getElementById('desktop-search');
-            const mInput = document.getElementById('mobile-search');
-            if (dInput) dInput.addEventListener('input', (e) => filterUsers(e.target.value));
-            if (mInput) mInput.addEventListener('input', (e) => filterUsers(e.target.value));
-        });
+        // Areas setup
+        const prefectures = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県","海外","その他"];
+        
+        function initFilterOptions() {
+            const areaSelect = document.getElementById('filter-area');
+            prefectures.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                areaSelect.appendChild(opt);
+            });
+        }
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -393,231 +224,139 @@
                         const mySnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                         if (mySnap.exists()) {
                             if (mySnap.data().userId === 'admin') isAdmin = true;
-                            // ★変更: ARRIVALの閲覧制限を解除し、無料会員でも他のユーザーを検索できるようにしました。
                         }
                     } catch(e){}
                 }
+                initFilterOptions();
                 fetchUsers();
             } else {
                 window.location.href = 'login.html';
             }
         });
 
-        function initFilterOptions() {
-            const select = document.getElementById('filter-prefecture');
-            prefectures.forEach(pref => {
-                const option = document.createElement('option');
-                option.value = pref;
-                option.textContent = pref;
-                select.appendChild(option);
-            });
-            const skillsContainer = document.getElementById('filter-skills-container');
-            createCategoryCheckboxes(skillCategories, skillsContainer, 'filter-skill');
-            const hobbiesContainer = document.getElementById('filter-hobbies-container');
-            createCategoryCheckboxes(hobbyCategories, hobbiesContainer, 'filter-hobby');
-        }
-
-        function createCategoryCheckboxes(data, container, name) {
-            for (const [category, items] of Object.entries(data)) {
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'mb-4';
-                groupDiv.innerHTML = `<h5 class="text-xs font-bold text-brand-700 mb-2 tracking-widest">${category}</h5>`;
-                const flexDiv = document.createElement('div');
-                flexDiv.className = 'flex flex-wrap gap-1.5';
-                items.forEach(item => {
-                    const label = document.createElement('label');
-                    label.className = 'cursor-pointer';
-                    label.innerHTML = `
-                        <input type="checkbox" name="${name}" value="${item}" class="filter-checkbox hidden">
-                        <div class="px-2 py-1 rounded-sm border border-brand-200 text-xs text-brand-700 hover:bg-[#fffdf9] transition-colors select-none tracking-widest shadow-sm bg-white">${item}</div>
-                    `;
-                    flexDiv.appendChild(label);
-                });
-                groupDiv.appendChild(flexDiv);
-                container.appendChild(groupDiv);
-            }
-        }
-
         async function fetchUsers() {
             try {
-                // 公開データを全取得
-                const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
-                const q = query(usersRef); 
-                const snapshot = await getDocs(q);
-
-                allUsers = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    data.authUid = doc.id; 
-                    
-                    // 表示判定: isHidden=true か profilePublic=false なら隠す
-                    // ただし管理者は全て見る
-                    const isHidden = data.isHidden === true;
-                    const isPrivate = data.profilePublic === 'false';
-                    
-                    if (isAdmin || (!isHidden && !isPrivate)) {
-                        if (data.userId) { 
-                            data._isMasked = (isHidden || isPrivate); 
-                            if (!data.name) data.name = "名称未設定";
-                            allUsers.push(data);
+                if (isAdminMock) {
+                    allUsers = [
+                        { userId: 'test1', name: 'Alice', jobTitle: 'Designer', prefecture: '東京都', profileScore: 80, isHidden: false },
+                        { userId: 'test2', name: 'Bob', jobTitle: 'Engineer', prefecture: '大阪府', profileScore: 60, isHidden: false },
+                        { userId: 'test3', name: 'Charlie', isHidden: true } // Hidden
+                    ];
+                } else {
+                    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                    const snap = await getDocs(usersRef);
+                    allUsers = [];
+                    snap.forEach(d => {
+                        const data = d.data();
+                        // 非公開ユーザーの除外 (管理者は除外しない)
+                        if (data.isHidden !== true || isAdmin) {
+                            allUsers.push({ id: d.id, ...data });
                         }
-                    }
+                    });
+                }
+                
+                // スコア順、次に名前順でソート
+                allUsers.sort((a, b) => {
+                    const scoreA = a.profileScore || 0;
+                    const scoreB = b.profileScore || 0;
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+                    const nameA = a.name || a.userId || '';
+                    const nameB = b.name || b.userId || '';
+                    return nameA.localeCompare(nameB);
                 });
 
-                shuffleArray(allUsers);
-                filteredUsers = [...allUsers];
-                
-                document.getElementById('loading-indicator').classList.add('hidden');
-                renderGrid(filteredUsers);
-
-            } catch (error) {
-                console.error(error);
-                document.getElementById('loading-indicator').innerHTML = '<div class="text-red-800 font-bold tracking-widest text-sm">エラーが発生しました</div>';
+                filterUsers();
+            } catch (e) {
+                console.error("Fetch users err:", e);
+                document.getElementById('users-grid').innerHTML = '<div class="col-span-full text-center text-red-500 py-10">ユーザーの取得に失敗しました</div>';
             }
         }
 
-        window.filterUsers = (keyword) => {
-            const term = (typeof keyword === 'string' ? keyword : document.getElementById('desktop-search').value).toLowerCase();
-            
-            const dInput = document.getElementById('desktop-search');
-            const mInput = document.getElementById('mobile-search');
-            if (dInput && dInput.value !== term) dInput.value = term;
-            if (mInput && mInput.value !== term) mInput.value = term;
+        window.filterUsers = () => {
+            const searchQ = document.getElementById('search-input').value.toLowerCase();
+            const areaQ = document.getElementById('filter-area').value;
+            const purposeQ = document.getElementById('filter-purpose').value; // 簡易モック用
 
-            const pref = document.getElementById('filter-prefecture').value;
-            const gender = document.getElementById('filter-gender').value;
-            const job = document.getElementById('filter-job').value.toLowerCase();
-            const canOffer = document.getElementById('filter-can-offer').value.toLowerCase();
-            const lookingFor = document.getElementById('filter-looking-for').value.toLowerCase();
-            
-            const selectedSkills = Array.from(document.querySelectorAll('input[name="filter-skill"]:checked')).map(cb => cb.value);
-            const selectedHobbies = Array.from(document.querySelectorAll('input[name="filter-hobby"]:checked')).map(cb => cb.value);
+            const filtered = allUsers.filter(u => {
+                let matchSearch = true;
+                if (searchQ) {
+                    const searchable = [
+                        u.name, u.userId, u.jobTitle, 
+                        (u.skills||[]).join(' '), (u.hobbies||[]).join(' '),
+                        (u.canOffer||[]).join(' '), (u.lookingFor||[]).join(' ')
+                    ].join(' ').toLowerCase();
+                    matchSearch = searchable.includes(searchQ);
+                }
 
-            const hasFilter = pref || gender || job || canOffer || lookingFor || selectedSkills.length > 0 || selectedHobbies.length > 0;
-            const badgeD = document.getElementById('filter-badge-desktop');
-            const badgeM = document.getElementById('filter-badge-mobile');
-            if (hasFilter) {
-                badgeD?.classList.remove('hidden');
-                badgeM?.classList.remove('hidden');
-            } else {
-                badgeD?.classList.add('hidden');
-                badgeM?.classList.add('hidden');
-            }
+                let matchArea = true;
+                if (areaQ) {
+                    matchArea = u.prefecture === areaQ || u.birthplace === areaQ;
+                }
 
-            filteredUsers = allUsers.filter(user => {
-                const searchTarget = `${user.name} ${user.userId} ${user.jobTitle || ''} ${user.bio || ''} ${user.hobbies?.join(' ') || ''}`.toLowerCase();
-                const matchKeyword = !term || searchTarget.includes(term);
-
-                const matchPref = !pref || (user.prefecture === pref);
-                const matchGender = !gender || (user.gender === gender);
-                const matchJob = !job || (user.jobTitle && user.jobTitle.toLowerCase().includes(job));
-                const matchOffer = !canOffer || (user.canOffer && user.canOffer.some(item => item.toLowerCase().includes(canOffer)));
-                const matchLooking = !lookingFor || (user.lookingFor && user.lookingFor.some(item => item.toLowerCase().includes(lookingFor)));
+                // Purpose filter is a mock implementation as real purpose needs NLP or specific tags
+                let matchPurpose = true; 
                 
-                const matchSkills = selectedSkills.length === 0 || (user.skills && selectedSkills.some(tag => user.skills.includes(tag)));
-                const matchHobbies = selectedHobbies.length === 0 || (user.hobbies && selectedHobbies.some(tag => user.hobbies.includes(tag)));
-
-                return matchKeyword && matchPref && matchGender && matchJob && matchOffer && matchLooking && matchSkills && matchHobbies;
+                return matchSearch && matchArea && matchPurpose;
             });
 
-            const sortType = document.getElementById('filter-sort').value;
-            if (sortType === 'newest') {
-                filteredUsers.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
-            }
-
-            renderGrid(filteredUsers);
-        };
-
-        window.toggleFilters = () => {
-            const panel = document.getElementById('filter-panel');
-            const content = document.getElementById('filter-content');
-            if (panel.classList.contains('hidden')) {
-                panel.classList.remove('hidden');
-                setTimeout(() => { panel.classList.remove('opacity-0'); content.classList.remove('translate-x-full'); }, 10);
-            } else {
-                panel.classList.add('opacity-0');
-                content.classList.add('translate-x-full');
-                setTimeout(() => panel.classList.add('hidden'), 300);
-            }
-        };
-
-        window.applyFilters = () => {
-            filterUsers(); 
-            toggleFilters();
-        };
-
-        window.resetFilters = () => {
-            document.getElementById('filter-prefecture').value = "";
-            document.getElementById('filter-gender').value = "";
-            document.getElementById('filter-job').value = "";
-            document.getElementById('filter-can-offer').value = "";
-            document.getElementById('filter-looking-for').value = "";
-            document.getElementById('filter-sort').value = "random";
-            document.getElementById('desktop-search').value = "";
-            document.getElementById('mobile-search').value = "";
-            document.querySelectorAll('.filter-checkbox').forEach(cb => cb.checked = false);
-            shuffleArray(allUsers);
-            filterUsers("");
-            toggleFilters();
+            renderGrid(filtered);
         };
 
         function renderGrid(users) {
             const grid = document.getElementById('users-grid');
-            const noResults = document.getElementById('no-results');
-            if (!grid) return;
-            grid.innerHTML = '';
+            document.getElementById('result-count').textContent = users.length;
 
             if (users.length === 0) {
-                grid.classList.add('hidden');
-                noResults.classList.remove('hidden');
+                grid.innerHTML = '<div class="col-span-full text-center text-brand-400 py-12 bg-[#fffdf9] rounded-sm border border-brand-200 border-dashed">該当する乗客が見つかりません。条件を変えてみてください。</div>';
                 return;
             }
-            noResults.classList.add('hidden');
-            grid.classList.remove('hidden');
 
-            users.forEach(user => {
-                const card = document.createElement('a');
-                card.href = `user.html?uid=${user.authUid}`;
+            let html = '';
+            users.forEach(u => {
+                const icon = u.photoURL || 'https://via.placeholder.com/150?text=NOAH';
+                const name = u.name || u.userId || '名無し';
+                const job = u.jobTitle || '職業未設定';
+                const loc = u.prefecture || '拠点未設定';
+                const tags = (u.skills || []).slice(0, 3).map(t => `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest truncate max-w-full">#${t}</span>`).join('');
                 
-                // 管理者向け: 非公開ユーザーは薄く表示
-                const opacityClass = user._isMasked ? 'opacity-50 grayscale' : '';
-                
-                card.className = `block bg-[#fffdf9] rounded-sm shadow-sm border border-brand-200 overflow-hidden hover:shadow-md hover:border-brand-300 transition-all flex flex-col h-full ${opacityClass}`;
-                
-                let iconHtml = user.photoURL 
-                    ? `<img src="${user.photoURL}" class="w-full h-full object-cover">`
-                    : `<div class="w-full h-full bg-brand-50 border-b border-brand-100 flex items-center justify-center text-brand-300"><i class="fa-solid fa-anchor text-3xl"></i></div>`;
+                const hiddenBadge = u.isHidden ? '<div class="absolute top-2 right-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded-sm font-bold z-10"><i class="fa-solid fa-eye-slash mr-1"></i>非公開</div>' : '';
+                const rankBadge = getRankBadge(u.membershipRank);
 
-                const maskBadge = user._isMasked ? `<span class="absolute top-1 left-1 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] text-[9px] px-1 rounded-sm tracking-widest font-bold shadow-sm">非公開</span>` : '';
-
-                card.innerHTML = `
-                    <div class="aspect-square w-full relative overflow-hidden bg-[#f7f5f0]">
-                        ${iconHtml}
-                        ${maskBadge}
-                        ${user.prefecture ? `<span class="absolute bottom-1 right-1 bg-[#2a1a17]/70 text-[#f7f5f0] text-[10px] px-1.5 py-0.5 rounded-sm tracking-widest">${user.prefecture}</span>` : ''}
+                html += `
+                <a href="user.html?uid=${u.id || u.userId}" class="block bg-[#fffdf9] rounded-sm shadow-sm border border-brand-200 hover:shadow-md transition-shadow hover:border-brand-400 group relative overflow-hidden">
+                    ${hiddenBadge}
+                    <div class="h-16 bg-gradient-to-r from-[#dcd4c6] to-[#eae5d8] w-full border-b border-brand-200"></div>
+                    <div class="px-5 pb-5">
+                        <div class="-mt-8 mb-3 flex justify-between items-end">
+                            <img src="${icon}" class="w-16 h-16 rounded-sm border-2 border-[#fffdf9] bg-[#fffdf9] object-cover shadow-sm group-hover:scale-105 transition-transform" onerror="this.src='https://via.placeholder.com/150?text=U'">
+                            ${rankBadge}
+                        </div>
+                        <h3 class="font-bold text-brand-900 text-lg truncate font-serif tracking-wide group-hover:text-brand-600 transition-colors">${name}</h3>
+                        <p class="text-xs text-brand-500 truncate mb-3 tracking-widest">${job}</p>
+                        
+                        <div class="flex items-center gap-2 text-xs text-brand-600 mb-3">
+                            <i class="fa-solid fa-map-pin text-brand-300"></i>
+                            <span class="truncate">${loc}</span>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-1.5 h-[48px] overflow-hidden">
+                            ${tags}
+                        </div>
                     </div>
-                    <div class="p-3 flex-1 relative">
-                        <h3 class="font-bold text-sm text-brand-900 truncate font-serif tracking-widest">${user.name || 'No Name'}</h3>
-                        <p class="text-xs text-brand-500 truncate tracking-wide mt-0.5">@${user.userId}</p>
-                        ${user.jobTitle ? `<p class="text-[10px] text-brand-700 mt-1.5 truncate border-t border-brand-100 pt-1.5 tracking-widest">${user.jobTitle}</p>` : ''}
-                    </div>
+                </a>
                 `;
-                grid.appendChild(card);
             });
+            grid.innerHTML = html;
         }
 
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
+        function getRankBadge(rank) {
+            if (!rank || rank === 'arrival') return '';
+            if (rank === 'settler') return '<span class="text-[10px] bg-brand-100 text-brand-700 px-2 py-1 rounded-sm border border-brand-300 font-bold tracking-widest shadow-sm"><i class="fa-solid fa-house mr-1 text-brand-500"></i>SETTLER</span>';
+            if (rank === 'builder') return '<span class="text-[10px] bg-brand-200 text-brand-800 px-2 py-1 rounded-sm border border-brand-400 font-bold tracking-widest shadow-sm"><i class="fa-solid fa-hammer mr-1 text-brand-600"></i>BUILDER</span>';
+            if (rank === 'guardian') return '<span class="text-[10px] bg-brand-300 text-[#fffdf9] px-2 py-1 rounded-sm border border-brand-500 font-bold tracking-widest shadow-sm"><i class="fa-solid fa-gavel mr-1"></i>GUARDIAN</span>';
+            if (rank === 'covenant' || rank === 'admin') return '<span class="text-[10px] bg-[#3e2723] text-[#d4af37] px-2 py-1 rounded-sm border border-[#b8860b] font-bold tracking-widest shadow-sm"><i class="fa-solid fa-shield-halved mr-1"></i>COVENANT</span>';
+            return '';
         }
-        
-        window.handleLogout = () => {
-            if (isAdminMock) localStorage.removeItem('isAdminMock');
-            signOut(auth);
-            window.location.href = 'login.html';
-        };
     </script>
 </body>
 </html>
