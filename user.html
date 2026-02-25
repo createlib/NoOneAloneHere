@@ -274,7 +274,13 @@
                                 <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-feather"></i></div><span id="profile-job" class="font-medium">-</span></div>
                                 <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div><span id="profile-location" class="font-medium">-</span></div>
                                 
-                                <div class="mutual-only hidden space-y-3">
+                                <!-- ★追加: 投稿した動画がある場合のみ表示されるリンク -->
+                                <a id="profile-video-link" href="#" class="hidden items-center gap-3 text-sm font-bold text-brand-600 hover:text-brand-800 transition-colors group w-fit">
+                                    <div class="w-8 h-8 rounded-full bg-[#3e2723] flex items-center justify-center text-[#d4af37] border border-[#b8860b] flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm"><i class="fa-solid fa-play ml-0.5 text-xs"></i></div>
+                                    <span class="border-b border-transparent group-hover:border-[#b8860b] tracking-widest">投稿した動画を見る</span>
+                                </a>
+                                
+                                <div class="mutual-only hidden space-y-3 pt-1">
                                     <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-venus-mars"></i></div><span id="data-gender" class="font-medium">-</span></div>
                                     <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-hourglass"></i></div><span id="data-birth" class="font-medium">-</span></div>
                                 </div>
@@ -534,11 +540,13 @@
                 if (targetUid && targetUid !== 'test_admin_uid') {
                     isSelf = false;
                     setupViewForOtherUser();
+                    checkUserVideos(targetUid); // ★追加
                 } else {
                     isSelf = true;
                     targetUid = 'test_admin_uid';
                     updateDashboardUI(getAdminMockData());
                     enableSelfMode(myRank);
+                    checkUserVideos(targetUid); // ★追加
                 }
                 return;
             }
@@ -564,6 +572,8 @@
                     enableSelfMode(myRank); 
                     if (myProfileSnap.exists()) updateDashboardUI(myProfileSnap.data());
                     else updateDashboardUI({ userId: user.uid, name: '（未設定）' });
+                    
+                    checkUserVideos(user.uid); // ★追加
                 } else {
                     isSelf = false;
                     await checkFollowStatus(user.uid, targetUid); 
@@ -575,12 +585,44 @@
                         memoBtn.classList.remove('hidden');
                         memoBtn.classList.add('inline-flex');
                     }
+                    
+                    checkUserVideos(targetUid); // ★追加
                 }
                 updateFollowCounts(targetUid);
             } else {
                 window.location.href = 'login.html';
             }
         });
+
+        // ★★★ 追加: 対象ユーザーの動画が存在するかチェックする関数 ★★★
+        async function checkUserVideos(uid) {
+            const videoLink = document.getElementById('profile-video-link');
+            if (!videoLink) return;
+
+            if (isAdminMock) {
+                videoLink.href = `user_videos.html?uid=${uid}`;
+                videoLink.classList.remove('hidden');
+                videoLink.classList.add('flex');
+                return;
+            }
+
+            try {
+                const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
+                const q = query(videosRef, where("authorId", "==", uid));
+                const snap = await getCountFromServer(q);
+                
+                if (snap.data().count > 0) {
+                    videoLink.href = `user_videos.html?uid=${uid}`;
+                    videoLink.classList.remove('hidden');
+                    videoLink.classList.add('flex');
+                } else {
+                    videoLink.classList.add('hidden');
+                    videoLink.classList.remove('flex');
+                }
+            } catch (e) {
+                console.error("Video check error:", e);
+            }
+        }
 
         // ★★★ 共通の航海士計算ロジック ★★★
         async function calculateCommonMutuals(myUid, targetUid) {
