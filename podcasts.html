@@ -205,7 +205,7 @@
                             すべて見る <i class="fa-solid fa-chevron-right ml-1"></i>
                         </button>
                     </div>
-                    <!-- ★変更: 横スクロールコンテナを縦に5段積むCSS Gridに修正 -->
+                    <!-- 横スクロールコンテナを縦に5段積むCSS Gridに修正 -->
                     <div id="following-scroll" class="grid grid-rows-[repeat(5,max-content)] grid-flow-col auto-cols-[280px] sm:auto-cols-[340px] overflow-x-auto gap-4 sm:gap-6 pb-4 no-scrollbar snap-x snap-mandatory px-1"></div>
                 </div>
 
@@ -219,7 +219,7 @@
                             すべて見る <i class="fa-solid fa-chevron-right ml-1"></i>
                         </button>
                     </div>
-                    <!-- ★変更: 横スクロールコンテナを縦に5段積むCSS Gridに修正 -->
+                    <!-- 横スクロールコンテナを縦に5段積むCSS Gridに修正 -->
                     <div id="recommended-scroll" class="grid grid-rows-[repeat(5,max-content)] grid-flow-col auto-cols-[280px] sm:auto-cols-[340px] overflow-x-auto gap-4 sm:gap-6 pb-4 no-scrollbar snap-x snap-mandatory px-1">
                         <div class="w-full text-center py-12 text-brand-400 col-span-full"><i class="fa-solid fa-spinner fa-spin mr-2"></i>音声を読み込み中...</div>
                     </div>
@@ -231,7 +231,7 @@
                 <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
                     <i class="fa-solid fa-magnifying-glass text-brand-400 mr-3"></i>検索結果
                 </h2>
-                <div id="search-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"></div>
+                <div id="search-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"></div>
             </div>
 
         </div>
@@ -313,7 +313,6 @@
             }
         });
 
-        // SP用 メディアメニューのトグル
         window.toggleTheaterMenu = () => {
             const menu = document.getElementById('sp-theater-menu');
             const content = document.getElementById('sp-theater-menu-content');
@@ -410,22 +409,30 @@
             return array;
         }
 
-        // ★ 音声アプリ風のスマートなカードUI生成 (isScrollModeで横幅を可変/固定に切り替え)
+        // ★追加: 時間フォーマット関数
+        function formatDuration(sec) {
+            if(!sec || isNaN(sec) || !isFinite(sec)) return "";
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0'+s : s}`;
+        }
+
         function createPodcastCardHtml(p, isScrollMode = true) {
             const date = new Date(p.createdAt || p.updatedAt || Date.now());
             const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
             const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
             
-            // Markdown記号を除去してプレーンテキストにする
             let plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
             const tagsHtml = (p.tags || []).slice(0,2).map(t => `<span class="text-[8px] sm:text-[9px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('');
 
-            // ★変更: Gridの中で幅いっぱいになるように w-full を指定。スナップ位置を設定
+            // ★追加: durationの表示生成
+            const durationStr = p.duration ? formatDuration(p.duration) : '';
+            const durationHtml = durationStr ? `<span class="text-[9px] text-[#b8860b] font-mono tracking-wider ml-1 bg-brand-50 px-1 rounded-sm border border-brand-100">${durationStr}</span>` : '';
+
             const widthClass = isScrollMode ? "w-full h-full snap-start" : "w-full h-full";
 
             return `
             <a href="podcast_detail.html?pid=${p.id}" class="flex flex-col bg-[#fffdf9] p-4 rounded-md border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group ${widthClass}">
-                <!-- Top: Artwork & Title -->
                 <div class="flex gap-3 sm:gap-4 items-start mb-3">
                     <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-inner mt-0.5">
                         <img src="${thumbUrl}" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500">
@@ -438,14 +445,13 @@
                     </div>
                 </div>
                 
-                <!-- Middle: Description -->
                 <p class="text-[11px] sm:text-xs text-brand-500 line-clamp-2 leading-relaxed mb-4 flex-1 tracking-wide">${plainDesc}</p>
                 
-                <!-- Bottom: Meta Data -->
                 <div class="flex flex-wrap items-center justify-between gap-2 mt-auto pt-3 border-t border-brand-100/70">
                     <div class="flex items-center gap-1.5 min-w-0 pr-2">
                         <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-5 h-5 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/24?text=U'">
                         <span class="text-[10px] text-brand-700 truncate font-bold tracking-widest">${p.authorName || '名無し'}</span>
+                        ${durationHtml} <!-- ★追加: 長さ表示 -->
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <div class="flex gap-1">${tagsHtml}</div>
@@ -486,26 +492,24 @@
             if (filtered.length === 0) {
                 grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-microphone-slash text-4xl mb-3 text-brand-200"></i><p>該当する配信がありません。</p></div>';
             } else {
-                // 検索結果はグリッド表示なので isScrollMode=false
                 grid.innerHTML = filtered.map(p => createPodcastCardHtml(p, false)).join('');
             }
         }
 
         function renderDefaultSections() {
-            // Following Section (横スクロール)
+            // Following Section
             const followingSection = document.getElementById('following-section');
             const followingScroll = document.getElementById('following-scroll');
             let followingPodcasts = allPodcasts.filter(p => followingIds.includes(p.authorId));
             
             if (followingPodcasts.length > 0) {
                 followingSection.classList.remove('hidden');
-                // ★変更: 5段積みになるので、最大25件（5行×5列）を表示するように変更
                 followingScroll.innerHTML = followingPodcasts.slice(0, 25).map(p => createPodcastCardHtml(p, true)).join('');
             } else {
                 followingSection.classList.add('hidden');
             }
 
-            // Recommended Section (横スクロール)
+            // Recommended Section
             const recommendedScroll = document.getElementById('recommended-scroll');
             let otherPodcasts = allPodcasts.filter(p => !followingIds.includes(p.authorId));
             
@@ -518,7 +522,6 @@
             if (shuffled.length === 0) {
                 recommendedScroll.innerHTML = '<div class="w-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200 col-span-full"><i class="fa-solid fa-microphone-slash text-4xl mb-3 text-brand-200"></i><p>まだ配信がありません。</p></div>';
             } else {
-                // ★変更: 最大25件表示に変更
                 recommendedScroll.innerHTML = shuffled.slice(0, 25).map(p => createPodcastCardHtml(p, true)).join('');
             }
         }
@@ -541,7 +544,6 @@
                 targetData = otherPodcasts; // 全件表示
             }
             
-            // モーダル内はグリッドなので false
             grid.innerHTML = targetData.map(p => createPodcastCardHtml(p, false)).join('');
             
             modal.classList.remove('hidden');
