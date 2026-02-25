@@ -85,8 +85,8 @@
                 </div>
 
                 <div id="audio-upload-area">
-                    <p class="text-xs text-brand-500 mb-3">MP3形式の音声ファイルを選択してください。</p>
-                    <input type="file" id="audio-file" accept="audio/mp3, audio/mpeg" class="block w-full text-sm text-brand-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-[#b8860b] hover:file:bg-brand-100 file:border file:border-brand-200 file:cursor-pointer transition-colors bg-[#f7f5f0] p-2 rounded-sm border border-brand-200" onchange="previewAudioUpload(this)">
+                    <p class="text-xs text-brand-500 mb-3">MP3形式の音声ファイルを選択してください。（※推奨サイズ: 30MB以下）</p>
+                    <input type="file" id="audio-file" accept="audio/mp3, audio/mpeg, audio/mp4, audio/m4a" class="block w-full text-sm text-brand-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-[#b8860b] hover:file:bg-brand-100 file:border file:border-brand-200 file:cursor-pointer transition-colors bg-[#f7f5f0] p-2 rounded-sm border border-brand-200" onchange="previewAudioUpload(this)">
                 </div>
 
                 <div id="audio-url-area" class="hidden">
@@ -180,7 +180,7 @@
         <div class="bg-[#fffdf9] p-8 rounded-sm shadow-2xl border border-brand-300 text-center max-w-sm w-full mx-4">
             <i class="fa-solid fa-cloud-arrow-up text-4xl text-[#b8860b] mb-4 animate-bounce"></i>
             <h3 class="text-lg font-bold text-brand-900 font-serif tracking-widest mb-2">アップロード中...</h3>
-            <p class="text-xs text-brand-500 mb-4 tracking-widest">音声ファイルのサイズによっては時間がかかります</p>
+            <p id="progress-text" class="text-xs text-brand-500 mb-4 tracking-widest">しばらくお待ちください</p>
             <div class="w-full bg-brand-100 rounded-full h-2.5 overflow-hidden">
                 <div id="progress-bar" class="bg-[#b8860b] h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
@@ -207,6 +207,7 @@
         let audioInputType = 'upload'; // 'upload' or 'url'
         let currentAudioFile = null;
         let currentThumbFile = null;
+        let currentDuration = 0; // ★追加: 音声の長さを保持する変数
 
         const urlParams = new URLSearchParams(window.location.search);
         const editPid = urlParams.get('pid');
@@ -256,6 +257,7 @@
             playerContainer.classList.add('hidden');
             player.src = '';
             currentAudioFile = null;
+            currentDuration = 0; // ★リセット
             document.getElementById('audio-file').value = '';
             document.getElementById('audio-url').value = '';
 
@@ -272,6 +274,7 @@
             }
         };
 
+        // ★追加: プレビュー時に長さを取得する処理
         window.previewAudioUpload = (input) => {
             const file = input.files[0];
             if (file) {
@@ -280,14 +283,23 @@
                 const player = document.getElementById('audio-player');
                 player.src = url;
                 document.getElementById('audio-preview-container').classList.remove('hidden');
+                
+                player.onloadedmetadata = () => {
+                    currentDuration = player.duration;
+                };
             }
         };
 
+        // ★追加: URLプレビュー時にも長さを取得する処理
         window.previewAudioUrl = (url) => {
             if (url) {
                 const player = document.getElementById('audio-player');
                 player.src = url;
                 document.getElementById('audio-preview-container').classList.remove('hidden');
+                
+                player.onloadedmetadata = () => {
+                    currentDuration = player.duration;
+                };
             } else {
                 document.getElementById('audio-preview-container').classList.add('hidden');
             }
@@ -321,12 +333,13 @@
                     document.getElementById('description').value = data.description || '';
                     document.getElementById('guests').value = data.guests ? data.guests.join(', ') : '';
                     
+                    currentDuration = data.duration || 0; // ★追加
+                    
                     if (data.sourceType === 'url') {
                         switchAudioType('url');
                         document.getElementById('audio-url').value = data.audioUrl || '';
                         previewAudioUrl(data.audioUrl);
                     } else {
-                        // アップロード済みの場合はURLをセットしてプレビューさせる(ファイル選択はそのまま)
                         document.getElementById('audio-preview-container').classList.remove('hidden');
                         document.getElementById('audio-player').src = data.audioUrl || '';
                     }
@@ -362,6 +375,7 @@
             let finalAudioUrl = '';
             let finalThumbUrl = '';
 
+            // 未入力チェック
             if (!editPid) {
                 if (audioInputType === 'upload' && !currentAudioFile && !isAdminMock) {
                     return alert('音声ファイルを選択してください');
@@ -370,13 +384,32 @@
                     return alert('音声のURLを入力してください');
                 }
             }
+
+            // ファイルサイズチェック
+            if (audioInputType === 'upload' && currentAudioFile) {
+                const maxSize = 30 * 1024 * 1024; // 30MB制限
+                if (currentAudioFile.size > maxSize) {
+                    return alert(`音声ファイルが大きすぎます (上限30MB)\n現在のサイズ: ${(currentAudioFile.size / 1024 / 1024).toFixed(1)}MB`);
+                }
+            }
+            if (currentThumbFile) {
+                const maxThumbSize = 5 * 1024 * 1024; // 5MB制限
+                if (currentThumbFile.size > maxThumbSize) {
+                    return alert(`画像サイズが大きすぎます (上限5MB)\n現在のサイズ: ${(currentThumbFile.size / 1024 / 1024).toFixed(1)}MB`);
+                }
+            }
             
             const btn = document.getElementById('btn-save');
             const modal = document.getElementById('progress-modal');
             const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
             
             btn.disabled = true;
-            if (!isAdminMock) modal.classList.remove('hidden');
+            if (!isAdminMock) {
+                modal.classList.remove('hidden');
+                progressBar.style.width = '5%';
+                progressText.textContent = 'アップロードの準備中...';
+            }
 
             try {
                 // 1. Audio Upload
@@ -387,13 +420,21 @@
                     await new Promise((resolve, reject) => {
                         uploadTask.on('state_changed', 
                             (snapshot) => {
-                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 80; // 音声で80%
-                                progressBar.style.width = progress + '%';
+                                const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 75; 
+                                progressBar.style.width = (5 + p) + '%';
+                                progressText.textContent = `音声をアップロード中... (${Math.floor(5 + p)}%)`;
                             }, 
-                            (error) => reject(error), 
+                            (error) => {
+                                console.error("Audio Upload Error:", error);
+                                reject(new Error(`音声のアップロードに失敗: ${error.message}`));
+                            }, 
                             async () => {
-                                finalAudioUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                                resolve();
+                                try {
+                                    finalAudioUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                                    resolve();
+                                } catch(err) {
+                                    reject(new Error("音声URLの取得に失敗しました"));
+                                }
                             }
                         );
                     });
@@ -405,16 +446,25 @@
                 if (currentThumbFile && !isAdminMock) {
                     const thumbRef = ref(storage, `podcasts/thumbnails/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`);
                     const thumbUploadTask = uploadBytesResumable(thumbRef, currentThumbFile);
+                    
                     await new Promise((resolve, reject) => {
                         thumbUploadTask.on('state_changed', 
                             (snapshot) => {
-                                const progress = 80 + ((snapshot.bytesTransferred / snapshot.totalBytes) * 20); // サムネで残り20%
-                                progressBar.style.width = progress + '%';
+                                const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 15;
+                                progressBar.style.width = (80 + p) + '%';
+                                progressText.textContent = `画像をアップロード中... (${Math.floor(80 + p)}%)`;
                             }, 
-                            (error) => reject(error), 
+                            (error) => {
+                                console.error("Thumb Upload Error:", error);
+                                reject(new Error(`画像のアップロードに失敗: ${error.message}`));
+                            }, 
                             async () => {
-                                finalThumbUrl = await getDownloadURL(thumbUploadTask.snapshot.ref);
-                                resolve();
+                                try {
+                                    finalThumbUrl = await getDownloadURL(thumbUploadTask.snapshot.ref);
+                                    resolve();
+                                } catch(err) {
+                                    reject(new Error("画像URLの取得に失敗しました"));
+                                }
                             }
                         );
                     });
@@ -431,13 +481,13 @@
                 }
 
                 progressBar.style.width = '100%';
+                progressText.textContent = 'データを保存しています...';
 
                 const desc = document.getElementById('description').value;
                 const guestsStr = document.getElementById('guests').value.trim();
                 const guests = guestsStr ? guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 const allowComments = document.querySelector('input[name="allowComments"]:checked').value === 'true';
 
-                // Tags
                 const checkedTags = Array.from(document.querySelectorAll('.tag-cb:checked')).map(cb => cb.value);
                 const customTags = document.getElementById('custom-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
                 const tags = [...new Set([...checkedTags, ...customTags])];
@@ -455,6 +505,7 @@
                     guests: guests,
                     tags: tags,
                     allowComments: allowComments,
+                    duration: currentDuration, // ★追加: 長さを保存
                     updatedAt: new Date().toISOString()
                 };
 
@@ -466,18 +517,20 @@
                     return;
                 }
 
+                // データベースに保存
                 const pidRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', docId);
                 await setDoc(pidRef, podcastData, { merge: true });
                 
-                // ★詳細ページ（podcast_detail.html）へ遷移（未作成の場合はpodcasts.htmlへ）
-                window.location.href = `podcasts.html`;
+                // 再生ページへ移動
+                window.location.href = `podcast_detail.html?pid=${docId}`;
                 
             } catch(error) {
                 console.error(error);
-                alert("保存に失敗しました");
+                alert(`保存中にエラーが発生しました。\n${error.message}\n\n※通信環境やファイルのサイズをご確認ください。`);
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 保存を再試行';
                 btn.disabled = false;
                 modal.classList.add('hidden');
+                progressBar.style.width = '0%';
             }
         };
     </script>
