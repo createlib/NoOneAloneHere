@@ -404,9 +404,11 @@
         let currentCalendarDate = new Date();
         let myProfile = null;
         let isAdmin = false;
+        let currentUser = null; // ★追加: 現在のユーザー情報を保持する変数を定義
 
         onAuthStateChanged(auth, async (user) => {
             if (isAdminMock) {
+                currentUser = { uid: 'test_admin_uid' }; // ★追加: モックユーザーをセット
                 isAdmin = true;
                 myProfile = { name: 'テスト管理者', userId: 'admin' };
                 document.getElementById('participating-events-list').innerHTML = '<div class="text-xs text-brand-400 italic p-6 bg-[#fffdf9] rounded-sm border border-brand-200 text-center tracking-widest">管理者モード: 参加イベントなし</div>';
@@ -415,6 +417,7 @@
             }
 
             if (user && !user.isAnonymous) {
+                currentUser = user; // ★追加: ログインユーザー情報をセット
                 try {
                     const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                     if (docSnap.exists()) {
@@ -809,13 +812,9 @@
 
             countEl.textContent = participants.length;
             
-            // ★修正: 自分が主催者(isOrganizer)かどうか判定
-            const isOrganizer = (myProfile && (myProfile.userId === evt.organizerId || currentUser.uid === evt.organizerId));
+            // ★修正: currentUser が null の場合でもエラーにならないように安全に判定
+            const isOrganizer = currentUser && myProfile && (myProfile.userId === evt.organizerId || currentUser.uid === evt.organizerId);
 
-            // ★修正: 参加者リストの可視化ロジック
-            // 管理者 or 主催者なら全員見える (非公開ユーザーも)
-            // 一般ユーザーなら「公開設定」の参加者だけ見える
-            // ※「参加者リスト自体が非公開(isParticipantsPublic == false)」の場合は主催者以外見えない
             if (evt.isParticipantsPublic || isOrganizer || isAdmin) {
                 if (participants.length === 0) {
                     partsContainer.innerHTML = '<div class="text-[10px] text-brand-500 w-full text-center py-2">まだ参加者はいません</div>';
@@ -834,7 +833,6 @@
                                     const data = uDoc.data();
                                     if(data.photoURL) avatarUrl = data.photoURL;
                                     
-                                    // ★判定ロジック
                                     if (isOrganizer || isAdmin) {
                                         isVisible = true; // 主催者・管理者は全員見える
                                     } else {
@@ -845,6 +843,8 @@
                                     }
                                 }
                             } catch(e){ isVisible = false; }
+                        } else {
+                            isVisible = true; // テスト環境では常に表示
                         }
                         return { uid, avatarUrl, isVisible };
                     });
@@ -862,7 +862,6 @@
                     }
                     
                     const remainingCount = participants.length - count;
-                    // ※自分が一般ユーザーで、残りが全員非公開ユーザーだった場合などは、数は合わない可能性があるが「+〇名」として出す
                     if (remainingCount > 0) {
                         partsHtml += `<div class="flex items-center justify-center h-10 w-10 rounded-full ring-2 ring-[#fffdf9] bg-brand-50 text-[10px] font-bold text-brand-600 border border-brand-200 shadow-sm">+${remainingCount}</div>`;
                     }
