@@ -34,15 +34,11 @@
         .prose li { margin-bottom: 0.5em; }
         .prose a { color: #b8860b; text-decoration: underline; }
         
-        /* プレイヤー内のMarkdown文字色調整 */
         .prose-invert h1, .prose-invert h2, .prose-invert h3 { color: #f7f5f0; border-color: rgba(255,255,255,0.2); }
         .prose-invert strong { color: #d4af37; }
 
         @media (max-width: 640px) {
-            .prose p, .prose ul, .prose ol, .prose li {
-                font-size: 0.75rem;
-                line-height: 1.6;
-            }
+            .prose p, .prose ul, .prose ol, .prose li { font-size: 0.75rem; line-height: 1.6; }
             .prose h1 { font-size: 1.1rem; }
             .prose h2 { font-size: 1rem; }
             .prose h3 { font-size: 0.9rem; }
@@ -70,9 +66,7 @@
         #smart-player { transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
         .player-expanded { height: 100dvh; bottom: 0 !important; border-radius: 0; }
         .player-collapsed { height: 64px; border-radius: 0.5rem 0.5rem 0 0; }
-        @media (min-width: 1024px) {
-            .player-collapsed { height: 80px; bottom: 0 !important; border-radius: 0; }
-        }
+        @media (min-width: 1024px) { .player-collapsed { height: 80px; bottom: 0 !important; border-radius: 0; } }
 
         .player-expanded .show-collapsed { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .player-collapsed .show-expanded { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
@@ -93,7 +87,7 @@
             </div>
             
             <div class="flex items-center gap-3 h-full">
-                <!-- PC Navigation Links -->
+                <!-- ★修正: 左から「航海・イベント・さがす・メディア・マイページ」の順 -->
                 <div class="hidden lg:flex items-center gap-6 mr-4 h-full">
                     <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海</a>
                     <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
@@ -105,11 +99,11 @@
                         </button>
                         <div class="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-[#fffdf9] border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity">
                             <a href="videos.html" class="block px-4 py-3 text-sm font-bold text-brand-400 hover:bg-brand-50 hover:text-brand-700 border-b border-brand-100 transition-colors tracking-widest"><i class="fa-solid fa-film mr-2 text-brand-500"></i>THEATER</a>
-                            <a href="podcasts.html" class="block px-4 py-3 text-sm font-bold text-[#b8860b] bg-brand-50 tracking-widest"><i class="fa-solid fa-podcast mr-2"></i>CAST</a>
+                            <a href="podcasts.html" class="block px-4 py-3 text-sm font-bold text-brand-400 hover:bg-brand-50 hover:text-brand-700 transition-colors tracking-widest"><i class="fa-solid fa-podcast mr-2 text-[#b8860b]"></i>CAST</a>
                         </div>
                     </div>
 
-                    <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                    <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
                 <div class="flex items-center gap-2 border-l border-brand-200 pl-4 ml-2">
@@ -121,11 +115,10 @@
                     </button>
                 </div>
             </div>
-
         </div>
     </nav>
 
-    <!-- Bottom Nav (SP) -->
+    <!-- ★修正: 左から「航海・イベント・さがす・メディア・マイページ」の順 -->
     <nav class="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="bottom-nav-content">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
@@ -213,17 +206,15 @@
         <div class="flex-1 flex flex-col items-center justify-center px-6 pb-safe-bottom lg:pb-12 pt-16 show-expanded relative z-20 overflow-y-auto">
             <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
                 
-                <!-- 通常再生時: フリップカードUI -->
+                <!-- フリップカードUI -->
                 <div id="flip-wrapper" class="w-full max-w-[300px] sm:max-w-[400px] h-[300px] sm:h-[400px] mb-8 lg:mb-0 relative cursor-pointer transition-all duration-500 ease-in-out [perspective:1000px] shrink-0" onclick="toggleFlip()" title="タップしてメモを見る">
                     <div id="flip-inner" class="w-full h-full relative transition-transform duration-700 ease-in-out" style="transform-style: preserve-3d; transform: rotateY(0deg);">
-                        
                         <div class="absolute inset-0 w-full h-full rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden group bg-[#1a110f]" style="backface-visibility: hidden;">
                             <img id="full-thumb" src="https://via.placeholder.com/600" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]">
                             <div class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/20 text-white/70 shadow-lg pointer-events-none group-hover:bg-black/70 group-hover:text-white transition-colors">
                                 <i class="fa-solid fa-align-left text-sm"></i>
                             </div>
                         </div>
-
                         <div class="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden flex flex-col p-5 sm:p-8 border border-white/5" style="backface-visibility: hidden; transform: rotateY(180deg);">
                             <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-2 text-left" onclick="event.stopPropagation()">
                                 <h3 class="text-[#d4af37] text-sm sm:text-base font-bold tracking-widest flex items-center gap-2 font-serif mb-4 border-b border-white/10 pb-2">
@@ -244,7 +235,7 @@
                     </div>
                 </div>
 
-                <!-- ★追加: 外部プレイヤー埋め込み時のコンテナ -->
+                <!-- 外部プレイヤー埋め込みコンテナ -->
                 <div id="embed-wrapper" class="w-full max-w-[400px] lg:max-w-[600px] hidden mb-8 lg:mb-0 shrink-0">
                     <iframe id="embed-iframe" class="w-full min-h-[250px] sm:min-h-[352px] rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 bg-black/50" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
                     <div class="mt-6 text-center animate-pulse">
@@ -260,6 +251,7 @@
                         <div class="min-w-0 flex-1 pr-4">
                             <div id="full-tags" class="flex flex-wrap gap-1.5 mb-3"></div>
                             <h2 id="full-title" class="text-2xl sm:text-3xl font-bold truncate text-white mb-2 font-serif tracking-widest">Loading...</h2>
+                            <!-- ★変更: リンク先を user_contents.html に変更 -->
                             <a id="full-author-link" href="#" class="text-sm text-[#d4af37] hover:text-[#b8860b] transition-colors truncate tracking-widest flex items-center gap-1 w-fit">
                                 <span id="full-author"></span> <i class="fa-solid fa-circle-check text-[10px]"></i>
                             </a>
@@ -275,7 +267,6 @@
                                 <span id="time-duration">0:00</span>
                             </div>
                         </div>
-                        
                         <div class="flex items-center justify-center gap-10 mb-8">
                             <button onclick="skip(-15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒戻る"><i class="fa-solid fa-rotate-left"></i></button>
                             <button id="btn-play-full" onclick="togglePlay()" class="w-20 h-20 bg-[#d4af37] text-[#1a110f] rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-1"></i></button>
@@ -299,6 +290,7 @@
             <div class="flex-1 min-w-0 space-y-8">
                 
                 <div class="flex flex-row justify-between items-center gap-2 pb-5 border-b border-brand-200 px-1 sm:px-0">
+                    <!-- ★変更: リンク先を user_contents.html に変更 -->
                     <a id="author-link" href="#" class="flex items-center gap-2 sm:gap-3 group cursor-pointer bg-[#fffdf9] pr-3 py-1 sm:py-1.5 rounded-full border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b] min-w-0">
                         <img id="author-icon" src="https://via.placeholder.com/48" class="w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover flex-shrink-0 ml-0.5" onerror="this.src='https://via.placeholder.com/48?text=U'">
                         <div class="min-w-0">
@@ -334,6 +326,7 @@
                     <div id="podcast-desc" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed tracking-wide"></div>
                 </div>
 
+                <!-- Comments Section -->
                 <div id="comments-section" class="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm mb-12">
                     <h3 class="font-bold text-brand-900 mb-6 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
                         <i class="fa-regular fa-comments text-brand-400"></i> コメント (<span id="comment-count">0</span>)
@@ -365,10 +358,9 @@
                     <h3 class="font-bold text-brand-900 mb-5 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
                         <i class="fa-solid fa-headphones text-[#b8860b]"></i> この作者の他の配信
                     </h3>
-                    <div id="related-podcasts-list" class="space-y-4">
-                        <!-- JSで挿入 -->
-                    </div>
+                    <div id="related-podcasts-list" class="space-y-4"></div>
                     <div class="mt-6 text-center">
+                        <!-- ★変更: リンク先を user_contents.html に変更 -->
                         <a id="btn-more-author" href="#" class="text-[10px] sm:text-xs font-bold text-brand-600 hover:text-[#b8860b] transition-colors tracking-widest">一覧をもっと見る <i class="fa-solid fa-chevron-right ml-1"></i></a>
                     </div>
                 </div>
@@ -448,6 +440,18 @@
             loadPodcastData();
         });
 
+        window.toggleTheaterMenu = () => {
+            const menu = document.getElementById('sp-theater-menu');
+            const content = document.getElementById('sp-theater-menu-content');
+            if (menu && menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => { if(content) content.classList.remove('translate-y-full'); }, 10);
+            } else if(menu) {
+                if(content) content.classList.add('translate-y-full');
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            }
+        };
+
         function formatText(text) {
             if (!text) return '';
             let rawHtml = '';
@@ -470,16 +474,20 @@
                     const safeName = podcastData.authorName || '名無し';
                     document.getElementById('full-author').textContent = safeName;
                     document.getElementById('mini-author').textContent = safeName;
-                    document.getElementById('full-author-link').href = `user_videos.html?uid=${podcastData.authorId}`;
+                    
+                    // ★修正: フルプレイヤーの投稿者リンクを MEDIA LOG に変更
+                    document.getElementById('full-author-link').href = `user_contents.html?uid=${podcastData.authorId}`;
                     
                     const authorNameEl = document.getElementById('author-name');
                     if(authorNameEl) authorNameEl.innerHTML = `${safeName} <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37] ml-0.5"></i>`;
                     
+                    // ★修正: メイン画面の投稿者アイコンリンクを MEDIA LOG に変更
                     const authorLinkEl = document.getElementById('author-link');
-                    if(authorLinkEl) authorLinkEl.href = `user_videos.html?uid=${podcastData.authorId}`;
+                    if(authorLinkEl) authorLinkEl.href = `user_contents.html?uid=${podcastData.authorId}`;
                     
+                    // ★修正: 「一覧をもっと見る」のリンクを MEDIA LOG に変更
                     const btnMoreEl = document.getElementById('btn-more-author');
-                    if(btnMoreEl) btnMoreEl.href = `user_videos.html?uid=${podcastData.authorId}`;
+                    if(btnMoreEl) btnMoreEl.href = `user_contents.html?uid=${podcastData.authorId}`;
 
                     if (podcastData.authorIcon) {
                         const ai = document.getElementById('author-icon');
@@ -506,24 +514,19 @@
                     document.getElementById('player-bg').src = thumbUrl;
                     document.getElementById('mini-thumb').src = thumbUrl;
 
-                    // ★追加・修正: 外部サービス埋め込み（isEmbed）の処理
                     if (podcastData.isEmbed) {
-                        // Flip UIを隠してEmbed UIを表示
                         document.getElementById('flip-wrapper').classList.add('hidden');
                         document.getElementById('embed-wrapper').classList.remove('hidden');
                         document.getElementById('embed-iframe').src = podcastData.audioUrl;
                         
-                        // カスタムコントロールを隠す
                         document.getElementById('custom-controls-area').classList.add('hidden');
                         document.getElementById('mini-controls-area').classList.add('hidden');
                         document.getElementById('mini-progress').classList.add('hidden');
                         
-                        // タイトルに注記を追加
                         document.getElementById('full-title').innerHTML += ' <span class="text-[10px] bg-brand-50 text-brand-600 px-2 py-1 rounded-sm border border-brand-200 font-sans tracking-widest align-middle ml-2">外部サービス再生</span>';
                         document.getElementById('mini-title').innerHTML += ' <span class="text-[8px] bg-brand-50 text-brand-600 px-1 py-0.5 rounded-sm">外部</span>';
                         
                     } else {
-                        // 従来の直接再生モード
                         if (podcastData.audioUrl) {
                             audio.src = podcastData.audioUrl;
                             audio.load();
