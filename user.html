@@ -154,7 +154,21 @@
                     <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海</a>
                     <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
                     <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
-                    <a href="videos.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-video"></i> シアター</a>
+                    
+                    <div class="relative group h-full flex items-center">
+                        <button class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
+                            <i class="fa-solid fa-photo-film"></i> メディア
+                        </button>
+                        <div class="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-[#fffdf9] border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity overflow-hidden">
+                            <a href="videos.html" class="flex items-center px-4 py-3 text-sm font-bold text-brand-800 hover:bg-brand-50 border-b border-brand-100 transition-colors tracking-widest group/item">
+                                <i class="fa-solid fa-film text-brand-400 group-hover/item:text-brand-600 mr-2 w-5 text-center transition-colors"></i> THEATER
+                            </a>
+                            <a href="podcasts.html" class="flex items-center px-4 py-3 text-sm font-bold text-brand-800 hover:bg-brand-50 transition-colors tracking-widest group/item">
+                                <i class="fa-solid fa-podcast text-[#b8860b] mr-2 w-5 text-center group-hover/item:scale-110 transition-transform"></i> CAST
+                            </a>
+                        </div>
+                    </div>
+
                     <a href="user.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
@@ -189,9 +203,9 @@
                 <i class="fa-solid fa-compass text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">さがす</span>
             </a>
-            <a href="videos.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
-                <i class="fa-solid fa-video text-xl mb-1"></i>
-                <span class="text-[10px] font-medium tracking-widest">シアター</span>
+            <a href="javascript:void(0)" onclick="toggleTheaterMenu()" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-photo-film text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">メディア</span>
             </a>
             <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px]">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
@@ -199,6 +213,33 @@
             </a>
         </div>
     </nav>
+
+    <!-- SP用 メディア選択ポップアップ -->
+    <div id="sp-theater-menu" class="hidden fixed inset-0 z-[2000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end justify-center">
+        <div class="absolute inset-0" onclick="toggleTheaterMenu()"></div>
+        <div class="bg-[#fffdf9] bg-texture w-full rounded-t-xl p-6 transform transition-transform translate-y-full relative shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sp-theater-menu-content">
+            <div class="flex justify-between items-center mb-4 border-b border-brand-200 pb-3">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center"><i class="fa-solid fa-photo-film text-brand-500 mr-2"></i>メディアを選択</h3>
+                <button onclick="toggleTheaterMenu()" class="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3">
+                <a href="videos.html" class="flex items-center gap-4 p-4 border border-brand-400 bg-brand-50 rounded-sm shadow-sm">
+                    <div class="w-12 h-12 bg-[#3e2723] text-[#f7f5f0] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-film"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH THEATER</h4>
+                        <p class="text-[10px] text-brand-600 mt-1 font-bold">動画で想いや活動の軌跡を共有</p>
+                    </div>
+                </a>
+                <a href="podcasts.html" class="flex items-center gap-4 p-4 border border-brand-200 rounded-sm hover:bg-brand-50 transition-colors shadow-sm bg-white">
+                    <div class="w-12 h-12 bg-brand-100 text-[#b8860b] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-podcast"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH CAST</h4>
+                        <p class="text-[10px] text-brand-500 mt-1 font-bold">音声で深い考えや対話を配信</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!-- Error Container -->
     <div id="error-container" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-[#fffdf9]/80 backdrop-blur-sm">
@@ -258,14 +299,14 @@
                                     <span class="block font-bold text-brand-900 text-lg font-serif" id="count-followers">-</span>
                                     <span class="text-xs text-brand-500 font-medium tracking-widest">フォロワー</span>
                                 </div>
-                                <!-- 共通の航海士 (初期は非表示) -->
+                                <!-- 共通の航海士 -->
                                 <div id="area-common-mutual" class="hidden text-center cursor-pointer hover:opacity-75 transition-opacity border-l border-brand-100" onclick="openFollowModal('mutual')">
                                     <span class="block font-bold text-[#b8860b] text-lg font-serif" id="count-common-mutual">-</span>
                                     <span class="text-xs text-[#b8860b] font-medium tracking-widest">共通の航海士</span>
                                 </div>
                             </div>
 
-                            <!-- Bio Section (マークダウン対応) -->
+                            <!-- Bio Section -->
                             <div class="py-4 border-t border-brand-100 relative z-20" id="section-bio">
                                 <div id="profile-bio" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
                             </div>
@@ -274,7 +315,6 @@
                                 <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-feather"></i></div><span id="profile-job" class="font-medium">-</span></div>
                                 <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div><span id="profile-location" class="font-medium">-</span></div>
                                 
-                                <!-- ★変更: 世界観に合わせたネーミング「MEDIA LOG」に変更 -->
                                 <a id="profile-video-link" href="#" class="hidden items-center gap-3 text-sm font-bold text-brand-600 hover:text-brand-800 transition-colors group w-fit">
                                     <div class="w-8 h-8 rounded-full bg-[#3e2723] flex items-center justify-center text-[#d4af37] border border-[#b8860b] flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm"><i class="fa-solid fa-photo-film text-xs"></i></div>
                                     <span class="border-b border-transparent group-hover:border-[#b8860b] tracking-widest">MEDIA LOG (発信記録)</span>
@@ -343,7 +383,6 @@
                         <div id="message-container" class="hidden">
                             <div class="relative mt-6">
                                 <i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-4 -left-2 z-0"></i>
-                                <!-- マークダウン対応クラスを付与 -->
                                 <div id="profile-message" class="relative z-10 prose prose-sm max-w-none prose-stone text-brand-700 pl-6"></div>
                             </div>
                         </div>
@@ -441,7 +480,6 @@
             </div>
             
             <div class="p-6 overflow-y-auto flex-1 bg-[#fffdf9] custom-scrollbar">
-                <!-- 相手には見えない旨のアナウンス -->
                 <div class="bg-brand-50 border border-brand-200 p-3 rounded-sm mb-6 flex items-start gap-2">
                     <i class="fa-solid fa-eye-slash text-brand-400 mt-0.5"></i>
                     <p class="text-xs text-brand-600 tracking-widest leading-relaxed">出会ったきっかけや会話の内容などを記録しておけます。このメモはあなたにしか見えません。</p>
@@ -502,7 +540,19 @@
         const urlParams = new URLSearchParams(window.location.search);
         targetUid = urlParams.get('uid');
 
-        // ★★★ 強化されたテキストフォーマット関数 (Markdown対応 完全版) ★★★
+        // ★追加: SP Menu Toggle ---
+        window.toggleTheaterMenu = () => {
+            const menu = document.getElementById('sp-theater-menu');
+            const content = document.getElementById('sp-theater-menu-content');
+            if (menu && menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => { if(content) content.classList.remove('translate-y-full'); }, 10);
+            } else if(menu) {
+                if(content) content.classList.add('translate-y-full');
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            }
+        };
+
         function formatText(text) {
             if (!text) return '';
             
@@ -532,6 +582,18 @@
         function setElText(id, text) { const el = document.getElementById(id); if(el) el.textContent = text || '-'; }
         function setElHtml(id, html) { const el = document.getElementById(id); if(el) el.innerHTML = html || ''; }
 
+        window.toggleTheaterMenu = () => {
+            const menu = document.getElementById('sp-theater-menu');
+            const content = document.getElementById('sp-theater-menu-content');
+            if (menu && menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => { if(content) content.classList.remove('translate-y-full'); }, 10);
+            } else if(menu) {
+                if(content) content.classList.add('translate-y-full');
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            }
+        };
+
         onAuthStateChanged(auth, async (user) => {
             if (isAdminMock) {
                 currentUser = { uid: 'test_admin_uid', displayName: '管理者' };
@@ -540,13 +602,13 @@
                 if (targetUid && targetUid !== 'test_admin_uid') {
                     isSelf = false;
                     setupViewForOtherUser();
-                    checkUserVideos(targetUid); // ★追加
+                    checkUserContents(targetUid);
                 } else {
                     isSelf = true;
                     targetUid = 'test_admin_uid';
                     updateDashboardUI(getAdminMockData());
                     enableSelfMode(myRank);
-                    checkUserVideos(targetUid); // ★追加
+                    checkUserContents(targetUid);
                 }
                 return;
             }
@@ -573,7 +635,7 @@
                     if (myProfileSnap.exists()) updateDashboardUI(myProfileSnap.data());
                     else updateDashboardUI({ userId: user.uid, name: '（未設定）' });
                     
-                    checkUserContents(user.uid); // ★変更: 動画・音声両方のチェックに変更
+                    checkUserContents(user.uid); 
                 } else {
                     isSelf = false;
                     await checkFollowStatus(user.uid, targetUid); 
@@ -586,7 +648,7 @@
                         memoBtn.classList.add('inline-flex');
                     }
                     
-                    checkUserContents(targetUid); // ★変更: 同上
+                    checkUserContents(targetUid); 
                 }
                 updateFollowCounts(targetUid);
             } else {
@@ -594,7 +656,6 @@
             }
         });
 
-        // ★★★ 変更: 対象ユーザーの動画または音声が存在するかチェックする関数 ★★★
         async function checkUserContents(uid) {
             const mediaLink = document.getElementById('profile-video-link');
             if (!mediaLink) return;
@@ -609,13 +670,11 @@
             try {
                 let hasContent = false;
                 
-                // 動画のチェック
                 const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
                 const qV = query(videosRef, where("authorId", "==", uid));
                 const snapV = await getCountFromServer(qV);
                 if (snapV.data().count > 0) hasContent = true;
 
-                // 音声のチェック
                 if (!hasContent) {
                     const podRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
                     const qP = query(podRef, where("authorId", "==", uid));
@@ -624,7 +683,7 @@
                 }
 
                 if (hasContent) {
-                    mediaLink.href = `user_contents.html?uid=${uid}`; // ★変更: 新しいページへリンク
+                    mediaLink.href = `user_contents.html?uid=${uid}`;
                     mediaLink.classList.remove('hidden');
                     mediaLink.classList.add('flex');
                 } else {
@@ -636,7 +695,6 @@
             }
         }
 
-        // ★★★ 共通の航海士計算ロジック ★★★
         async function calculateCommonMutuals(myUid, targetUid) {
             if (isAdminMock) {
                 commonMutualIds = ['user1', 'user2'];
@@ -645,7 +703,6 @@
             }
 
             try {
-                // 1. 自分の相互フォローリストを取得
                 const myFollowingSnap = await getDocs(collection(db, 'artifacts', appId, 'users', myUid, 'following'));
                 const myFollowersSnap = await getDocs(collection(db, 'artifacts', appId, 'users', myUid, 'followers'));
                 
@@ -658,14 +715,12 @@
                     return;
                 }
 
-                // 2. 相手の相互フォローリストを取得
                 const targetFollowingSnap = await getDocs(collection(db, 'artifacts', appId, 'users', targetUid, 'following'));
                 const targetFollowersSnap = await getDocs(collection(db, 'artifacts', appId, 'users', targetUid, 'followers'));
 
                 const targetFollowingIds = new Set(targetFollowingSnap.docs.map(d => d.id));
                 const targetMutualIds = targetFollowersSnap.docs.map(d => d.id).filter(id => targetFollowingIds.has(id));
 
-                // 3. 共通部分（積集合）を抽出
                 const targetMutualSet = new Set(targetMutualIds);
                 commonMutualIds = myMutualIds.filter(id => targetMutualSet.has(id));
 
@@ -677,7 +732,6 @@
             }
         }
 
-        // ★★★ プライベートメモ関連の処理 ★★★
         async function loadPrivateMemo(myUid, targetUid) {
             if (isAdminMock) return;
             try {
@@ -897,7 +951,6 @@
             }
         };
 
-        // ★★★ フォロー/フォロワー一覧モーダル処理 ★★★
         window.openFollowModal = async (type) => {
             const modal = document.getElementById('follow-modal');
             const title = document.getElementById('follow-modal-title');
@@ -916,7 +969,6 @@
             let users = [];
 
             if (isAdminMock) {
-                // モックデータ
                 users = [
                     { userId: 'user1', name: 'テストユーザーA', photoURL: 'https://via.placeholder.com/150', jobTitle: 'デザイナー', uid: 'mock_uid_1' },
                     { userId: 'user2', name: 'テストユーザーB', photoURL: 'https://via.placeholder.com/150', jobTitle: 'エンジニア', uid: 'mock_uid_2' },
