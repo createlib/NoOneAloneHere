@@ -174,7 +174,7 @@
                 
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-bold text-brand-700 tracking-widest">自己紹介 (Bio) <span class="text-brand-400 text-[10px] font-normal ml-1">(※300字以上で評価)</span></label>
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">自己紹介 (Bio) <span class="text-brand-400 text-[10px] font-normal ml-1">(※150字以上で評価)</span></label>
                         <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
                     </div>
                     <textarea id="bio" rows="4" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="これまでの歩みや現在の活動内容を簡潔に。"></textarea>
@@ -182,7 +182,7 @@
                 
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-bold text-brand-700 tracking-widest">想い・メッセージ <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 300字以上で評価)</span></label>
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">想い・メッセージ <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 150字以上で評価)</span></label>
                         <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
                     </div>
                     <textarea id="message" rows="5" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="コミュニティの仲間に向けた熱い想いや価値観を語ってください。"></textarea>
@@ -190,7 +190,7 @@
 
                 <div>
                     <div class="flex justify-between items-center mb-1.5">
-                        <label class="block text-xs font-bold text-brand-700 tracking-widest">目標・ビジョン <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 300字以上で評価)</span></label>
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">目標・ビジョン <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 150字以上で評価)</span></label>
                         <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
                     </div>
                     <textarea id="goals" rows="3" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="将来成し遂げたいことや、次に進みたい世界について。"></textarea>
@@ -300,7 +300,7 @@
                 <p class="text-xs text-brand-700 leading-relaxed tracking-wide">
                     すべての項目（基本情報、パーソナリティ、マッチング情報、スキル・趣味、経歴、SNS・リンク）を設定・入力することで、充実度が <strong>100%</strong> になります。<br>
                     <span class="text-[10px] text-brand-500 mt-2 block space-y-1">
-                        ・「自己紹介」「想い・メッセージ」「目標・ビジョン」は各300文字以上で評価されます。<br>
+                        ・「自己紹介」「想い・メッセージ」「目標・ビジョン」は各150文字以上で評価されます。<br>
                         ・「スキル」「趣味」は各3つ以上で評価されます。<br>
                         ・「経歴」「SNS・外部リンク」は1つ以上の入力で評価されます。<br>
                         ※ 基本情報の項目は入力されている項目ごとに加算されます。(画像8点、他各4点)
@@ -698,10 +698,10 @@
             if (data.gender && data.gender !== '無回答') score += 4;
             if (data.birthDate) score += 4;
             
-            // パーソナリティ (計30点: 各300文字以上で10点)
-            if (data.bio && data.bio.length >= 300) score += 10;
-            if (data.message && data.message.length >= 300) score += 10;
-            if (data.goals && data.goals.length >= 300) score += 10;
+            // パーソナリティ (計30点: 各150文字以上で10点)
+            if (data.bio && data.bio.length >= 150) score += 10;
+            if (data.message && data.message.length >= 150) score += 10;
+            if (data.goals && data.goals.length >= 150) score += 10;
             
             // マッチング情報 (計10点: 各1つ以上で5点)
             if (data.canOffer && data.canOffer.length > 0) score += 5;
