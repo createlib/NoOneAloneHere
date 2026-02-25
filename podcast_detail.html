@@ -38,10 +38,9 @@
         .prose-invert h1, .prose-invert h2, .prose-invert h3 { color: #f7f5f0; border-color: rgba(255,255,255,0.2); }
         .prose-invert strong { color: #d4af37; }
 
-        /* ★追加: スマホ画面での文字サイズ最適化（改行を防ぐ） */
         @media (max-width: 640px) {
             .prose p, .prose ul, .prose ol, .prose li {
-                font-size: 0.75rem; /* text-xs 相当 */
+                font-size: 0.75rem;
                 line-height: 1.6;
             }
             .prose h1 { font-size: 1.1rem; }
@@ -54,7 +53,6 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(212, 175, 55, 0.3); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(212, 175, 55, 0.6); }
 
-        /* ボトムナビ */
         .bottom-nav-fixed {
             position: fixed; bottom: 0; left: 0; width: 100%;
             background-color: #fffdf9; border-top: 1px solid #e8dfd1;
@@ -63,14 +61,12 @@
         }
         .bottom-nav-content { height: 4rem; display: flex; justify-content: space-around; align-items: center; width: 100%; }
 
-        /* カスタムオーディオシークバー */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]:focus { outline: none; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
         input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #d4af37; cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); transition: transform 0.1s; }
         input[type=range]::-webkit-slider-thumb:active { transform: scale(1.3); }
 
-        /* スマートプレイヤーアニメーション */
         #smart-player { transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
         .player-expanded { height: 100dvh; bottom: 0 !important; border-radius: 0; }
         .player-collapsed { height: 64px; border-radius: 0.5rem 0.5rem 0 0; }
@@ -78,7 +74,6 @@
             .player-collapsed { height: 80px; bottom: 0 !important; border-radius: 0; }
         }
 
-        /* 状態による表示切替 */
         .player-expanded .show-collapsed { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .player-collapsed .show-expanded { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .player-expanded .show-expanded { opacity: 1; pointer-events: auto; transition: opacity 0.4s 0.2s; }
@@ -91,14 +86,12 @@
     <nav class="bg-[#fffdf9]/90 backdrop-blur-md border-b border-brand-200 fixed w-full z-40 top-0 h-16 shadow-sm transition-all">
         <div class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
             
-            <!-- Left: Back Button -->
             <div class="flex items-center gap-4">
                 <a href="podcasts.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest mr-2">
                     <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">一覧へ戻る</span>
                 </a>
             </div>
             
-            <!-- Right: Menus & Actions -->
             <div class="flex items-center gap-3 h-full">
                 <!-- PC Navigation Links -->
                 <div class="hidden lg:flex items-center gap-6 mr-4 h-full">
@@ -106,7 +99,6 @@
                     <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
                     <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
                     
-                    <!-- メディア ドロップダウン (PC) -->
                     <div class="relative group h-full flex items-center">
                         <button class="text-[#b8860b] transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
                             <i class="fa-solid fa-photo-film"></i> メディア
@@ -120,7 +112,6 @@
                     <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
-                <!-- Admin / Owner Actions -->
                 <div class="flex items-center gap-2 border-l border-brand-200 pl-4 ml-2">
                     <button id="btn-edit" onclick="goToEdit()" class="hidden items-center px-3 py-1.5 bg-[#fffdf9] text-brand-700 text-xs font-bold rounded-sm shadow-sm hover:bg-brand-50 transition-colors border border-brand-300 tracking-widest">
                         <i class="fa-solid fa-pen sm:mr-1"></i> <span class="hidden sm:inline">編集</span>
@@ -166,7 +157,7 @@
         <div class="bg-[#fffdf9] bg-texture w-full rounded-t-xl p-6 transform transition-transform translate-y-full relative shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sp-theater-menu-content">
             <div class="flex justify-between items-center mb-4 border-b border-brand-200 pb-3">
                 <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center"><i class="fa-solid fa-photo-film text-brand-500 mr-2"></i>メディアを選択</h3>
-                <button onclick="toggleTheaterMenu()" class="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="toggleTheaterMenu()" class="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors border border-brand-200 shadow-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="space-y-3">
                 <a href="videos.html" class="flex items-center gap-4 p-4 border border-brand-200 rounded-sm hover:bg-brand-50 transition-colors shadow-sm bg-white">
@@ -187,23 +178,20 @@
         </div>
     </div>
 
-    <!-- 唯一の隠しオーディオ要素 (重複させない！) -->
+    <!-- 唯一の隠しオーディオ要素 -->
     <audio id="core-player" preload="metadata"></audio>
 
     <!-- Smart Player (Bottom Sheet & Mini Player) -->
     <div id="smart-player" class="fixed w-full left-0 z-[5000] bg-[#1a110f] text-white shadow-[0_-10px_40px_rgba(0,0,0,0.5)] player-expanded flex flex-col overflow-hidden">
         
-        <!-- 背景のぼかし画像 (Expanded用) -->
         <img id="player-bg" src="" class="absolute inset-0 w-full h-full object-cover opacity-20 blur-3xl scale-150 pointer-events-none show-expanded">
         <div class="absolute inset-0 bg-gradient-to-t from-[#1a110f] via-[#1a110f]/80 to-transparent pointer-events-none show-expanded"></div>
 
-        <!-- しまうボタン (Expanded用) -->
         <button onclick="togglePlayerSize()" class="absolute top-4 left-4 sm:top-6 sm:left-6 text-white/70 hover:text-white p-3 show-expanded z-30 flex items-center gap-2 bg-black/20 rounded-full backdrop-blur-md transition-colors border border-white/10">
             <i class="fa-solid fa-chevron-down text-lg"></i>
             <span class="text-xs font-bold tracking-widest pr-1">しまう</span>
         </button>
 
-        <!-- Mini Player UI (Collapsed用) -->
         <div class="absolute inset-0 w-full h-full flex items-center justify-between px-4 show-collapsed cursor-pointer bg-[#2a1a17] border-t border-[#3e2723] hover:bg-[#3e2723] transition-colors" onclick="togglePlayerSize()">
             <div class="absolute top-0 left-0 h-0.5 bg-[#d4af37]" id="mini-progress" style="width: 0%;"></div>
             
@@ -220,27 +208,20 @@
             </div>
         </div>
 
-        <!-- Full Player UI (Expanded用) -->
         <div class="flex-1 flex flex-col items-center justify-center px-6 pb-safe-bottom lg:pb-12 pt-16 show-expanded relative z-20 overflow-y-auto">
-            
             <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
                 
-                <!-- ★ フリップカードUI (アートワーク & エピソードメモ) -->
                 <div id="flip-wrapper" class="w-full max-w-[300px] sm:max-w-[400px] h-[300px] sm:h-[400px] mb-8 lg:mb-0 relative cursor-pointer transition-all duration-500 ease-in-out [perspective:1000px] shrink-0" onclick="toggleFlip()" title="タップしてメモを見る">
                     <div id="flip-inner" class="w-full h-full relative transition-transform duration-700 ease-in-out" style="transform-style: preserve-3d; transform: rotateY(0deg);">
                         
-                        <!-- 表面 (サムネイル画像) -->
                         <div class="absolute inset-0 w-full h-full rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden group bg-[#1a110f]" style="backface-visibility: hidden;">
                             <img id="full-thumb" src="https://via.placeholder.com/600" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]">
-                            <!-- タップのヒント -->
                             <div class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/20 text-white/70 shadow-lg pointer-events-none group-hover:bg-black/70 group-hover:text-white transition-colors">
                                 <i class="fa-solid fa-align-left text-sm"></i>
                             </div>
                         </div>
 
-                        <!-- 裏面 (エピソードメモ) -->
                         <div class="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden flex flex-col p-5 sm:p-8 border border-white/5" style="backface-visibility: hidden; transform: rotateY(180deg);">
-                            
                             <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-2 text-left" onclick="event.stopPropagation()">
                                 <h3 class="text-[#d4af37] text-sm sm:text-base font-bold tracking-widest flex items-center gap-2 font-serif mb-4 border-b border-white/10 pb-2">
                                     <i class="fa-solid fa-align-left"></i> エピソードメモ
@@ -251,7 +232,6 @@
                                 </div>
                                 <div id="full-podcast-desc" class="prose prose-sm md:prose-base prose-invert max-w-none text-white/90 leading-relaxed tracking-wide font-medium drop-shadow-sm"></div>
                             </div>
-
                             <div class="mt-3 text-center shrink-0 pt-2 border-t border-white/10">
                                 <span class="text-white/40 text-[10px] tracking-widest font-bold flex items-center justify-center gap-1">
                                     <i class="fa-solid fa-rotate"></i> タップして画像に戻る
@@ -262,7 +242,6 @@
                 </div>
                 
                 <div class="w-full max-w-md flex flex-col">
-                    <!-- タイトルとアクション -->
                     <div class="flex justify-between items-end mb-8">
                         <div class="min-w-0 flex-1 pr-4">
                             <div id="full-tags" class="flex flex-wrap gap-1.5 mb-3"></div>
@@ -274,7 +253,6 @@
                         <button id="btn-like-full" onclick="toggleLike(event)" class="text-3xl text-gray-400 hover:text-red-500 transition-colors pb-1"><i class="fa-regular fa-heart" id="icon-like-full"></i></button>
                     </div>
                     
-                    <!-- シークバー -->
                     <div class="w-full flex flex-col mb-8">
                         <input type="range" id="seek-slider" value="0" min="0" max="100" class="w-full mb-3">
                         <div class="flex justify-between text-xs text-gray-400 font-mono tracking-widest">
@@ -283,7 +261,6 @@
                         </div>
                     </div>
                     
-                    <!-- コントロールボタン -->
                     <div class="flex items-center justify-center gap-10 mb-8">
                         <button onclick="skip(-15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒戻る"><i class="fa-solid fa-rotate-left"></i></button>
                         <button id="btn-play-full" onclick="togglePlay()" class="w-20 h-20 bg-[#d4af37] text-[#1a110f] rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-1"></i></button>
@@ -291,38 +268,36 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <!-- Main Content (背景となるスクロール領域) -->
-    <!-- ★変更: 横幅を最大1600pxに拡張し、コンテンツにゆとりを持たせる -->
+    <!-- Main Content -->
     <main class="w-full max-w-[1600px] mx-auto pt-24 px-4 sm:px-6 lg:px-8 pb-[300px] lg:pb-[200px]">
         
         <div class="bg-brand-50 p-3 rounded-sm border border-brand-200 text-center mb-8 shadow-sm max-w-4xl mx-auto">
             <p class="text-[10px] sm:text-xs text-brand-600 font-bold tracking-widest"><i class="fa-solid fa-circle-info mr-1"></i> 音声を再生しながら、下の詳細やコメントを読むことができます。</p>
         </div>
 
-        <!-- ★変更: YouTubeのような2カラムレイアウト (左: メイン, 右: 関連リスト) に変更 -->
         <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 xl:gap-12">
             
-            <!-- Left Column: Actions, Description & Comments (メイン可変幅) -->
+            <!-- Left Column: Actions, Description & Comments -->
             <div class="flex-1 min-w-0 space-y-8">
                 
-                <!-- Action Bar (コンテンツの幅に合わせるため左カラム内に移動) -->
                 <div class="flex flex-row justify-between items-center gap-2 pb-5 border-b border-brand-200 px-1 sm:px-0">
-                    <!-- Author -->
                     <a id="author-link" href="#" class="flex items-center gap-2 sm:gap-3 group cursor-pointer bg-[#fffdf9] pr-3 py-1 sm:py-1.5 rounded-full border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b] min-w-0">
                         <img id="author-icon" src="https://via.placeholder.com/48" class="w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover flex-shrink-0 ml-0.5" onerror="this.src='https://via.placeholder.com/48?text=U'">
                         <div class="min-w-0">
                             <p id="author-name" class="font-bold text-brand-900 text-[10px] sm:text-sm flex items-center gap-1 truncate transition-colors group-hover:text-[#b8860b]">
                                 名無し <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37]"></i>
                             </p>
-                            <p id="podcast-date-small" class="text-[8px] sm:text-[10px] text-brand-400 font-mono tracking-wider"></p>
+                            <!-- ★追加: ここに長さを表示するためのspanを追加 -->
+                            <div class="flex items-center gap-2">
+                                <p id="podcast-date-small" class="text-[8px] sm:text-[10px] text-brand-400 font-mono tracking-wider"></p>
+                                <p id="podcast-duration-small" class="text-[8px] sm:text-[10px] text-[#b8860b] font-mono tracking-wider bg-brand-50 px-1.5 rounded-sm border border-brand-200 hidden"></p>
+                            </div>
                         </div>
                     </a>
 
-                    <!-- Actions -->
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <button onclick="toggleLike()" id="btn-like" class="flex items-center gap-1.5 sm:gap-2 bg-[#fffdf9] border border-brand-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold text-brand-700 hover:bg-brand-50 shadow-sm transition-all">
                             <i class="fa-regular fa-heart text-sm sm:text-base text-brand-400" id="icon-like"></i> <span id="like-count">0</span>
@@ -333,7 +308,6 @@
                     </div>
                 </div>
 
-                <!-- Description -->
                 <div class="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-brand-200 m-2 pointer-events-none"></div>
                     <h3 class="font-bold text-brand-900 mb-4 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
@@ -358,12 +332,10 @@
                             <textarea id="comment-input" rows="2" class="w-full border border-brand-200 rounded-sm p-3 bg-brand-50 text-sm focus:bg-white transition-colors resize-none leading-relaxed" placeholder="感想や気付きをコメントしよう..."></textarea>
                             
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 gap-3">
-                                <!-- 鍵コメント（非公開設定） -->
                                 <label class="flex items-center gap-2 cursor-pointer group">
                                     <input type="checkbox" id="comment-is-private" class="w-4 h-4 text-[#b8860b] border-brand-300 rounded-sm focus:ring-[#b8860b]">
                                     <span class="text-[10px] text-brand-600 font-bold tracking-widest group-hover:text-brand-800 transition-colors"><i class="fa-solid fa-lock mr-1"></i>投稿者にのみ公開する</span>
                                 </label>
-                                
                                 <button onclick="submitComment()" id="btn-submit-comment" class="px-5 py-2 bg-[#3e2723] text-[#d4af37] font-bold text-xs rounded-sm hover:bg-[#2a1a17] transition-colors tracking-widest shadow-sm border border-[#b8860b]">コメントを投稿</button>
                             </div>
                         </div>
@@ -375,8 +347,8 @@
                 </div>
             </div>
 
-            <!-- Right Column: Related Podcasts (サイドバー固定幅) -->
-            <div class="w-full lg:w-[320px] xl:w-[400px] flex-shrink-0">
+            <!-- Right Column: Related Podcasts -->
+            <div class="lg:col-span-1 xl:col-span-1">
                 <div id="related-section" class="hidden bg-[#fffdf9] border border-brand-200 rounded-sm p-5 shadow-sm lg:sticky lg:top-24">
                     <h3 class="font-bold text-brand-900 mb-5 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
                         <i class="fa-solid fa-headphones text-[#b8860b]"></i> この作者の他の配信
@@ -391,7 +363,6 @@
             </div>
             
         </div>
-
     </main>
 
     <!-- Notification Toast -->
@@ -440,6 +411,7 @@
 
         // --- Player Elements & State ---
         const audio = document.getElementById('core-player');
+        
         const playBtnFull = document.getElementById('btn-play-full');
         const playBtnMini = document.getElementById('btn-play-mini');
         const seekBar = document.getElementById('seek-slider');
@@ -493,7 +465,6 @@
                 if (snap.exists()) {
                     podcastData = snap.data();
                     
-                    // Set Texts
                     document.getElementById('full-title').textContent = podcastData.title || 'タイトルなし';
                     document.getElementById('mini-title').textContent = podcastData.title || 'タイトルなし';
                     
@@ -519,20 +490,24 @@
                     const d = new Date(podcastData.createdAt || podcastData.updatedAt);
                     const dateFormatted = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
                     
-                    const dateTextEl = document.getElementById('date-text');
-                    if(dateTextEl) dateTextEl.textContent = dateFormatted;
-                    
                     const dateSmallEl = document.getElementById('podcast-date-small');
                     if(dateSmallEl) dateSmallEl.textContent = dateFormatted;
 
-                    // Set Images
+                    // ★追加: Duration
+                    if (podcastData.duration) {
+                        const durationEl = document.getElementById('podcast-duration-small');
+                        if (durationEl) {
+                            durationEl.innerHTML = `<i class="fa-regular fa-clock mr-0.5"></i>${formatTime(podcastData.duration)}`;
+                            durationEl.classList.remove('hidden');
+                        }
+                    }
+
                     const defaultThumb = 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=1000&auto=format&fit=crop';
                     const thumbUrl = podcastData.thumbnailUrl || defaultThumb;
                     document.getElementById('full-thumb').src = thumbUrl;
                     document.getElementById('player-bg').src = thumbUrl;
                     document.getElementById('mini-thumb').src = thumbUrl;
 
-                    // Audio Source Set
                     if (podcastData.audioUrl) {
                         audio.src = podcastData.audioUrl;
                         audio.load();
@@ -540,7 +515,6 @@
                         document.getElementById('full-title').innerHTML = `<span class="text-red-500 text-lg">音声データがありません</span>`;
                     }
 
-                    // Content
                     document.getElementById('podcast-desc').innerHTML = formatText(podcastData.description);
                     
                     const guestsArray = Array.isArray(podcastData.guests) ? podcastData.guests : (podcastData.guests ? [podcastData.guests] : []);
@@ -549,7 +523,6 @@
                         document.getElementById('guests-text').textContent = guestsArray.join(', ');
                     }
 
-                    // ★追加: Flip 裏面のメモにも内容を反映
                     const fullDescEl = document.getElementById('full-podcast-desc');
                     if (fullDescEl) {
                         fullDescEl.innerHTML = formatText(podcastData.description);
@@ -563,7 +536,6 @@
                         }
                     }
 
-                    // Tags
                     const fullTagsEl = document.getElementById('full-tags');
                     fullTagsEl.innerHTML = '';
                     if (podcastData.tags) {
@@ -572,10 +544,8 @@
                         });
                     }
 
-                    // Related Podcasts
                     fetchRelatedPodcasts(podcastData.authorId);
 
-                    // Comments
                     if (podcastData.allowComments === false) {
                         document.getElementById('comments-section').innerHTML = '<div class="text-center py-6 text-brand-400 text-xs tracking-widest bg-[#fffdf9] rounded-sm border border-brand-200"><i class="fa-solid fa-comment-slash mr-2"></i>コメントはオフになっています</div>';
                     } else {
@@ -591,7 +561,6 @@
                         document.getElementById('btn-delete').classList.add('inline-flex');
                     }
                     
-                    // 初期表示：ボディーのスクロールを止めて、モーダルを全面に
                     document.body.style.overflow = 'hidden';
 
                 } else {
@@ -604,25 +573,21 @@
             }
         }
 
-        // --- ★追加: Flip Artwork / Memo Logic ---
         window.toggleFlip = () => {
             const wrapper = document.getElementById('flip-wrapper');
             const inner = document.getElementById('flip-inner');
             
             if (inner.style.transform === 'rotateY(180deg)') {
-                // 表面（画像）に戻す
                 inner.style.transform = 'rotateY(0deg)';
                 wrapper.classList.remove('max-w-[90%]', 'sm:max-w-[600px]', 'lg:max-w-[800px]');
                 wrapper.classList.add('max-w-[300px]', 'sm:max-w-[400px]');
             } else {
-                // 裏面（メモ）にする
                 inner.style.transform = 'rotateY(180deg)';
                 wrapper.classList.remove('max-w-[300px]', 'sm:max-w-[400px]');
                 wrapper.classList.add('max-w-[90%]', 'sm:max-w-[600px]', 'lg:max-w-[800px]');
             }
         };
 
-        // --- Audio Player Event Listeners ---
         audio.addEventListener('error', (e) => {
             console.error("Audio playback error:", e);
             const notif = document.getElementById('notification');
@@ -699,33 +664,27 @@
             return `${min}:${s < 10 ? '0'+s : s}`;
         }
 
-        // --- Player Toggle Logic ---
         window.togglePlayerSize = () => {
             if (isExpanded) {
-                // To Collapsed (Mini Player)
                 isExpanded = false;
                 playerContainer.classList.remove('player-expanded');
                 playerContainer.classList.add('player-collapsed');
-                document.body.style.overflow = ''; // allow scroll
+                document.body.style.overflow = ''; 
                 
-                // Adjust position for mobile bottom nav
                 if (window.innerWidth < 1024) {
                     playerContainer.style.bottom = 'calc(4rem + env(safe-area-inset-bottom))';
                 } else {
                     playerContainer.style.bottom = '0';
                 }
             } else {
-                // To Expanded (Full Screen)
                 isExpanded = true;
                 playerContainer.classList.remove('player-collapsed');
                 playerContainer.classList.add('player-expanded');
-                document.body.style.overflow = 'hidden'; // lock scroll
+                document.body.style.overflow = 'hidden'; 
                 playerContainer.style.bottom = '0';
             }
         };
 
-
-        // --- Related Podcasts ---
         async function fetchRelatedPodcasts(authorId) {
             if (isAdminMock) return;
             try {
@@ -756,14 +715,15 @@
                     const date = new Date(p.createdAt || p.updatedAt);
                     const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
                     
-                    // Markdown記号を除去してプレーンテキストにする
                     let plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
                     const tagsHtml = (p.tags || []).slice(0,2).map(t => `<span class="text-[8px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('');
 
-                    // ★変更: 一覧ページと同じデザインレイアウトを適用（サイドバー用にサイズを微調整）
+                    // ★追加: 関連リスト内のDuration
+                    const durationStr = p.duration ? formatTime(p.duration) : '';
+                    const durationHtml = durationStr ? `<span class="text-[8px] sm:text-[9px] text-[#b8860b] font-mono tracking-wider ml-1 bg-brand-50 px-1 rounded-sm border border-brand-100"><i class="fa-regular fa-clock mr-0.5"></i>${durationStr}</span>` : '';
+
                     html += `
                     <a href="podcast_detail.html?pid=${p.id}" class="flex flex-col bg-[#fffdf9] p-3 sm:p-4 rounded-md border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full">
-                        <!-- Top: Artwork & Title -->
                         <div class="flex gap-3 items-start mb-2.5">
                             <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-inner mt-0.5">
                                 <img src="${thumbUrl}" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500">
@@ -776,14 +736,13 @@
                             </div>
                         </div>
                         
-                        <!-- Middle: Description -->
                         <p class="text-[10px] sm:text-[11px] text-brand-500 line-clamp-2 leading-relaxed mb-3 flex-1 tracking-wide">${plainDesc}</p>
                         
-                        <!-- Bottom: Meta Data -->
                         <div class="flex flex-wrap items-center justify-between gap-2 mt-auto pt-2.5 border-t border-brand-100/70">
                             <div class="flex items-center gap-1.5 min-w-0 pr-1">
                                 <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-4 h-4 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/24?text=U'">
                                 <span class="text-[9px] sm:text-[10px] text-brand-700 truncate font-bold tracking-widest">${p.authorName || '名無し'}</span>
+                                ${durationHtml}
                             </div>
                             <div class="flex items-center gap-1.5 shrink-0">
                                 <div class="flex gap-1">${tagsHtml}</div>
@@ -800,7 +759,6 @@
             }
         }
 
-        // --- Comments ---
         function listenComments() {
             if (isAdminMock) {
                 document.getElementById('comments-list').innerHTML = '<div class="text-center py-6 text-brand-400 text-xs tracking-widest">モック環境ではコメントは表示されません</div>';
@@ -830,7 +788,6 @@
                         delBtn = `<button onclick="deleteComment('${docSnap.id}')" class="text-red-400 hover:text-red-600 text-xs transition-colors ml-4"><i class="fa-solid fa-trash"></i></button>`;
                     }
 
-                    // ★変更: コメントテキストのサイズをスマホ時に小さく設定
                     let textHtml = `<p class="text-[11px] sm:text-xs text-brand-700 leading-relaxed whitespace-pre-wrap">${c.text}</p>`;
                     let bgClass = "bg-brand-50 border-brand-100";
                     
@@ -845,7 +802,6 @@
                                 <p class="text-[11px] sm:text-xs text-brand-900 leading-relaxed whitespace-pre-wrap">${c.text}</p>
                             `;
                         } else {
-                            // 権限がない場合は中身を隠す
                             textHtml = `
                                 <div class="py-2 text-[10px] sm:text-xs text-brand-400 italic flex items-center gap-2 tracking-widest font-bold"><i class="fa-solid fa-lock"></i> このコメントは投稿者のみ公開されています</div>
                             `;
@@ -921,7 +877,6 @@
             } catch(e) { console.error(e); alert("削除に失敗しました"); }
         };
 
-        // --- Likes ---
         function listenLikes() {
             if (isAdminMock) return;
             const likesRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'likes');
@@ -974,7 +929,6 @@
             }
         };
 
-        // --- Actions ---
         window.sharePodcast = () => {
             const url = window.location.href;
             const textArea = document.createElement("textarea");
@@ -1017,7 +971,6 @@
             }
         };
 
-        // Cleanup
         window.addEventListener('unload', () => {
             if(commentsUnsubscribe) commentsUnsubscribe();
             if(likesUnsubscribe) likesUnsubscribe();
