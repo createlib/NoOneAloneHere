@@ -68,7 +68,7 @@
         <div class="mb-8 text-center">
             <p class="text-sm text-brand-600 tracking-widest leading-relaxed">
                 あなたの声で、深い考えや対話を届けましょう。<br>
-                <span class="text-xs text-brand-400">※音声ファイル(mp3)のアップロード、または外部URLの指定が可能です。</span>
+                <span class="text-xs text-brand-400">※音声ファイルのアップロード、または各種サービスのURL指定が可能です。</span>
             </p>
         </div>
 
@@ -76,7 +76,7 @@
             
             <!-- Audio Input -->
             <div class="form-section">
-                <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-solid fa-music text-[#b8860b] mr-2"></i>音声ファイル <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-solid fa-music text-[#b8860b] mr-2"></i>音声データ <span class="text-red-500">*</span></label>
                 
                 <!-- Tabs -->
                 <div class="flex gap-6 mb-4 border-b border-brand-200">
@@ -85,26 +85,34 @@
                 </div>
 
                 <div id="audio-upload-area">
-                    <p class="text-xs text-brand-500 mb-3">MP3形式の音声ファイルを選択してください。（※推奨サイズ: 30MB以下）</p>
+                    <p class="text-xs text-brand-500 mb-3">MP3形式などの音声ファイルを選択してください。（※上限: 30MB）</p>
                     <input type="file" id="audio-file" accept="audio/mp3, audio/mpeg, audio/mp4, audio/m4a" class="block w-full text-sm text-brand-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-[#b8860b] hover:file:bg-brand-100 file:border file:border-brand-200 file:cursor-pointer transition-colors bg-[#f7f5f0] p-2 rounded-sm border border-brand-200" onchange="previewAudioUpload(this)">
                 </div>
 
                 <div id="audio-url-area" class="hidden">
-                    <p class="text-xs text-brand-500 mb-3">外部でホスティングされている音声ファイルのURL（http://...mp3）を入力してください。</p>
-                    <input type="url" id="audio-url" class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="https://example.com/audio.mp3" oninput="previewAudioUrl(this.value)">
+                    <p class="text-[10px] sm:text-xs text-brand-500 mb-2 leading-relaxed">
+                        <b>Spotify</b>, <b>Apple Podcasts</b>, <b>Google Drive</b> などのリンクを貼り付けると、自動で公式プレイヤーが埋め込まれます。または、直接再生可能な <code>.mp3</code> URLを入力してください。
+                    </p>
+                    <input type="url" id="audio-url" class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="https://open.spotify.com/episode/..." oninput="previewAudioUrl(this.value)">
                 </div>
 
                 <!-- Audio Preview -->
                 <div id="audio-preview-container" class="mt-4 hidden bg-brand-50 p-4 rounded-sm border border-brand-200">
-                    <p class="text-[10px] font-bold text-brand-500 mb-2 tracking-widest">プレビュー</p>
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-[10px] font-bold text-brand-500 tracking-widest uppercase">Preview</p>
+                        <i class="fa-solid fa-circle-check text-green-600 text-xs"></i>
+                    </div>
+                    <!-- 通常のオーディオプレイヤー -->
                     <audio id="audio-player" controls class="w-full h-10"></audio>
+                    <!-- 外部サービス埋め込み用のiframe -->
+                    <iframe id="embed-player" class="w-full hidden rounded-sm shadow-inner bg-white min-h-[160px]" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
                 </div>
             </div>
 
             <!-- Thumbnail -->
             <div class="form-section">
                 <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest"><i class="fa-solid fa-image text-[#b8860b] mr-2"></i>サムネイル画像 <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
-                <p class="text-xs text-brand-500 mb-4">設定しない場合は、NOAH CASTのデフォルト背景が適用されます。</p>
+                <p class="text-xs text-brand-500 mb-4">設定しない場合は、NOAH CASTのデフォルト背景が適用されます。<br>※Spotify等の埋め込みリンクを使用する場合は、そのサービスの画像が表示されるため設定不要です。</p>
                 <div class="flex flex-col items-center sm:flex-row gap-6">
                     <div class="relative w-full sm:w-64 aspect-video bg-brand-50 rounded-sm border-2 border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner">
                         <input type="file" id="thumb-file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="previewThumb(this)">
@@ -207,7 +215,11 @@
         let audioInputType = 'upload'; // 'upload' or 'url'
         let currentAudioFile = null;
         let currentThumbFile = null;
-        let currentDuration = 0; // ★追加: 音声の長さを保持する変数
+        let currentDuration = 0; 
+        
+        // ★追加: 外部サービスのURL変換用変数
+        let parsedAudioUrl = '';
+        let isEmbedMode = false;
 
         const urlParams = new URLSearchParams(window.location.search);
         const editPid = urlParams.get('pid');
@@ -253,11 +265,16 @@
             const areaUrl = document.getElementById('audio-url-area');
             const playerContainer = document.getElementById('audio-preview-container');
             const player = document.getElementById('audio-player');
+            const embedPlayer = document.getElementById('embed-player');
 
             playerContainer.classList.add('hidden');
             player.src = '';
+            embedPlayer.src = '';
             currentAudioFile = null;
-            currentDuration = 0; // ★リセット
+            currentDuration = 0; 
+            parsedAudioUrl = '';
+            isEmbedMode = false;
+            
             document.getElementById('audio-file').value = '';
             document.getElementById('audio-url').value = '';
 
@@ -274,14 +291,57 @@
             }
         };
 
-        // ★追加: プレビュー時に長さを取得する処理
+        // --- URLを解析して埋め込み用リンクを生成する関数 ---
+        function parsePodcastUrl(url) {
+            let embedUrl = null;
+            let isEmbed = false;
+
+            if (!url) return { isEmbed: false, url: '' };
+
+            // Spotify
+            if (url.includes('open.spotify.com/episode/')) {
+                const match = url.match(/episode\/([a-zA-Z0-9]+)/);
+                if (match) {
+                    embedUrl = `https://open.spotify.com/embed/episode/${match[1]}?utm_source=generator`;
+                    isEmbed = true;
+                }
+            } else if (url.includes('open.spotify.com/show/')) {
+                const match = url.match(/show\/([a-zA-Z0-9]+)/);
+                if (match) {
+                    embedUrl = `https://open.spotify.com/embed/show/${match[1]}?utm_source=generator`;
+                    isEmbed = true;
+                }
+            } 
+            // Apple Podcasts
+            else if (url.includes('podcasts.apple.com')) {
+                embedUrl = url.replace('podcasts.apple.com', 'embed.podcasts.apple.com');
+                isEmbed = true;
+            } 
+            // Google Drive
+            else if (url.includes('drive.google.com/file/d/')) {
+                const match = url.match(/d\/([a-zA-Z0-9_-]+)/);
+                if (match) {
+                    embedUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
+                    isEmbed = true;
+                }
+            }
+
+            return { isEmbed, url: isEmbed ? embedUrl : url };
+        }
+
         window.previewAudioUpload = (input) => {
             const file = input.files[0];
             if (file) {
                 currentAudioFile = file;
                 const url = URL.createObjectURL(file);
                 const player = document.getElementById('audio-player');
+                const embedPlayer = document.getElementById('embed-player');
+                
+                isEmbedMode = false;
+                embedPlayer.classList.add('hidden');
+                
                 player.src = url;
+                player.classList.remove('hidden');
                 document.getElementById('audio-preview-container').classList.remove('hidden');
                 
                 player.onloadedmetadata = () => {
@@ -290,18 +350,40 @@
             }
         };
 
-        // ★追加: URLプレビュー時にも長さを取得する処理
         window.previewAudioUrl = (url) => {
+            const container = document.getElementById('audio-preview-container');
+            const audioPlayer = document.getElementById('audio-player');
+            const embedPlayer = document.getElementById('embed-player');
+
             if (url) {
-                const player = document.getElementById('audio-player');
-                player.src = url;
-                document.getElementById('audio-preview-container').classList.remove('hidden');
+                const parsed = parsePodcastUrl(url);
+                parsedAudioUrl = parsed.url;
+                isEmbedMode = parsed.isEmbed;
                 
-                player.onloadedmetadata = () => {
-                    currentDuration = player.duration;
-                };
+                container.classList.remove('hidden');
+
+                if (isEmbedMode) {
+                    // Spotify/Appleなどの埋め込み
+                    audioPlayer.classList.add('hidden');
+                    audioPlayer.src = '';
+                    embedPlayer.src = parsedAudioUrl;
+                    embedPlayer.classList.remove('hidden');
+                    currentDuration = 0; // 外部サービスの場合は長さ取得不可
+                } else {
+                    // 通常のMP3直リンク等
+                    embedPlayer.classList.add('hidden');
+                    embedPlayer.src = '';
+                    audioPlayer.src = parsedAudioUrl;
+                    audioPlayer.classList.remove('hidden');
+                    audioPlayer.onloadedmetadata = () => {
+                        currentDuration = audioPlayer.duration;
+                    };
+                }
             } else {
-                document.getElementById('audio-preview-container').classList.add('hidden');
+                container.classList.add('hidden');
+                parsedAudioUrl = '';
+                isEmbedMode = false;
+                currentDuration = 0;
             }
         };
 
@@ -333,15 +415,20 @@
                     document.getElementById('description').value = data.description || '';
                     document.getElementById('guests').value = data.guests ? data.guests.join(', ') : '';
                     
-                    currentDuration = data.duration || 0; // ★追加
+                    currentDuration = data.duration || 0;
                     
                     if (data.sourceType === 'url') {
                         switchAudioType('url');
+                        // 元の入力URLが保存されていない場合は、変換後の埋め込みURLをそのまま表示
                         document.getElementById('audio-url').value = data.audioUrl || '';
                         previewAudioUrl(data.audioUrl);
                     } else {
+                        switchAudioType('upload');
                         document.getElementById('audio-preview-container').classList.remove('hidden');
-                        document.getElementById('audio-player').src = data.audioUrl || '';
+                        document.getElementById('embed-player').classList.add('hidden');
+                        const player = document.getElementById('audio-player');
+                        player.src = data.audioUrl || '';
+                        player.classList.remove('hidden');
                     }
 
                     if (data.thumbnailUrl) {
@@ -439,7 +526,11 @@
                         );
                     });
                 } else if (audioInputType === 'url') {
-                    finalAudioUrl = document.getElementById('audio-url').value.trim();
+                    // ★ URLモードの場合は、パース済みのURLか、そのままのURLを適用
+                    const rawUrl = document.getElementById('audio-url').value.trim();
+                    const parsed = parsePodcastUrl(rawUrl);
+                    finalAudioUrl = parsed.url;
+                    isEmbedMode = parsed.isEmbed;
                 }
 
                 // 2. Thumbnail Upload
@@ -470,12 +561,14 @@
                     });
                 }
 
-                // Edit mode preserving existing URLs if not updated
                 if (editPid && !isAdminMock) {
                     const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', editPid));
                     if(snap.exists()) {
                         const oldData = snap.data();
-                        if (!finalAudioUrl) finalAudioUrl = oldData.audioUrl;
+                        if (!finalAudioUrl) {
+                            finalAudioUrl = oldData.audioUrl;
+                            isEmbedMode = oldData.isEmbed || false; // 旧データのフラグを引き継ぐ
+                        }
                         if (!finalThumbUrl) finalThumbUrl = oldData.thumbnailUrl;
                     }
                 }
@@ -499,20 +592,21 @@
                     authorIcon: myData.photoURL || null,
                     sourceType: audioInputType,
                     audioUrl: finalAudioUrl || (isAdminMock ? 'dummy_audio.mp3' : ''),
+                    isEmbed: isEmbedMode, // ★追加: 外部プレイヤーかどうかのフラグ
                     thumbnailUrl: finalThumbUrl || null,
                     title: title,
                     description: desc,
                     guests: guests,
                     tags: tags,
                     allowComments: allowComments,
-                    duration: currentDuration, // ★追加: 長さを保存
+                    duration: currentDuration, 
                     updatedAt: new Date().toISOString()
                 };
 
                 if(!editPid) podcastData.createdAt = podcastData.updatedAt;
 
                 if(isAdminMock) {
-                    alert("保存成功(テスト)");
+                    alert("保存成功(テスト)\n※Embedモード: " + isEmbedMode);
                     window.location.href = 'podcasts.html';
                     return;
                 }
