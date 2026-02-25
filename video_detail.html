@@ -37,6 +37,17 @@
         .prose li { margin-bottom: 0.5em; }
         .prose blockquote { border-left: 3px solid #c8b9a6; padding-left: 1em; color: #725b3f; font-style: italic; margin-top: 1em; margin-bottom: 1em; }
         
+        /* ★追加: スマホ画面での文字サイズ最適化（改行を防ぐ） */
+        @media (max-width: 640px) {
+            .prose p, .prose ul, .prose ol, .prose li {
+                font-size: 0.75rem; /* text-xs 相当 */
+                line-height: 1.6;
+            }
+            .prose h1 { font-size: 1.1rem; }
+            .prose h2 { font-size: 1rem; }
+            .prose h3 { font-size: 0.9rem; }
+        }
+
         .action-btn { transition: all 0.2s ease; }
         .action-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
         .action-btn:active { transform: translateY(0); }
@@ -46,7 +57,7 @@
 
     <!-- Navbar -->
     <nav class="bg-[rgba(255,253,249,0.95)] backdrop-blur border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
+        <div class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
             <a href="videos.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest group">
                 <div class="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center group-hover:bg-brand-100 transition-colors">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -60,32 +71,33 @@
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto pt-20 px-0 sm:px-4 lg:px-8 flex flex-col lg:flex-row gap-8">
+    <!-- ★変更: 横幅を最大限まで使い、Flexboxで左(メイン)と右(サイド)に分割 -->
+    <main class="w-full max-w-[1600px] mx-auto pt-24 px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-8 lg:gap-10 xl:gap-12">
         
-        <!-- Left: Video & Info -->
-        <div class="w-full lg:w-[70%]">
+        <!-- Left: Video & Info (メインエリア・可変幅) -->
+        <div class="flex-1 min-w-0">
             
             <!-- Video Player -->
             <div id="player-container" class="w-full aspect-video bg-black sm:rounded-sm overflow-hidden shadow-xl border border-brand-300 relative group">
                 <div class="absolute inset-0 flex items-center justify-center text-white"><i class="fa-solid fa-spinner fa-spin text-4xl opacity-50"></i></div>
             </div>
 
-            <div class="p-5 sm:p-0 sm:pt-6">
+            <div class="pt-6">
                 <!-- Tags (Above Title) -->
                 <div id="video-tags" class="flex flex-wrap gap-2 mb-3"></div>
                 
                 <h1 id="video-title" class="text-2xl sm:text-3xl font-bold text-brand-900 leading-tight mb-4 font-serif tracking-wide">読み込み中...</h1>
                 
-                <!-- ★ 修正: スマホ時でも1列に収まるように flex-row 固定にし、サイズと折り返しを調整 -->
-                <div class="flex flex-row justify-between items-center gap-2 sm:gap-6 pb-4 sm:pb-6 mb-4 sm:mb-6">
+                <!-- Action Bar -->
+                <div class="flex flex-row justify-between items-center gap-2 sm:gap-6 pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-brand-200">
                     <!-- Author -->
                     <a id="author-link" href="#" class="flex items-center gap-2 sm:gap-4 group cursor-pointer bg-[#fffdf9] pl-1 pr-3 sm:pl-2 sm:pr-6 py-1 sm:py-2 rounded-full border border-brand-100 shadow-sm hover:shadow-md transition-all hover:border-brand-300 min-w-0">
-                        <img id="author-icon" src="https://via.placeholder.com/48" class="w-9 h-9 sm:w-14 sm:h-14 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover group-hover:scale-105 transition-transform flex-shrink-0">
+                        <img id="author-icon" src="https://via.placeholder.com/48" class="w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover group-hover:scale-105 transition-transform flex-shrink-0 ml-0.5">
                         <div class="min-w-0">
-                            <p id="author-name" class="font-bold text-brand-900 group-hover:text-brand-600 transition-colors text-xs sm:text-lg flex items-center gap-1 truncate">
+                            <p id="author-name" class="font-bold text-brand-900 group-hover:text-brand-600 transition-colors text-xs sm:text-base flex items-center gap-1 truncate">
                                 名無し <i class="fa-solid fa-circle-check text-[10px] sm:text-xs text-[#d4af37]"></i>
                             </p>
-                            <p id="video-date" class="text-[9px] sm:text-xs text-brand-400 font-mono tracking-wider truncate"></p>
+                            <p id="video-date" class="text-[9px] sm:text-[10px] text-brand-400 font-mono tracking-wider truncate"></p>
                         </div>
                     </a>
 
@@ -134,8 +146,8 @@
             </div>
         </div>
 
-        <!-- Right: Other Videos -->
-        <div class="w-full lg:w-[30%] px-4 lg:px-0">
+        <!-- Right: Other Videos (サイドバー・固定幅) -->
+        <div class="w-full lg:w-[320px] xl:w-[400px] flex-shrink-0">
             <h3 class="font-bold text-brand-800 mb-5 tracking-widest text-sm border-b border-brand-200 pb-2 flex items-center"><i class="fa-solid fa-film mr-2 text-brand-400"></i>新着の動画</h3>
             <div id="related-videos" class="flex flex-col gap-4">
                 <!-- JSで挿入 -->
@@ -226,14 +238,9 @@
                 // 描画
                 document.getElementById('player-container').innerHTML = `<iframe src="${videoData.embedUrl}" class="w-full h-full absolute inset-0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
                 document.getElementById('video-title').textContent = videoData.title;
-                
-                // Author info
-                document.getElementById('author-name').innerHTML = `${videoData.authorName || '名無し'} <i class="fa-solid fa-circle-check text-[10px] sm:text-xs text-[#d4af37]"></i>`;
-                if (videoData.authorIcon) document.getElementById('author-icon').src = videoData.authorIcon;
-
-                // ★ここを変更: hrefを user_videos.html へ向ける
-                document.getElementById('author-link').href = `user_videos.html?uid=${videoData.authorId}`;
-                // ※ `author-link` の `href` 属性を `user_videos.html?uid=...` に設定するだけで機能します。
+                document.getElementById('author-name').innerHTML = `${videoData.authorName || '名無し'} <i class="fa-solid fa-circle-check text-xs text-[#d4af37] ml-1"></i>`;
+                if(videoData.authorIcon) document.getElementById('author-icon').src = videoData.authorIcon;
+                document.getElementById('author-link').href = `user.html?uid=${videoData.authorId}`;
                 
                 const d = new Date(videoData.createdAt);
                 document.getElementById('video-date').textContent = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} 公開`;
@@ -449,14 +456,15 @@
                 let html = '';
                 vids.slice(0, 5).forEach(v => {
                     const date = new Date(v.createdAt);
+                    // ★変更: サムネイルサイズを少し大きくして見栄えを整える
                     html += `
-                    <a href="video_detail.html?vid=${v.id}" class="flex gap-3 group cursor-pointer bg-[#fffdf9] p-2 rounded-sm border border-transparent hover:border-brand-200 hover:shadow-md transition-all">
-                        <div class="w-32 aspect-video bg-black rounded-sm overflow-hidden flex-shrink-0 relative border border-brand-200">
-                            <img src="${v.thumbnailUrl||'https://via.placeholder.com/120x68?text=NOAH'}" class="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500">
+                    <a href="video_detail.html?vid=${v.id}" class="flex gap-3 group cursor-pointer bg-[#fffdf9] p-2 sm:p-3 rounded-sm border border-brand-100 hover:border-brand-300 hover:shadow-md transition-all">
+                        <div class="w-36 sm:w-40 aspect-video bg-black rounded-sm overflow-hidden flex-shrink-0 relative border border-brand-200">
+                            <img src="${v.thumbnailUrl||'https://via.placeholder.com/320x180?text=NOAH'}" class="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500">
                             <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><i class="fa-solid fa-play text-white text-xl"></i></div>
                         </div>
                         <div class="flex-1 min-w-0 flex flex-col justify-center py-1">
-                            <h4 class="text-xs font-bold text-brand-900 leading-snug line-clamp-2 mb-1 group-hover:text-brand-600 transition-colors font-serif">${v.title}</h4>
+                            <h4 class="text-xs sm:text-sm font-bold text-brand-900 leading-snug line-clamp-2 mb-1 group-hover:text-brand-600 transition-colors font-serif">${v.title}</h4>
                             <p class="text-[10px] text-brand-500 truncate mb-0.5">${v.authorName||'名無し'}</p>
                             <p class="text-[9px] text-brand-400 font-mono">${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}</p>
                         </div>
