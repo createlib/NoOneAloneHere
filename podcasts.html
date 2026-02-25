@@ -199,7 +199,8 @@
                     <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
                         <i class="fa-solid fa-user-group text-brand-400 mr-3"></i>フォロー中の新着
                     </h2>
-                    <div id="following-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8"></div>
+                    <!-- ★変更: グリッドのカラム数を減らし、横長カード向けに余白を調整 -->
+                    <div id="following-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"></div>
                 </div>
 
                 <!-- Recommended Section -->
@@ -207,7 +208,8 @@
                     <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
                         <i class="fa-solid fa-sparkles text-[#b8860b] mr-3"></i>おすすめ
                     </h2>
-                    <div id="recommended-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8">
+                    <!-- ★変更: 同上 -->
+                    <div id="recommended-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                         <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>音声を読み込み中...</div>
                     </div>
                 </div>
@@ -218,7 +220,8 @@
                 <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
                     <i class="fa-solid fa-magnifying-glass text-brand-400 mr-3"></i>検索結果
                 </h2>
-                <div id="search-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8"></div>
+                <!-- ★変更: 同上 -->
+                <div id="search-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"></div>
             </div>
 
         </div>
@@ -377,31 +380,30 @@
             return array;
         }
 
+        // ★変更: ポッドキャストのカードを「コンパクトな横長」の音声ファイル風UIに変更
         function createPodcastCardHtml(p) {
             const date = new Date(p.createdAt);
             const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
             const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
             
             return `
-            <a href="podcast_detail.html?pid=${p.id}" class="podcast-card flex flex-col bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-200 shadow-sm hover:shadow-md cursor-pointer group h-full">
-                <div class="w-full aspect-square relative bg-[#1a110f] border-b border-brand-100 overflow-hidden">
+            <a href="podcast_detail.html?pid=${p.id}" class="podcast-card flex items-center bg-[#fffdf9] rounded-sm border border-brand-200 shadow-sm hover:shadow-md cursor-pointer group p-3 gap-4 transition-all hover:border-[#b8860b]">
+                <div class="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 relative bg-[#1a110f] rounded-sm overflow-hidden border border-brand-100 shadow-inner">
                     <img src="${thumbUrl}" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
                     <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-transparent transition-colors">
-                        <div class="play-icon w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-all duration-300">
-                            <i class="fa-solid fa-play text-white text-base ml-1"></i>
+                        <div class="play-icon w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-all duration-300 shadow-sm">
+                            <i class="fa-solid fa-play text-white text-xs ml-0.5"></i>
                         </div>
                     </div>
                 </div>
-                <div class="p-4 flex flex-col justify-between flex-1">
-                    <div>
-                        <div class="flex flex-wrap gap-1 mb-2 h-4 overflow-hidden">
-                            ${(p.tags || []).slice(0,2).map(t => `<span class="text-[9px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('')}
-                        </div>
-                        <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 font-serif tracking-wide group-hover:text-[#b8860b] transition-colors mb-3">${p.title}</h3>
+                <div class="flex-1 min-w-0 flex flex-col justify-center h-full py-1">
+                    <div class="flex flex-wrap gap-1 mb-1.5 h-4 overflow-hidden">
+                        ${(p.tags || []).slice(0,2).map(t => `<span class="text-[9px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('')}
                     </div>
+                    <h3 class="text-sm sm:text-base font-bold text-brand-900 leading-snug line-clamp-2 font-serif tracking-wide group-hover:text-[#b8860b] transition-colors mb-2">${p.title}</h3>
                     <div class="flex items-center justify-between mt-auto">
                         <div class="flex items-center gap-2 min-w-0 pr-2">
-                            <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-6 h-6 rounded-full border border-brand-200 object-cover flex-shrink-0" onerror="this.src='https://via.placeholder.com/24?text=U'">
+                            <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-5 h-5 rounded-full border border-brand-200 object-cover flex-shrink-0" onerror="this.src='https://via.placeholder.com/24?text=U'">
                             <span class="text-[10px] text-brand-600 truncate font-bold">${p.authorName || '名無し'}</span>
                         </div>
                         <span class="text-[9px] text-brand-400 font-mono flex-shrink-0">${dateStr}</span>
