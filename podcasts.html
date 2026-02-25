@@ -51,7 +51,7 @@
 
     <!-- Navbar -->
     <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
+        <div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
             <div class="flex items-center gap-4">
                 <a href="home.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
                     <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-podcast text-[#d4af37]"></i></span>
@@ -80,7 +80,6 @@
                     <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
-                <!-- ★修正: リンク先を podcast_post.html に変更 -->
                 <button id="btn-post" onclick="window.location.href='podcast_post.html'" class="hidden items-center px-4 py-1.5 bg-[#b8860b] text-[#fffdf9] text-xs font-bold rounded-sm shadow-md hover:bg-[#996515] transition-colors tracking-widest">
                     <i class="fa-solid fa-microphone mr-1"></i> 音声を配信
                 </button>
@@ -160,10 +159,10 @@
     </div>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8">
+    <main class="w-full max-w-[1600px] mx-auto pt-20 px-4 sm:px-6 lg:px-8">
         
         <!-- Podcast Hero Header -->
-        <div class="py-8 md:py-12 flex flex-col items-center text-center relative">
+        <div class="py-8 md:py-12 flex flex-col items-center text-center relative max-w-4xl mx-auto">
             <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.05)_0%,transparent_70%)] pointer-events-none"></div>
             <i class="fa-solid fa-podcast text-3xl text-[#d4af37] mb-3"></i>
             <h1 class="text-3xl md:text-5xl font-bold font-serif text-brand-900 tracking-widest mb-3">NOAH CAST</h1>
@@ -174,13 +173,13 @@
 
         <!-- Search & Tags -->
         <div class="mb-8 sticky top-16 z-30 glass-bar py-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:bg-transparent sm:backdrop-blur-none sm:border-none">
-            <div class="flex flex-col md:flex-row gap-4 mb-4 items-center justify-between">
-                <div class="relative w-full md:w-96 group">
+            <div class="flex flex-col xl:flex-row gap-4 mb-4 items-center justify-between">
+                <div class="relative w-full xl:w-96 group shrink-0">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400 group-focus-within:text-brand-600 transition-colors"></i>
                     <input type="text" id="search-input" placeholder="タイトルやゲストで検索..." class="w-full pl-11 pr-4 py-3 rounded-full border border-brand-200 shadow-sm text-sm focus:ring-brand-500 focus:border-brand-500 bg-[#fffdf9] transition-shadow hover:shadow-md">
                 </div>
                 
-                <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto pb-2" id="tag-filters">
+                <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 w-full pb-2" id="tag-filters">
                     <button onclick="filterByTag('')" class="tag-btn active whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#3e2723] text-[#d4af37] border border-[#b8860b] transform hover:scale-105">すべて</button>
                     <button onclick="filterByTag('対談・インタビュー')" class="tag-btn whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#fffdf9] text-brand-600 border border-brand-200 hover:bg-brand-50 hover:border-[#b8860b] transform hover:scale-105">対談・インタビュー</button>
                     <button onclick="filterByTag('ひとり語り')" class="tag-btn whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#fffdf9] text-brand-600 border border-brand-200 hover:bg-brand-50 hover:border-[#b8860b] transform hover:scale-105">ひとり語り</button>
@@ -190,9 +189,38 @@
             </div>
         </div>
 
-        <!-- Podcast Grid -->
-        <div id="podcast-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 pb-12">
-            <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>音声を読み込み中...</div>
+        <!-- 状態管理用ラッパー -->
+        <div id="content-wrapper">
+            
+            <!-- Default Sections (Not filtering) -->
+            <div id="default-sections" class="pb-12">
+                <!-- Following Section -->
+                <div id="following-section" class="mb-12 hidden">
+                    <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
+                        <i class="fa-solid fa-user-group text-brand-400 mr-3"></i>フォロー中の新着
+                    </h2>
+                    <div id="following-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8"></div>
+                </div>
+
+                <!-- Recommended Section -->
+                <div id="recommended-section">
+                    <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
+                        <i class="fa-solid fa-sparkles text-[#b8860b] mr-3"></i>おすすめ
+                    </h2>
+                    <div id="recommended-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8">
+                        <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>音声を読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Results Section (Filtering) -->
+            <div id="search-results-section" class="hidden pb-12">
+                <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
+                    <i class="fa-solid fa-magnifying-glass text-brand-400 mr-3"></i>検索結果
+                </h2>
+                <div id="search-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8"></div>
+            </div>
+
         </div>
 
     </main>
@@ -200,7 +228,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
@@ -212,6 +240,7 @@
         let isAdmin = false;
         let myRank = 'arrival';
         let allPodcasts = [];
+        let followingIds = [];
         let currentTag = '';
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
@@ -220,6 +249,8 @@
             if (isAdminMock) {
                 currentUser = { uid: 'test_admin_uid' };
                 isAdmin = true;
+                myRank = 'covenant';
+                followingIds = ['target_user'];
                 document.getElementById('btn-post').classList.remove('hidden');
                 document.getElementById('btn-post').classList.add('inline-flex');
                 updateNavForAuth(true);
@@ -232,16 +263,20 @@
                 try {
                     const mySnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                     if (mySnap.exists()) {
-                        const rank = mySnap.data().membershipRank || 'arrival';
+                        myRank = mySnap.data().membershipRank || 'arrival';
                         if (mySnap.data().userId === 'admin') isAdmin = true;
                         
-                        if (rank !== 'arrival' || isAdmin) {
+                        if (myRank !== 'arrival' || isAdmin) {
                             const btnPost = document.getElementById('btn-post');
                             btnPost.classList.remove('hidden');
                             btnPost.classList.add('inline-flex');
                         }
                     }
-                } catch(e) {}
+                    
+                    const followSnap = await getDocs(collection(db, 'artifacts', appId, 'users', user.uid, 'following'));
+                    followingIds = followSnap.docs.map(d => d.id);
+
+                } catch(e) { console.error(e); }
                 updateNavForAuth(true);
                 fetchPodcasts();
             } else {
@@ -301,10 +336,17 @@
                 });
                 
                 allPodcasts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                renderPodcasts();
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const tagParam = urlParams.get('tag');
+                if (tagParam) {
+                    filterByTag(tagParam);
+                } else {
+                    renderDisplay();
+                }
             } catch (error) {
                 console.error("Error fetching podcasts:", error);
-                document.getElementById('podcast-grid').innerHTML = '<div class="col-span-full text-center text-red-500 py-10">音声の取得に失敗しました</div>';
+                document.getElementById('recommended-grid').innerHTML = '<div class="col-span-full text-center text-red-500 py-10">音声の取得に失敗しました</div>';
             }
         }
 
@@ -318,14 +360,74 @@
                     btn.className = 'tag-btn whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#fffdf9] text-brand-600 border border-brand-200 hover:bg-brand-50 hover:border-[#b8860b] transform hover:scale-105';
                 }
             });
-            renderPodcasts();
+            renderDisplay();
         };
 
-        document.getElementById('search-input').addEventListener('input', renderPodcasts);
+        document.getElementById('search-input').addEventListener('input', renderDisplay);
 
-        function renderPodcasts() {
-            const grid = document.getElementById('podcast-grid');
-            const searchQ = document.getElementById('search-input').value.toLowerCase();
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function createPodcastCardHtml(p) {
+            const date = new Date(p.createdAt);
+            const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+            const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
+            
+            return `
+            <a href="podcast_detail.html?pid=${p.id}" class="podcast-card flex flex-col bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-200 shadow-sm hover:shadow-md cursor-pointer group h-full">
+                <div class="w-full aspect-square relative bg-[#1a110f] border-b border-brand-100 overflow-hidden">
+                    <img src="${thumbUrl}" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-transparent transition-colors">
+                        <div class="play-icon w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-all duration-300">
+                            <i class="fa-solid fa-play text-white text-base ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 flex flex-col justify-between flex-1">
+                    <div>
+                        <div class="flex flex-wrap gap-1 mb-2 h-4 overflow-hidden">
+                            ${(p.tags || []).slice(0,2).map(t => `<span class="text-[9px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('')}
+                        </div>
+                        <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 font-serif tracking-wide group-hover:text-[#b8860b] transition-colors mb-3">${p.title}</h3>
+                    </div>
+                    <div class="flex items-center justify-between mt-auto">
+                        <div class="flex items-center gap-2 min-w-0 pr-2">
+                            <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-6 h-6 rounded-full border border-brand-200 object-cover flex-shrink-0" onerror="this.src='https://via.placeholder.com/24?text=U'">
+                            <span class="text-[10px] text-brand-600 truncate font-bold">${p.authorName || '名無し'}</span>
+                        </div>
+                        <span class="text-[9px] text-brand-400 font-mono flex-shrink-0">${dateStr}</span>
+                    </div>
+                </div>
+            </a>
+            `;
+        }
+
+        function renderDisplay() {
+            const searchQ = document.getElementById('search-input').value.trim().toLowerCase();
+            const isFiltering = searchQ !== '' || currentTag !== '';
+
+            if (isFiltering) {
+                document.getElementById('default-sections').classList.add('hidden');
+                document.getElementById('search-results-section').classList.remove('hidden');
+                renderSearchResults(searchQ);
+            } else {
+                document.getElementById('default-sections').classList.remove('hidden');
+                document.getElementById('search-results-section').classList.add('hidden');
+                renderDefaultSections();
+            }
+        }
+
+        function renderSearchResults(searchQ) {
+            const grid = document.getElementById('search-grid');
             
             let filtered = allPodcasts.filter(p => {
                 const matchTag = currentTag === '' || (p.tags && p.tags.includes(currentTag));
@@ -337,45 +439,39 @@
 
             if (filtered.length === 0) {
                 grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-microphone-slash text-4xl mb-3 text-brand-200"></i><p>該当する配信がありません。</p></div>';
-                return;
+            } else {
+                grid.innerHTML = filtered.map(p => createPodcastCardHtml(p)).join('');
+            }
+        }
+
+        function renderDefaultSections() {
+            // Following Section
+            const followingSection = document.getElementById('following-section');
+            const followingGrid = document.getElementById('following-grid');
+            let followingPodcasts = allPodcasts.filter(p => followingIds.includes(p.authorId));
+            
+            if (followingPodcasts.length > 0) {
+                followingSection.classList.remove('hidden');
+                followingGrid.innerHTML = followingPodcasts.slice(0, 10).map(p => createPodcastCardHtml(p)).join('');
+            } else {
+                followingSection.classList.add('hidden');
             }
 
-            let html = '';
-            filtered.forEach(p => {
-                const date = new Date(p.createdAt);
-                const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
-                const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
-                
-                // ★修正: リンク先を alert から podcast_detail.html へ変更
-                html += `
-                <a href="podcast_detail.html?pid=${p.id}" class="podcast-card flex items-stretch bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-200 shadow-sm hover:shadow-md cursor-pointer group h-32">
-                    <div class="w-32 h-full flex-shrink-0 relative bg-[#1a110f] border-r border-brand-100">
-                        <img src="${thumbUrl}" class="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity">
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="play-icon w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-all duration-300">
-                                <i class="fa-solid fa-play text-white text-sm ml-0.5"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-4 flex flex-col justify-between flex-1 min-w-0">
-                        <div>
-                            <div class="flex flex-wrap gap-1 mb-1 h-4 overflow-hidden">
-                                ${(p.tags || []).slice(0,2).map(t => `<span class="text-[8px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('')}
-                            </div>
-                            <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 font-serif tracking-wide group-hover:text-[#b8860b] transition-colors">${p.title}</h3>
-                        </div>
-                        <div class="flex items-center justify-between mt-2">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-5 h-5 rounded-full border border-brand-200 object-cover flex-shrink-0" onerror="this.src='https://via.placeholder.com/24?text=U'">
-                                <span class="text-[10px] text-brand-600 truncate font-bold">${p.authorName || '名無し'}</span>
-                            </div>
-                            <span class="text-[9px] text-brand-400 font-mono flex-shrink-0">${dateStr}</span>
-                        </div>
-                    </div>
-                </a>
-                `;
-            });
-            grid.innerHTML = html;
+            // Recommended Section
+            const recommendedGrid = document.getElementById('recommended-grid');
+            let otherPodcasts = allPodcasts.filter(p => !followingIds.includes(p.authorId));
+            
+            if (otherPodcasts.length === 0) {
+                otherPodcasts = [...allPodcasts];
+            }
+            
+            let shuffled = shuffleArray([...otherPodcasts]);
+            
+            if (shuffled.length === 0) {
+                recommendedGrid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-microphone-slash text-4xl mb-3 text-brand-200"></i><p>まだ配信がありません。</p></div>';
+            } else {
+                recommendedGrid.innerHTML = shuffled.map(p => createPodcastCardHtml(p)).join('');
+            }
         }
     </script>
 </body>
