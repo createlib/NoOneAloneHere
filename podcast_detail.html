@@ -754,18 +754,41 @@
                 related.slice(0, 4).forEach(p => {
                     const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
                     const date = new Date(p.createdAt || p.updatedAt);
-                    // ★変更: 関連ポッドキャストの画像サイズを大きくし、リストの余白を調整
+                    const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+                    
+                    // Markdown記号を除去してプレーンテキストにする
+                    let plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
+                    const tagsHtml = (p.tags || []).slice(0,2).map(t => `<span class="text-[8px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('');
+
+                    // ★変更: 一覧ページと同じデザインレイアウトを適用（サイドバー用にサイズを微調整）
                     html += `
-                    <a href="podcast_detail.html?pid=${p.id}" class="flex gap-4 bg-brand-50 p-3 rounded-sm border border-brand-100 hover:border-[#b8860b] hover:shadow-md transition-all group">
-                        <div class="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-[#1a110f] rounded-sm overflow-hidden relative border border-brand-200">
-                            <img src="${thumbUrl}" class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-300">
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <i class="fa-solid fa-play text-white/80 text-sm shadow-sm"></i>
+                    <a href="podcast_detail.html?pid=${p.id}" class="flex flex-col bg-[#fffdf9] p-3 sm:p-4 rounded-md border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full">
+                        <!-- Top: Artwork & Title -->
+                        <div class="flex gap-3 items-start mb-2.5">
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-inner mt-0.5">
+                                <img src="${thumbUrl}" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
+                                    <i class="fa-solid fa-play text-white/90 text-sm sm:text-base shadow-sm drop-shadow-md"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0 flex flex-col justify-center min-h-[3rem] sm:min-h-[3.5rem]">
+                                <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors m-0 tracking-wide">${p.title || 'タイトルなし'}</h3>
                             </div>
                         </div>
-                        <div class="flex flex-col justify-center min-w-0 pr-1">
-                            <h4 class="text-xs sm:text-sm font-bold text-brand-900 line-clamp-2 mb-1.5 group-hover:text-[#b8860b] transition-colors leading-snug">${p.title}</h4>
-                            <p class="text-[10px] text-brand-400 font-mono">${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}</p>
+                        
+                        <!-- Middle: Description -->
+                        <p class="text-[10px] sm:text-[11px] text-brand-500 line-clamp-2 leading-relaxed mb-3 flex-1 tracking-wide">${plainDesc}</p>
+                        
+                        <!-- Bottom: Meta Data -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 mt-auto pt-2.5 border-t border-brand-100/70">
+                            <div class="flex items-center gap-1.5 min-w-0 pr-1">
+                                <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-4 h-4 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/24?text=U'">
+                                <span class="text-[9px] sm:text-[10px] text-brand-700 truncate font-bold tracking-widest">${p.authorName || '名無し'}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <div class="flex gap-1">${tagsHtml}</div>
+                                <span class="text-[8px] sm:text-[9px] text-brand-400 font-mono">${dateStr}</span>
+                            </div>
                         </div>
                     </a>
                     `;
