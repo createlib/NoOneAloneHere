@@ -72,7 +72,7 @@
 <body class="antialiased min-h-screen bg-texture">
 
     <!-- Navbar -->
-    <nav class="bg-[#fffdf9]/90 backdrop-blur-md border-b border-brand-200 fixed w-full z-40 top-0 h-16 shadow-sm">
+    <nav class="bg-[#fffdf9]/90 backdrop-blur-md border-b border-brand-200 fixed w-full z-40 top-0 h-16 shadow-sm transition-all">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <a href="podcasts.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest mr-2">
@@ -112,8 +112,8 @@
         </div>
     </nav>
 
-    <!-- ★修正: 隠しオーディオ要素 (ここで音声を一括管理します) -->
-    <audio id="audio-player" preload="metadata"></audio>
+    <!-- 唯一の隠しオーディオ要素 (重複させない！) -->
+    <audio id="core-player" preload="metadata"></audio>
 
     <!-- Smart Player (Bottom Sheet & Mini Player) -->
     <div id="smart-player" class="fixed w-full left-0 z-[5000] bg-[#1a110f] text-white shadow-[0_-10px_40px_rgba(0,0,0,0.5)] player-expanded flex flex-col overflow-hidden">
@@ -202,6 +202,7 @@
                     <p id="author-name" class="font-bold text-brand-900 text-[10px] sm:text-xs flex items-center gap-1 truncate transition-colors group-hover:text-[#b8860b]">
                         名無し <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37]"></i>
                     </p>
+                    <p id="podcast-date-small" class="text-[8px] sm:text-[10px] text-brand-400 font-mono tracking-wider"></p>
                 </div>
             </a>
 
@@ -311,9 +312,8 @@
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
-        // --- ★修正: Player Elements & State ---
-        // 唯一の音声プレイヤー要素
-        const audio = document.getElementById('audio-player');
+        // --- Player Elements & State ---
+        const audio = document.getElementById('core-player');
         
         const playBtnFull = document.getElementById('btn-play-full');
         const playBtnMini = document.getElementById('btn-play-mini');
@@ -377,14 +377,28 @@
                     document.getElementById('mini-author').textContent = safeName;
                     document.getElementById('full-author-link').href = `user_videos.html?uid=${podcastData.authorId}`;
                     
-                    document.getElementById('author-name').innerHTML = `${safeName} <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37] ml-0.5"></i>`;
-                    document.getElementById('author-link').href = `user_videos.html?uid=${podcastData.authorId}`;
-                    document.getElementById('btn-more-author').href = `user_videos.html?uid=${podcastData.authorId}`;
+                    const authorNameEl = document.getElementById('author-name');
+                    if(authorNameEl) authorNameEl.innerHTML = `${safeName} <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37] ml-0.5"></i>`;
+                    
+                    const authorLinkEl = document.getElementById('author-link');
+                    if(authorLinkEl) authorLinkEl.href = `user_videos.html?uid=${podcastData.authorId}`;
+                    
+                    const btnMoreEl = document.getElementById('btn-more-author');
+                    if(btnMoreEl) btnMoreEl.href = `user_videos.html?uid=${podcastData.authorId}`;
 
-                    if (podcastData.authorIcon) document.getElementById('author-icon').src = podcastData.authorIcon;
+                    if (podcastData.authorIcon) {
+                        const ai = document.getElementById('author-icon');
+                        if(ai) ai.src = podcastData.authorIcon;
+                    }
 
                     const d = new Date(podcastData.createdAt || podcastData.updatedAt);
-                    document.getElementById('date-text').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+                    const dateFormatted = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+                    
+                    const dateTextEl = document.getElementById('date-text');
+                    if(dateTextEl) dateTextEl.textContent = dateFormatted;
+                    
+                    const dateSmallEl = document.getElementById('podcast-date-small');
+                    if(dateSmallEl) dateSmallEl.textContent = dateFormatted;
 
                     // Set Images
                     const defaultThumb = 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=1000&auto=format&fit=crop';
@@ -393,7 +407,7 @@
                     document.getElementById('player-bg').src = thumbUrl;
                     document.getElementById('mini-thumb').src = thumbUrl;
 
-                    // ★修正: Audio Source の設定とエラーハンドリング
+                    // Audio Source Set
                     if (podcastData.audioUrl) {
                         audio.src = podcastData.audioUrl;
                         audio.load();
@@ -403,9 +417,12 @@
 
                     // Content
                     document.getElementById('podcast-desc').innerHTML = formatText(podcastData.description);
-                    if (podcastData.guests && podcastData.guests.length > 0) {
+                    
+                    // Guests safely parsed
+                    const guestsArray = Array.isArray(podcastData.guests) ? podcastData.guests : (podcastData.guests ? [podcastData.guests] : []);
+                    if (guestsArray.length > 0) {
                         document.getElementById('guests-area').classList.remove('hidden');
-                        document.getElementById('guests-text').textContent = podcastData.guests.join(', ');
+                        document.getElementById('guests-text').textContent = guestsArray.join(', ');
                     }
 
                     // Tags
@@ -449,10 +466,22 @@
             }
         }
 
-        // --- ★修正: Custom Audio Player Logic ---
+        // --- Audio Player Event Listeners ---
         audio.addEventListener('error', (e) => {
             console.error("Audio playback error:", e);
-            document.getElementById('full-title').innerHTML = `<span class="text-red-500 text-lg"><i class="fa-solid fa-triangle-exclamation"></i> 音声の読み込みに失敗しました</span>`;
+            const notif = document.getElementById('notification');
+            const msgEl = document.getElementById('notif-message');
+            if (notif && msgEl) {
+                msgEl.textContent = '音声の読み込みに失敗しました。';
+                notif.classList.remove('hidden', 'translate-y-20');
+                notif.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-red-500 text-lg';
+                notif.classList.replace('bg-[#3e2723]', 'bg-[#fffdf9]');
+                notif.classList.replace('text-[#f7f5f0]', 'text-red-700');
+                setTimeout(() => {
+                    notif.classList.add('translate-y-20');
+                    setTimeout(() => notif.classList.add('hidden'), 300);
+                }, 3000);
+            }
         });
 
         window.togglePlay = (e) => {
@@ -514,7 +543,7 @@
             return `${min}:${s < 10 ? '0'+s : s}`;
         }
 
-        // --- ★修正: Player Toggle Logic (ボタンのみで制御) ---
+        // --- Player Toggle Logic ---
         window.togglePlayerSize = () => {
             if (isExpanded) {
                 // To Collapsed (Mini Player)
@@ -696,7 +725,7 @@
                 document.getElementById('comment-is-private').checked = false;
             } catch(e) {
                 console.error("Comment submit error:", e);
-                alert(`コメントの送信に失敗しました。\nエラー詳細: ${e.message}\n※データベース(Firestore)のセキュリティルールが設定されていない可能性があります。`);
+                alert(`コメントの送信に失敗しました。\nエラー詳細: ${e.message}`);
             } finally {
                 btn.innerHTML = 'コメントを投稿';
                 btn.disabled = false;
