@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAST 再生 | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { brand: { 50: '#f7f5f0', 100: '#e8dfd1', 200: '#dcd4c6', 300: '#c8b9a6', 400: '#a09080', 500: '#8b6a4f', 600: '#725b3f', 700: '#5c4a3d', 800: '#4a3b32', 900: '#3e2723' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Serif JP', serif; background-color: #f7f5f0; color: #4a3b32; }
+        .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
+        
+        .prose h1, .prose h2, .prose h3 { color: #3e2723; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.5em; border-bottom: 1px solid #e8dfd1; padding-bottom: 0.3em; }
+        .prose h3 { font-size: 1.1rem; border: none; padding: 0; }
+        .prose p { margin-top: 0.5em; margin-bottom: 1em; line-height: 1.8; }
+        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
+        .prose li { margin-bottom: 0.5em; }
+        .prose a { color: #b8860b; text-decoration: underline; }
+
+        /* オーディオプレイヤーのカスタマイズ */
+        audio {
+            width: 100%;
+            height: 48px;
+            outline: none;
+            border-radius: 4px;
+        }
+        audio::-webkit-media-controls-panel {
+            background-color: #f7f5f0;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen bg-texture">
+
+    <!-- Navbar -->
+    <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
+            <div class="flex items-center gap-4">
+                <a href="podcasts.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest mr-2">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">一覧へ戻る</span>
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button id="btn-edit" onclick="goToEdit()" class="hidden items-center px-4 py-1.5 bg-[#fffdf9] text-brand-700 text-xs font-bold rounded-sm shadow-sm hover:bg-brand-50 transition-colors border border-brand-300 tracking-widest">
+                    <i class="fa-solid fa-pen mr-1"></i> 編集
+                </button>
+                <button id="btn-delete" onclick="deletePodcast()" class="hidden items-center px-4 py-1.5 bg-red-50 text-red-700 text-xs font-bold rounded-sm shadow-sm hover:bg-red-100 transition-colors border border-red-200 tracking-widest">
+                    <i class="fa-solid fa-trash mr-1"></i> 削除
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto pt-24 px-4 sm:px-6 lg:px-8 pb-20">
+        
+        <!-- Podcast Player Section -->
+        <div class="bg-[#fffdf9] rounded-sm shadow-xl border border-brand-200 overflow-hidden mb-8">
+            <!-- サムネイル表示エリア -->
+            <div class="relative w-full aspect-[21/9] sm:aspect-[21/9] bg-[#1a110f] flex items-center justify-center overflow-hidden border-b border-[#b8860b]">
+                <img id="podcast-bg" src="" class="absolute inset-0 w-full h-full object-cover opacity-30 blur-md scale-110">
+                <img id="podcast-thumb" src="" class="relative z-10 h-full max-w-full object-contain shadow-2xl drop-shadow-2xl">
+            </div>
+
+            <!-- プレイヤー・タイトルエリア -->
+            <div class="p-6 sm:p-8">
+                <div id="podcast-tags" class="flex flex-wrap gap-2 mb-3"></div>
+                
+                <h1 id="podcast-title" class="text-2xl sm:text-3xl font-bold text-brand-900 leading-tight mb-4 font-serif tracking-wide">読み込み中...</h1>
+                
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-6 mb-6 border-b border-brand-100">
+                    <a id="author-link" href="#" class="flex items-center gap-3 group cursor-pointer bg-brand-50 pr-4 py-1.5 rounded-full border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b] w-fit">
+                        <img id="author-icon" src="https://via.placeholder.com/48" class="w-10 h-10 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover group-hover:scale-105 transition-transform flex-shrink-0 ml-1">
+                        <div>
+                            <p id="author-name" class="font-bold text-brand-900 group-hover:text-[#b8860b] transition-colors text-xs sm:text-sm flex items-center gap-1">
+                                名無し <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37]"></i>
+                            </p>
+                            <p id="podcast-date" class="text-[9px] text-brand-500 font-mono tracking-wider"></p>
+                        </div>
+                    </a>
+
+                    <!-- アクション -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleLike()" id="btn-like" class="flex items-center gap-2 bg-[#fffdf9] border border-brand-200 px-4 py-2 rounded-full text-xs font-bold text-brand-700 hover:bg-brand-50 hover:border-brand-400 shadow-sm transition-all">
+                            <i class="fa-regular fa-heart text-base" id="icon-like"></i> <span id="like-count">0</span>
+                        </button>
+                        <button onclick="sharePodcast()" class="flex items-center gap-2 bg-[#fffdf9] border border-brand-200 px-4 py-2 rounded-full text-xs font-bold text-brand-700 hover:bg-brand-50 hover:border-brand-400 shadow-sm transition-all">
+                            <i class="fa-solid fa-share-nodes text-base"></i> シェア
+                        </button>
+                    </div>
+                </div>
+
+                <!-- オーディオプレイヤー本体 -->
+                <div class="bg-brand-50 p-3 sm:p-4 rounded-sm border border-brand-200 shadow-inner flex items-center gap-4">
+                    <i class="fa-solid fa-headphones text-2xl text-[#b8860b] ml-2 hidden sm:block"></i>
+                    <audio id="audio-player" controls class="w-full">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm mb-12 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-brand-200 m-2 pointer-events-none"></div>
+            <h3 class="font-bold text-brand-900 mb-4 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-align-left text-brand-400"></i> エピソードメモ
+            </h3>
+            <div id="guests-area" class="mb-4 hidden">
+                <p class="text-xs font-bold text-brand-500 tracking-widest mb-1">ゲスト</p>
+                <p id="guests-text" class="text-sm text-brand-800 font-bold bg-brand-50 p-2 rounded-sm border border-brand-100 inline-block"></p>
+            </div>
+            <div id="podcast-desc" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed tracking-wide"></div>
+        </div>
+
+        <!-- Comments Section -->
+        <div id="comments-section" class="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm mb-12">
+            <h3 class="font-bold text-brand-900 mb-6 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
+                <i class="fa-regular fa-comments text-brand-400"></i> コメント (<span id="comment-count">0</span>)
+            </h3>
+            
+            <div id="comment-form-area" class="mb-8 flex gap-3 sm:gap-4">
+                <img id="my-comment-icon" src="https://via.placeholder.com/40" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/40?text=U'">
+                <div class="flex-1">
+                    <textarea id="comment-input" rows="2" class="w-full border border-brand-200 rounded-sm p-3 bg-brand-50 text-sm focus:bg-white transition-colors resize-none leading-relaxed" placeholder="感想や気付きをコメントしよう..."></textarea>
+                    <div class="flex justify-end mt-2">
+                        <button onclick="submitComment()" id="btn-submit-comment" class="px-5 py-2 bg-[#3e2723] text-[#d4af37] font-bold text-xs rounded-sm hover:bg-[#2a1a17] transition-colors tracking-widest shadow-sm border border-[#b8860b]">コメントを投稿</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="comments-list" class="space-y-6">
+                <div class="text-center py-6 text-brand-400 text-xs tracking-widest"><i class="fa-solid fa-spinner fa-spin mr-2"></i>読み込み中...</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#d4af37] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const pid = urlParams.get('pid');
+
+        if (!pid) window.location.href = 'podcasts.html';
+
+        let currentUser = null;
+        let myProfile = null;
+        let podcastData = null;
+        let isAdmin = false;
+        let isLiked = false;
+        let commentsUnsubscribe = null;
+        let likesUnsubscribe = null;
+
+        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
+
+        onAuthStateChanged(auth, async (user) => {
+            if (isAdminMock) {
+                currentUser = { uid: 'test_admin_uid' };
+                isAdmin = true;
+                myProfile = { name: '管理者', photoURL: 'https://via.placeholder.com/40' };
+                document.getElementById('my-comment-icon').src = myProfile.photoURL;
+                loadPodcastData();
+                return;
+            }
+
+            if (user && !user.isAnonymous) {
+                currentUser = user;
+                try {
+                    const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
+                    if (snap.exists()) {
+                        myProfile = snap.data();
+                        document.getElementById('my-comment-icon').src = myProfile.photoURL || 'https://via.placeholder.com/40?text=U';
+                        if (myProfile.userId === 'admin') isAdmin = true;
+                    }
+                } catch(e) {}
+            } else {
+                document.getElementById('comment-form-area').innerHTML = '<div class="w-full text-center py-4 bg-brand-50 border border-brand-200 rounded-sm text-xs font-bold text-brand-600 tracking-widest">コメントを投稿するには乗船（ログイン）してください。</div>';
+            }
+            loadPodcastData();
+        });
+
+        // Markdown Parser
+        function formatText(text) {
+            if (!text) return '';
+            let rawHtml = '';
+            try {
+                if (window.marked) rawHtml = window.marked.parse(text, { breaks: true });
+                else rawHtml = text.replace(/\n/g, '<br>');
+            } catch (e) { rawHtml = text.replace(/\n/g, '<br>'); }
+            return window.DOMPurify.sanitize(rawHtml);
+        }
+
+        async function loadPodcastData() {
+            try {
+                const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid));
+                if (snap.exists()) {
+                    podcastData = snap.data();
+                    
+                    document.getElementById('podcast-title').textContent = podcastData.title || 'タイトルなし';
+                    
+                    document.getElementById('author-link').href = `user_videos.html?uid=${podcastData.authorId}`;
+                    document.getElementById('author-name').innerHTML = `${podcastData.authorName || '名無し'} <i class="fa-solid fa-circle-check text-[10px] sm:text-xs text-[#d4af37]"></i>`;
+                    if (podcastData.authorIcon) document.getElementById('author-icon').src = podcastData.authorIcon;
+
+                    const d = new Date(podcastData.createdAt || podcastData.updatedAt);
+                    document.getElementById('podcast-date').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+
+                    const defaultThumb = 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=1000&auto=format&fit=crop';
+                    const thumbUrl = podcastData.thumbnailUrl || defaultThumb;
+                    document.getElementById('podcast-bg').src = thumbUrl;
+                    document.getElementById('podcast-thumb').src = thumbUrl;
+
+                    document.getElementById('audio-player').src = podcastData.audioUrl || '';
+
+                    document.getElementById('podcast-desc').innerHTML = formatText(podcastData.description);
+                    
+                    if (podcastData.guests && podcastData.guests.length > 0) {
+                        document.getElementById('guests-area').classList.remove('hidden');
+                        document.getElementById('guests-text').textContent = podcastData.guests.join(', ');
+                    }
+
+                    const tagsEl = document.getElementById('podcast-tags');
+                    tagsEl.innerHTML = '';
+                    if (podcastData.tags) {
+                        podcastData.tags.forEach(tag => {
+                            tagsEl.innerHTML += `<span class="bg-[#3e2723] text-[#d4af37] border border-[#b8860b] px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest shadow-sm">#${tag}</span>`;
+                        });
+                    }
+
+                    if (podcastData.allowComments === false) {
+                        document.getElementById('comments-section').innerHTML = '<div class="text-center py-6 text-brand-400 text-xs tracking-widest bg-[#fffdf9] rounded-sm border border-brand-200"><i class="fa-solid fa-comment-slash mr-2"></i>コメントはオフになっています</div>';
+                    } else {
+                        listenComments();
+                    }
+                    
+                    listenLikes();
+
+                    if ((currentUser && currentUser.uid === podcastData.authorId) || isAdmin) {
+                        document.getElementById('btn-edit').classList.remove('hidden');
+                        document.getElementById('btn-edit').classList.add('inline-flex');
+                        document.getElementById('btn-delete').classList.remove('hidden');
+                        document.getElementById('btn-delete').classList.add('inline-flex');
+                    }
+
+                } else {
+                    document.querySelector('main').innerHTML = '<div class="text-center py-20 text-brand-500 font-bold tracking-widest bg-[#fffdf9] border border-brand-200 rounded-sm mt-10">指定された音声は存在しないか、削除されました。</div>';
+                }
+            } catch (e) {
+                console.error(e);
+                document.querySelector('main').innerHTML = '<div class="text-center py-20 text-red-500 font-bold tracking-widest">エラーが発生しました。</div>';
+            }
+        }
+
+        // --- Comments ---
+        function listenComments() {
+            if (isAdminMock) {
+                document.getElementById('comments-list').innerHTML = '<div class="text-center py-6 text-brand-400 text-xs tracking-widest">モック環境ではコメントは表示されません</div>';
+                return;
+            }
+            
+            const commentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'comments');
+            const q = query(commentsRef, orderBy('createdAt', 'desc'));
+            
+            commentsUnsubscribe = onSnapshot(q, (snapshot) => {
+                document.getElementById('comment-count').textContent = snapshot.size;
+                const list = document.getElementById('comments-list');
+                
+                if (snapshot.empty) {
+                    list.innerHTML = '<div class="text-center py-8 text-brand-400 text-xs tracking-widest border border-dashed border-brand-200 bg-brand-50 rounded-sm">まだコメントはありません。<br>最初の感想を伝えてみましょう！</div>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(docSnap => {
+                    const c = docSnap.data();
+                    const d = c.createdAt ? new Date(c.createdAt.toMillis()) : new Date();
+                    const dateStr = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                    
+                    let delBtn = '';
+                    if (isAdmin || (currentUser && currentUser.uid === c.userId) || (currentUser && currentUser.uid === podcastData.authorId)) {
+                        delBtn = `<button onclick="deleteComment('${docSnap.id}')" class="text-red-400 hover:text-red-600 text-xs transition-colors ml-4"><i class="fa-solid fa-trash"></i></button>`;
+                    }
+
+                    html += `
+                    <div class="flex gap-3 sm:gap-4 group">
+                        <img src="${c.userIcon || 'https://via.placeholder.com/40'}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm mt-1" onerror="this.src='https://via.placeholder.com/40?text=U'">
+                        <div class="flex-1 min-w-0">
+                            <div class="bg-brand-50 border border-brand-100 p-3 sm:p-4 rounded-sm rounded-tl-none shadow-sm relative">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-brand-900 text-xs tracking-widest">${c.userName || '名無し'}</span>
+                                        <span class="text-[9px] text-brand-400 font-mono">${dateStr}</span>
+                                    </div>
+                                    ${delBtn}
+                                </div>
+                                <p class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap">${c.text}</p>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+                list.innerHTML = html;
+            }, (error) => {
+                console.error("Comments error:", error);
+            });
+        }
+
+        window.submitComment = async () => {
+            if (!currentUser) return alert('コメントするにはログインが必要です');
+            const input = document.getElementById('comment-input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const btn = document.getElementById('btn-submit-comment');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                if (!isAdminMock) {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'comments'), {
+                        userId: currentUser.uid,
+                        userName: myProfile?.name || myProfile?.userId || '名無し',
+                        userIcon: myProfile?.photoURL || null,
+                        text: text,
+                        createdAt: serverTimestamp()
+                    });
+                } else {
+                    alert("【テスト】コメント送信");
+                }
+                input.value = '';
+            } catch(e) {
+                console.error(e);
+                alert("コメントの送信に失敗しました");
+            } finally {
+                btn.innerHTML = 'コメントを投稿';
+                btn.disabled = false;
+            }
+        };
+
+        window.deleteComment = async (cid) => {
+            if(!confirm("コメントを削除しますか？")) return;
+            try {
+                if (!isAdminMock) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'comments', cid));
+                }
+            } catch(e) { console.error(e); alert("削除に失敗しました"); }
+        };
+
+        // --- Likes ---
+        function listenLikes() {
+            if (isAdminMock) return;
+            const likesRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'likes');
+            
+            likesUnsubscribe = onSnapshot(likesRef, (snapshot) => {
+                document.getElementById('like-count').textContent = snapshot.size;
+                
+                if (currentUser) {
+                    const myLike = snapshot.docs.find(d => d.id === currentUser.uid);
+                    isLiked = !!myLike;
+                    const btn = document.getElementById('btn-like');
+                    const icon = document.getElementById('icon-like');
+                    if (isLiked) {
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid', 'text-red-500');
+                        btn.classList.add('border-red-200', 'bg-red-50');
+                    } else {
+                        icon.classList.remove('fa-solid', 'text-red-500');
+                        icon.classList.add('fa-regular');
+                        btn.classList.remove('border-red-200', 'bg-red-50');
+                    }
+                }
+            });
+        }
+
+        window.toggleLike = async () => {
+            if (!currentUser) return alert("いいねするにはログインが必要です");
+            if (isAdminMock) return alert("【テスト】いいねしました");
+
+            try {
+                const likeRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'likes', currentUser.uid);
+                if (isLiked) {
+                    await deleteDoc(likeRef);
+                } else {
+                    await setDoc(likeRef, { timestamp: serverTimestamp() });
+                }
+            } catch(e) { console.error(e); }
+        };
+
+        // --- Actions ---
+        window.sharePodcast = () => {
+            const url = window.location.href;
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const notif = document.getElementById('notification');
+                document.getElementById('notif-message').textContent = 'URLをコピーしました！';
+                notif.classList.remove('hidden', 'translate-y-20');
+                setTimeout(() => notif.classList.add('translate-y-20'), 3000);
+                setTimeout(() => notif.classList.add('hidden'), 3300);
+            } catch (err) {
+                alert('コピーに失敗しました。\n' + url);
+            }
+            document.body.removeChild(textArea);
+        };
+
+        window.goToEdit = () => {
+            window.location.href = `podcast_post.html?pid=${pid}`;
+        };
+
+        window.deletePodcast = async () => {
+            if(!confirm("本当にこの音声を削除しますか？\n※この操作は元に戻せません。")) return;
+            if(isAdminMock) {
+                alert("【テスト】削除しました");
+                window.location.href = 'podcasts.html';
+                return;
+            }
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid));
+                alert("音声を削除しました");
+                window.location.href = 'podcasts.html';
+            } catch(e) {
+                console.error(e);
+                alert("削除に失敗しました");
+            }
+        };
+
+        // Cleanup
+        window.addEventListener('unload', () => {
+            if(commentsUnsubscribe) commentsUnsubscribe();
+            if(likesUnsubscribe) likesUnsubscribe();
+        });
+    </script>
+</body>
+</html>
