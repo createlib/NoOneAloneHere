@@ -50,8 +50,8 @@
         /* カスタムオーディオシークバー */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]:focus { outline: none; }
-        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
-        input[type=range]::-webkit-slider-thumb { height: 16px; width: 16px; border-radius: 50%; background: #d4af37; cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #d4af37; cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); transition: transform 0.1s; }
         input[type=range]::-webkit-slider-thumb:active { transform: scale(1.3); }
 
         /* スマートプレイヤーアニメーション */
@@ -112,8 +112,8 @@
         </div>
     </nav>
 
-    <!-- 隠しオーディオ要素 -->
-    <audio id="core-player" preload="metadata"></audio>
+    <!-- ★修正: 隠しオーディオ要素 (ここで音声を一括管理します) -->
+    <audio id="audio-player" preload="metadata"></audio>
 
     <!-- Smart Player (Bottom Sheet & Mini Player) -->
     <div id="smart-player" class="fixed w-full left-0 z-[5000] bg-[#1a110f] text-white shadow-[0_-10px_40px_rgba(0,0,0,0.5)] player-expanded flex flex-col overflow-hidden">
@@ -122,19 +122,19 @@
         <img id="player-bg" src="" class="absolute inset-0 w-full h-full object-cover opacity-20 blur-3xl scale-150 pointer-events-none show-expanded">
         <div class="absolute inset-0 bg-gradient-to-t from-[#1a110f] via-[#1a110f]/80 to-transparent pointer-events-none show-expanded"></div>
 
-        <!-- ドラッグハンドル (Expanded用) -->
-        <div class="w-full h-10 flex items-center justify-center cursor-pointer show-expanded relative z-20 shrink-0" id="drag-handle" onclick="togglePlayerSize()">
-            <div class="w-12 h-1.5 bg-white/30 rounded-full hover:bg-white/50 transition-colors"></div>
-        </div>
-        <button onclick="togglePlayerSize()" class="absolute top-4 left-4 text-white/70 hover:text-white p-2 show-expanded z-20"><i class="fa-solid fa-chevron-down text-xl"></i></button>
+        <!-- しまうボタン (Expanded用) -->
+        <button onclick="togglePlayerSize()" class="absolute top-4 left-4 sm:top-6 sm:left-6 text-white/70 hover:text-white p-3 show-expanded z-30 flex items-center gap-2 bg-black/20 rounded-full backdrop-blur-md transition-colors border border-white/10">
+            <i class="fa-solid fa-chevron-down text-lg"></i>
+            <span class="text-xs font-bold tracking-widest pr-1">しまう</span>
+        </button>
 
         <!-- Mini Player UI (Collapsed用) -->
-        <div class="absolute inset-0 w-full h-full flex items-center justify-between px-4 show-collapsed cursor-pointer bg-[#2a1a17] border-t border-[#3e2723]" onclick="togglePlayerSize()">
+        <div class="absolute inset-0 w-full h-full flex items-center justify-between px-4 show-collapsed cursor-pointer bg-[#2a1a17] border-t border-[#3e2723] hover:bg-[#3e2723] transition-colors" onclick="togglePlayerSize()">
             <!-- ミニプログレスバー -->
             <div class="absolute top-0 left-0 h-0.5 bg-[#d4af37]" id="mini-progress" style="width: 0%;"></div>
             
             <div class="flex items-center gap-3 w-full min-w-0 pr-4">
-                <img id="mini-thumb" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-sm object-cover shadow-md flex-shrink-0">
+                <img id="mini-thumb" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-sm object-cover shadow-md flex-shrink-0 border border-white/10">
                 <div class="min-w-0 flex-1">
                     <h4 id="mini-title" class="text-sm font-bold truncate text-white tracking-widest font-serif">Loading...</h4>
                     <p id="mini-author" class="text-[10px] text-brand-400 truncate tracking-widest"></p>
@@ -142,36 +142,38 @@
             </div>
             <div class="flex items-center gap-4 flex-shrink-0">
                 <button id="btn-like-mini" onclick="toggleLike(event)" class="text-brand-400 hover:text-red-500 text-lg transition-colors p-2"><i class="fa-regular fa-heart" id="icon-like-mini"></i></button>
-                <button id="btn-play-mini" onclick="togglePlay(event)" class="w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors"><i class="fa-solid fa-play ml-0.5"></i></button>
+                <button id="btn-play-mini" onclick="togglePlay(event)" class="w-10 h-10 rounded-full bg-[#d4af37] text-[#1a110f] flex items-center justify-center hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-0.5"></i></button>
             </div>
         </div>
 
         <!-- Full Player UI (Expanded用) -->
-        <div class="flex-1 flex flex-col items-center justify-center px-6 pb-safe-bottom lg:pb-12 pt-4 show-expanded relative z-20 overflow-y-auto">
+        <div class="flex-1 flex flex-col items-center justify-center px-6 pb-safe-bottom lg:pb-12 pt-16 show-expanded relative z-20 overflow-y-auto">
             
             <!-- アートワーク -->
-            <div class="w-full max-w-[320px] aspect-square mb-8 relative group">
-                <img id="full-thumb" src="https://via.placeholder.com/600" class="w-full h-full object-cover rounded-lg shadow-2xl border border-white/10 transition-transform duration-500 group-hover:scale-[1.02]">
+            <div class="w-full max-w-[300px] sm:max-w-[360px] aspect-square mb-8 relative group">
+                <img id="full-thumb" src="https://via.placeholder.com/600" class="w-full h-full object-cover rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 transition-transform duration-500 group-hover:scale-[1.02]">
             </div>
             
             <div class="w-full max-w-md flex flex-col">
                 <!-- タイトルとアクション -->
-                <div class="flex justify-between items-end mb-6">
+                <div class="flex justify-between items-end mb-8">
                     <div class="min-w-0 flex-1 pr-4">
-                        <div id="full-tags" class="flex flex-wrap gap-1.5 mb-2"></div>
-                        <h2 id="full-title" class="text-2xl font-bold truncate text-white mb-1 font-serif tracking-widest">Loading...</h2>
-                        <a id="full-author-link" href="#" class="text-sm text-[#d4af37] hover:text-[#b8860b] transition-colors truncate tracking-widest flex items-center gap-1">
+                        <div id="full-tags" class="flex flex-wrap gap-1.5 mb-3"></div>
+                        <h2 id="full-title" class="text-2xl sm:text-3xl font-bold truncate text-white mb-2 font-serif tracking-widest">Loading...</h2>
+                        <a id="full-author-link" href="#" class="text-sm text-[#d4af37] hover:text-[#b8860b] transition-colors truncate tracking-widest flex items-center gap-1 w-fit">
                             <span id="full-author"></span> <i class="fa-solid fa-circle-check text-[10px]"></i>
                         </a>
                     </div>
-                    <button id="btn-like-full" onclick="toggleLike(event)" class="text-2xl text-gray-400 hover:text-red-500 transition-colors pb-1"><i class="fa-regular fa-heart" id="icon-like-full"></i></button>
+                    <button id="btn-like-full" onclick="toggleLike(event)" class="text-3xl text-gray-400 hover:text-red-500 transition-colors pb-1"><i class="fa-regular fa-heart" id="icon-like-full"></i></button>
                 </div>
                 
                 <!-- シークバー -->
-                <div class="w-full flex items-center gap-3 text-xs text-gray-400 font-mono mb-8">
-                    <span id="time-current">0:00</span>
-                    <input type="range" id="seek-slider" value="0" min="0" max="100" class="flex-1">
-                    <span id="time-duration">0:00</span>
+                <div class="w-full flex flex-col mb-8">
+                    <input type="range" id="seek-slider" value="0" min="0" max="100" class="w-full mb-3">
+                    <div class="flex justify-between text-xs text-gray-400 font-mono tracking-widest">
+                        <span id="time-current">0:00</span>
+                        <span id="time-duration">0:00</span>
+                    </div>
                 </div>
                 
                 <!-- コントロールボタン -->
@@ -179,12 +181,6 @@
                     <button onclick="skip(-15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒戻る"><i class="fa-solid fa-rotate-left"></i></button>
                     <button id="btn-play-full" onclick="togglePlay()" class="w-20 h-20 bg-[#d4af37] text-[#1a110f] rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-1"></i></button>
                     <button onclick="skip(15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒進む"><i class="fa-solid fa-rotate-right"></i></button>
-                </div>
-
-                <!-- スクロール案内の矢印 -->
-                <div class="text-center text-white/30 text-[10px] tracking-widest mt-auto animate-pulse flex flex-col items-center">
-                    <span>下にスワイプして詳細を見る</span>
-                    <i class="fa-solid fa-chevron-down mt-1"></i>
                 </div>
             </div>
         </div>
@@ -194,7 +190,30 @@
     <main class="max-w-4xl mx-auto pt-24 px-4 sm:px-6 lg:px-8 pb-[300px] lg:pb-[200px]">
         
         <div class="bg-brand-50 p-3 rounded-sm border border-brand-200 text-center mb-8 shadow-sm">
-            <p class="text-[10px] sm:text-xs text-brand-600 font-bold tracking-widest"><i class="fa-solid fa-circle-info mr-1"></i> 音声を再生しながら、下のコメントや詳細を読むことができます。</p>
+            <p class="text-[10px] sm:text-xs text-brand-600 font-bold tracking-widest"><i class="fa-solid fa-circle-info mr-1"></i> 音声を再生しながら、下の詳細やコメントを読むことができます。</p>
+        </div>
+
+        <!-- Action Bar (スマホでも1列に収まるように flex-row ＆ overflow制御) -->
+        <div class="flex flex-row justify-between items-center gap-2 pb-5 mb-8 border-b border-brand-200 px-1 sm:px-0">
+            <!-- Author -->
+            <a id="author-link" href="#" class="flex items-center gap-2 sm:gap-3 group cursor-pointer bg-[#fffdf9] pr-3 py-1 sm:py-1.5 rounded-full border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b] min-w-0">
+                <img id="author-icon" src="https://via.placeholder.com/48" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover flex-shrink-0 ml-0.5" onerror="this.src='https://via.placeholder.com/48?text=U'">
+                <div class="min-w-0">
+                    <p id="author-name" class="font-bold text-brand-900 text-[10px] sm:text-xs flex items-center gap-1 truncate transition-colors group-hover:text-[#b8860b]">
+                        名無し <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37]"></i>
+                    </p>
+                </div>
+            </a>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <button onclick="toggleLike()" id="btn-like" class="flex items-center gap-1.5 sm:gap-2 bg-[#fffdf9] border border-brand-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold text-brand-700 hover:bg-brand-50 shadow-sm transition-all">
+                    <i class="fa-regular fa-heart text-sm sm:text-base text-brand-400" id="icon-like"></i> <span id="like-count">0</span>
+                </button>
+                <button onclick="sharePodcast()" class="flex items-center gap-1.5 sm:gap-2 bg-[#fffdf9] border border-brand-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold text-brand-700 hover:bg-brand-50 shadow-sm transition-all">
+                    <i class="fa-solid fa-share-nodes text-sm sm:text-base text-brand-400"></i> <span class="hidden sm:inline">シェア</span>
+                </button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -292,8 +311,10 @@
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
-        // --- Player Elements & State ---
-        const audio = document.getElementById('core-player');
+        // --- ★修正: Player Elements & State ---
+        // 唯一の音声プレイヤー要素
+        const audio = document.getElementById('audio-player');
+        
         const playBtnFull = document.getElementById('btn-play-full');
         const playBtnMini = document.getElementById('btn-play-mini');
         const seekBar = document.getElementById('seek-slider');
@@ -331,7 +352,6 @@
             loadPodcastData();
         });
 
-        // Markdown Parser
         function formatText(text) {
             if (!text) return '';
             let rawHtml = '';
@@ -349,7 +369,6 @@
                     podcastData = snap.data();
                     
                     // Set Texts
-                    document.getElementById('podcast-title').textContent = podcastData.title || 'タイトルなし';
                     document.getElementById('full-title').textContent = podcastData.title || 'タイトルなし';
                     document.getElementById('mini-title').textContent = podcastData.title || 'タイトルなし';
                     
@@ -357,7 +376,12 @@
                     document.getElementById('full-author').textContent = safeName;
                     document.getElementById('mini-author').textContent = safeName;
                     document.getElementById('full-author-link').href = `user_videos.html?uid=${podcastData.authorId}`;
+                    
+                    document.getElementById('author-name').innerHTML = `${safeName} <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37] ml-0.5"></i>`;
+                    document.getElementById('author-link').href = `user_videos.html?uid=${podcastData.authorId}`;
                     document.getElementById('btn-more-author').href = `user_videos.html?uid=${podcastData.authorId}`;
+
+                    if (podcastData.authorIcon) document.getElementById('author-icon').src = podcastData.authorIcon;
 
                     const d = new Date(podcastData.createdAt || podcastData.updatedAt);
                     document.getElementById('date-text').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
@@ -365,14 +389,17 @@
                     // Set Images
                     const defaultThumb = 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=1000&auto=format&fit=crop';
                     const thumbUrl = podcastData.thumbnailUrl || defaultThumb;
-                    document.getElementById('podcast-bg').src = thumbUrl;
-                    document.getElementById('podcast-thumb').src = thumbUrl;
                     document.getElementById('full-thumb').src = thumbUrl;
                     document.getElementById('player-bg').src = thumbUrl;
                     document.getElementById('mini-thumb').src = thumbUrl;
 
-                    // Audio Source
-                    audio.src = podcastData.audioUrl || '';
+                    // ★修正: Audio Source の設定とエラーハンドリング
+                    if (podcastData.audioUrl) {
+                        audio.src = podcastData.audioUrl;
+                        audio.load();
+                    } else {
+                        document.getElementById('full-title').innerHTML = `<span class="text-red-500 text-lg">音声データがありません</span>`;
+                    }
 
                     // Content
                     document.getElementById('podcast-desc').innerHTML = formatText(podcastData.description);
@@ -382,12 +409,10 @@
                     }
 
                     // Tags
-                    const tagsEl = document.getElementById('podcast-tags');
                     const fullTagsEl = document.getElementById('full-tags');
-                    tagsEl.innerHTML = ''; fullTagsEl.innerHTML = '';
+                    fullTagsEl.innerHTML = '';
                     if (podcastData.tags) {
                         podcastData.tags.forEach(tag => {
-                            tagsEl.innerHTML += `<span class="bg-[#2a1a17] text-[#d4af37] border border-[#b8860b] px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest shadow-sm">#${tag}</span>`;
                             fullTagsEl.innerHTML += `<span class="bg-white/10 text-[#d4af37] px-2 py-0.5 rounded-sm text-[9px] font-bold tracking-widest">#${tag}</span>`;
                         });
                     }
@@ -424,16 +449,29 @@
             }
         }
 
-        // --- Custom Audio Player Logic ---
+        // --- ★修正: Custom Audio Player Logic ---
+        audio.addEventListener('error', (e) => {
+            console.error("Audio playback error:", e);
+            document.getElementById('full-title').innerHTML = `<span class="text-red-500 text-lg"><i class="fa-solid fa-triangle-exclamation"></i> 音声の読み込みに失敗しました</span>`;
+        });
+
         window.togglePlay = (e) => {
             if (e) e.stopPropagation();
-            if (isPlaying) audio.pause();
-            else audio.play();
+            if (!audio.src || audio.src === window.location.href) return alert("音声データが設定されていません");
+            
+            if (isPlaying) {
+                audio.pause();
+            } else {
+                audio.play().catch(err => {
+                    console.error("Play error:", err);
+                    alert("再生できませんでした。通信環境やファイル形式をご確認ください。");
+                });
+            }
         };
 
         audio.onplay = () => {
             isPlaying = true;
-            playBtnFull.innerHTML = '<i class="fa-solid fa-pause ml-0.5"></i>';
+            playBtnFull.innerHTML = '<i class="fa-solid fa-pause"></i>';
             playBtnMini.innerHTML = '<i class="fa-solid fa-pause"></i>';
         };
 
@@ -458,23 +496,25 @@
         };
 
         seekBar.addEventListener('input', (e) => {
+            if (!audio.duration) return;
             const val = e.target.value;
             audio.currentTime = (val / 100) * audio.duration;
             seekBar.style.background = `linear-gradient(to right, #d4af37 0%, #d4af37 ${val}%, rgba(255,255,255,0.2) ${val}%, rgba(255,255,255,0.2) 100%)`;
         });
 
         window.skip = (seconds) => {
+            if (!audio.duration) return;
             audio.currentTime += seconds;
         };
 
         function formatTime(sec) {
-            if(isNaN(sec)) return "0:00";
+            if(isNaN(sec) || !isFinite(sec)) return "0:00";
             const min = Math.floor(sec / 60);
             const s = Math.floor(sec % 60);
             return `${min}:${s < 10 ? '0'+s : s}`;
         }
 
-        // --- Player Swipe / Toggle Logic ---
+        // --- ★修正: Player Toggle Logic (ボタンのみで制御) ---
         window.togglePlayerSize = () => {
             if (isExpanded) {
                 // To Collapsed (Mini Player)
@@ -498,28 +538,6 @@
                 playerContainer.style.bottom = '0';
             }
         };
-
-        // Swipe down handler
-        let startY = 0;
-        const handle = document.getElementById('drag-handle');
-        
-        handle.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, {passive: true});
-        handle.addEventListener('touchmove', e => {
-            const diff = e.touches[0].clientY - startY;
-            if (diff > 0 && isExpanded) {
-                playerContainer.style.transform = `translateY(${diff}px)`;
-                playerContainer.style.transition = 'none';
-            }
-        }, {passive: true});
-        
-        handle.addEventListener('touchend', e => {
-            const diff = e.changedTouches[0].clientY - startY;
-            playerContainer.style.transform = '';
-            playerContainer.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
-            if (diff > 100 && isExpanded) {
-                togglePlayerSize();
-            }
-        });
 
 
         // --- Related Podcasts ---
