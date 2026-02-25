@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ユーザーのシアター | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { brand: { 50: '#f7f5f0', 100: '#e8dfd1', 200: '#dcd4c6', 300: '#c8b9a6', 400: '#a09080', 500: '#8b6a4f', 600: '#725b3f', 700: '#5c4a3d', 800: '#4a3b32', 900: '#3e2723' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Serif JP', serif; background-color: #f7f5f0; color: #4a3b32; }
+        .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .video-card { transition: all 0.3s ease; }
+        .video-card:hover { transform: translateY(-4px); }
+        .video-card:hover .thumb-overlay { opacity: 1; backdrop-filter: blur(2px); }
+        .video-card:hover .play-icon { transform: scale(1.1); }
+        
+        .bottom-nav-fixed {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #fffdf9; border-top: 1px solid #e8dfd1;
+            z-index: 50; height: 4rem; height: calc(4rem + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .bottom-nav-content { height: 4rem; display: flex; justify-content: space-around; align-items: center; width: 100%; }
+        .body-pb-nav { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+    </style>
+</head>
+<body class="antialiased min-h-screen bg-texture body-pb-nav lg:pb-0">
+
+    <!-- Navbar -->
+    <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
+            <div class="flex items-center gap-4">
+                <a href="videos.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest mr-2">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">シアターへ戻る</span>
+                </a>
+                <a href="home.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
+                    <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-play"></i></span>
+                    <span class="hidden sm:inline">THEATER</span>
+                </a>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="hidden lg:flex items-center gap-6 mr-4">
+                    <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海</a>
+                    <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
+                    <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
+                    <a href="videos.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-video"></i> シアター</a>
+                    <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                </div>
+                <a href="notifications.html" class="auth-required p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                </a>
+                <button onclick="location.reload()" class="p-2 text-brand-300 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
+                <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
+                <button onclick="handleAuthAction()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-brand-800 transition-colors flex items-center gap-2">
+                    <span class="hidden sm:inline tracking-widest" id="nav-auth-text">下船する</span>
+                    <i class="fa-solid fa-right-from-bracket text-lg" id="nav-auth-icon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Bottom Nav (SP) -->
+    <nav class="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div class="bottom-nav-content">
+            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-ship text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">航海</span>
+            </a>
+            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-hourglass-half text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">イベント</span>
+            </a>
+            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-compass text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">さがす</span>
+            </a>
+            <a href="videos.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px] transition-colors">
+                <i class="fa-solid fa-video text-xl mb-1"></i>
+                <span class="text-[10px] font-bold tracking-widest">シアター</span>
+            </a>
+            <a href="user.html" class="auth-required flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">マイページ</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8">
+        
+        <!-- User Info Header (Channel Header) -->
+        <div class="py-10 flex flex-col items-center text-center relative bg-[#fffdf9] shadow-sm border border-brand-200 rounded-sm mb-8 overflow-hidden mt-6">
+            <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-brand-500 z-10 m-2"></div>
+            <div class="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-brand-500 z-10 m-2"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,106,79,0.05)_0%,transparent_70%)] pointer-events-none"></div>
+            
+            <a id="author-profile-link" href="#" class="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-[#fffdf9] shadow-md bg-brand-100 flex items-center justify-center overflow-hidden mb-4 group cursor-pointer hover:border-brand-300 transition-colors relative z-10">
+                <img id="header-icon" src="https://via.placeholder.com/150" class="w-full h-full object-cover group-hover:scale-105 transition-transform" onerror="this.src='https://via.placeholder.com/150?text=U'">
+            </a>
+            <h1 id="header-name" class="text-2xl md:text-3xl font-bold font-serif text-brand-900 tracking-widest mb-1 relative z-10 flex items-center gap-2">
+                <span id="user-name"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                <i class="fa-solid fa-circle-check text-sm text-[#d4af37]" title="NOAH認証"></i>
+            </h1>
+            <p class="text-sm text-brand-500 tracking-widest relative z-10 font-mono mb-2" id="user-id">@...</p>
+            <p class="text-xs text-brand-600 tracking-widest relative z-10 mb-5 font-bold" id="user-job"></p>
+            
+            <div class="mt-2 flex gap-4 relative z-10">
+                <a id="btn-profile" href="#" class="px-6 py-2.5 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] rounded-sm text-xs font-bold hover:bg-[#2a1a17] transition-all shadow-md tracking-widest flex items-center gap-2">
+                    <i class="fa-solid fa-user"></i> 航海録(プロフィール)を見る
+                </a>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between mb-6 border-b border-brand-200 pb-2">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-film text-brand-400 text-xl"></i>
+                <h2 class="font-bold text-brand-900 text-lg font-serif tracking-widest">投稿した動画</h2>
+            </div>
+            <span id="video-count" class="text-xs bg-brand-100 text-brand-700 px-2 py-0.5 rounded-sm font-bold tracking-widest">0件</span>
+        </div>
+
+        <!-- Video Grid -->
+        <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8 pb-12">
+            <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>動画を探しています...</div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUid = urlParams.get('uid');
+        let allVideos = [];
+
+        if (!targetUid) {
+            alert('ユーザーが指定されていません');
+            window.location.href = 'videos.html';
+        }
+
+        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
+        let currentUser = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (isAdminMock) {
+                currentUser = { uid: 'test_admin_uid' };
+                updateNavForAuth(true);
+                loadUserAndVideos();
+                return;
+            }
+
+            if (user && !user.isAnonymous) {
+                currentUser = user;
+                updateNavForAuth(true);
+            } else {
+                updateNavForAuth(false);
+            }
+            loadUserAndVideos();
+        });
+
+        window.handleAuthAction = () => {
+            if (currentUser || isAdminMock) {
+                if (isAdminMock) localStorage.removeItem('isAdminMock');
+                signOut(auth);
+                window.location.reload(); 
+            } else {
+                window.location.href = 'login.html';
+            }
+        };
+
+        function updateNavForAuth(isLoggedIn) {
+            document.querySelectorAll('.auth-required').forEach(el => el.style.display = isLoggedIn ? '' : 'none');
+            const authText = document.getElementById('nav-auth-text');
+            const authIcon = document.getElementById('nav-auth-icon');
+            if (authText && authIcon) {
+                if (isLoggedIn) {
+                    authText.textContent = '下船する';
+                    authIcon.className = 'fa-solid fa-right-from-bracket text-lg';
+                } else {
+                    authText.textContent = '乗船する';
+                    authIcon.className = 'fa-solid fa-right-to-bracket text-lg';
+                }
+            }
+        }
+
+        async function loadUserAndVideos() {
+            try {
+                if (isAdminMock && targetUid === 'test_admin_uid') {
+                    document.getElementById('user-name').textContent = 'NOAH 運営';
+                    document.getElementById('user-id').textContent = '@admin';
+                    document.getElementById('user-job').textContent = 'NOAH運営';
+                    document.getElementById('header-icon').src = 'https://via.placeholder.com/150';
+                } else {
+                    const userDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', targetUid));
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        document.getElementById('user-name').textContent = data.name || data.userId || '名無し';
+                        document.getElementById('user-id').textContent = '@' + (data.userId || targetUid);
+                        document.getElementById('user-job').textContent = data.jobTitle || '';
+                        if (data.photoURL) document.getElementById('header-icon').src = data.photoURL;
+                    } else {
+                        document.getElementById('user-name').textContent = '退会したユーザー';
+                    }
+                }
+                document.getElementById('author-profile-link').href = `user.html?uid=${targetUid}`;
+                document.getElementById('btn-profile').href = `user.html?uid=${targetUid}`;
+            } catch (e) {
+                console.error("User fetch error", e);
+            }
+
+            try {
+                const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
+                const q = query(videosRef, where("authorId", "==", targetUid));
+                const snap = await getDocs(q);
+                
+                let userVideos = [];
+                snap.forEach(doc => {
+                    userVideos.push({ id: doc.id, ...doc.data() });
+                });
+                
+                userVideos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                renderVideos(userVideos);
+            } catch (error) {
+                console.error("Error fetching videos:", error);
+                document.getElementById('video-grid').innerHTML = '<div class="col-span-full text-center text-red-500 py-10">動画の取得に失敗しました</div>';
+            }
+        }
+
+        function renderVideos(videos) {
+            const grid = document.getElementById('video-grid');
+            document.getElementById('video-count').textContent = `${videos.length}件`;
+
+            if (videos.length === 0) {
+                grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-film text-4xl mb-3 text-brand-200"></i><p class="font-bold tracking-widest">まだ投稿された動画はありません。</p></div>';
+                return;
+            }
+
+            let html = '';
+            videos.forEach(v => {
+                const date = new Date(v.createdAt);
+                const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+                
+                html += `
+                <a href="video_detail.html?vid=${v.id}" class="video-card flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-100 shadow-sm hover:shadow-xl">
+                    <div class="relative w-full aspect-video bg-[#000] overflow-hidden border-b border-brand-100">
+                        <img src="${v.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/640x360?text=NOAH'">
+                        <div class="thumb-overlay absolute inset-0 bg-black/40 opacity-0 transition-all duration-300 flex items-center justify-center">
+                            <div class="play-icon w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-transform duration-300">
+                                <i class="fa-solid fa-play text-white text-xl ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex flex-wrap gap-1 mb-2 h-5 overflow-hidden">
+                            ${(v.tags || []).slice(0,3).map(t => `<span class="text-[9px] bg-brand-50 border border-brand-200 text-brand-600 px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('')}
+                        </div>
+                        <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 mb-2 group-hover:text-brand-600 transition-colors font-serif tracking-wide h-10">${v.title}</h3>
+                        <p class="text-[10px] text-brand-400 font-mono flex justify-between items-center">
+                            <span><i class="fa-regular fa-clock mr-1"></i>${dateStr}</span>
+                        </p>
+                    </div>
+                </a>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
