@@ -150,11 +150,13 @@
                 
                 <!-- Filters -->
                 <div class="flex flex-wrap sm:flex-nowrap gap-2">
-                    <select id="filter-purpose" class="filter-select flex-1 sm:w-40 border border-brand-200 rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-brand-700 shadow-sm focus:ring-brand-500 font-medium tracking-widest" onchange="filterUsers()">
-                        <option value="">全ての目的</option>
-                        <option value="business">ビジネス</option>
-                        <option value="hobby">趣味・交流</option>
-                        <option value="skill">スキル交換</option>
+                    <select id="filter-rank" class="filter-select flex-1 sm:w-40 border border-brand-200 rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-brand-700 shadow-sm focus:ring-brand-500 font-medium tracking-widest" onchange="filterUsers()">
+                        <option value="">全ての役割</option>
+                        <option value="arrival">ARRIVAL</option>
+                        <option value="settler">SETTLER</option>
+                        <option value="builder">BUILDER</option>
+                        <option value="guardian">GUARDIAN</option>
+                        <option value="covenant">COVENANT</option>
                     </select>
                     
                     <select id="filter-area" class="filter-select flex-1 sm:w-40 border border-brand-200 rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-brand-700 shadow-sm focus:ring-brand-500 font-medium tracking-widest" onchange="filterUsers()">
@@ -275,7 +277,7 @@
         window.filterUsers = () => {
             const searchQ = document.getElementById('search-input').value.toLowerCase();
             const areaQ = document.getElementById('filter-area').value;
-            const purposeQ = document.getElementById('filter-purpose').value; // 簡易モック用
+            const rankQ = document.getElementById('filter-rank').value;
 
             const filtered = allUsers.filter(u => {
                 let matchSearch = true;
@@ -293,10 +295,17 @@
                     matchArea = u.prefecture === areaQ || u.birthplace === areaQ;
                 }
 
-                // Purpose filter is a mock implementation as real purpose needs NLP or specific tags
-                let matchPurpose = true; 
+                let matchRank = true;
+                if (rankQ) {
+                    const uRank = u.membershipRank || 'arrival';
+                    if (rankQ === 'covenant') {
+                        matchRank = (uRank === 'covenant' || uRank === 'admin');
+                    } else {
+                        matchRank = (uRank === rankQ);
+                    }
+                }
                 
-                return matchSearch && matchArea && matchPurpose;
+                return matchSearch && matchArea && matchRank;
             });
 
             renderGrid(filtered);
@@ -332,9 +341,9 @@
                     <div class="px-2 sm:px-5 pb-3 sm:pb-5">
                         
                         <!-- アイコンとバッジの行 -->
-                        <div class="-mt-6 sm:-mt-8 mb-2 sm:mb-3 flex flex-col sm:flex-row justify-between items-center sm:items-end relative">
-                            <!-- アバター画像 (スマホでは丸く中央、PCでは四角で左) -->
-                            <img src="${icon}" class="w-12 h-12 sm:w-16 sm:h-16 rounded-full sm:rounded-sm border-2 border-[#fffdf9] bg-[#fffdf9] object-cover shadow-sm group-hover:scale-105 transition-transform" onerror="this.src='https://via.placeholder.com/150?text=U'">
+                        <div class="-mt-8 mb-2 sm:mb-3 flex flex-col sm:flex-row justify-between items-center sm:items-end relative">
+                            <!-- アバター画像 (スマホでもPCと同じ大きさに変更) -->
+                            <img src="${icon}" class="w-16 h-16 rounded-full sm:rounded-sm border-2 border-[#fffdf9] bg-[#fffdf9] object-cover shadow-sm group-hover:scale-105 transition-transform" onerror="this.src='https://via.placeholder.com/150?text=U'">
                             
                             <!-- ランクバッジ -->
                             <div class="absolute -bottom-2 sm:relative sm:bottom-0">
