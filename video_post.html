@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動画を投稿 | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { brand: { 50: '#f7f5f0', 100: '#e8dfd1', 200: '#dcd4c6', 300: '#c8b9a6', 400: '#a09080', 500: '#8b6a4f', 600: '#725b3f', 700: '#5c4a3d', 800: '#4a3b32', 900: '#3e2723' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Serif JP', serif; background-color: #f7f5f0; color: #4a3b32; }
+        .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
+        input:focus, textarea:focus { outline: none; border-color: #8b6a4f !important; box-shadow: 0 0 0 1px #8b6a4f !important; }
+        .tag-cb:checked + div { background-color: #3e2723; color: #d4af37; border-color: #b8860b; }
+        
+        .form-section {
+            background-color: #fffdf9;
+            border: 1px solid #e8dfd1;
+            border-radius: 0.25rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background-color: #8b6a4f;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen bg-texture pb-20">
+
+    <nav class="bg-[rgba(255,253,249,0.95)] backdrop-blur border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 h-full flex justify-between items-center">
+            <a href="videos.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest">
+                <div class="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center hover:bg-brand-100 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </div>
+                <span class="hidden sm:inline">キャンセル</span>
+            </a>
+            <h1 class="font-serif font-bold text-brand-900 tracking-widest text-lg flex items-center gap-2">
+                <i class="fa-solid fa-film text-brand-400"></i> 動画の投稿・編集
+            </h1>
+            <div class="w-20"></div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto pt-24 px-4 sm:px-6">
+        
+        <div class="mb-8 text-center">
+            <p class="text-sm text-brand-600 tracking-widest leading-relaxed">
+                あなたのピッチ、PR、活動記録を共有しましょう。<br>
+                <span class="text-xs text-brand-400">※YouTube または Vimeo の動画URLが必要です。</span>
+            </p>
+        </div>
+
+        <form id="post-form" onsubmit="saveVideo(event)" class="space-y-8">
+            
+            <!-- Video URL & Preview -->
+            <div class="form-section">
+                <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest"><i class="fa-brands fa-youtube mr-2 text-[#FF0000]"></i>動画リンク <span class="text-red-500">*</span></label>
+                <p class="text-xs text-brand-500 mb-3">YouTube または Vimeo のURLを貼り付けてください。自動でプレビューが表示されます。</p>
+                <div class="relative group">
+                    <input type="url" id="video-url" required class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm mb-4 focus:bg-white transition-colors" placeholder="https://www.youtube.com/watch?v=..." onchange="previewVideo()">
+                </div>
+                
+                <!-- Preview Box -->
+                <div id="preview-area" class="hidden mt-2">
+                    <div class="flex items-center justify-between mb-3 border-b border-brand-100 pb-2">
+                        <p class="text-xs font-bold text-brand-500 tracking-widest uppercase">Preview</p>
+                        <i class="fa-solid fa-circle-check text-green-600"></i>
+                    </div>
+                    <div id="player-preview" class="w-full aspect-video bg-black rounded-sm overflow-hidden border border-brand-300 shadow-inner"></div>
+                </div>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="form-section space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest">動画のタイトル <span class="text-red-500">*</span></label>
+                    <input type="text" id="title" required class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm font-bold focus:bg-white transition-colors" placeholder="視聴者の興味を惹くタイトルを入力">
+                </div>
+
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-2 gap-2">
+                        <label class="block text-sm font-bold text-brand-900 tracking-widest">概要欄</label>
+                        <span class="text-[10px] bg-[#f7f5f0] text-brand-600 px-2 py-1 rounded-sm border border-brand-200 font-bold tracking-widest flex items-center gap-1 w-fit"><i class="fa-brands fa-markdown text-brand-400"></i>Markdown対応</span>
+                    </div>
+                    <p class="text-xs text-brand-500 mb-3">動画の説明、関連リンク、PRしたい内容を自由に記述してください。</p>
+                    <textarea id="description" rows="8" class="w-full border border-brand-200 rounded-sm p-4 bg-[#f7f5f0] text-sm leading-relaxed focus:bg-white transition-colors" placeholder="・この動画の目的&#13;&#10;・募集しているパートナー像&#13;&#10;・詳細リンク： https://..."></textarea>
+                </div>
+            </div>
+
+            <!-- Tags & Settings -->
+            <div class="form-section space-y-8">
+                <div>
+                    <label class="block text-sm font-bold text-brand-900 mb-3 tracking-widest"><i class="fa-solid fa-tags text-brand-400 mr-2"></i>カテゴリー・タグ</label>
+                    <p class="text-xs text-brand-500 mb-4">動画の内容に合うものを選択してください。</p>
+                    
+                    <div class="flex flex-wrap gap-2.5 mb-4" id="preset-tags">
+                        <label class="cursor-pointer"><input type="checkbox" value="ピッチ・資金調達" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">ピッチ・資金調達</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="ビジネスパートナー募集" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">パートナー募集</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="PR・宣伝" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">PR・宣伝</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="活動記録" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">活動記録</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="ノウハウ共有" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">ノウハウ共有</div></label>
+                    </div>
+                    <input type="text" id="custom-tags" class="w-full border border-brand-200 rounded-sm p-3 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="その他のタグ (カンマ区切りで入力)">
+                </div>
+
+                <div class="border-t border-brand-100 pt-6">
+                    <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-regular fa-comments text-brand-400 mr-2"></i>コメント機能の設定</label>
+                    <div class="flex gap-6">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
+                            <input type="radio" name="allowComments" value="true" checked class="text-[#8b6a4f] focus:ring-[#8b6a4f]"> 許可する
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
+                            <input type="radio" name="allowComments" value="false" class="text-brand-400 focus:ring-brand-400"> 許可しない
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pb-12 pt-6">
+                <button type="submit" id="btn-save" class="w-full py-4 bg-gradient-to-r from-[#3e2723] to-[#2a1a17] text-[#d4af37] font-bold text-lg rounded-sm hover:from-[#2a1a17] hover:to-[#1a110f] transition-all shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-3 transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i> 動画を公開する
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        let currentUser = null;
+        let myData = null;
+        let isAdmin = false;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const editVid = urlParams.get('vid');
+        
+        let parsedEmbedUrl = '';
+        let parsedThumbUrl = '';
+
+        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
+
+        onAuthStateChanged(auth, async (user) => {
+            if(isAdminMock) {
+                currentUser = { uid: 'test_admin_uid' };
+                isAdmin = true;
+                myData = { name: '管理者', photoURL: '' };
+                if(editVid) loadEditData();
+                return;
+            }
+
+            if (user && !user.isAnonymous) {
+                currentUser = user;
+                try {
+                    const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
+                    if(snap.exists()) {
+                        myData = snap.data();
+                        const rank = myData.membershipRank || 'arrival';
+                        if(myData.userId === 'admin') isAdmin = true;
+                        
+                        if(rank === 'arrival' && !isAdmin) {
+                            alert("動画の投稿はSETTLER以上の会員のみ可能です。");
+                            window.location.href = 'upgrade.html';
+                        }
+                    }
+                } catch(e){}
+                
+                if(editVid) loadEditData();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        async function loadEditData() {
+            if(isAdminMock) return; // ダミー回避
+            try {
+                const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'videos', editVid));
+                if(snap.exists()) {
+                    const data = snap.data();
+                    if(data.authorId !== currentUser.uid && !isAdmin) {
+                        alert("編集権限がありません");
+                        window.location.href = 'videos.html';
+                        return;
+                    }
+                    
+                    document.getElementById('video-url').value = data.sourceUrl || '';
+                    document.getElementById('title').value = data.title || '';
+                    document.getElementById('description').value = data.description || '';
+                    
+                    if(data.allowComments === false) {
+                        document.querySelector('input[name="allowComments"][value="false"]').checked = true;
+                    }
+
+                    // tags
+                    const allTags = data.tags || [];
+                    document.querySelectorAll('.tag-cb').forEach(cb => {
+                        if(allTags.includes(cb.value)) { cb.checked = true; }
+                    });
+                    const presetValues = Array.from(document.querySelectorAll('.tag-cb')).map(cb=>cb.value);
+                    const customTags = allTags.filter(t => !presetValues.includes(t));
+                    document.getElementById('custom-tags').value = customTags.join(', ');
+
+                    document.getElementById('btn-save').innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 編集を保存する';
+                    window.previewVideo();
+                }
+            } catch(e){}
+        }
+
+        window.previewVideo = async () => {
+            const url = document.getElementById('video-url').value.trim();
+            if(!url) { document.getElementById('preview-area').classList.add('hidden'); return; }
+
+            const ytId = getYouTubeId(url);
+            const vimId = getVimeoId(url);
+
+            if(ytId) {
+                parsedEmbedUrl = `https://www.youtube.com/embed/${ytId}`;
+                parsedThumbUrl = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
+            } else if (vimId) {
+                parsedEmbedUrl = `https://player.vimeo.com/video/${vimId}`;
+                try {
+                    const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`);
+                    const data = await res.json();
+                    parsedThumbUrl = data.thumbnail_url;
+                } catch(e) { parsedThumbUrl = 'https://via.placeholder.com/640x360?text=Vimeo+Video'; }
+            } else {
+                alert("YouTubeまたはVimeoのURLを正しく入力してください。");
+                document.getElementById('preview-area').classList.add('hidden');
+                parsedEmbedUrl = ''; parsedThumbUrl = '';
+                return;
+            }
+
+            document.getElementById('player-preview').innerHTML = `<iframe src="${parsedEmbedUrl}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>`;
+            document.getElementById('preview-area').classList.remove('hidden');
+        };
+
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function getVimeoId(url) {
+            const regExp = /(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_\-]+)?/i;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
+        window.saveVideo = async (e) => {
+            e.preventDefault();
+            if(!parsedEmbedUrl) { alert("有効な動画URLを入力してプレビューを完了してください"); return; }
+            
+            const btn = document.getElementById('btn-save');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2 text-xl"></i> 保存中...';
+            btn.disabled = true;
+
+            const title = document.getElementById('title').value.trim();
+            const desc = document.getElementById('description').value;
+            const sourceUrl = document.getElementById('video-url').value.trim();
+            const allowComments = document.querySelector('input[name="allowComments"]:checked').value === 'true';
+
+            // Tags
+            const checkedTags = Array.from(document.querySelectorAll('.tag-cb:checked')).map(cb => cb.value);
+            const customTags = document.getElementById('custom-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
+            const tags = [...new Set([...checkedTags, ...customTags])];
+
+            const docId = editVid || Date.now().toString(); // edit or new
+            const videoData = {
+                authorId: currentUser.uid,
+                authorName: myData.name || myData.userId,
+                authorIcon: myData.photoURL || null,
+                sourceUrl: sourceUrl,
+                embedUrl: parsedEmbedUrl,
+                thumbnailUrl: parsedThumbUrl,
+                title: title,
+                description: desc,
+                tags: tags,
+                allowComments: allowComments,
+                updatedAt: new Date().toISOString()
+            };
+
+            if(!editVid) videoData.createdAt = videoData.updatedAt;
+
+            if(isAdminMock) {
+                alert("保存成功(テスト)");
+                window.location.href = 'videos.html';
+                return;
+            }
+
+            try {
+                const vidRef = doc(db, 'artifacts', appId, 'public', 'data', 'videos', docId);
+                await setDoc(vidRef, videoData, { merge: true });
+                window.location.href = `video_detail.html?vid=${docId}`;
+            } catch(error) {
+                console.error(error);
+                alert("保存に失敗しました");
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 保存を再試行';
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>
