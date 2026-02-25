@@ -233,7 +233,7 @@
 
                 // ★ここを変更: hrefを user_videos.html へ向ける
                 document.getElementById('author-link').href = `user_videos.html?uid=${videoData.authorId}`;
-                ※ `author-link` の `href` 属性を `user_videos.html?uid=...` に設定するだけで機能します。
+                // ※ `author-link` の `href` 属性を `user_videos.html?uid=...` に設定するだけで機能します。
                 
                 const d = new Date(videoData.createdAt);
                 document.getElementById('video-date').textContent = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} 公開`;
