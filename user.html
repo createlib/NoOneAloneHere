@@ -9,10 +9,10 @@
     <!-- Google Fonts: Noto Serif JP -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS with Typography Plugin -->
+    <!-- Tailwind CSS with Typography Plugin (マークダウン装飾用) -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     
-    <!-- Marked.js (Markdown変換) & DOMPurify (セキュリティ保護) -->
+    <!-- ★修正: Marked.js (Markdown変換) UMD版を確実に読み込む -->
     <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
@@ -419,17 +419,19 @@
         function formatText(text) {
             if (!text) return '';
             
-            // ★追加: テキストが文字列以外（数値など）だった場合に文字列に変換してエラーを防ぐ
-            const textStr = String(text);
-            let processedText = textStr.replace(/__(.*?)__/g, '<u>$1</u>');
+            // 独自拡張: __下線__ を <u>下線</u> に変換
+            let processedText = text.replace(/__(.*?)__/g, '<u>$1</u>');
 
             let rawHtml = '';
             try {
+                // CDNから読み込んだ marked.umd.js は window.marked に展開される
                 if (window.marked && typeof window.marked.parse === 'function') {
                     rawHtml = window.marked.parse(processedText, { breaks: true, gfm: true });
                 } else if (typeof window.marked === 'function') {
+                    // 古いバージョンの場合
                     rawHtml = window.marked(processedText, { breaks: true, gfm: true });
                 } else {
+                    // markedが読み込めていない場合のフォールバック（改行だけ反映）
                     rawHtml = processedText.replace(/\n/g, '<br>');
                 }
             } catch (e) {
@@ -437,6 +439,7 @@
                 rawHtml = processedText.replace(/\n/g, '<br>'); 
             }
             
+            // DOMPurifyで安全なHTMLのみを許可してサニタイズ
             return window.DOMPurify.sanitize(rawHtml, { 
                 ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote', 'code', 'pre'],
                 ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
@@ -444,6 +447,8 @@
         }
 
         function setElText(id, text) { const el = document.getElementById(id); if(el) el.textContent = text || '-'; }
+        
+        // ★ HTMLとして挿入するための関数
         function setElHtml(id, html) { const el = document.getElementById(id); if(el) el.innerHTML = html || ''; }
 
         onAuthStateChanged(auth, async (user) => {
@@ -545,6 +550,36 @@
             if(isMutual) document.getElementById('mutual-badge').classList.remove('hidden');
             setElText('count-following', '120');
             setElText('count-followers', '45');
+        }
+
+        async function loadPublicProfile(uid) {
+            try {
+                let dataToUse = null;
+                const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
+                const publicSnap = await getDoc(publicRef);
+
+                if (publicSnap.exists()) {
+                    dataToUse = publicSnap.data();
+                }
+                
+                if (isAdmin || (isMutual && myRank !== 'arrival')) {
+                    try {
+                        const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
+                        const privateSnap = await getDoc(privateRef);
+                        if (privateSnap.exists()) {
+                            dataToUse = { ...(dataToUse || {}), ...privateSnap.data() };
+                        }
+                    } catch (e) { console.log("Private load failed", e); }
+                }
+
+                if (dataToUse) {
+                    updateDashboardUI(dataToUse);
+                } else {
+                    document.getElementById('error-container').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error("Load error:", e);
+            }
         }
 
         async function updateFollowCounts(uid) {
@@ -664,6 +699,7 @@
             setElText('profile-id', '@' + (data.userId || '-'));
             setElText('profile-job', data.jobTitle || '職業未設定');
             
+            // 出身地と活動拠点の表示統合
             let locStr = '-';
             if(data.prefecture && data.birthplace) {
                 locStr = `${data.prefecture} (出身: ${data.birthplace})`;
@@ -674,6 +710,7 @@
             }
             setElText('profile-location', locStr);
             
+            // ★ Bio をリッチテキスト(Markdown)としてパースしてHTMLで挿入
             setElHtml('profile-bio', formatText(data.bio || ''));
             
             const iconImg = document.getElementById('header-icon-img');
@@ -755,10 +792,8 @@
                 const skillsContainer = document.getElementById('skills-container');
                 if (skillsContainer) {
                     skillsContainer.innerHTML = '';
-                    // ★追加: 配列かどうかを確実にチェックする
-                    const skillsArray = Array.isArray(data.skills) ? data.skills : (data.skills ? [data.skills] : []);
-                    if (skillsArray.length > 0) {
-                        skillsArray.forEach(tag => {
+                    if (data.skills && data.skills.length > 0) {
+                        data.skills.forEach(tag => {
                             skillsContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
                         });
                     } else {
@@ -769,10 +804,8 @@
                 const hobbiesContainer = document.getElementById('hobbies-container');
                 if (hobbiesContainer) {
                     hobbiesContainer.innerHTML = '';
-                    // ★追加: 配列かどうかを確実にチェックする
-                    const hobbiesArray = Array.isArray(data.hobbies) ? data.hobbies : (data.hobbies ? [data.hobbies] : []);
-                    if (hobbiesArray.length > 0) {
-                        hobbiesArray.forEach(tag => {
+                    if (data.hobbies && data.hobbies.length > 0) {
+                        data.hobbies.forEach(tag => {
                             hobbiesContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
                         });
                     } else {
@@ -783,21 +816,18 @@
                 // Matching
                 const canOfferList = document.getElementById('list-can-offer');
                 if (canOfferList) {
-                    // ★追加: 過去の文字データ等に対応するための配列化
-                    const canOfferArray = Array.isArray(data.canOffer) ? data.canOffer : (data.canOffer ? [data.canOffer] : []);
-                    canOfferList.innerHTML = canOfferArray.length > 0 
-                        ? canOfferArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-check text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
+                    canOfferList.innerHTML = data.canOffer && data.canOffer.length > 0 
+                        ? data.canOffer.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-check text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
                         : '<li class="text-brand-300 italic text-sm">未設定</li>';
                 }
                 const lookingForList = document.getElementById('list-looking-for');
                 if (lookingForList) {
-                    // ★追加: 過去の文字データ等に対応するための配列化
-                    const lookingForArray = Array.isArray(data.lookingFor) ? data.lookingFor : (data.lookingFor ? [data.lookingFor] : []);
-                    lookingForList.innerHTML = lookingForArray.length > 0 
-                        ? lookingForArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-magnifying-glass text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
+                    lookingForList.innerHTML = data.lookingFor && data.lookingFor.length > 0 
+                        ? data.lookingFor.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-magnifying-glass text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
                         : '<li class="text-brand-300 italic text-sm">未設定</li>';
                 }
 
+                // ★ Goals (Markdown対応)
                 const goalsEl = document.getElementById('profile-goals');
                 if (goalsEl) {
                     if (data.goals) {
@@ -826,10 +856,9 @@
                 const careerContainer = document.getElementById('career-container');
                 if (careerContainer) {
                     careerContainer.innerHTML = '';
-                    // ★追加: 経歴が配列かどうかをチェック
-                    const careerArray = Array.isArray(data.career) ? data.career : [];
-                    if (careerArray.length > 0) {
-                        careerArray.forEach(c => {
+                    if (data.career && data.career.length > 0) {
+                        data.career.forEach(c => {
+                            // ★ Career Description (Markdown対応)
                             const formattedDesc = formatText(c.description || '');
                             careerContainer.innerHTML += `
                                 <div class="relative pl-6 pb-2">
@@ -856,6 +885,7 @@
                     if (data.snsX) snsContainer.innerHTML += `<a href="${data.snsX.startsWith('http') ? data.snsX : 'https://twitter.com/'+data.snsX}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors shadow-sm"><i class="fa-brands fa-x-twitter"></i></a>`;
                 }
 
+                // ★ Message (Markdown対応)
                 const messageEl = document.getElementById('profile-message');
                 if (messageEl) {
                     if (data.message) {
