@@ -194,23 +194,36 @@
         <!-- 状態管理用ラッパー -->
         <div id="content-wrapper">
             
-            <!-- Default Sections (Not filtering) -->
-            <div id="default-sections" class="pb-12">
+            <!-- Default Sections (横スクロール仕様に変更) -->
+            <div id="default-sections" class="pb-12 space-y-12">
+                
                 <!-- Following Section -->
-                <div id="following-section" class="mb-12 hidden">
-                    <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
-                        <i class="fa-solid fa-user-group text-brand-400 mr-3"></i>フォロー中の新着
-                    </h2>
-                    <div id="following-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8"></div>
+                <div id="following-section" class="hidden relative">
+                    <div class="flex justify-between items-end mb-4 border-b border-brand-200 pb-2">
+                        <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest flex items-center">
+                            <i class="fa-solid fa-user-group text-brand-400 mr-3"></i>フォロー中の新着
+                        </h2>
+                        <button onclick="openMoreModal('following')" class="text-[10px] sm:text-xs font-bold text-brand-500 hover:text-brand-800 transition-colors tracking-widest flex items-center bg-brand-50 px-3 py-1.5 rounded-sm border border-brand-200 shadow-sm">
+                            すべて見る <i class="fa-solid fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                    <!-- ★変更: 横スクロールコンテナを縦に3段積むCSS Gridに修正 -->
+                    <div id="following-scroll" class="grid grid-rows-[repeat(3,max-content)] grid-flow-col auto-cols-[280px] sm:auto-cols-[320px] overflow-x-auto gap-4 sm:gap-6 pb-4 no-scrollbar snap-x snap-mandatory px-1"></div>
                 </div>
 
                 <!-- Recommended Section -->
-                <div id="recommended-section">
-                    <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
-                        <i class="fa-solid fa-sparkles text-[#b8860b] mr-3"></i>おすすめ
-                    </h2>
-                    <div id="recommended-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8">
-                        <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>動画を読み込み中...</div>
+                <div id="recommended-section" class="relative">
+                    <div class="flex justify-between items-end mb-4 border-b border-brand-200 pb-2">
+                        <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest flex items-center">
+                            <i class="fa-solid fa-sparkles text-[#b8860b] mr-3"></i>おすすめ
+                        </h2>
+                        <button onclick="openMoreModal('recommended')" class="text-[10px] sm:text-xs font-bold text-brand-500 hover:text-brand-800 transition-colors tracking-widest flex items-center bg-brand-50 px-3 py-1.5 rounded-sm border border-brand-200 shadow-sm">
+                            すべて見る <i class="fa-solid fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                    <!-- ★変更: 横スクロールコンテナを縦に3段積むCSS Gridに修正 -->
+                    <div id="recommended-scroll" class="grid grid-rows-[repeat(3,max-content)] grid-flow-col auto-cols-[280px] sm:auto-cols-[320px] overflow-x-auto gap-4 sm:gap-6 pb-4 no-scrollbar snap-x snap-mandatory px-1">
+                        <div class="w-full text-center py-12 text-brand-400 col-span-full"><i class="fa-solid fa-spinner fa-spin mr-2"></i>動画を読み込み中...</div>
                     </div>
                 </div>
             </div>
@@ -220,12 +233,28 @@
                 <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
                     <i class="fa-solid fa-magnifying-glass text-brand-400 mr-3"></i>検索結果
                 </h2>
-                <div id="search-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8"></div>
+                <div id="search-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6"></div>
             </div>
 
         </div>
 
     </main>
+
+    <!-- 「すべて見る」モーダル -->
+    <div id="more-modal" class="hidden fixed inset-0 z-[6000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
+        <div class="bg-[#fffdf9] bg-texture w-full sm:max-w-7xl h-[90vh] sm:h-[85vh] rounded-t-xl sm:rounded-md shadow-2xl flex flex-col border border-brand-300">
+            <div class="p-4 sm:p-6 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] shrink-0 rounded-t-md">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center text-base sm:text-lg" id="more-modal-title">一覧</h3>
+                <button onclick="closeMoreModal()" class="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors border border-brand-200 shadow-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar bg-texture">
+                <!-- モーダル内はグリッド表示 -->
+                <div id="more-modal-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                    <!-- JSで挿入 -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
@@ -387,11 +416,16 @@
             return array;
         }
 
-        function createVideoCardHtml(v) {
+        // ★追加・変更: isScrollMode に応じて横幅のクラスを切り替える
+        function createVideoCardHtml(v, isScrollMode = true) {
             const date = new Date(v.createdAt);
             const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+            
+            // スクロール内かグリッド内かで幅設定を切り替え
+            const widthClass = isScrollMode ? "w-full h-full snap-start" : "w-full h-full";
+
             return `
-            <a href="video_detail.html?vid=${v.id}" class="video-card flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-100 shadow-sm hover:shadow-xl">
+            <a href="video_detail.html?vid=${v.id}" class="video-card flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-100 shadow-sm hover:shadow-xl ${widthClass}">
                 <div class="relative w-full aspect-video bg-[#000] overflow-hidden">
                     <img src="${v.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/640x360?text=NOAH'">
                     <div class="thumb-overlay absolute inset-0 bg-black/40 opacity-0 transition-all duration-300 flex items-center justify-center">
@@ -400,13 +434,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="p-4 flex gap-3">
+                <div class="p-4 flex gap-3 flex-1">
                     <img src="${v.authorIcon || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/40?text=U'">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-brand-600 transition-colors font-serif tracking-wide">${v.title}</h3>
-                        <div class="flex items-center text-xs text-brand-500 mb-0.5">
-                            <span class="truncate hover:text-brand-800 transition-colors">${v.authorName || '名無し'}</span>
-                            <i class="fa-solid fa-circle-check text-[10px] ml-1 text-[#d4af37]"></i>
+                    <div class="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-brand-600 transition-colors font-serif tracking-wide">${v.title}</h3>
+                            <div class="flex items-center text-xs text-brand-500 mb-1">
+                                <span class="truncate hover:text-brand-800 transition-colors">${v.authorName || '名無し'}</span>
+                                <i class="fa-solid fa-circle-check text-[10px] ml-1 text-[#d4af37]"></i>
+                            </div>
                         </div>
                         <p class="text-[10px] text-brand-400 font-mono">${dateStr}</p>
                     </div>
@@ -444,29 +480,29 @@
             if (filtered.length === 0) {
                 grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-film text-4xl mb-3 text-brand-200"></i><p>該当する動画がありません。</p></div>';
             } else {
-                grid.innerHTML = filtered.map(v => createVideoCardHtml(v)).join('');
+                // 検索結果はグリッドなので false
+                grid.innerHTML = filtered.map(v => createVideoCardHtml(v, false)).join('');
             }
         }
 
         function renderDefaultSections() {
-            // Following Section
+            // Following Section (横スクロール 3段)
             const followingSection = document.getElementById('following-section');
-            const followingGrid = document.getElementById('following-grid');
+            const followingScroll = document.getElementById('following-scroll');
             let followingVideos = allVideos.filter(v => followingIds.includes(v.authorId));
             
             if (followingVideos.length > 0) {
                 followingSection.classList.remove('hidden');
-                // 最新10件を表示
-                followingGrid.innerHTML = followingVideos.slice(0, 10).map(v => createVideoCardHtml(v)).join('');
+                // 3段積みを想定して最大15件表示
+                followingScroll.innerHTML = followingVideos.slice(0, 15).map(v => createVideoCardHtml(v, true)).join('');
             } else {
                 followingSection.classList.add('hidden');
             }
 
-            // Recommended Section (フォロー中以外をランダムに)
-            const recommendedGrid = document.getElementById('recommended-grid');
+            // Recommended Section (横スクロール 3段)
+            const recommendedScroll = document.getElementById('recommended-scroll');
             let otherVideos = allVideos.filter(v => !followingIds.includes(v.authorId));
             
-            // もしフォロー中しかいなければ、全体からランダム
             if (otherVideos.length === 0) {
                 otherVideos = [...allVideos];
             }
@@ -474,11 +510,41 @@
             let shuffled = shuffleArray([...otherVideos]);
             
             if (shuffled.length === 0) {
-                recommendedGrid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-film text-4xl mb-3 text-brand-200"></i><p>まだ動画がありません。</p></div>';
+                recommendedScroll.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200 w-full"><i class="fa-solid fa-film text-4xl mb-3 text-brand-200"></i><p>まだ動画がありません。</p></div>';
             } else {
-                recommendedGrid.innerHTML = shuffled.map(v => createVideoCardHtml(v)).join('');
+                // 3段積みを想定して最大15件表示
+                recommendedScroll.innerHTML = shuffled.slice(0, 15).map(v => createVideoCardHtml(v, true)).join('');
             }
         }
+
+        // --- モーダル制御 ---
+        window.openMoreModal = (type) => {
+            const modal = document.getElementById('more-modal');
+            const title = document.getElementById('more-modal-title');
+            const grid = document.getElementById('more-modal-grid');
+            
+            let targetData = [];
+            
+            if (type === 'following') {
+                title.innerHTML = '<i class="fa-solid fa-user-group text-brand-400 mr-2"></i>フォロー中の新着';
+                targetData = allVideos.filter(v => followingIds.includes(v.authorId));
+            } else if (type === 'recommended') {
+                title.innerHTML = '<i class="fa-solid fa-sparkles text-[#b8860b] mr-2"></i>おすすめ';
+                let otherVideos = allVideos.filter(v => !followingIds.includes(v.authorId));
+                if (otherVideos.length === 0) otherVideos = [...allVideos];
+                targetData = otherVideos; // 全件表示
+            }
+            
+            grid.innerHTML = targetData.map(v => createVideoCardHtml(v, false)).join('');
+            
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeMoreModal = () => {
+            document.getElementById('more-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        };
 
     </script>
 </body>
