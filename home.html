@@ -479,8 +479,8 @@
             
             if (isAdminMock) {
                 referrals = [
-                    { name: "テストユーザーA", userId: "user_a", profileScore: 85, photoURL: "" },
-                    { name: "テストユーザーB", userId: "user_b", profileScore: 40, photoURL: "" },
+                    { name: "テストユーザーA", userId: "user_a", id: "dummy1", profileScore: 85, photoURL: "" },
+                    { name: "テストユーザーB", userId: "user_b", id: "dummy2", profileScore: 40, photoURL: "" },
                 ];
             } else {
                 if (!myProfile || !myProfile.userId) {
@@ -496,8 +496,9 @@
                     snap.forEach(d => {
                         const data = d.data();
                         referrals.push({
+                            id: d.id, // ★Auth UIDをここで取得 (これが正解)
                             name: data.name,
-                            userId: data.userId,
+                            userId: data.userId, // 表示用ID
                             photoURL: data.photoURL || '',
                             profileScore: data.profileScore || 0
                         });
@@ -521,7 +522,8 @@
                     
                     const item = document.createElement('div');
                     item.className = 'flex items-center gap-4 p-4 bg-[#fffdf9] border border-brand-200 rounded-sm mb-3 shadow-sm hover:shadow-md transition-shadow group cursor-pointer';
-                    item.onclick = () => window.location.href = `user.html?uid=${refUser.userId}`;
+                    // ★修正: Auth UID (refUser.id) を渡すように変更
+                    item.onclick = () => window.location.href = `user.html?uid=${refUser.id}`;
                     item.innerHTML = `
                         <img src="${thumb}" class="w-14 h-14 rounded-sm object-cover bg-brand-50 border border-brand-100 flex-shrink-0 group-hover:scale-105 transition-transform">
                         <div class="flex-1 min-w-0">
@@ -806,9 +808,15 @@
             }
 
             countEl.textContent = participants.length;
-            const isOrganizer = currentUser && currentUser.uid === evt.organizerId;
+            
+            // ★修正: 自分が主催者(isOrganizer)かどうか判定
+            const isOrganizer = (myProfile && (myProfile.userId === evt.organizerId || currentUser.uid === evt.organizerId));
 
-            if (evt.isParticipantsPublic || isOrganizer) {
+            // ★修正: 参加者リストの可視化ロジック
+            // 管理者 or 主催者なら全員見える (非公開ユーザーも)
+            // 一般ユーザーなら「公開設定」の参加者だけ見える
+            // ※「参加者リスト自体が非公開(isParticipantsPublic == false)」の場合は主催者以外見えない
+            if (evt.isParticipantsPublic || isOrganizer || isAdmin) {
                 if (participants.length === 0) {
                     partsContainer.innerHTML = '<div class="text-[10px] text-brand-500 w-full text-center py-2">まだ参加者はいません</div>';
                 } else {
@@ -817,7 +825,7 @@
                     
                     const participantDataPromises = participants.map(async (uid) => {
                         let avatarUrl = 'https://via.placeholder.com/32?text=U';
-                        let isVisible = true;
+                        let isVisible = false; // デフォルト非表示
                         
                         if (!isAdminMock) {
                             try {
@@ -826,13 +834,15 @@
                                     const data = uDoc.data();
                                     if(data.photoURL) avatarUrl = data.photoURL;
                                     
-                                    if (uid === evt.organizerId) {
-                                        isVisible = true;
+                                    // ★判定ロジック
+                                    if (isOrganizer || isAdmin) {
+                                        isVisible = true; // 主催者・管理者は全員見える
                                     } else {
-                                        if (data.isHidden === true) isVisible = false;
+                                        // 一般ユーザーは、その参加者が「非公開」でなければ見える
+                                        if (data.isHidden !== true) {
+                                            isVisible = true;
+                                        }
                                     }
-                                } else {
-                                    isVisible = false;
                                 }
                             } catch(e){ isVisible = false; }
                         }
@@ -852,6 +862,7 @@
                     }
                     
                     const remainingCount = participants.length - count;
+                    // ※自分が一般ユーザーで、残りが全員非公開ユーザーだった場合などは、数は合わない可能性があるが「+〇名」として出す
                     if (remainingCount > 0) {
                         partsHtml += `<div class="flex items-center justify-center h-10 w-10 rounded-full ring-2 ring-[#fffdf9] bg-brand-50 text-[10px] font-bold text-brand-600 border border-brand-200 shadow-sm">+${remainingCount}</div>`;
                     }
