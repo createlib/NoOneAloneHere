@@ -346,8 +346,9 @@
                 const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
                 const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
                 
+                // ★修正: リンク先を alert から podcast_detail.html へ変更
                 html += `
-                <a href="javascript:alert('CASTの再生画面は準備中です (ID: ${p.id})')" class="podcast-card flex items-stretch bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-200 shadow-sm hover:shadow-md cursor-pointer group h-32">
+                <a href="podcast_detail.html?pid=${p.id}" class="podcast-card flex items-stretch bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-200 shadow-sm hover:shadow-md cursor-pointer group h-32">
                     <div class="w-32 h-full flex-shrink-0 relative bg-[#1a110f] border-r border-brand-100">
                         <img src="${thumbUrl}" class="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity">
                         <div class="absolute inset-0 flex items-center justify-center">
