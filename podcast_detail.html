@@ -178,7 +178,7 @@
         </div>
     </div>
 
-    <!-- 唯一の隠しオーディオ要素 -->
+    <!-- 隠しオーディオ要素 -->
     <audio id="core-player" preload="metadata"></audio>
 
     <!-- Smart Player (Bottom Sheet & Mini Player) -->
@@ -187,7 +187,7 @@
         <img id="player-bg" src="" class="absolute inset-0 w-full h-full object-cover opacity-20 blur-3xl scale-150 pointer-events-none show-expanded">
         <div class="absolute inset-0 bg-gradient-to-t from-[#1a110f] via-[#1a110f]/80 to-transparent pointer-events-none show-expanded"></div>
 
-        <button onclick="togglePlayerSize()" class="absolute top-4 left-4 sm:top-6 sm:left-6 text-white/70 hover:text-white p-3 show-expanded z-30 flex items-center gap-2 bg-black/20 rounded-full backdrop-blur-md transition-colors border border-white/10">
+        <button onclick="togglePlayerSize()" class="absolute top-4 left-4 sm:top-6 sm:left-6 text-white/70 hover:text-white p-3 show-expanded z-30 flex items-center gap-2 bg-black/20 rounded-full backdrop-blur-md transition-colors border border-white/10 shadow-lg">
             <i class="fa-solid fa-chevron-down text-lg"></i>
             <span class="text-xs font-bold tracking-widest pr-1">しまう</span>
         </button>
@@ -204,13 +204,16 @@
             </div>
             <div class="flex items-center gap-4 flex-shrink-0">
                 <button id="btn-like-mini" onclick="toggleLike(event)" class="text-brand-400 hover:text-red-500 text-lg transition-colors p-2"><i class="fa-regular fa-heart" id="icon-like-mini"></i></button>
-                <button id="btn-play-mini" onclick="togglePlay(event)" class="w-10 h-10 rounded-full bg-[#d4af37] text-[#1a110f] flex items-center justify-center hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-0.5"></i></button>
+                <div id="mini-controls-area">
+                    <button id="btn-play-mini" onclick="togglePlay(event)" class="w-10 h-10 rounded-full bg-[#d4af37] text-[#1a110f] flex items-center justify-center hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-0.5"></i></button>
+                </div>
             </div>
         </div>
 
         <div class="flex-1 flex flex-col items-center justify-center px-6 pb-safe-bottom lg:pb-12 pt-16 show-expanded relative z-20 overflow-y-auto">
             <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
                 
+                <!-- 通常再生時: フリップカードUI -->
                 <div id="flip-wrapper" class="w-full max-w-[300px] sm:max-w-[400px] h-[300px] sm:h-[400px] mb-8 lg:mb-0 relative cursor-pointer transition-all duration-500 ease-in-out [perspective:1000px] shrink-0" onclick="toggleFlip()" title="タップしてメモを見る">
                     <div id="flip-inner" class="w-full h-full relative transition-transform duration-700 ease-in-out" style="transform-style: preserve-3d; transform: rotateY(0deg);">
                         
@@ -240,6 +243,17 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- ★追加: 外部プレイヤー埋め込み時のコンテナ -->
+                <div id="embed-wrapper" class="w-full max-w-[400px] lg:max-w-[600px] hidden mb-8 lg:mb-0 shrink-0">
+                    <iframe id="embed-iframe" class="w-full min-h-[250px] sm:min-h-[352px] rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 bg-black/50" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+                    <div class="mt-6 text-center animate-pulse">
+                        <span class="text-white/40 text-[10px] tracking-widest font-bold flex flex-col items-center justify-center gap-1">
+                            <i class="fa-solid fa-arrow-up text-lg"></i> 
+                            <span>上のプレイヤーを直接操作して再生してください</span>
+                        </span>
+                    </div>
+                </div>
                 
                 <div class="w-full max-w-md flex flex-col">
                     <div class="flex justify-between items-end mb-8">
@@ -253,18 +267,20 @@
                         <button id="btn-like-full" onclick="toggleLike(event)" class="text-3xl text-gray-400 hover:text-red-500 transition-colors pb-1"><i class="fa-regular fa-heart" id="icon-like-full"></i></button>
                     </div>
                     
-                    <div class="w-full flex flex-col mb-8">
-                        <input type="range" id="seek-slider" value="0" min="0" max="100" class="w-full mb-3">
-                        <div class="flex justify-between text-xs text-gray-400 font-mono tracking-widest">
-                            <span id="time-current">0:00</span>
-                            <span id="time-duration">0:00</span>
+                    <div id="custom-controls-area">
+                        <div class="w-full flex flex-col mb-8">
+                            <input type="range" id="seek-slider" value="0" min="0" max="100" class="w-full mb-3">
+                            <div class="flex justify-between text-xs text-gray-400 font-mono tracking-widest">
+                                <span id="time-current">0:00</span>
+                                <span id="time-duration">0:00</span>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="flex items-center justify-center gap-10 mb-8">
-                        <button onclick="skip(-15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒戻る"><i class="fa-solid fa-rotate-left"></i></button>
-                        <button id="btn-play-full" onclick="togglePlay()" class="w-20 h-20 bg-[#d4af37] text-[#1a110f] rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-1"></i></button>
-                        <button onclick="skip(15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒進む"><i class="fa-solid fa-rotate-right"></i></button>
+                        
+                        <div class="flex items-center justify-center gap-10 mb-8">
+                            <button onclick="skip(-15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒戻る"><i class="fa-solid fa-rotate-left"></i></button>
+                            <button id="btn-play-full" onclick="togglePlay()" class="w-20 h-20 bg-[#d4af37] text-[#1a110f] rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-1"></i></button>
+                            <button onclick="skip(15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒進む"><i class="fa-solid fa-rotate-right"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -275,12 +291,11 @@
     <main class="w-full max-w-[1600px] mx-auto pt-24 px-4 sm:px-6 lg:px-8 pb-[300px] lg:pb-[200px]">
         
         <div class="bg-brand-50 p-3 rounded-sm border border-brand-200 text-center mb-8 shadow-sm max-w-4xl mx-auto">
-            <p class="text-[10px] sm:text-xs text-brand-600 font-bold tracking-widest"><i class="fa-solid fa-circle-info mr-1"></i> 音声を再生しながら、下の詳細やコメントを読むことができます。</p>
+            <p class="text-[10px] sm:text-xs text-brand-600 font-bold tracking-widest"><i class="fa-solid fa-circle-info mr-1"></i> 配信を聴きながら、下の詳細やコメントを読むことができます。</p>
         </div>
 
         <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 xl:gap-12">
             
-            <!-- Left Column: Actions, Description & Comments -->
             <div class="flex-1 min-w-0 space-y-8">
                 
                 <div class="flex flex-row justify-between items-center gap-2 pb-5 border-b border-brand-200 px-1 sm:px-0">
@@ -290,8 +305,7 @@
                             <p id="author-name" class="font-bold text-brand-900 text-[10px] sm:text-sm flex items-center gap-1 truncate transition-colors group-hover:text-[#b8860b]">
                                 名無し <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37]"></i>
                             </p>
-                            <!-- ★追加: ここに長さを表示するためのspanを追加 -->
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 mt-0.5">
                                 <p id="podcast-date-small" class="text-[8px] sm:text-[10px] text-brand-400 font-mono tracking-wider"></p>
                                 <p id="podcast-duration-small" class="text-[8px] sm:text-[10px] text-[#b8860b] font-mono tracking-wider bg-brand-50 px-1.5 rounded-sm border border-brand-200 hidden"></p>
                             </div>
@@ -320,7 +334,6 @@
                     <div id="podcast-desc" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed tracking-wide"></div>
                 </div>
 
-                <!-- Comments Section -->
                 <div id="comments-section" class="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm mb-12">
                     <h3 class="font-bold text-brand-900 mb-6 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
                         <i class="fa-regular fa-comments text-brand-400"></i> コメント (<span id="comment-count">0</span>)
@@ -347,7 +360,6 @@
                 </div>
             </div>
 
-            <!-- Right Column: Related Podcasts -->
             <div class="lg:col-span-1 xl:col-span-1">
                 <div id="related-section" class="hidden bg-[#fffdf9] border border-brand-200 rounded-sm p-5 shadow-sm lg:sticky lg:top-24">
                     <h3 class="font-bold text-brand-900 mb-5 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
@@ -395,19 +407,6 @@
         let likesUnsubscribe = null;
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
-
-        // --- SP Menu Toggle ---
-        window.toggleTheaterMenu = () => {
-            const menu = document.getElementById('sp-theater-menu');
-            const content = document.getElementById('sp-theater-menu-content');
-            if (menu.classList.contains('hidden')) {
-                menu.classList.remove('hidden');
-                setTimeout(() => content.classList.remove('translate-y-full'), 10);
-            } else {
-                content.classList.add('translate-y-full');
-                setTimeout(() => menu.classList.add('hidden'), 300);
-            }
-        };
 
         // --- Player Elements & State ---
         const audio = document.getElementById('core-player');
@@ -493,7 +492,6 @@
                     const dateSmallEl = document.getElementById('podcast-date-small');
                     if(dateSmallEl) dateSmallEl.textContent = dateFormatted;
 
-                    // ★追加: Duration
                     if (podcastData.duration) {
                         const durationEl = document.getElementById('podcast-duration-small');
                         if (durationEl) {
@@ -508,11 +506,30 @@
                     document.getElementById('player-bg').src = thumbUrl;
                     document.getElementById('mini-thumb').src = thumbUrl;
 
-                    if (podcastData.audioUrl) {
-                        audio.src = podcastData.audioUrl;
-                        audio.load();
+                    // ★追加・修正: 外部サービス埋め込み（isEmbed）の処理
+                    if (podcastData.isEmbed) {
+                        // Flip UIを隠してEmbed UIを表示
+                        document.getElementById('flip-wrapper').classList.add('hidden');
+                        document.getElementById('embed-wrapper').classList.remove('hidden');
+                        document.getElementById('embed-iframe').src = podcastData.audioUrl;
+                        
+                        // カスタムコントロールを隠す
+                        document.getElementById('custom-controls-area').classList.add('hidden');
+                        document.getElementById('mini-controls-area').classList.add('hidden');
+                        document.getElementById('mini-progress').classList.add('hidden');
+                        
+                        // タイトルに注記を追加
+                        document.getElementById('full-title').innerHTML += ' <span class="text-[10px] bg-brand-50 text-brand-600 px-2 py-1 rounded-sm border border-brand-200 font-sans tracking-widest align-middle ml-2">外部サービス再生</span>';
+                        document.getElementById('mini-title').innerHTML += ' <span class="text-[8px] bg-brand-50 text-brand-600 px-1 py-0.5 rounded-sm">外部</span>';
+                        
                     } else {
-                        document.getElementById('full-title').innerHTML = `<span class="text-red-500 text-lg">音声データがありません</span>`;
+                        // 従来の直接再生モード
+                        if (podcastData.audioUrl) {
+                            audio.src = podcastData.audioUrl;
+                            audio.load();
+                        } else {
+                            document.getElementById('full-title').innerHTML = `<span class="text-red-500 text-lg">音声データがありません</span>`;
+                        }
                     }
 
                     document.getElementById('podcast-desc').innerHTML = formatText(podcastData.description);
@@ -718,7 +735,6 @@
                     let plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
                     const tagsHtml = (p.tags || []).slice(0,2).map(t => `<span class="text-[8px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('');
 
-                    // ★追加: 関連リスト内のDuration
                     const durationStr = p.duration ? formatTime(p.duration) : '';
                     const durationHtml = durationStr ? `<span class="text-[8px] sm:text-[9px] text-[#b8860b] font-mono tracking-wider ml-1 bg-brand-50 px-1 rounded-sm border border-brand-100"><i class="fa-regular fa-clock mr-0.5"></i>${durationStr}</span>` : '';
 
