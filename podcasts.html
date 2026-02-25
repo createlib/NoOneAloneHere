@@ -26,10 +26,6 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .podcast-card { transition: all 0.3s ease; }
-        .podcast-card:hover { transform: translateY(-4px); }
-        .podcast-card:hover .play-icon { transform: scale(1.1); background-color: #b8860b; color: #fffdf9; border-color: #b8860b; }
-        
         .glass-bar {
             background: rgba(247, 245, 240, 0.85);
             backdrop-filter: blur(12px);
@@ -199,7 +195,6 @@
                     <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
                         <i class="fa-solid fa-user-group text-brand-400 mr-3"></i>フォロー中の新着
                     </h2>
-                    <!-- ★変更: グリッドのカラム数を減らし、横長カード向けに余白を調整 -->
                     <div id="following-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"></div>
                 </div>
 
@@ -208,7 +203,6 @@
                     <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
                         <i class="fa-solid fa-sparkles text-[#b8860b] mr-3"></i>おすすめ
                     </h2>
-                    <!-- ★変更: 同上 -->
                     <div id="recommended-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                         <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>音声を読み込み中...</div>
                     </div>
@@ -220,7 +214,6 @@
                 <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
                     <i class="fa-solid fa-magnifying-glass text-brand-400 mr-3"></i>検索結果
                 </h2>
-                <!-- ★変更: 同上 -->
                 <div id="search-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6"></div>
             </div>
 
@@ -338,7 +331,12 @@
                     allPodcasts.push({ id: doc.id, ...doc.data() });
                 });
                 
-                allPodcasts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                // 日付の降順でソート
+                allPodcasts.sort((a, b) => {
+                    const dateA = new Date(a.createdAt || a.updatedAt || 0);
+                    const dateB = new Date(b.createdAt || b.updatedAt || 0);
+                    return dateB - dateA;
+                });
                 
                 const urlParams = new URLSearchParams(window.location.search);
                 const tagParam = urlParams.get('tag');
@@ -380,33 +378,49 @@
             return array;
         }
 
-        // ★変更: ポッドキャストのカードを「コンパクトな横長」の音声ファイル風UIに変更
+        // ★ 音声アプリ風のスマートなリストカードUI
         function createPodcastCardHtml(p) {
-            const date = new Date(p.createdAt);
+            const date = new Date(p.createdAt || p.updatedAt || Date.now());
             const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
             const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
             
+            // Markdown記号を除去してプレーンテキストにする
+            let plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
+            
+            const tagsHtml = (p.tags || []).slice(0,2).map(t => `<span class="text-[9px] text-[#b8860b] bg-brand-50 border border-[#b8860b]/30 px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('');
+
             return `
-            <a href="podcast_detail.html?pid=${p.id}" class="podcast-card flex items-center bg-[#fffdf9] rounded-sm border border-brand-200 shadow-sm hover:shadow-md cursor-pointer group p-3 gap-4 transition-all hover:border-[#b8860b]">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 relative bg-[#1a110f] rounded-sm overflow-hidden border border-brand-100 shadow-inner">
-                    <img src="${thumbUrl}" class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
-                    <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-transparent transition-colors">
-                        <div class="play-icon w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-all duration-300 shadow-sm">
-                            <i class="fa-solid fa-play text-white text-xs ml-0.5"></i>
+            <a href="podcast_detail.html?pid=${p.id}" class="block bg-[#fffdf9] p-3 sm:p-4 rounded-md border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group">
+                <div class="flex gap-3 sm:gap-4 items-start">
+                    
+                    <!-- アートワーク (小さめ正方形) -->
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 relative bg-[#1a110f] rounded-md overflow-hidden border border-brand-100 shadow-inner mt-1">
+                        <img src="${thumbUrl}" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
+                            <i class="fa-solid fa-circle-play text-white/90 text-2xl sm:text-3xl shadow-sm group-hover:scale-110 transition-transform"></i>
                         </div>
                     </div>
-                </div>
-                <div class="flex-1 min-w-0 flex flex-col justify-center h-full py-1">
-                    <div class="flex flex-wrap gap-1 mb-1.5 h-4 overflow-hidden">
-                        ${(p.tags || []).slice(0,2).map(t => `<span class="text-[9px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('')}
-                    </div>
-                    <h3 class="text-sm sm:text-base font-bold text-brand-900 leading-snug line-clamp-2 font-serif tracking-wide group-hover:text-[#b8860b] transition-colors mb-2">${p.title}</h3>
-                    <div class="flex items-center justify-between mt-auto">
-                        <div class="flex items-center gap-2 min-w-0 pr-2">
-                            <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-5 h-5 rounded-full border border-brand-200 object-cover flex-shrink-0" onerror="this.src='https://via.placeholder.com/24?text=U'">
-                            <span class="text-[10px] text-brand-600 truncate font-bold">${p.authorName || '名無し'}</span>
+                    
+                    <!-- コンテンツ -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center h-full">
+                        
+                        <!-- メタ情報 (日付 & タグ) -->
+                        <div class="flex items-center gap-2 mb-1.5 overflow-hidden">
+                            <span class="text-[9px] text-brand-400 font-mono tracking-widest shrink-0">${dateStr}</span>
+                            <div class="flex gap-1 overflow-hidden">${tagsHtml}</div>
                         </div>
-                        <span class="text-[9px] text-brand-400 font-mono flex-shrink-0">${dateStr}</span>
+                        
+                        <!-- タイトル -->
+                        <h3 class="text-sm sm:text-base font-bold text-brand-900 leading-snug line-clamp-1 font-serif tracking-wide group-hover:text-[#b8860b] transition-colors mb-1">${p.title || 'タイトルなし'}</h3>
+                        
+                        <!-- 説明文抜粋 -->
+                        <p class="text-[11px] sm:text-xs text-brand-500 line-clamp-1 leading-relaxed mb-2">${plainDesc}</p>
+                        
+                        <!-- 投稿者 -->
+                        <div class="flex items-center gap-1.5 mt-auto">
+                            <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-4 h-4 rounded-full border border-brand-200 object-cover flex-shrink-0" onerror="this.src='https://via.placeholder.com/24?text=U'">
+                            <span class="text-[10px] text-brand-700 truncate font-bold tracking-widest">${p.authorName || '名無し'}</span>
+                        </div>
                     </div>
                 </div>
             </a>
