@@ -9,10 +9,10 @@
     <!-- Google Fonts: Noto Serif JP -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS with Typography Plugin (マークダウン装飾用) -->
+    <!-- Tailwind CSS with Typography Plugin -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     
-    <!-- ★修正: Marked.js (Markdown変換) UMD版を確実に読み込む -->
+    <!-- Marked.js (Markdown変換) & DOMPurify (セキュリティ保護) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
@@ -130,6 +130,11 @@
         .prose ol { list-style-type: decimal; padding-left: 1.25em; margin-top: 0.5em; margin-bottom: 0.5em; }
         .prose li { margin-top: 0.25em; margin-bottom: 0.25em; }
         .prose blockquote { border-left: 3px solid #c8b9a6; padding-left: 1em; color: #725b3f; font-style: italic; margin-top: 1em; margin-bottom: 1em; }
+        
+        /* スクロールバー装飾 */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f7f5f0; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #c8b9a6; border-radius: 10px; }
     </style>
 </head>
 <body class="antialiased body-pb-nav lg:pb-0 bg-texture">
@@ -228,7 +233,13 @@
                             </div>
 
                             <div class="mb-4 relative z-20">
-                                <h1 class="text-2xl font-bold text-brand-900 leading-tight font-serif"><span id="profile-name" class="shimmer block w-32 h-8 rounded-sm mb-1"></span></h1>
+                                <!-- ★変更: 名前の横にプライベートメモを開くアイコンを配置 -->
+                                <h1 class="text-2xl font-bold text-brand-900 leading-tight font-serif flex items-center flex-wrap gap-2">
+                                    <span id="profile-name" class="shimmer block w-32 h-8 rounded-sm mb-1"></span>
+                                    <button id="btn-open-memo" onclick="openMemoModal()" class="hidden text-brand-400 hover:text-brand-600 transition-colors text-lg ml-1" title="プライベートメモを開く">
+                                        <i class="fa-solid fa-lock text-sm"></i><i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                </h1>
                                 <div class="flex flex-wrap items-center gap-2 mt-1">
                                     <p class="text-sm text-brand-500 font-medium tracking-wide" id="profile-id">@...</p>
                                     <span id="rank-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest"></span>
@@ -383,6 +394,41 @@
         </div>
     </div>
 
+    <!-- ★ 追加: プライベートメモ用のモーダルウィンドウ -->
+    <div id="memo-modal" class="hidden fixed inset-0 z-[4000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#fffdf9] bg-texture w-full max-w-lg rounded-sm shadow-2xl flex flex-col border border-brand-300 max-h-[90vh]">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9]">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center"><i class="fa-solid fa-lock text-brand-500 mr-2"></i>プライベートメモ</h3>
+                <button onclick="closeMemoModal()" type="button" class="text-brand-400 hover:text-brand-700 transition-colors w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 border border-brand-100"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 bg-[#fffdf9] custom-scrollbar">
+                <!-- 相手には見えない旨のアナウンス -->
+                <div class="bg-brand-50 border border-brand-200 p-3 rounded-sm mb-6 flex items-start gap-2">
+                    <i class="fa-solid fa-eye-slash text-brand-400 mt-0.5"></i>
+                    <p class="text-xs text-brand-600 tracking-widest leading-relaxed">出会ったきっかけや会話の内容などを記録しておけます。このメモはあなたにしか見えません。</p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">新しいログを追加</label>
+                    <textarea id="new-memo-content" rows="3" class="w-full border-brand-300 rounded-sm text-sm p-3 bg-white leading-relaxed focus:ring-brand-500 shadow-sm placeholder-brand-300" placeholder="例：2/25の名古屋のイベントで挨拶。Webデザインに興味があるとのこと。"></textarea>
+                    <div class="flex justify-end mt-2">
+                        <button onclick="addNewMemoLog()" id="btn-add-memo" class="bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] px-4 py-2 rounded-sm text-xs font-bold shadow-md transition-colors tracking-widest border border-[#b8860b] flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> 追加する
+                        </button>
+                    </div>
+                </div>
+
+                <div class="border-t border-brand-200 pt-6">
+                    <h4 class="text-xs font-bold text-brand-800 mb-4 tracking-widest flex items-center"><i class="fa-solid fa-clock-rotate-left mr-2 text-brand-400"></i>過去のログ</h4>
+                    <div id="memo-log-container" class="space-y-4">
+                        <!-- ここにログがJSで挿入されます -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
@@ -410,6 +456,8 @@
         let isFollowing = false;
         let isMutual = false;
         let myRank = 'arrival';
+        
+        let privateMemos = []; // ★追加: メモを配列で保持する
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const urlParams = new URLSearchParams(window.location.search);
@@ -419,19 +467,17 @@
         function formatText(text) {
             if (!text) return '';
             
-            // 独自拡張: __下線__ を <u>下線</u> に変換
-            let processedText = text.replace(/__(.*?)__/g, '<u>$1</u>');
+            // ★追加: テキストが文字列以外（数値など）だった場合に文字列に変換してエラーを防ぐ
+            const textStr = String(text);
+            let processedText = textStr.replace(/__(.*?)__/g, '<u>$1</u>');
 
             let rawHtml = '';
             try {
-                // CDNから読み込んだ marked.umd.js は window.marked に展開される
                 if (window.marked && typeof window.marked.parse === 'function') {
                     rawHtml = window.marked.parse(processedText, { breaks: true, gfm: true });
                 } else if (typeof window.marked === 'function') {
-                    // 古いバージョンの場合
                     rawHtml = window.marked(processedText, { breaks: true, gfm: true });
                 } else {
-                    // markedが読み込めていない場合のフォールバック（改行だけ反映）
                     rawHtml = processedText.replace(/\n/g, '<br>');
                 }
             } catch (e) {
@@ -439,7 +485,6 @@
                 rawHtml = processedText.replace(/\n/g, '<br>'); 
             }
             
-            // DOMPurifyで安全なHTMLのみを許可してサニタイズ
             return window.DOMPurify.sanitize(rawHtml, { 
                 ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote', 'code', 'pre'],
                 ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
@@ -447,8 +492,6 @@
         }
 
         function setElText(id, text) { const el = document.getElementById(id); if(el) el.textContent = text || '-'; }
-        
-        // ★ HTMLとして挿入するための関数
         function setElHtml(id, html) { const el = document.getElementById(id); if(el) el.innerHTML = html || ''; }
 
         onAuthStateChanged(auth, async (user) => {
@@ -493,12 +536,192 @@
                     isSelf = false;
                     await checkFollowStatus(user.uid, targetUid); 
                     await loadPublicProfile(targetUid);
+                    
+                    // ★追加: 他人のプロフィールの場合はプライベートメモを読み込み、アイコンを表示
+                    await loadPrivateMemo(user.uid, targetUid);
+                    document.getElementById('btn-open-memo').classList.remove('hidden');
                 }
                 updateFollowCounts(targetUid);
             } else {
                 window.location.href = 'login.html';
             }
         });
+
+        // ★★★ プライベートメモ関連の処理 ★★★
+        async function loadPrivateMemo(myUid, targetUid) {
+            if (isAdminMock) return;
+            try {
+                const memoRef = doc(db, 'artifacts', appId, 'users', myUid, 'private_memos', targetUid);
+                const memoSnap = await getDoc(memoRef);
+                if (memoSnap.exists()) {
+                    const data = memoSnap.data();
+                    if (data.logs && Array.isArray(data.logs)) {
+                        privateMemos = data.logs;
+                    } else if (data.content) {
+                        // 古いバージョンのデータを配列に移行
+                        privateMemos = [{
+                            id: Date.now().toString(),
+                            content: data.content,
+                            updatedAt: data.updatedAt || new Date().toISOString()
+                        }];
+                    } else {
+                        privateMemos = [];
+                    }
+                } else {
+                    privateMemos = [];
+                }
+            } catch (e) {
+                console.error("Memo load error:", e);
+            }
+        }
+
+        window.openMemoModal = () => {
+            document.getElementById('memo-modal').classList.remove('hidden');
+            renderMemoLogs();
+        };
+
+        window.closeMemoModal = () => {
+            document.getElementById('memo-modal').classList.add('hidden');
+        };
+
+        function renderMemoLogs() {
+            const container = document.getElementById('memo-log-container');
+            if (privateMemos.length === 0) {
+                container.innerHTML = '<p class="text-xs text-brand-400 text-center py-6 italic border border-dashed border-brand-200 bg-[#f7f5f0]">まだメモはありません。</p>';
+                return;
+            }
+            
+            // 新しい順（降順）で表示
+            const sorted = [...privateMemos].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            
+            container.innerHTML = sorted.map(memo => {
+                const dateObj = new Date(memo.updatedAt);
+                const dateStr = `${dateObj.getFullYear()}/${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+                
+                return `
+                <div class="bg-brand-50 border border-brand-200 p-4 rounded-sm relative group shadow-sm transition-all">
+                    <div class="flex justify-between items-start mb-2 border-b border-brand-200 pb-2">
+                        <span class="text-[10px] text-brand-500 font-bold tracking-widest"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</span>
+                        <div class="flex gap-2">
+                            <button onclick="editMemoLog('${memo.id}')" class="text-brand-400 hover:text-brand-700 transition-colors px-1"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                            <button onclick="deleteMemoLog('${memo.id}')" class="text-brand-400 hover:text-red-600 transition-colors px-1"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                        </div>
+                    </div>
+                    <div id="memo-display-${memo.id}" class="text-xs text-brand-800 whitespace-pre-wrap leading-relaxed">${formatText(memo.content)}</div>
+                    
+                    <div id="memo-edit-${memo.id}" class="hidden">
+                        <textarea id="memo-input-${memo.id}" rows="3" class="w-full border-brand-300 rounded-sm text-xs p-2 bg-white leading-relaxed focus:ring-brand-500 shadow-sm mb-2"></textarea>
+                        <div class="flex justify-end gap-2">
+                            <button onclick="cancelEditMemo('${memo.id}')" class="text-[10px] text-brand-500 hover:text-brand-800 px-2 py-1 tracking-widest font-bold">キャンセル</button>
+                            <button onclick="saveEditMemo('${memo.id}')" class="bg-brand-600 hover:bg-brand-800 text-white px-4 py-1.5 rounded-sm text-[10px] font-bold shadow-sm transition-colors tracking-widest">保存</button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            // 値のセットは生成後に実施(改行崩れを防ぐため)
+            sorted.forEach(memo => {
+                const inputEl = document.getElementById(`memo-input-${memo.id}`);
+                if(inputEl) inputEl.value = memo.content;
+            });
+        }
+
+        window.addNewMemoLog = async () => {
+            const input = document.getElementById('new-memo-content');
+            const content = input.value.trim();
+            if (!content) return;
+            
+            const btn = document.getElementById('btn-add-memo');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 追加中...';
+            btn.disabled = true;
+
+            const newLog = {
+                id: Date.now().toString(),
+                content: content,
+                updatedAt: new Date().toISOString()
+            };
+            
+            privateMemos.push(newLog);
+
+            try {
+                if (!isAdminMock && currentUser && targetUid) {
+                    const memoRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'private_memos', targetUid);
+                    await setDoc(memoRef, { logs: privateMemos }, { merge: true });
+                }
+                input.value = '';
+                renderMemoLogs();
+            } catch (e) {
+                console.error(e);
+                alert('メモの保存に失敗しました');
+                privateMemos.pop(); 
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i> 追加する';
+                btn.disabled = false;
+            }
+        };
+
+        window.deleteMemoLog = async (id) => {
+            if (!confirm('このメモを削除してもよろしいですか？')) return;
+            
+            const originalMemos = [...privateMemos];
+            privateMemos = privateMemos.filter(m => m.id !== id);
+            
+            renderMemoLogs();
+
+            try {
+                if (!isAdminMock && currentUser && targetUid) {
+                    const memoRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'private_memos', targetUid);
+                    await setDoc(memoRef, { logs: privateMemos }, { merge: true });
+                }
+            } catch (e) {
+                console.error(e);
+                alert('削除に失敗しました');
+                privateMemos = originalMemos;
+                renderMemoLogs();
+            }
+        };
+
+        window.editMemoLog = (id) => {
+            document.getElementById(`memo-display-${id}`).classList.add('hidden');
+            document.getElementById(`memo-edit-${id}`).classList.remove('hidden');
+        };
+
+        window.cancelEditMemo = (id) => {
+            document.getElementById(`memo-display-${id}`).classList.remove('hidden');
+            document.getElementById(`memo-edit-${id}`).classList.add('hidden');
+            // reset input
+            const originalContent = privateMemos.find(m => m.id === id)?.content || '';
+            document.getElementById(`memo-input-${id}`).value = originalContent;
+        };
+
+        window.saveEditMemo = async (id) => {
+            const input = document.getElementById(`memo-input-${id}`);
+            const newContent = input.value.trim();
+            if (!newContent) return alert('内容は空にできません');
+
+            const originalMemos = JSON.parse(JSON.stringify(privateMemos));
+            const targetMemo = privateMemos.find(m => m.id === id);
+            
+            if (targetMemo) {
+                targetMemo.content = newContent;
+                targetMemo.updatedAt = new Date().toISOString();
+            }
+
+            try {
+                if (!isAdminMock && currentUser && targetUid) {
+                    const memoRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'private_memos', targetUid);
+                    await setDoc(memoRef, { logs: privateMemos }, { merge: true });
+                }
+                renderMemoLogs();
+            } catch (e) {
+                console.error(e);
+                alert('編集の保存に失敗しました');
+                privateMemos = originalMemos; 
+                renderMemoLogs();
+            }
+        };
+        // ★★★ ここまで ★★★
 
         async function checkUnreadNotifications(uid) {
             try {
@@ -550,42 +773,12 @@
             if(isMutual) document.getElementById('mutual-badge').classList.remove('hidden');
             setElText('count-following', '120');
             setElText('count-followers', '45');
+            
+            // ★追加: テスト用にメモボタンも表示
+            document.getElementById('btn-open-memo').classList.remove('hidden');
         }
 
         async function loadPublicProfile(uid) {
-            try {
-                let dataToUse = null;
-                const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
-                const publicSnap = await getDoc(publicRef);
-
-                if (publicSnap.exists()) {
-                    dataToUse = publicSnap.data();
-                }
-                
-                if (isAdmin || (isMutual && myRank !== 'arrival')) {
-                    try {
-                        const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
-                        const privateSnap = await getDoc(privateRef);
-                        if (privateSnap.exists()) {
-                            dataToUse = { ...(dataToUse || {}), ...privateSnap.data() };
-                        }
-                    } catch (e) { console.log("Private load failed", e); }
-                }
-
-                if (dataToUse) {
-                    updateDashboardUI(dataToUse);
-                } else {
-                    document.getElementById('error-container').classList.remove('hidden');
-                }
-            } catch (e) {
-                console.error("Load error:", e);
-            }
-        }
-
-        async function updateFollowCounts(uid) {
-            try {
-                const followingColl = collection(db, 'artifacts', appId, 'users', uid, 'following');
-                const followersColl = collection(db, 'artifacts', appId, 'users', uid, 'followers');
                 const followingSnap = await getCountFromServer(followingColl);
                 const followersSnap = await getCountFromServer(followersColl);
                 setElText('count-following', followingSnap.data().count);
@@ -699,7 +892,6 @@
             setElText('profile-id', '@' + (data.userId || '-'));
             setElText('profile-job', data.jobTitle || '職業未設定');
             
-            // 出身地と活動拠点の表示統合
             let locStr = '-';
             if(data.prefecture && data.birthplace) {
                 locStr = `${data.prefecture} (出身: ${data.birthplace})`;
@@ -710,7 +902,6 @@
             }
             setElText('profile-location', locStr);
             
-            // ★ Bio をリッチテキスト(Markdown)としてパースしてHTMLで挿入
             setElHtml('profile-bio', formatText(data.bio || ''));
             
             const iconImg = document.getElementById('header-icon-img');
@@ -792,8 +983,10 @@
                 const skillsContainer = document.getElementById('skills-container');
                 if (skillsContainer) {
                     skillsContainer.innerHTML = '';
-                    if (data.skills && data.skills.length > 0) {
-                        data.skills.forEach(tag => {
+                    // ★追加: 配列かどうかを確実にチェックする
+                    const skillsArray = Array.isArray(data.skills) ? data.skills : (data.skills ? [data.skills] : []);
+                    if (skillsArray.length > 0) {
+                        skillsArray.forEach(tag => {
                             skillsContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
                         });
                     } else {
@@ -804,8 +997,10 @@
                 const hobbiesContainer = document.getElementById('hobbies-container');
                 if (hobbiesContainer) {
                     hobbiesContainer.innerHTML = '';
-                    if (data.hobbies && data.hobbies.length > 0) {
-                        data.hobbies.forEach(tag => {
+                    // ★追加: 配列かどうかを確実にチェックする
+                    const hobbiesArray = Array.isArray(data.hobbies) ? data.hobbies : (data.hobbies ? [data.hobbies] : []);
+                    if (hobbiesArray.length > 0) {
+                        hobbiesArray.forEach(tag => {
                             hobbiesContainer.innerHTML += `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`;
                         });
                     } else {
@@ -816,18 +1011,21 @@
                 // Matching
                 const canOfferList = document.getElementById('list-can-offer');
                 if (canOfferList) {
-                    canOfferList.innerHTML = data.canOffer && data.canOffer.length > 0 
-                        ? data.canOffer.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-check text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
+                    // ★追加: 過去の文字データ等に対応するための配列化
+                    const canOfferArray = Array.isArray(data.canOffer) ? data.canOffer : (data.canOffer ? [data.canOffer] : []);
+                    canOfferList.innerHTML = canOfferArray.length > 0 
+                        ? canOfferArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-check text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
                         : '<li class="text-brand-300 italic text-sm">未設定</li>';
                 }
                 const lookingForList = document.getElementById('list-looking-for');
                 if (lookingForList) {
-                    lookingForList.innerHTML = data.lookingFor && data.lookingFor.length > 0 
-                        ? data.lookingFor.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-magnifying-glass text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
+                    // ★追加: 過去の文字データ等に対応するための配列化
+                    const lookingForArray = Array.isArray(data.lookingFor) ? data.lookingFor : (data.lookingFor ? [data.lookingFor] : []);
+                    lookingForList.innerHTML = lookingForArray.length > 0 
+                        ? lookingForArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-magnifying-glass text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
                         : '<li class="text-brand-300 italic text-sm">未設定</li>';
                 }
 
-                // ★ Goals (Markdown対応)
                 const goalsEl = document.getElementById('profile-goals');
                 if (goalsEl) {
                     if (data.goals) {
@@ -856,9 +1054,10 @@
                 const careerContainer = document.getElementById('career-container');
                 if (careerContainer) {
                     careerContainer.innerHTML = '';
-                    if (data.career && data.career.length > 0) {
-                        data.career.forEach(c => {
-                            // ★ Career Description (Markdown対応)
+                    // ★追加: 経歴が配列かどうかをチェック
+                    const careerArray = Array.isArray(data.career) ? data.career : [];
+                    if (careerArray.length > 0) {
+                        careerArray.forEach(c => {
                             const formattedDesc = formatText(c.description || '');
                             careerContainer.innerHTML += `
                                 <div class="relative pl-6 pb-2">
@@ -885,7 +1084,6 @@
                     if (data.snsX) snsContainer.innerHTML += `<a href="${data.snsX.startsWith('http') ? data.snsX : 'https://twitter.com/'+data.snsX}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors shadow-sm"><i class="fa-brands fa-x-twitter"></i></a>`;
                 }
 
-                // ★ Message (Markdown対応)
                 const messageEl = document.getElementById('profile-message');
                 if (messageEl) {
                     if (data.message) {
