@@ -234,7 +234,6 @@
                             </div>
 
                             <div class="mb-4 relative z-20">
-                                <!-- ★変更: 鍵メモボタンのデザインをかっこよく変更 -->
                                 <h1 class="text-2xl font-bold text-brand-900 leading-tight font-serif flex items-center flex-wrap gap-3">
                                     <span id="profile-name" class="shimmer block w-32 h-8 rounded-sm mb-1"></span>
                                     <button id="btn-open-memo" onclick="openMemoModal()" class="hidden items-center gap-1.5 px-3 py-1 bg-[#fffdf9] border border-brand-300 rounded-sm text-xs font-bold text-brand-700 hover:bg-brand-50 hover:text-brand-900 hover:border-brand-500 transition-all shadow-sm tracking-widest font-sans" title="自分だけが見られるメモ">
@@ -249,7 +248,7 @@
                                 </div>
                             </div>
                             
-                            <!-- ★変更: フォロー・フォロワー・共通の航海士エリア -->
+                            <!-- フォロー・フォロワー・共通の航海士エリア -->
                             <div class="grid grid-cols-2 gap-2 py-4 border-t border-brand-100 relative z-20" id="follow-stats-container">
                                 <div class="text-center cursor-pointer hover:opacity-75 transition-opacity" onclick="openFollowModal('following')">
                                     <span class="block font-bold text-brand-900 text-lg font-serif" id="count-following">-</span>
@@ -411,7 +410,7 @@
         </div>
     </div>
 
-    <!-- ★ 追加: フォロー/フォロワー一覧モーダル -->
+    <!-- フォロー/フォロワー一覧モーダル -->
     <div id="follow-modal" class="hidden fixed inset-0 z-[4000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-[#fffdf9] bg-texture w-full max-w-md h-[80vh] rounded-sm shadow-2xl flex flex-col border border-brand-300">
             <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9]">
@@ -490,8 +489,8 @@
         let isMutual = false;
         let myRank = 'arrival';
         
-        let privateMemos = []; // ★追加: メモを配列で保持する
-        let commonMutualIds = []; // ★追加: 共通の相互フォローIDリスト
+        let privateMemos = []; 
+        let commonMutualIds = []; 
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const urlParams = new URLSearchParams(window.location.search);
@@ -501,7 +500,6 @@
         function formatText(text) {
             if (!text) return '';
             
-            // ★追加: テキストが文字列以外（数値など）だった場合に文字列に変換してエラーを防ぐ
             const textStr = String(text);
             let processedText = textStr.replace(/__(.*?)__/g, '<u>$1</u>');
 
@@ -571,7 +569,6 @@
                     await checkFollowStatus(user.uid, targetUid); 
                     await loadPublicProfile(targetUid);
                     
-                    // ★追加: 他人のプロフィールの場合はプライベートメモを読み込み、アイコンを表示
                     await loadPrivateMemo(user.uid, targetUid);
                     const memoBtn = document.getElementById('btn-open-memo');
                     if (memoBtn) {
@@ -588,7 +585,6 @@
         // ★★★ 共通の航海士計算ロジック ★★★
         async function calculateCommonMutuals(myUid, targetUid) {
             if (isAdminMock) {
-                // モック用ダミーデータ
                 commonMutualIds = ['user1', 'user2'];
                 document.getElementById('count-common-mutual').textContent = commonMutualIds.length;
                 return;
@@ -629,6 +625,32 @@
 
         // ★★★ プライベートメモ関連の処理 ★★★
         async function loadPrivateMemo(myUid, targetUid) {
+            if (isAdminMock) return;
+            try {
+                const memoRef = doc(db, 'artifacts', appId, 'users', myUid, 'private_memos', targetUid);
+                const memoSnap = await getDoc(memoRef);
+                if (memoSnap.exists()) {
+                    const data = memoSnap.data();
+                    if (data.logs && Array.isArray(data.logs)) {
+                        privateMemos = data.logs;
+                    } else if (data.content) {
+                        privateMemos = [{
+                            id: Date.now().toString(),
+                            content: data.content,
+                            updatedAt: data.updatedAt || new Date().toISOString()
+                        }];
+                    } else {
+                        privateMemos = [];
+                    }
+                } else {
+                    privateMemos = [];
+                }
+            } catch (e) {
+                console.error("Memo load error:", e);
+            }
+        }
+
+        async function checkUnreadNotifications(uid) {
             try {
                 const notifRef = collection(db, 'artifacts', appId, 'users', uid, 'notifications');
                 const q = query(notifRef, where('isRead', '==', false));
@@ -642,7 +664,7 @@
             if(headerActions) {
                 headerActions.innerHTML = `
                 <div class="flex flex-col items-end gap-1 w-full lg:w-auto">
-                    <a href="profile.html" class="inline-flex items-center justify-center px-6 py-2 border border-brand-500 shadow-sm text-sm font-bold rounded-sm text-brand-900 bg-[#fffdf9] hover:bg-brand-50 transition-all active:scale-95 tracking-widest font-serif">
+                    <a href="profile_edit.html" class="inline-flex items-center justify-center px-6 py-2 border border-brand-500 shadow-sm text-sm font-bold rounded-sm text-brand-900 bg-[#fffdf9] hover:bg-brand-50 transition-all active:scale-95 tracking-widest font-serif">
                         航海録を編集
                     </a>
                     <a href="upgrade.html" class="text-[10px] font-bold text-brand-400 hover:text-brand-600 transition-colors mr-1 underline decoration-dotted tracking-widest mt-1">
@@ -679,14 +701,12 @@
             setElText('count-following', '120');
             setElText('count-followers', '45');
             
-            // ★追加: テスト用にメモボタンも表示
             const memoBtn = document.getElementById('btn-open-memo');
             if (memoBtn) {
                 memoBtn.classList.remove('hidden');
                 memoBtn.classList.add('inline-flex');
             }
 
-            // ★追加: モック用に共通の航海士を表示
             document.getElementById('follow-stats-container').classList.remove('grid-cols-2');
             document.getElementById('follow-stats-container').classList.add('grid-cols-3');
             document.getElementById('area-common-mutual').classList.remove('hidden');
@@ -703,7 +723,6 @@
                     dataToUse = publicSnap.data();
                 }
 
-                // ★追加: ランクがSETTLER以上なら共通の航海士エリアを表示して計算開始
                 if (dataToUse && dataToUse.membershipRank && dataToUse.membershipRank !== 'arrival' && !isSelf) {
                     const container = document.getElementById('follow-stats-container');
                     const area = document.getElementById('area-common-mutual');
@@ -711,7 +730,6 @@
                         container.classList.remove('grid-cols-2');
                         container.classList.add('grid-cols-3');
                         area.classList.remove('hidden');
-                        // 非同期で計算開始
                         calculateCommonMutuals(currentUser.uid, uid);
                     }
                 }
@@ -735,6 +753,95 @@
                 console.error("Load error:", e);
             }
         }
+
+        async function updateFollowCounts(uid) {
+            try {
+                const followingColl = collection(db, 'artifacts', appId, 'users', uid, 'following');
+                const followersColl = collection(db, 'artifacts', appId, 'users', uid, 'followers');
+                const followingSnap = await getCountFromServer(followingColl);
+                const followersSnap = await getCountFromServer(followersColl);
+                setElText('count-following', followingSnap.data().count);
+                setElText('count-followers', followersSnap.data().count);
+            } catch (e) {
+                setElText('count-following', '-');
+                setElText('count-followers', '-');
+            }
+        }
+
+        async function checkFollowStatus(myUid, targetUid) {
+            try {
+                const followingRef = doc(db, 'artifacts', appId, 'users', myUid, 'following', targetUid);
+                const isFollowingSnap = await getDoc(followingRef);
+                isFollowing = isFollowingSnap.exists();
+
+                const followerRef = doc(db, 'artifacts', appId, 'users', myUid, 'followers', targetUid);
+                const isFollowedBackSnap = await getDoc(followerRef);
+                const isFollowedBack = isFollowedBackSnap.exists();
+
+                isMutual = isFollowing && isFollowedBack;
+                renderFollowButton();
+                
+                const badge = document.getElementById('mutual-badge');
+                if (badge) {
+                    if (isMutual && !isSelf) badge.classList.remove('hidden');
+                    else badge.classList.add('hidden');
+                }
+            } catch (e) { console.error("Check follow err:", e); }
+        }
+
+        function renderFollowButton() {
+            const container = document.getElementById('header-actions');
+            if(!container) return;
+            let btnHtml = '';
+            if (isFollowing) {
+                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-brand-500 shadow-sm text-sm font-bold rounded-sm text-brand-900 bg-[#fffdf9] hover:bg-brand-50 transition-all mr-2 tracking-widest font-serif">フォロー中</button>`;
+            } else {
+                btnHtml += `<button onclick="toggleFollow()" class="inline-flex items-center px-4 py-2 border border-transparent shadow-md text-sm font-bold rounded-sm text-[#f7f5f0] bg-[#3e2723] hover:bg-[#2a1a17] transition-all mr-2 tracking-widest font-serif">フォロー</button>`;
+            }
+            if (isAdmin && !isSelf) {
+                btnHtml += `<a href="profile_edit.html?uid=${targetUid}" class="inline-flex items-center px-3 py-2 border border-brand-300 text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-sm text-sm font-bold transition-all"><i class="fa-solid fa-pen-to-square mr-1"></i>編集</a>`;
+                document.getElementById('admin-badge').classList.remove('hidden');
+                document.getElementById('debug-rank-switcher').classList.remove('hidden');
+            }
+            container.innerHTML = btnHtml;
+        }
+
+        window.toggleFollow = async () => {
+            if (!currentUser || isAdminMock) {
+                if(isAdminMock) { isFollowing = !isFollowing; renderFollowButton(); alert('Mock Action'); }
+                return;
+            }
+            const myUid = currentUser.uid;
+            const myFollowingRef = doc(db, 'artifacts', appId, 'users', myUid, 'following', targetUid);
+            const targetFollowerRef = doc(db, 'artifacts', appId, 'users', targetUid, 'followers', myUid);
+            const notificationColl = collection(db, 'artifacts', appId, 'users', targetUid, 'notifications');
+
+            try {
+                if (isFollowing) {
+                    await deleteDoc(myFollowingRef);
+                    await deleteDoc(targetFollowerRef);
+                    isFollowing = false;
+                } else {
+                    const timestamp = serverTimestamp();
+                    await setDoc(myFollowingRef, { createdAt: timestamp });
+                    await setDoc(targetFollowerRef, { createdAt: timestamp });
+                    try {
+                        await addDoc(notificationColl, {
+                            type: 'follow',
+                            fromUid: myUid,
+                            createdAt: timestamp,
+                            isRead: false
+                        });
+                    } catch (e) { console.warn("Notify err:", e); }
+                    isFollowing = true;
+                }
+                await checkFollowStatus(myUid, targetUid);
+                updateFollowCounts(targetUid);
+                loadPublicProfile(targetUid);
+            } catch (e) {
+                console.error(e);
+            }
+        };
 
         // ★★★ フォロー/フォロワー一覧モーダル処理 ★★★
         window.openFollowModal = async (type) => {
@@ -762,7 +869,6 @@
                     { userId: 'user3', name: 'テストユーザーC', photoURL: '', jobTitle: 'マーケター', uid: 'mock_uid_3' }
                 ];
             } else if (type === 'mutual') {
-                // ★追加: 共通の航海士の場合は計算済みのIDリストを使用
                 if (commonMutualIds.length === 0) {
                     list.innerHTML = '<div class="text-center py-10 text-brand-400 text-xs font-bold tracking-widest">共通の航海士はいません</div>';
                     return;
@@ -784,7 +890,7 @@
 
             } else {
                 try {
-                    const colName = type; // 'following' or 'followers'
+                    const colName = type; 
                     const ref = collection(db, 'artifacts', appId, 'users', targetUid, colName);
                     const snap = await getDocs(ref);
                     
@@ -815,8 +921,8 @@
                 list.innerHTML = users.map(u => {
                     const name = u.name || u.userId || '名無し';
                     const job = u.jobTitle || '';
-                    const linkUid = u.uid || u.userId; // リンク先はUIDを使用
-                    const displayId = u.userId ? `@${u.userId}` : ''; // 表示はユーザーIDを使用
+                    const linkUid = u.uid || u.userId; 
+                    const displayId = u.userId ? `@${u.userId}` : ''; 
 
                     const iconHtml = u.photoURL 
                         ? `<img src="${u.photoURL}" class="w-12 h-12 rounded-full border border-brand-200 object-cover bg-white">`
@@ -837,6 +943,10 @@
                     `;
                 }).join('');
             }
+        };
+
+        window.closeFollowModal = () => {
+            document.getElementById('follow-modal').classList.add('hidden');
         };
 
         function toggleRestrictedContent(show) {
@@ -965,7 +1075,6 @@
                 const skillsContainer = document.getElementById('skills-container');
                 if (skillsContainer) {
                     skillsContainer.innerHTML = '';
-                    // ★追加: 配列かどうかを確実にチェックする
                     const skillsArray = Array.isArray(data.skills) ? data.skills : (data.skills ? [data.skills] : []);
                     if (skillsArray.length > 0) {
                         skillsArray.forEach(tag => {
@@ -979,7 +1088,6 @@
                 const hobbiesContainer = document.getElementById('hobbies-container');
                 if (hobbiesContainer) {
                     hobbiesContainer.innerHTML = '';
-                    // ★追加: 配列かどうかを確実にチェックする
                     const hobbiesArray = Array.isArray(data.hobbies) ? data.hobbies : (data.hobbies ? [data.hobbies] : []);
                     if (hobbiesArray.length > 0) {
                         hobbiesArray.forEach(tag => {
@@ -993,7 +1101,6 @@
                 // Matching
                 const canOfferList = document.getElementById('list-can-offer');
                 if (canOfferList) {
-                    // ★追加: 過去の文字データ等に対応するための配列化
                     const canOfferArray = Array.isArray(data.canOffer) ? data.canOffer : (data.canOffer ? [data.canOffer] : []);
                     canOfferList.innerHTML = canOfferArray.length > 0 
                         ? canOfferArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-check text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
@@ -1001,7 +1108,6 @@
                 }
                 const lookingForList = document.getElementById('list-looking-for');
                 if (lookingForList) {
-                    // ★追加: 過去の文字データ等に対応するための配列化
                     const lookingForArray = Array.isArray(data.lookingFor) ? data.lookingFor : (data.lookingFor ? [data.lookingFor] : []);
                     lookingForList.innerHTML = lookingForArray.length > 0 
                         ? lookingForArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-magnifying-glass text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('') 
@@ -1036,7 +1142,6 @@
                 const careerContainer = document.getElementById('career-container');
                 if (careerContainer) {
                     careerContainer.innerHTML = '';
-                    // ★追加: 経歴が配列かどうかをチェック
                     const careerArray = Array.isArray(data.career) ? data.career : [];
                     if (careerArray.length > 0) {
                         careerArray.forEach(c => {
@@ -1084,6 +1189,150 @@
                 if(scoreBar) scoreBar.style.width = (data.profileScore || 0) + '%';
             }
         }
+
+        window.openMemoModal = () => {
+            document.getElementById('memo-modal').classList.remove('hidden');
+            renderMemoLogs();
+        };
+
+        window.closeMemoModal = () => {
+            document.getElementById('memo-modal').classList.add('hidden');
+        };
+
+        function renderMemoLogs() {
+            const container = document.getElementById('memo-log-container');
+            if (privateMemos.length === 0) {
+                container.innerHTML = '<p class="text-xs text-brand-400 text-center py-6 italic border border-dashed border-brand-200 bg-[#f7f5f0]">まだメモはありません。</p>';
+                return;
+            }
+            
+            const sorted = [...privateMemos].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            
+            container.innerHTML = sorted.map(memo => {
+                const dateObj = new Date(memo.updatedAt);
+                const dateStr = `${dateObj.getFullYear()}/${dateObj.getMonth()+1}/${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+                
+                return `
+                <div class="bg-brand-50 border border-brand-200 p-4 rounded-sm relative group shadow-sm transition-all">
+                    <div class="flex justify-between items-start mb-2 border-b border-brand-200 pb-2">
+                        <span class="text-[10px] text-brand-500 font-bold tracking-widest"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</span>
+                        <div class="flex gap-2">
+                            <button onclick="editMemoLog('${memo.id}')" class="text-brand-400 hover:text-brand-700 transition-colors px-1"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                            <button onclick="deleteMemoLog('${memo.id}')" class="text-brand-400 hover:text-red-600 transition-colors px-1"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                        </div>
+                    </div>
+                    <div id="memo-display-${memo.id}" class="text-xs text-brand-800 whitespace-pre-wrap leading-relaxed">${formatText(memo.content)}</div>
+                    
+                    <div id="memo-edit-${memo.id}" class="hidden">
+                        <textarea id="memo-input-${memo.id}" rows="3" class="w-full border-brand-300 rounded-sm text-xs p-2 bg-white leading-relaxed focus:ring-brand-500 shadow-sm mb-2"></textarea>
+                        <div class="flex justify-end gap-2">
+                            <button onclick="cancelEditMemo('${memo.id}')" class="text-[10px] text-brand-500 hover:text-brand-800 px-2 py-1 tracking-widest font-bold">キャンセル</button>
+                            <button onclick="saveEditMemo('${memo.id}')" class="bg-brand-600 hover:bg-brand-800 text-white px-4 py-1.5 rounded-sm text-[10px] font-bold shadow-sm transition-colors tracking-widest">保存</button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            sorted.forEach(memo => {
+                const inputEl = document.getElementById(`memo-input-${memo.id}`);
+                if(inputEl) inputEl.value = memo.content;
+            });
+        }
+
+        window.addNewMemoLog = async () => {
+            const input = document.getElementById('new-memo-content');
+            const content = input.value.trim();
+            if (!content) return;
+            
+            const btn = document.getElementById('btn-add-memo');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 追加中...';
+            btn.disabled = true;
+
+            const newLog = {
+                id: Date.now().toString(),
+                content: content,
+                updatedAt: new Date().toISOString()
+            };
+            
+            privateMemos.push(newLog);
+
+            try {
+                if (!isAdminMock && currentUser && targetUid) {
+                    const memoRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'private_memos', targetUid);
+                    await setDoc(memoRef, { logs: privateMemos }, { merge: true });
+                }
+                input.value = '';
+                renderMemoLogs();
+            } catch (e) {
+                console.error(e);
+                alert('メモの保存に失敗しました');
+                privateMemos.pop(); 
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i> 追加する';
+                btn.disabled = false;
+            }
+        };
+
+        window.deleteMemoLog = async (id) => {
+            if (!confirm('このメモを削除してもよろしいですか？')) return;
+            
+            const originalMemos = [...privateMemos];
+            privateMemos = privateMemos.filter(m => m.id !== id);
+            
+            renderMemoLogs();
+
+            try {
+                if (!isAdminMock && currentUser && targetUid) {
+                    const memoRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'private_memos', targetUid);
+                    await setDoc(memoRef, { logs: privateMemos }, { merge: true });
+                }
+            } catch (e) {
+                console.error(e);
+                alert('削除に失敗しました');
+                privateMemos = originalMemos;
+                renderMemoLogs();
+            }
+        };
+
+        window.editMemoLog = (id) => {
+            document.getElementById(`memo-display-${id}`).classList.add('hidden');
+            document.getElementById(`memo-edit-${id}`).classList.remove('hidden');
+        };
+
+        window.cancelEditMemo = (id) => {
+            document.getElementById(`memo-display-${id}`).classList.remove('hidden');
+            document.getElementById(`memo-edit-${id}`).classList.add('hidden');
+            const originalContent = privateMemos.find(m => m.id === id)?.content || '';
+            document.getElementById(`memo-input-${id}`).value = originalContent;
+        };
+
+        window.saveEditMemo = async (id) => {
+            const input = document.getElementById(`memo-input-${id}`);
+            const newContent = input.value.trim();
+            if (!newContent) return alert('内容は空にできません');
+
+            const originalMemos = JSON.parse(JSON.stringify(privateMemos));
+            const targetMemo = privateMemos.find(m => m.id === id);
+            
+            if (targetMemo) {
+                targetMemo.content = newContent;
+                targetMemo.updatedAt = new Date().toISOString();
+            }
+
+            try {
+                if (!isAdminMock && currentUser && targetUid) {
+                    const memoRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'private_memos', targetUid);
+                    await setDoc(memoRef, { logs: privateMemos }, { merge: true });
+                }
+                renderMemoLogs();
+            } catch (e) {
+                console.error(e);
+                alert('編集の保存に失敗しました');
+                privateMemos = originalMemos; 
+                renderMemoLogs();
+            }
+        };
 
         window.changeRank = async (newRole) => {
             if (!currentUser) return;
