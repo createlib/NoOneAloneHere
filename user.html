@@ -622,9 +622,9 @@
             if (isAdminMock) {
                 // モックデータ
                 users = [
-                    { userId: 'user1', name: 'テストユーザーA', photoURL: 'https://via.placeholder.com/150', jobTitle: 'デザイナー' },
-                    { userId: 'user2', name: 'テストユーザーB', photoURL: 'https://via.placeholder.com/150', jobTitle: 'エンジニア' },
-                    { userId: 'user3', name: 'テストユーザーC', photoURL: '', jobTitle: 'マーケター' }
+                    { userId: 'user1', name: 'テストユーザーA', photoURL: 'https://via.placeholder.com/150', jobTitle: 'デザイナー', uid: 'mock_uid_1' },
+                    { userId: 'user2', name: 'テストユーザーB', photoURL: 'https://via.placeholder.com/150', jobTitle: 'エンジニア', uid: 'mock_uid_2' },
+                    { userId: 'user3', name: 'テストユーザーC', photoURL: '', jobTitle: 'マーケター', uid: 'mock_uid_3' }
                 ];
             } else {
                 try {
@@ -638,8 +638,7 @@
                             const userDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', uid));
                             if (userDoc.exists()) {
                                 const data = userDoc.data();
-                                // 非公開ユーザーの処理 (自分自身か管理者は見れるが、他人のフォロワー欄で見えるかどうか)
-                                // 基本的に「つながり」は公開情報として扱う
+                                // 非公開ユーザーでも「つながり」一覧には表示する（必要に応じて調整）
                                 return { uid, ...data };
                             }
                         } catch (e) { console.error(e); }
@@ -660,22 +659,27 @@
                 list.innerHTML = '<div class="text-center py-10 text-brand-400 text-xs font-bold tracking-widest">ユーザーはいません</div>';
             } else {
                 list.innerHTML = users.map(u => {
-                    const icon = u.photoURL || 'https://via.placeholder.com/150?text=U';
                     const name = u.name || u.userId || '名無し';
                     const job = u.jobTitle || '';
-                    const uid = u.uid || u.userId; // Mock対応
+                    const linkUid = u.uid || u.userId; // リンク先はUIDを使用
+                    const displayId = u.userId ? `@${u.userId}` : ''; // 表示はユーザーIDを使用
+
+                    // ★修正: アイコン画像のHTML生成（画像がない場合はアンカーアイコンを表示）
+                    const iconHtml = u.photoURL 
+                        ? `<img src="${u.photoURL}" class="w-12 h-12 rounded-full border border-brand-200 object-cover bg-white">`
+                        : `<div class="w-12 h-12 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-300"><i class="fa-solid fa-anchor text-xl"></i></div>`;
 
                     return `
-                    <a href="user.html?uid=${uid}" onclick="closeFollowModal()" class="flex items-center gap-4 p-4 border-b border-brand-100 hover:bg-brand-50 transition-colors">
-                        <img src="${icon}" class="w-12 h-12 rounded-full border border-brand-200 object-cover bg-white">
+                    <a href="user.html?uid=${linkUid}" onclick="closeFollowModal()" class="flex items-center gap-4 p-4 border-b border-brand-100 hover:bg-brand-50 transition-colors group">
+                        ${iconHtml}
                         <div class="flex-1 min-w-0">
-                            <h4 class="text-sm font-bold text-brand-900 truncate font-serif tracking-wide">${name}</h4>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] text-brand-500 font-mono">@${uid.substring(0, 8)}...</span>
+                            <h4 class="text-sm font-bold text-brand-900 truncate font-serif tracking-wide group-hover:text-brand-600 transition-colors">${name}</h4>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-[10px] text-brand-500 font-mono font-bold">${displayId}</span>
                                 ${job ? `<span class="text-[9px] bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-sm border border-brand-200 truncate max-w-[120px]">${job}</span>` : ''}
                             </div>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-brand-300 text-xs"></i>
+                        <i class="fa-solid fa-chevron-right text-brand-300 text-xs group-hover:text-brand-500"></i>
                     </a>
                     `;
                 }).join('');
