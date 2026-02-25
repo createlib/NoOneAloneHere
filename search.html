@@ -171,7 +171,7 @@
         </div>
 
         <!-- Users Grid -->
-        <div id="users-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div id="users-grid" class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
             <div class="col-span-full text-center py-10 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>探索中...</div>
         </div>
 
@@ -319,28 +319,44 @@
                 const loc = u.prefecture || '拠点未設定';
                 const tags = (u.skills || []).slice(0, 3).map(t => `<span class="bg-[#f7f5f0] border border-brand-200 text-brand-600 px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest truncate max-w-full">#${t}</span>`).join('');
                 
-                const hiddenBadge = u.isHidden ? '<div class="absolute top-2 right-2 bg-red-600 text-white text-[10px] px-2 py-1 rounded-sm font-bold z-10"><i class="fa-solid fa-eye-slash mr-1"></i>非公開</div>' : '';
+                const hiddenBadge = u.isHidden ? '<div class="absolute top-1 sm:top-2 right-1 sm:right-2 bg-red-600 text-white text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-sm font-bold z-10"><i class="fa-solid fa-eye-slash sm:mr-1"></i><span class="hidden sm:inline">非公開</span></div>' : '';
                 const rankBadge = getRankBadge(u.membershipRank);
 
                 html += `
                 <a href="user.html?uid=${u.id || u.userId}" class="block bg-[#fffdf9] rounded-sm shadow-sm border border-brand-200 hover:shadow-md transition-shadow hover:border-brand-400 group relative overflow-hidden">
                     ${hiddenBadge}
-                    <div class="h-16 bg-gradient-to-r from-[#dcd4c6] to-[#eae5d8] w-full border-b border-brand-200"></div>
-                    <div class="px-5 pb-5">
-                        <div class="-mt-8 mb-3 flex justify-between items-end">
-                            <img src="${icon}" class="w-16 h-16 rounded-sm border-2 border-[#fffdf9] bg-[#fffdf9] object-cover shadow-sm group-hover:scale-105 transition-transform" onerror="this.src='https://via.placeholder.com/150?text=U'">
-                            ${rankBadge}
-                        </div>
-                        <h3 class="font-bold text-brand-900 text-lg truncate font-serif tracking-wide group-hover:text-brand-600 transition-colors">${name}</h3>
-                        <p class="text-xs text-brand-500 truncate mb-3 tracking-widest">${job}</p>
+                    
+                    <!-- 背景のヘッダー帯 -->
+                    <div class="h-10 sm:h-16 bg-gradient-to-r from-[#dcd4c6] to-[#eae5d8] w-full border-b border-brand-200"></div>
+                    
+                    <div class="px-2 sm:px-5 pb-3 sm:pb-5">
                         
-                        <div class="flex items-center gap-2 text-xs text-brand-600 mb-3">
-                            <i class="fa-solid fa-map-pin text-brand-300"></i>
-                            <span class="truncate">${loc}</span>
+                        <!-- アイコンとバッジの行 -->
+                        <div class="-mt-6 sm:-mt-8 mb-2 sm:mb-3 flex flex-col sm:flex-row justify-between items-center sm:items-end relative">
+                            <!-- アバター画像 (スマホでは丸く中央、PCでは四角で左) -->
+                            <img src="${icon}" class="w-12 h-12 sm:w-16 sm:h-16 rounded-full sm:rounded-sm border-2 border-[#fffdf9] bg-[#fffdf9] object-cover shadow-sm group-hover:scale-105 transition-transform" onerror="this.src='https://via.placeholder.com/150?text=U'">
+                            
+                            <!-- ランクバッジ -->
+                            <div class="absolute -bottom-2 sm:relative sm:bottom-0">
+                                ${rankBadge}
+                            </div>
                         </div>
                         
-                        <div class="flex flex-wrap gap-1.5 h-[48px] overflow-hidden">
-                            ${tags}
+                        <!-- テキスト情報 -->
+                        <div class="text-center sm:text-left mt-3 sm:mt-0">
+                            <h3 class="font-bold text-brand-900 text-xs sm:text-lg truncate font-serif tracking-wide group-hover:text-brand-600 transition-colors">${name}</h3>
+                            <p class="text-[9px] sm:text-xs text-brand-500 truncate mb-0 sm:mb-3 tracking-widest">${job}</p>
+                            
+                            <!-- PCのみ表示する詳細情報 -->
+                            <div class="hidden sm:block">
+                                <div class="flex items-center gap-2 text-xs text-brand-600 mb-3">
+                                    <i class="fa-solid fa-map-pin text-brand-300"></i>
+                                    <span class="truncate">${loc}</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5 h-[48px] overflow-hidden">
+                                    ${tags}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </a>
@@ -351,10 +367,13 @@
 
         function getRankBadge(rank) {
             if (!rank || rank === 'arrival') return '';
-            if (rank === 'settler') return '<span class="text-[10px] bg-brand-100 text-brand-700 px-2 py-1 rounded-sm border border-brand-300 font-bold tracking-widest shadow-sm"><i class="fa-solid fa-house mr-1 text-brand-500"></i>SETTLER</span>';
-            if (rank === 'builder') return '<span class="text-[10px] bg-brand-200 text-brand-800 px-2 py-1 rounded-sm border border-brand-400 font-bold tracking-widest shadow-sm"><i class="fa-solid fa-hammer mr-1 text-brand-600"></i>BUILDER</span>';
-            if (rank === 'guardian') return '<span class="text-[10px] bg-brand-300 text-[#fffdf9] px-2 py-1 rounded-sm border border-brand-500 font-bold tracking-widest shadow-sm"><i class="fa-solid fa-gavel mr-1"></i>GUARDIAN</span>';
-            if (rank === 'covenant' || rank === 'admin') return '<span class="text-[10px] bg-[#3e2723] text-[#d4af37] px-2 py-1 rounded-sm border border-[#b8860b] font-bold tracking-widest shadow-sm"><i class="fa-solid fa-shield-halved mr-1"></i>COVENANT</span>';
+            
+            const badgeClasses = "text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-sm font-bold tracking-widest shadow-sm whitespace-nowrap flex items-center";
+            
+            if (rank === 'settler') return `<span class="bg-brand-100 text-brand-700 border border-brand-300 ${badgeClasses}"><i class="fa-solid fa-house sm:mr-1 text-brand-500"></i><span class="hidden sm:inline">SETTLER</span></span>`;
+            if (rank === 'builder') return `<span class="bg-brand-200 text-brand-800 border border-brand-400 ${badgeClasses}"><i class="fa-solid fa-hammer sm:mr-1 text-brand-600"></i><span class="hidden sm:inline">BUILDER</span></span>`;
+            if (rank === 'guardian') return `<span class="bg-brand-300 text-[#fffdf9] border border-brand-500 ${badgeClasses}"><i class="fa-solid fa-gavel sm:mr-1"></i><span class="hidden sm:inline">GUARDIAN</span></span>`;
+            if (rank === 'covenant' || rank === 'admin') return `<span class="bg-[#3e2723] text-[#d4af37] border border-[#b8860b] ${badgeClasses}"><i class="fa-solid fa-shield-halved sm:mr-1"></i><span class="hidden sm:inline">COVENANT</span></span>`;
             return '';
         }
     </script>
