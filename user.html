@@ -779,6 +779,39 @@
         }
 
         async function loadPublicProfile(uid) {
+            try {
+                let dataToUse = null;
+                const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
+                const publicSnap = await getDoc(publicRef);
+
+                if (publicSnap.exists()) {
+                    dataToUse = publicSnap.data();
+                }
+                
+                if (isAdmin || (isMutual && myRank !== 'arrival')) {
+                    try {
+                        const privateRef = doc(db, 'artifacts', appId, 'users', uid, 'profile', 'data');
+                        const privateSnap = await getDoc(privateRef);
+                        if (privateSnap.exists()) {
+                            dataToUse = { ...(dataToUse || {}), ...privateSnap.data() };
+                        }
+                    } catch (e) { console.log("Private load failed", e); }
+                }
+
+                if (dataToUse) {
+                    updateDashboardUI(dataToUse);
+                } else {
+                    document.getElementById('error-container').classList.remove('hidden');
+                }
+            } catch (e) {
+                console.error("Load error:", e);
+            }
+        }
+
+        async function updateFollowCounts(uid) {
+            try {
+                const followingColl = collection(db, 'artifacts', appId, 'users', uid, 'following');
+                const followersColl = collection(db, 'artifacts', appId, 'users', uid, 'followers');
                 const followingSnap = await getCountFromServer(followingColl);
                 const followersSnap = await getCountFromServer(followersColl);
                 setElText('count-following', followingSnap.data().count);
