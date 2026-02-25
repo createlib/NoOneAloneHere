@@ -311,6 +311,23 @@
             <div class="flex-1 min-w-0">
                 <div class="space-y-6">
                     
+                    <!-- ★ 追加: Private Memo Section (他人のプロフィールの時だけ表示される) -->
+                    <div id="section-private-memo" class="hidden bg-[#f7f5f0] sm:rounded-sm shadow-inner border border-brand-300 p-6 sm:p-8 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-brand-400 m-2 pointer-events-none"></div>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 pb-2 border-b border-brand-200 gap-2">
+                            <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest"><i class="fa-solid fa-lock text-brand-500"></i>プライベートメモ</h2>
+                            <span class="text-[10px] bg-brand-200 text-brand-700 px-2 py-1 rounded-sm font-bold tracking-widest w-fit"><i class="fa-solid fa-eye-slash mr-1"></i>あなただけに見えます</span>
+                        </div>
+                        <p class="text-xs text-brand-600 mb-4 tracking-widest leading-relaxed">出会ったイベントや話した内容、相手の印象などを自由に記録しておけます。<br>※相手に通知されたり、見られることはありません。</p>
+                        <textarea id="private-memo-content" rows="4" class="w-full border-brand-300 rounded-sm text-sm p-4 bg-white leading-relaxed focus:ring-brand-500 focus:border-brand-500 mb-3 shadow-sm placeholder-brand-300" placeholder="例：2/25の名古屋のイベントで挨拶。Webデザインに興味があるとのこと。コーヒーが好きらしい。"></textarea>
+                        <div class="flex justify-end items-center gap-4">
+                            <span id="private-memo-status" class="text-xs text-brand-500 font-bold tracking-widest hidden"><i class="fa-solid fa-check text-green-600 mr-1"></i>保存しました</span>
+                            <button onclick="savePrivateMemo()" id="btn-save-memo" class="bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] px-6 py-2.5 rounded-sm text-sm font-bold shadow-md transition-colors tracking-widest border border-[#b8860b] flex items-center gap-2">
+                                <i class="fa-solid fa-pen"></i> メモを保存
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Message Section -->
                     <div id="section-message" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative overflow-hidden">
                         <div class="flex items-center justify-between mb-4 pb-2 border-b border-brand-200">
@@ -493,6 +510,10 @@
                     isSelf = false;
                     await checkFollowStatus(user.uid, targetUid); 
                     await loadPublicProfile(targetUid);
+                    
+                    // ★追加: 他人のプロフィールの場合はプライベートメモを読み込んで表示する
+                    await loadPrivateMemo(user.uid, targetUid);
+                    document.getElementById('section-private-memo').classList.remove('hidden');
                 }
                 updateFollowCounts(targetUid);
             } else {
@@ -550,6 +571,9 @@
             if(isMutual) document.getElementById('mutual-badge').classList.remove('hidden');
             setElText('count-following', '120');
             setElText('count-followers', '45');
+            
+            // ★追加: テスト時もメモ欄を表示
+            document.getElementById('section-private-memo').classList.remove('hidden');
         }
 
         async function loadPublicProfile(uid) {
@@ -581,6 +605,64 @@
                 console.error("Load error:", e);
             }
         }
+
+        // ★追加: プライベートメモの読み込み機能
+        async function loadPrivateMemo(myUid, targetUid) {
+            if (isAdminMock) return;
+            try {
+                const memoRef = doc(db, 'artifacts', appId, 'users', myUid, 'private_memos', targetUid);
+                const memoSnap = await getDoc(memoRef);
+                if (memoSnap.exists()) {
+                    const data = memoSnap.data();
+                    if (data.content) {
+                        document.getElementById('private-memo-content').value = data.content;
+                    }
+                }
+            } catch (e) {
+                console.error("Memo load error:", e);
+            }
+        }
+
+        // ★追加: プライベートメモの保存機能
+        window.savePrivateMemo = async () => {
+            const btn = document.getElementById('btn-save-memo');
+            const status = document.getElementById('private-memo-status');
+            const content = document.getElementById('private-memo-content').value;
+
+            if (isAdminMock) {
+                status.innerHTML = '<i class="fa-solid fa-check text-green-600 mr-1"></i>保存しました (テスト)';
+                status.classList.remove('hidden', 'text-red-500');
+                setTimeout(() => status.classList.add('hidden'), 3000);
+                return;
+            }
+
+            if (!currentUser || !targetUid) return;
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
+            btn.disabled = true;
+
+            try {
+                const memoRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'private_memos', targetUid);
+                await setDoc(memoRef, {
+                    content: content,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+
+                btn.innerHTML = '<i class="fa-solid fa-pen"></i> メモを保存';
+                btn.disabled = false;
+                
+                status.innerHTML = '<i class="fa-solid fa-check text-green-600 mr-1"></i>保存しました';
+                status.classList.remove('hidden', 'text-red-500');
+                setTimeout(() => status.classList.add('hidden'), 3000);
+            } catch (e) {
+                console.error("Memo save error:", e);
+                btn.innerHTML = '<i class="fa-solid fa-pen"></i> メモを保存';
+                btn.disabled = false;
+                status.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-500 mr-1"></i>保存エラー';
+                status.classList.remove('hidden');
+                status.classList.add('text-red-500');
+            }
+        };
 
         async function updateFollowCounts(uid) {
             try {
