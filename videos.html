@@ -52,7 +52,7 @@
 
     <!-- Navbar -->
     <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
+        <div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
             <div class="flex items-center gap-4">
                 <a href="home.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
                     <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-play"></i></span>
@@ -160,10 +160,10 @@
     </div>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8">
+    <main class="w-full max-w-[1600px] mx-auto pt-20 px-4 sm:px-6 lg:px-8">
         
         <!-- Theater Hero Header -->
-        <div class="py-8 md:py-12 flex flex-col items-center text-center relative">
+        <div class="py-8 md:py-12 flex flex-col items-center text-center relative max-w-4xl mx-auto">
             <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(139,106,79,0.05)_0%,transparent_70%)] pointer-events-none"></div>
             <i class="fa-solid fa-film text-3xl text-brand-300 mb-3"></i>
             <h1 class="text-3xl md:text-5xl font-bold font-serif text-brand-900 tracking-widest mb-3">NOAH THEATER</h1>
@@ -174,13 +174,13 @@
 
         <!-- Search & Tags -->
         <div class="mb-8 sticky top-16 z-30 glass-bar py-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:bg-transparent sm:backdrop-blur-none sm:border-none">
-            <div class="flex flex-col md:flex-row gap-4 mb-4 items-center justify-between">
-                <div class="relative w-full md:w-96 group">
+            <div class="flex flex-col xl:flex-row gap-4 mb-4 items-center justify-between">
+                <div class="relative w-full xl:w-96 group shrink-0">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400 group-focus-within:text-brand-600 transition-colors"></i>
                     <input type="text" id="search-input" placeholder="タイトルや概要で検索..." class="w-full pl-11 pr-4 py-3 rounded-full border border-brand-200 shadow-sm text-sm focus:ring-brand-500 focus:border-brand-500 bg-[#fffdf9] transition-shadow hover:shadow-md">
                 </div>
                 
-                <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 w-full md:w-auto pb-2" id="tag-filters">
+                <div class="flex gap-2 overflow-x-auto no-scrollbar py-1 w-full pb-2" id="tag-filters">
                     <button onclick="filterByTag('')" class="tag-btn active whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#3e2723] text-[#f7f5f0] border border-[#3e2723] transform hover:scale-105">すべて</button>
                     <button onclick="filterByTag('ピッチ・資金調達')" class="tag-btn whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#fffdf9] text-brand-600 border border-brand-200 hover:bg-brand-50 hover:border-brand-300 transform hover:scale-105">ピッチ・資金調達</button>
                     <button onclick="filterByTag('ビジネスパートナー募集')" class="tag-btn whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#fffdf9] text-brand-600 border border-brand-200 hover:bg-brand-50 hover:border-brand-300 transform hover:scale-105">パートナー募集</button>
@@ -191,9 +191,38 @@
             </div>
         </div>
 
-        <!-- Video Grid -->
-        <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8 pb-12">
-            <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>動画を読み込み中...</div>
+        <!-- 状態管理用ラッパー -->
+        <div id="content-wrapper">
+            
+            <!-- Default Sections (Not filtering) -->
+            <div id="default-sections" class="pb-12">
+                <!-- Following Section -->
+                <div id="following-section" class="mb-12 hidden">
+                    <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
+                        <i class="fa-solid fa-user-group text-brand-400 mr-3"></i>フォロー中の新着
+                    </h2>
+                    <div id="following-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8"></div>
+                </div>
+
+                <!-- Recommended Section -->
+                <div id="recommended-section">
+                    <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
+                        <i class="fa-solid fa-sparkles text-[#b8860b] mr-3"></i>おすすめ
+                    </h2>
+                    <div id="recommended-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8">
+                        <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>動画を読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Results Section (Filtering) -->
+            <div id="search-results-section" class="hidden pb-12">
+                <h2 class="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
+                    <i class="fa-solid fa-magnifying-glass text-brand-400 mr-3"></i>検索結果
+                </h2>
+                <div id="search-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 sm:gap-8"></div>
+            </div>
+
         </div>
 
     </main>
@@ -201,7 +230,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
@@ -213,6 +242,7 @@
         let isAdmin = false;
         let myRank = 'arrival';
         let allVideos = [];
+        let followingIds = [];
         let currentTag = '';
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
@@ -222,6 +252,7 @@
                 currentUser = { uid: 'test_admin_uid' };
                 isAdmin = true;
                 myRank = 'covenant';
+                followingIds = ['target_user']; // ダミーのフォロー
                 document.getElementById('btn-post').classList.remove('hidden');
                 document.getElementById('btn-post').classList.add('inline-flex');
                 updateNavForAuth(true);
@@ -244,6 +275,11 @@
                             btnPost.classList.add('inline-flex');
                         }
                     }
+                    
+                    // フォロー中のユーザーを取得
+                    const followSnap = await getDocs(collection(db, 'artifacts', appId, 'users', user.uid, 'following'));
+                    followingIds = followSnap.docs.map(d => d.id);
+                    
                 } catch(e) { console.error(e); }
                 updateNavForAuth(true);
                 fetchVideos();
@@ -316,11 +352,11 @@
                 if (tagParam) {
                     filterByTag(tagParam);
                 } else {
-                    renderVideos();
+                    renderDisplay();
                 }
             } catch (error) {
                 console.error("Error fetching videos:", error);
-                document.getElementById('video-grid').innerHTML = '<div class="col-span-full text-center text-red-500 py-10">動画の取得に失敗しました</div>';
+                document.getElementById('recommended-grid').innerHTML = '<div class="col-span-full text-center text-red-500 py-10">動画の取得に失敗しました</div>';
             }
         }
 
@@ -334,14 +370,68 @@
                     btn.className = 'tag-btn whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm bg-[#fffdf9] text-brand-600 border border-brand-200 hover:bg-brand-50 hover:border-brand-300 transform hover:scale-105';
                 }
             });
-            renderVideos();
+            renderDisplay();
         };
 
-        document.getElementById('search-input').addEventListener('input', renderVideos);
+        document.getElementById('search-input').addEventListener('input', renderDisplay);
 
-        function renderVideos() {
-            const grid = document.getElementById('video-grid');
-            const searchQ = document.getElementById('search-input').value.toLowerCase();
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function createVideoCardHtml(v) {
+            const date = new Date(v.createdAt);
+            const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+            return `
+            <a href="video_detail.html?vid=${v.id}" class="video-card flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-100 shadow-sm hover:shadow-xl">
+                <div class="relative w-full aspect-video bg-[#000] overflow-hidden">
+                    <img src="${v.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/640x360?text=NOAH'">
+                    <div class="thumb-overlay absolute inset-0 bg-black/40 opacity-0 transition-all duration-300 flex items-center justify-center">
+                        <div class="play-icon w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-transform duration-300">
+                            <i class="fa-solid fa-play text-white text-xl ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 flex gap-3">
+                    <img src="${v.authorIcon || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/40?text=U'">
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-brand-600 transition-colors font-serif tracking-wide">${v.title}</h3>
+                        <div class="flex items-center text-xs text-brand-500 mb-0.5">
+                            <span class="truncate hover:text-brand-800 transition-colors">${v.authorName || '名無し'}</span>
+                            <i class="fa-solid fa-circle-check text-[10px] ml-1 text-[#d4af37]"></i>
+                        </div>
+                        <p class="text-[10px] text-brand-400 font-mono">${dateStr}</p>
+                    </div>
+                </div>
+            </a>
+            `;
+        }
+
+        function renderDisplay() {
+            const searchQ = document.getElementById('search-input').value.trim().toLowerCase();
+            const isFiltering = searchQ !== '' || currentTag !== '';
+
+            if (isFiltering) {
+                document.getElementById('default-sections').classList.add('hidden');
+                document.getElementById('search-results-section').classList.remove('hidden');
+                renderSearchResults(searchQ);
+            } else {
+                document.getElementById('default-sections').classList.remove('hidden');
+                document.getElementById('search-results-section').classList.add('hidden');
+                renderDefaultSections();
+            }
+        }
+
+        function renderSearchResults(searchQ) {
+            const grid = document.getElementById('search-grid');
             
             let filtered = allVideos.filter(v => {
                 const matchTag = currentTag === '' || (v.tags && v.tags.includes(currentTag));
@@ -353,40 +443,43 @@
 
             if (filtered.length === 0) {
                 grid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-film text-4xl mb-3 text-brand-200"></i><p>該当する動画がありません。</p></div>';
-                return;
+            } else {
+                grid.innerHTML = filtered.map(v => createVideoCardHtml(v)).join('');
+            }
+        }
+
+        function renderDefaultSections() {
+            // Following Section
+            const followingSection = document.getElementById('following-section');
+            const followingGrid = document.getElementById('following-grid');
+            let followingVideos = allVideos.filter(v => followingIds.includes(v.authorId));
+            
+            if (followingVideos.length > 0) {
+                followingSection.classList.remove('hidden');
+                // 最新10件を表示
+                followingGrid.innerHTML = followingVideos.slice(0, 10).map(v => createVideoCardHtml(v)).join('');
+            } else {
+                followingSection.classList.add('hidden');
             }
 
-            let html = '';
-            filtered.forEach(v => {
-                const date = new Date(v.createdAt);
-                const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
-                
-                html += `
-                <a href="video_detail.html?vid=${v.id}" class="video-card flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-100 shadow-sm hover:shadow-xl">
-                    <div class="relative w-full aspect-video bg-[#000] overflow-hidden">
-                        <img src="${v.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/640x360?text=NOAH'">
-                        <div class="thumb-overlay absolute inset-0 bg-black/40 opacity-0 transition-all duration-300 flex items-center justify-center">
-                            <div class="play-icon w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-transform duration-300">
-                                <i class="fa-solid fa-play text-white text-xl ml-1"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-4 flex gap-3">
-                        <img src="${v.authorIcon || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/40?text=U'">
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-brand-600 transition-colors font-serif tracking-wide">${v.title}</h3>
-                            <div class="flex items-center text-xs text-brand-500 mb-0.5">
-                                <span class="truncate hover:text-brand-800 transition-colors">${v.authorName || '名無し'}</span>
-                                <i class="fa-solid fa-circle-check text-[10px] ml-1 text-[#d4af37]"></i>
-                            </div>
-                            <p class="text-[10px] text-brand-400 font-mono">${dateStr}</p>
-                        </div>
-                    </div>
-                </a>
-                `;
-            });
-            grid.innerHTML = html;
+            // Recommended Section (フォロー中以外をランダムに)
+            const recommendedGrid = document.getElementById('recommended-grid');
+            let otherVideos = allVideos.filter(v => !followingIds.includes(v.authorId));
+            
+            // もしフォロー中しかいなければ、全体からランダム
+            if (otherVideos.length === 0) {
+                otherVideos = [...allVideos];
+            }
+            
+            let shuffled = shuffleArray([...otherVideos]);
+            
+            if (shuffled.length === 0) {
+                recommendedGrid.innerHTML = '<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-film text-4xl mb-3 text-brand-200"></i><p>まだ動画がありません。</p></div>';
+            } else {
+                recommendedGrid.innerHTML = shuffled.map(v => createVideoCardHtml(v)).join('');
+            }
         }
+
     </script>
 </body>
 </html>
