@@ -82,6 +82,28 @@
     </div>
   </section>
 
+  <!-- --- NEWS SECTION --- -->
+  <section class="py-12 px-6 max-w-4xl mx-auto z-20 relative -mt-8 sm:-mt-16">
+    <div class="bg-[#fffdf9] p-6 sm:p-10 shadow-lg border border-[#e8dfd1] relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1.5 h-full bg-[#8b6a4f]"></div>
+        
+        <div class="flex justify-between items-end mb-6 border-b border-[#e8dfd1] pb-3">
+            <h2 class="text-2xl font-serif text-[#3e2723] flex items-center gap-2 tracking-widest font-bold">
+                <i data-lucide="bell" class="w-6 h-6 text-[#8b6a4f]"></i> News
+            </h2>
+            <a href="news.html" class="text-xs font-bold text-[#8b6a4f] hover:text-[#5c4a3d] tracking-widest flex items-center transition-colors">
+                一覧を見る <i data-lucide="chevron-right" class="w-4 h-4 ml-0.5"></i>
+            </a>
+        </div>
+        
+        <ul id="news-list" class="space-y-4">
+            <li class="text-center py-4 text-[#a09080] text-sm tracking-widest flex items-center justify-center">
+                <i data-lucide="loader-2" class="w-5 h-5 animate-spin mr-2"></i> 読み込み中...
+            </li>
+        </ul>
+    </div>
+  </section>
+
   <!-- --- CONCEPT SECTION --- -->
   <section class="py-24 px-6 max-w-4xl mx-auto">
     <div class="flex flex-col items-center justify-center text-center mb-16">
@@ -369,14 +391,6 @@
         </div>
       </div>
 
-      <!-- 料金ページへのリンクボタン -->
-      <!-- <div class="mt-20 text-center">
-        <a href="pricing.html" class="inline-flex items-center gap-3 px-10 py-5 bg-[#3e2723] text-[#d4af37] font-bold text-lg md:text-xl rounded-sm hover:bg-[#2a1a17] transition-colors shadow-xl tracking-widest border border-[#b8860b]">
-          乗船手続き・料金プランはこちら
-          <i data-lucide="arrow-right" class="w-6 h-6"></i>
-        </a>
-      </div> -->
-
     </div>
   </section>
 
@@ -409,6 +423,54 @@
   <script>
     lucide.createIcons();
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // news.html からデータを取得して最新3件を表示する
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('news.html')
+        .then(response => response.text())
+        .then(html => {
+          // news.html内のデータ配列を抽出
+          const match = html.match(/window\.NOAH_NEWS_DATA\s*=\s*(\[\s*\{[\s\S]*?\])\s*;/);
+          if (match) {
+            const getNews = new Function(`return ${match[1]};`);
+            const newsData = getNews();
+            renderLatestNews(newsData);
+          } else {
+            throw new Error('データが見つかりません');
+          }
+        })
+        .catch(error => {
+          console.error('ニュースの取得に失敗しました:', error);
+          document.getElementById('news-list').innerHTML = '<li class="text-center py-4 text-[#a09080] text-sm">お知らせを読み込めませんでした。</li>';
+        });
+    });
+
+    function renderLatestNews(newsData) {
+      const list = document.getElementById('news-list');
+      if (!newsData || newsData.length === 0) {
+          list.innerHTML = '<li class="text-center py-4 text-[#a09080] text-sm">現在お知らせはありません。</li>';
+          return;
+      }
+      
+      // 日付降順でソートして上位3件を取得
+      const sortedNews = [...newsData].sort((a, b) => new Date(b.date.replace(/\./g, '/')) - new Date(a.date.replace(/\./g, '/')));
+      const latestNews = sortedNews.slice(0, 3);
+      
+      let html = '';
+      latestNews.forEach(item => {
+          html += `
+          <li class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 group">
+              <span class="text-xs text-[#a09080] font-mono w-24 shrink-0">${item.date}</span>
+              <span class="text-[10px] bg-[#f7f5f0] text-[#725b3f] border border-[#e8dfd1] px-2 py-0.5 rounded-sm tracking-widest w-fit font-bold">${item.category}</span>
+              <a href="news.html?id=${item.id}" class="text-sm text-[#4a3b32] group-hover:text-[#8b6a4f] transition-colors leading-relaxed flex-1 font-medium truncate sm:whitespace-normal">
+                  ${item.title}
+              </a>
+          </li>
+          `;
+      });
+      list.innerHTML = html;
+      lucide.createIcons(); // アイコン再描画
+    }
   </script>
 </body>
 </html>
