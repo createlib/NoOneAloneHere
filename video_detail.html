@@ -226,6 +226,7 @@
                 // 描画
                 document.getElementById('player-container').innerHTML = `<iframe src="${videoData.embedUrl}" class="w-full h-full absolute inset-0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
                 document.getElementById('video-title').textContent = videoData.title;
+                ```javascript
                 // Author info
                 document.getElementById('author-name').innerHTML = `${videoData.authorName || '名無し'} <i class="fa-solid fa-circle-check text-[10px] sm:text-xs text-[#d4af37]"></i>`;
                 if (videoData.authorIcon) document.getElementById('author-icon').src = videoData.authorIcon;
