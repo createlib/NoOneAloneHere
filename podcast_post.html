@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音声を配信 | NOAH CAST</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { brand: { 50: '#f7f5f0', 100: '#e8dfd1', 200: '#dcd4c6', 300: '#c8b9a6', 400: '#a09080', 500: '#8b6a4f', 600: '#725b3f', 700: '#5c4a3d', 800: '#4a3b32', 900: '#3e2723' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Serif JP', serif; background-color: #f7f5f0; color: #4a3b32; }
+        .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
+        input:focus, textarea:focus { outline: none; border-color: #b8860b !important; box-shadow: 0 0 0 1px #b8860b !important; }
+        .tag-cb:checked + div { background-color: #3e2723; color: #d4af37; border-color: #b8860b; }
+        
+        .form-section {
+            background-color: #fffdf9;
+            border: 1px solid #e8dfd1;
+            border-radius: 0.25rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            position: relative;
+            overflow: hidden;
+        }
+        .form-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background-color: #b8860b;
+        }
+
+        .tab-btn.active { border-bottom-color: #b8860b; color: #b8860b; font-weight: bold; }
+    </style>
+</head>
+<body class="antialiased min-h-screen bg-texture pb-20">
+
+    <nav class="bg-[rgba(255,253,249,0.95)] backdrop-blur border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 h-full flex justify-between items-center">
+            <a href="podcasts.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest">
+                <div class="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center hover:bg-brand-100 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </div>
+                <span class="hidden sm:inline">キャンセル</span>
+            </a>
+            <h1 class="font-serif font-bold text-brand-900 tracking-widest text-lg flex items-center gap-2">
+                <i class="fa-solid fa-podcast text-[#b8860b]"></i> 音声の配信・編集
+            </h1>
+            <div class="w-20"></div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto pt-24 px-4 sm:px-6">
+        
+        <div class="mb-8 text-center">
+            <p class="text-sm text-brand-600 tracking-widest leading-relaxed">
+                あなたの声で、深い考えや対話を届けましょう。<br>
+                <span class="text-xs text-brand-400">※音声ファイル(mp3)のアップロード、または外部URLの指定が可能です。</span>
+            </p>
+        </div>
+
+        <form id="post-form" onsubmit="savePodcast(event)" class="space-y-8">
+            
+            <!-- Audio Input -->
+            <div class="form-section">
+                <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-solid fa-music text-[#b8860b] mr-2"></i>音声ファイル <span class="text-red-500">*</span></label>
+                
+                <!-- Tabs -->
+                <div class="flex gap-6 mb-4 border-b border-brand-200">
+                    <button type="button" id="tab-upload" onclick="switchAudioType('upload')" class="tab-btn active pb-2 border-b-2 text-sm tracking-widest transition-colors">ファイルをアップロード</button>
+                    <button type="button" id="tab-url" onclick="switchAudioType('url')" class="tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-sm tracking-widest transition-colors">URLを指定</button>
+                </div>
+
+                <div id="audio-upload-area">
+                    <p class="text-xs text-brand-500 mb-3">MP3形式の音声ファイルを選択してください。</p>
+                    <input type="file" id="audio-file" accept="audio/mp3, audio/mpeg" class="block w-full text-sm text-brand-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-[#b8860b] hover:file:bg-brand-100 file:border file:border-brand-200 file:cursor-pointer transition-colors bg-[#f7f5f0] p-2 rounded-sm border border-brand-200" onchange="previewAudioUpload(this)">
+                </div>
+
+                <div id="audio-url-area" class="hidden">
+                    <p class="text-xs text-brand-500 mb-3">外部でホスティングされている音声ファイルのURL（http://...mp3）を入力してください。</p>
+                    <input type="url" id="audio-url" class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="https://example.com/audio.mp3" oninput="previewAudioUrl(this.value)">
+                </div>
+
+                <!-- Audio Preview -->
+                <div id="audio-preview-container" class="mt-4 hidden bg-brand-50 p-4 rounded-sm border border-brand-200">
+                    <p class="text-[10px] font-bold text-brand-500 mb-2 tracking-widest">プレビュー</p>
+                    <audio id="audio-player" controls class="w-full h-10"></audio>
+                </div>
+            </div>
+
+            <!-- Thumbnail -->
+            <div class="form-section">
+                <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest"><i class="fa-solid fa-image text-[#b8860b] mr-2"></i>サムネイル画像 <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
+                <p class="text-xs text-brand-500 mb-4">設定しない場合は、NOAH CASTのデフォルト背景が適用されます。</p>
+                <div class="flex flex-col items-center sm:flex-row gap-6">
+                    <div class="relative w-full sm:w-64 aspect-video bg-brand-50 rounded-sm border-2 border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner">
+                        <input type="file" id="thumb-file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="previewThumb(this)">
+                        <img id="thumb-preview" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <div id="thumb-placeholder" class="group-hover:scale-110 transition-transform flex flex-col items-center">
+                            <i class="fa-solid fa-image text-3xl mb-2"></i>
+                            <span class="text-xs tracking-widest font-bold">画像を選択</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="form-section space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest">配信タイトル <span class="text-red-500">*</span></label>
+                    <input type="text" id="title" required class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm font-bold focus:bg-white transition-colors" placeholder="エピソードのタイトルを入力">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest">ゲスト <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
+                    <input type="text" id="guests" class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="ゲスト名（複数いる場合はカンマ区切り）">
+                </div>
+
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-2 gap-2">
+                        <label class="block text-sm font-bold text-brand-900 tracking-widest">概要欄・エピソードメモ</label>
+                        <span class="text-[10px] bg-[#f7f5f0] text-brand-600 px-2 py-1 rounded-sm border border-brand-200 font-bold tracking-widest flex items-center gap-1 w-fit"><i class="fa-brands fa-markdown text-brand-400"></i>Markdown対応</span>
+                    </div>
+                    <p class="text-xs text-brand-500 mb-3">このエピソードで話している内容や、関連リンクなどを記述してください。</p>
+                    <textarea id="description" rows="6" class="w-full border border-brand-200 rounded-sm p-4 bg-[#f7f5f0] text-sm leading-relaxed focus:bg-white transition-colors" placeholder="・オープニング&#13;&#10;・今回のテーマについて&#13;&#10;・ゲストからのお知らせ"></textarea>
+                </div>
+            </div>
+
+            <!-- Tags & Settings -->
+            <div class="form-section space-y-8">
+                <div>
+                    <label class="block text-sm font-bold text-brand-900 mb-3 tracking-widest"><i class="fa-solid fa-tags text-brand-400 mr-2"></i>カテゴリー・タグ</label>
+                    <p class="text-xs text-brand-500 mb-4">配信内容に合うものを選択してください。</p>
+                    
+                    <div class="flex flex-wrap gap-2.5 mb-4" id="preset-tags">
+                        <label class="cursor-pointer"><input type="checkbox" value="対談・インタビュー" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">対談・インタビュー</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="ひとり語り" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">ひとり語り</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="ノウハウ共有" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">ノウハウ共有</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="活動報告" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">活動報告</div></label>
+                    </div>
+                    <input type="text" id="custom-tags" class="w-full border border-brand-200 rounded-sm p-3 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="その他のタグ (カンマ区切りで入力)">
+                </div>
+
+                <div class="border-t border-brand-100 pt-6">
+                    <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-regular fa-comments text-brand-400 mr-2"></i>コメント機能の設定</label>
+                    <div class="flex gap-6">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
+                            <input type="radio" name="allowComments" value="true" checked class="text-[#b8860b] focus:ring-[#b8860b]"> 許可する
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
+                            <input type="radio" name="allowComments" value="false" class="text-brand-400 focus:ring-brand-400"> 許可しない
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pb-12 pt-6">
+                <button type="submit" id="btn-save" class="w-full py-4 bg-gradient-to-r from-[#2a1a17] to-[#3e2723] text-[#d4af37] font-bold text-lg rounded-sm hover:from-[#1a110f] hover:to-[#2a1a17] transition-all shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-3 transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-podcast text-xl"></i> 音声を配信する
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <!-- プログレスモーダル -->
+    <div id="progress-modal" class="hidden fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center">
+        <div class="bg-[#fffdf9] p-8 rounded-sm shadow-2xl border border-brand-300 text-center max-w-sm w-full mx-4">
+            <i class="fa-solid fa-cloud-arrow-up text-4xl text-[#b8860b] mb-4 animate-bounce"></i>
+            <h3 class="text-lg font-bold text-brand-900 font-serif tracking-widest mb-2">アップロード中...</h3>
+            <p class="text-xs text-brand-500 mb-4 tracking-widest">音声ファイルのサイズによっては時間がかかります</p>
+            <div class="w-full bg-brand-100 rounded-full h-2.5 overflow-hidden">
+                <div id="progress-bar" class="bg-[#b8860b] h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        const appId = 'default-app-id';
+
+        let currentUser = null;
+        let myData = null;
+        let isAdmin = false;
+        
+        let audioInputType = 'upload'; // 'upload' or 'url'
+        let currentAudioFile = null;
+        let currentThumbFile = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const editPid = urlParams.get('pid');
+
+        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
+
+        onAuthStateChanged(auth, async (user) => {
+            if(isAdminMock) {
+                currentUser = { uid: 'test_admin_uid' };
+                isAdmin = true;
+                myData = { name: '管理者', photoURL: '' };
+                if(editPid) loadEditData();
+                return;
+            }
+
+            if (user && !user.isAnonymous) {
+                currentUser = user;
+                try {
+                    const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
+                    if(snap.exists()) {
+                        myData = snap.data();
+                        const rank = myData.membershipRank || 'arrival';
+                        if(myData.userId === 'admin') isAdmin = true;
+                        
+                        if(rank === 'arrival' && !isAdmin) {
+                            alert("音声の配信はSETTLER以上の会員のみ可能です。");
+                            window.location.href = 'upgrade.html';
+                        }
+                    }
+                } catch(e){}
+                
+                if(editPid) loadEditData();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        window.switchAudioType = (type) => {
+            audioInputType = type;
+            const btnUpload = document.getElementById('tab-upload');
+            const btnUrl = document.getElementById('tab-url');
+            const areaUpload = document.getElementById('audio-upload-area');
+            const areaUrl = document.getElementById('audio-url-area');
+            const playerContainer = document.getElementById('audio-preview-container');
+            const player = document.getElementById('audio-player');
+
+            playerContainer.classList.add('hidden');
+            player.src = '';
+            currentAudioFile = null;
+            document.getElementById('audio-file').value = '';
+            document.getElementById('audio-url').value = '';
+
+            if (type === 'upload') {
+                btnUpload.className = 'tab-btn active pb-2 border-b-2 text-sm tracking-widest transition-colors';
+                btnUrl.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-sm tracking-widest transition-colors';
+                areaUpload.classList.remove('hidden');
+                areaUrl.classList.add('hidden');
+            } else {
+                btnUrl.className = 'tab-btn active pb-2 border-b-2 text-sm tracking-widest transition-colors';
+                btnUpload.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-sm tracking-widest transition-colors';
+                areaUrl.classList.remove('hidden');
+                areaUpload.classList.add('hidden');
+            }
+        };
+
+        window.previewAudioUpload = (input) => {
+            const file = input.files[0];
+            if (file) {
+                currentAudioFile = file;
+                const url = URL.createObjectURL(file);
+                const player = document.getElementById('audio-player');
+                player.src = url;
+                document.getElementById('audio-preview-container').classList.remove('hidden');
+            }
+        };
+
+        window.previewAudioUrl = (url) => {
+            if (url) {
+                const player = document.getElementById('audio-player');
+                player.src = url;
+                document.getElementById('audio-preview-container').classList.remove('hidden');
+            } else {
+                document.getElementById('audio-preview-container').classList.add('hidden');
+            }
+        };
+
+        window.previewThumb = (input) => {
+            const file = input.files[0];
+            if (file) {
+                currentThumbFile = file;
+                const url = URL.createObjectURL(file);
+                const img = document.getElementById('thumb-preview');
+                img.src = url;
+                img.classList.remove('hidden');
+                document.getElementById('thumb-placeholder').classList.add('hidden');
+            }
+        };
+
+        async function loadEditData() {
+            if(isAdminMock) return; 
+            try {
+                const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', editPid));
+                if(snap.exists()) {
+                    const data = snap.data();
+                    if(data.authorId !== currentUser.uid && !isAdmin) {
+                        alert("編集権限がありません");
+                        window.location.href = 'podcasts.html';
+                        return;
+                    }
+                    
+                    document.getElementById('title').value = data.title || '';
+                    document.getElementById('description').value = data.description || '';
+                    document.getElementById('guests').value = data.guests ? data.guests.join(', ') : '';
+                    
+                    if (data.sourceType === 'url') {
+                        switchAudioType('url');
+                        document.getElementById('audio-url').value = data.audioUrl || '';
+                        previewAudioUrl(data.audioUrl);
+                    } else {
+                        // アップロード済みの場合はURLをセットしてプレビューさせる(ファイル選択はそのまま)
+                        document.getElementById('audio-preview-container').classList.remove('hidden');
+                        document.getElementById('audio-player').src = data.audioUrl || '';
+                    }
+
+                    if (data.thumbnailUrl) {
+                        const img = document.getElementById('thumb-preview');
+                        img.src = data.thumbnailUrl;
+                        img.classList.remove('hidden');
+                        document.getElementById('thumb-placeholder').classList.add('hidden');
+                    }
+
+                    if(data.allowComments === false) {
+                        document.querySelector('input[name="allowComments"][value="false"]').checked = true;
+                    }
+
+                    const allTags = data.tags || [];
+                    document.querySelectorAll('.tag-cb').forEach(cb => {
+                        if(allTags.includes(cb.value)) { cb.checked = true; }
+                    });
+                    const presetValues = Array.from(document.querySelectorAll('.tag-cb')).map(cb=>cb.value);
+                    const customTags = allTags.filter(t => !presetValues.includes(t));
+                    document.getElementById('custom-tags').value = customTags.join(', ');
+
+                    document.getElementById('btn-save').innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 編集を保存する';
+                }
+            } catch(e){}
+        }
+
+        window.savePodcast = async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value.trim();
+            let finalAudioUrl = '';
+            let finalThumbUrl = '';
+
+            if (!editPid) {
+                if (audioInputType === 'upload' && !currentAudioFile && !isAdminMock) {
+                    return alert('音声ファイルを選択してください');
+                }
+                if (audioInputType === 'url' && !document.getElementById('audio-url').value.trim() && !isAdminMock) {
+                    return alert('音声のURLを入力してください');
+                }
+            }
+            
+            const btn = document.getElementById('btn-save');
+            const modal = document.getElementById('progress-modal');
+            const progressBar = document.getElementById('progress-bar');
+            
+            btn.disabled = true;
+            if (!isAdminMock) modal.classList.remove('hidden');
+
+            try {
+                // 1. Audio Upload
+                if (audioInputType === 'upload' && currentAudioFile && !isAdminMock) {
+                    const storageRef = ref(storage, `podcasts/audio/${currentUser.uid}/${Date.now()}_${currentAudioFile.name}`);
+                    const uploadTask = uploadBytesResumable(storageRef, currentAudioFile);
+                    
+                    await new Promise((resolve, reject) => {
+                        uploadTask.on('state_changed', 
+                            (snapshot) => {
+                                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 80; // 音声で80%
+                                progressBar.style.width = progress + '%';
+                            }, 
+                            (error) => reject(error), 
+                            async () => {
+                                finalAudioUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                                resolve();
+                            }
+                        );
+                    });
+                } else if (audioInputType === 'url') {
+                    finalAudioUrl = document.getElementById('audio-url').value.trim();
+                }
+
+                // 2. Thumbnail Upload
+                if (currentThumbFile && !isAdminMock) {
+                    const thumbRef = ref(storage, `podcasts/thumbnails/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`);
+                    const thumbUploadTask = uploadBytesResumable(thumbRef, currentThumbFile);
+                    await new Promise((resolve, reject) => {
+                        thumbUploadTask.on('state_changed', 
+                            (snapshot) => {
+                                const progress = 80 + ((snapshot.bytesTransferred / snapshot.totalBytes) * 20); // サムネで残り20%
+                                progressBar.style.width = progress + '%';
+                            }, 
+                            (error) => reject(error), 
+                            async () => {
+                                finalThumbUrl = await getDownloadURL(thumbUploadTask.snapshot.ref);
+                                resolve();
+                            }
+                        );
+                    });
+                }
+
+                // Edit mode preserving existing URLs if not updated
+                if (editPid && !isAdminMock) {
+                    const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', editPid));
+                    if(snap.exists()) {
+                        const oldData = snap.data();
+                        if (!finalAudioUrl) finalAudioUrl = oldData.audioUrl;
+                        if (!finalThumbUrl) finalThumbUrl = oldData.thumbnailUrl;
+                    }
+                }
+
+                progressBar.style.width = '100%';
+
+                const desc = document.getElementById('description').value;
+                const guestsStr = document.getElementById('guests').value.trim();
+                const guests = guestsStr ? guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
+                const allowComments = document.querySelector('input[name="allowComments"]:checked').value === 'true';
+
+                // Tags
+                const checkedTags = Array.from(document.querySelectorAll('.tag-cb:checked')).map(cb => cb.value);
+                const customTags = document.getElementById('custom-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
+                const tags = [...new Set([...checkedTags, ...customTags])];
+
+                const docId = editPid || Date.now().toString();
+                const podcastData = {
+                    authorId: currentUser.uid,
+                    authorName: myData.name || myData.userId,
+                    authorIcon: myData.photoURL || null,
+                    sourceType: audioInputType,
+                    audioUrl: finalAudioUrl || (isAdminMock ? 'dummy_audio.mp3' : ''),
+                    thumbnailUrl: finalThumbUrl || null,
+                    title: title,
+                    description: desc,
+                    guests: guests,
+                    tags: tags,
+                    allowComments: allowComments,
+                    updatedAt: new Date().toISOString()
+                };
+
+                if(!editPid) podcastData.createdAt = podcastData.updatedAt;
+
+                if(isAdminMock) {
+                    alert("保存成功(テスト)");
+                    window.location.href = 'podcasts.html';
+                    return;
+                }
+
+                const pidRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', docId);
+                await setDoc(pidRef, podcastData, { merge: true });
+                
+                // ★詳細ページ（podcast_detail.html）へ遷移（未作成の場合はpodcasts.htmlへ）
+                window.location.href = `podcasts.html`;
+                
+            } catch(error) {
+                console.error(error);
+                alert("保存に失敗しました");
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 保存を再試行';
+                btn.disabled = false;
+                modal.classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
