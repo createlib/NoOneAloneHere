@@ -136,6 +136,13 @@
                 </div>
             </div>
 
+            <!-- ★追加: 管理者専用 代理投稿セクション -->
+            <div id="admin-override-section" class="hidden form-section space-y-4 border-red-300 before:bg-red-500 bg-red-50/30">
+                <h3 class="text-sm font-bold text-red-600 mb-1 tracking-widest"><i class="fa-solid fa-crown mr-2"></i>【管理者機能】 代理投稿</h3>
+                <p class="text-xs text-brand-600 mb-3">他のユーザーとして投稿する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br>※空欄の場合はあなた自身として投稿されます。</p>
+                <input type="text" id="override-userid" class="w-full border border-red-200 rounded-sm p-3.5 bg-[#fffdf9] text-sm focus:border-red-500 focus:ring-red-500 transition-colors" placeholder="例: taro_123">
+            </div>
+
             <div class="pb-12 pt-6">
                 <button type="submit" id="btn-save" class="w-full py-4 bg-gradient-to-r from-[#3e2723] to-[#2a1a17] text-[#d4af37] font-bold text-lg rounded-sm hover:from-[#2a1a17] hover:to-[#1a110f] transition-all shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-3 transform hover:-translate-y-0.5">
                     <i class="fa-solid fa-cloud-arrow-up text-xl"></i> 動画を公開する
@@ -147,7 +154,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        // ★修正: getDocs, query, where を追加
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
@@ -172,6 +180,7 @@
                 currentUser = { uid: 'test_admin_uid' };
                 isAdmin = true;
                 myData = { name: '管理者', photoURL: '' };
+                document.getElementById('admin-override-section').classList.remove('hidden'); // モックでも表示
                 if(editVid) loadEditData();
                 return;
             }
@@ -183,7 +192,12 @@
                     if(snap.exists()) {
                         myData = snap.data();
                         const rank = myData.membershipRank || 'arrival';
-                        if(myData.userId === 'admin') isAdmin = true;
+                        
+                        // ★追加: 管理者判定と代理投稿UIの表示
+                        if(myData.userId === 'admin') {
+                            isAdmin = true;
+                            document.getElementById('admin-override-section').classList.remove('hidden');
+                        }
                         
                         if(rank === 'arrival' && !isAdmin) {
                             alert("動画の投稿はSETTLER以上の会員のみ可能です。");
@@ -291,11 +305,47 @@
             const customTags = document.getElementById('custom-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
             const tags = [...new Set([...checkedTags, ...customTags])];
 
+            // ★追加: 代理投稿ユーザーの解決
+            let finalAuthorId = currentUser.uid;
+            let finalAuthorName = myData.name || myData.userId;
+            let finalAuthorIcon = myData.photoURL || null;
+
+            const overrideUserIdInput = document.getElementById('override-userid');
+            const overrideUserId = overrideUserIdInput ? overrideUserIdInput.value.trim() : '';
+
+            if (isAdmin && overrideUserId && !isAdminMock) {
+                try {
+                    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                    const q = query(usersRef, where("userId", "==", overrideUserId));
+                    const querySnapshot = await getDocs(q);
+                    
+                    if (querySnapshot.empty) {
+                        alert(`エラー: 指定されたユーザーID「@${overrideUserId}」は見つかりませんでした。\n正しいIDを指定するか、空欄にしてやり直してください。`);
+                        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 動画を公開する';
+                        btn.disabled = false;
+                        return;
+                    }
+                    
+                    const targetDoc = querySnapshot.docs[0];
+                    finalAuthorId = targetDoc.id;
+                    const tData = targetDoc.data();
+                    finalAuthorName = tData.name || tData.userId;
+                    finalAuthorIcon = tData.photoURL || null;
+                    
+                } catch (error) {
+                    console.error("Override fetch error:", error);
+                    alert("代理投稿ユーザーの取得中にエラーが発生しました。");
+                    btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 動画を公開する';
+                    btn.disabled = false;
+                    return;
+                }
+            }
+
             const docId = editVid || Date.now().toString(); // edit or new
             const videoData = {
-                authorId: currentUser.uid,
-                authorName: myData.name || myData.userId,
-                authorIcon: myData.photoURL || null,
+                authorId: finalAuthorId,          // ★修正: 決定したID
+                authorName: finalAuthorName,      // ★修正: 決定した名前
+                authorIcon: finalAuthorIcon,      // ★修正: 決定したアイコン
                 sourceUrl: sourceUrl,
                 embedUrl: parsedEmbedUrl,
                 thumbnailUrl: parsedThumbUrl,
@@ -309,7 +359,7 @@
             if(!editVid) videoData.createdAt = videoData.updatedAt;
 
             if(isAdminMock) {
-                alert("保存成功(テスト)");
+                alert(`保存成功(テスト)\n代理ID: ${overrideUserId || 'なし'}`);
                 window.location.href = 'videos.html';
                 return;
             }
