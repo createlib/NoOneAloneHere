@@ -467,17 +467,21 @@
             btn.disabled = true;
 
             try {
-                // ★追加: 前回の配信データ（コメント・参加者）を完全に初期化してデータ容量を節約
+                // ★修正: データ初期化時のエラーをキャッチし、失敗しても配信を開始できるように安全化
                 if (!isAdminMock) {
-                    const oldCommentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'comments');
-                    const oldCommentsSnap = await getDocs(oldCommentsRef);
-                    const deleteComments = oldCommentsSnap.docs.map(d => deleteDoc(d.ref));
-                    
-                    const oldPartsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'participants');
-                    const oldPartsSnap = await getDocs(oldPartsRef);
-                    const deleteParts = oldPartsSnap.docs.map(d => deleteDoc(d.ref));
-                    
-                    await Promise.all([...deleteComments, ...deleteParts]);
+                    try {
+                        const oldCommentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'comments');
+                        const oldCommentsSnap = await getDocs(oldCommentsRef);
+                        const deleteComments = oldCommentsSnap.docs.map(d => deleteDoc(d.ref));
+                        
+                        const oldPartsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'participants');
+                        const oldPartsSnap = await getDocs(oldPartsRef);
+                        const deleteParts = oldPartsSnap.docs.map(d => deleteDoc(d.ref));
+                        
+                        await Promise.all([...deleteComments, ...deleteParts]);
+                    } catch (initErr) {
+                        console.warn("古いデータの初期化に失敗しました (無視して続行します):", initErr);
+                    }
                 }
 
                 let thumbUrl = null;
