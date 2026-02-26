@@ -445,6 +445,13 @@
             </div>
             
             <div class="p-5 overflow-y-auto flex-1 space-y-6">
+                <!-- ★追加: 管理者専用 代理投稿セクション -->
+                <div id="admin-override-section-event" class="hidden bg-red-50 p-4 rounded-sm border border-red-200 shadow-inner">
+                    <h4 class="text-xs font-bold text-red-600 mb-2 tracking-widest"><i class="fa-solid fa-crown mr-1"></i>【管理者専用】代理投稿</h4>
+                    <p class="text-[10px] text-red-500 mb-2">他のユーザーとして投稿・編集する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br>※空欄の場合は元の主催者（新規の場合はあなた自身）になります。</p>
+                    <input type="text" id="event-override-userid" class="w-full border-red-200 rounded-sm text-sm p-2 bg-white" placeholder="例: taro_123">
+                </div>
+
                 <!-- Thumbnail -->
                 <div>
                     <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">サムネイル画像</label>
@@ -573,6 +580,13 @@
             <div class="p-5 overflow-y-auto flex-1 space-y-4" id="job-form-container">
                 <p class="text-xs text-brand-600 font-bold tracking-widest mb-2"><i class="fa-solid fa-circle-info mr-1"></i> 情報を詳細に記載するとマッチング率が上がります</p>
                 
+                <!-- ★追加: 管理者専用 代理投稿セクション -->
+                <div id="admin-override-section-job" class="hidden bg-red-50 p-4 rounded-sm border border-red-200 shadow-inner">
+                    <h4 class="text-xs font-bold text-red-600 mb-2 tracking-widest"><i class="fa-solid fa-crown mr-1"></i>【管理者専用】代理投稿</h4>
+                    <p class="text-[10px] text-red-500 mb-2">他のユーザーとして投稿・編集する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br>※空欄の場合は元の主催者（新規の場合はあなた自身）になります。</p>
+                    <input type="text" id="job-override-userid" class="w-full border-red-200 rounded-sm text-sm p-2 bg-white" placeholder="例: taro_123">
+                </div>
+
                 <!-- Accordion 1: 基本情報 -->
                 <details class="group bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm" open>
                     <summary class="flex justify-between items-center p-3 cursor-pointer hover:bg-brand-50 transition-colors select-none">
@@ -1528,6 +1542,13 @@
                 const modal = document.getElementById('event-modal');
                 if(modal) modal.classList.remove('hidden');
                 
+                // ★追加: 管理者用フィールドの表示制御
+                if (isAdmin) {
+                    const overrideSec = document.getElementById('admin-override-section-event');
+                    if (overrideSec) overrideSec.classList.remove('hidden');
+                }
+                setVal('event-override-userid', ''); // フィールドを初期化
+
                 editingEventId = existingData ? existingData.id : null;
                 const titleEl = document.getElementById('event-modal-title');
                 if(titleEl) titleEl.textContent = existingData ? 'イベントを編集' : 'イベントを企画';
@@ -1600,6 +1621,13 @@
                 if(modal) modal.classList.remove('hidden');
                 const cont = document.getElementById('job-form-container');
                 if(cont) cont.scrollTop = 0;
+
+                // ★追加: 管理者用フィールドの表示制御
+                if (isAdmin) {
+                    const overrideSec = document.getElementById('admin-override-section-job');
+                    if (overrideSec) overrideSec.classList.remove('hidden');
+                }
+                setVal('job-override-userid', ''); // フィールドを初期化
 
                 editingJobId = existingData ? existingData.id : null;
                 const titleEl = document.getElementById('job-modal-title');
@@ -1843,7 +1871,44 @@
                 const customTags = customTagsStr ? customTagsStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 const finalTags = [...Array.from(selectedTags), ...customTags];
                 
-                const safeName = (myProfile && (myProfile.name || myProfile.userId)) || '主催者';
+                // ★修正: 代理投稿処理を含む主催者データの設定
+                let finalOrganizerId = currentUser.uid;
+                let finalOrganizerName = (myProfile && (myProfile.name || myProfile.userId)) || '主催者';
+                
+                if (editingEventId) {
+                    const oldEvt = allEvents.find(e => e.id === editingEventId);
+                    if (oldEvt) {
+                        finalOrganizerId = oldEvt.organizerId || finalOrganizerId;
+                        finalOrganizerName = oldEvt.organizerName || finalOrganizerName;
+                    }
+                }
+
+                const overrideUserIdInput = document.getElementById('event-override-userid');
+                const overrideUserId = overrideUserIdInput ? overrideUserIdInput.value.trim() : '';
+
+                if (isAdmin && overrideUserId && !isAdminMock) {
+                    try {
+                        const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                        const q = query(usersRef, where("userId", "==", overrideUserId));
+                        const querySnapshot = await getDocs(q);
+                        
+                        if (querySnapshot.empty) {
+                            alert(`エラー: 指定されたユーザーID「@${overrideUserId}」は見つかりませんでした。\n正しいIDを指定するか、空欄にしてやり直してください。`);
+                            if(btn) btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する";
+                            return;
+                        }
+                        
+                        const targetDoc = querySnapshot.docs[0];
+                        finalOrganizerId = targetDoc.id;
+                        const tData = targetDoc.data();
+                        finalOrganizerName = tData.name || tData.userId;
+                    } catch (error) {
+                        console.error("Override fetch error:", error);
+                        alert("代理投稿ユーザーの取得中にエラーが発生しました。");
+                        if(btn) btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する";
+                        return;
+                    }
+                }
 
                 let descVal = getVal('event-desc');
                 let publicParts = true;
@@ -1856,8 +1921,8 @@
                     endTimestamp: new Date(`${endDate}T${endTime}`).toISOString(),
                     description: descVal,
                     tags: finalTags, thumbnailUrl: thumbnailUrl,
-                    organizerId: currentUser.uid,
-                    organizerName: safeName,
+                    organizerId: finalOrganizerId,
+                    organizerName: finalOrganizerName,
                     isParticipantsPublic: publicParts,
                     updatedAt: serverTimestamp()
                 };
@@ -1917,8 +1982,47 @@
                 if (!title || !desc) return alert('必須項目(タイトル・詳細)を入力してください');
                 if (style !== 'フルリモート' && !selectedCoordsJob) return alert('勤務地・活動場所をマップで検索して設定してください');
 
-                const safeName = (myProfile && (myProfile.name || myProfile.userId)) || '投稿者';
-                const safeAvatar = (myProfile && myProfile.photoURL) || null;
+                // ★修正: 代理投稿処理を含む投稿者データの設定
+                let finalOrganizerId = currentUser.uid;
+                let finalOrganizerName = (myProfile && (myProfile.name || myProfile.userId)) || '投稿者';
+                let finalOrganizerAvatar = (myProfile && myProfile.photoURL) || null;
+                
+                if (editingJobId) {
+                    const oldJob = allJobs.find(j => j.id === editingJobId);
+                    if (oldJob) {
+                        finalOrganizerId = oldJob.organizerId || finalOrganizerId;
+                        finalOrganizerName = oldJob.organizerName || finalOrganizerName;
+                        finalOrganizerAvatar = oldJob.organizerAvatar || finalOrganizerAvatar;
+                    }
+                }
+
+                const overrideUserIdInput = document.getElementById('job-override-userid');
+                const overrideUserId = overrideUserIdInput ? overrideUserIdInput.value.trim() : '';
+
+                if (isAdmin && overrideUserId && !isAdminMock) {
+                    try {
+                        const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                        const q = query(usersRef, where("userId", "==", overrideUserId));
+                        const querySnapshot = await getDocs(q);
+                        
+                        if (querySnapshot.empty) {
+                            alert(`エラー: 指定されたユーザーID「@${overrideUserId}」は見つかりませんでした。\n正しいIDを指定するか、空欄にしてやり直してください。`);
+                            if(btn) btn.textContent = editingJobId ? "募集情報を更新する" : "募集を掲載する";
+                            return;
+                        }
+                        
+                        const targetDoc = querySnapshot.docs[0];
+                        finalOrganizerId = targetDoc.id;
+                        const tData = targetDoc.data();
+                        finalOrganizerName = tData.name || tData.userId;
+                        finalOrganizerAvatar = tData.photoURL || null;
+                    } catch (error) {
+                        console.error("Override fetch error:", error);
+                        alert("代理投稿ユーザーの取得中にエラーが発生しました。");
+                        if(btn) btn.textContent = editingJobId ? "募集情報を更新する" : "募集を掲載する";
+                        return;
+                    }
+                }
 
                 const jobData = {
                     title: title, 
@@ -1936,9 +2040,9 @@
                     company: getVal('job-company', ''),
                     url: getVal('job-url', ''),
                     
-                    organizerId: currentUser.uid,
-                    organizerName: safeName,
-                    organizerAvatar: safeAvatar,
+                    organizerId: finalOrganizerId,
+                    organizerName: finalOrganizerName,
+                    organizerAvatar: finalOrganizerAvatar,
                     updatedAt: serverTimestamp(),
                 };
 
