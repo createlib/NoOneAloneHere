@@ -753,10 +753,14 @@
                 const checkedTags = Array.from(document.querySelectorAll('.room-tag-cb:checked')).map(cb => cb.value);
                 const isRecord = document.querySelector('input[name="roomRecord"]:checked').value === 'true';
 
+                // ★修正: myProfile が null の場合でもエラーにならないように安全に取得
+                const safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
+                const safeIcon = myProfile ? myProfile.photoURL : null;
+
                 const roomData = {
                     hostId: currentUser.uid,
-                    hostName: myProfile.name || myProfile.userId,
-                    hostIcon: myProfile.photoURL || null,
+                    hostName: safeName,
+                    hostIcon: safeIcon,
                     title: title,
                     desc: getVal('room-desc'),
                     guestsStr: getVal('room-guests'),
@@ -782,8 +786,8 @@
                 const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'participants', currentUser.uid);
                 await setDoc(partRef, {
                     uid: currentUser.uid,
-                    name: myProfile.name || myProfile.userId,
-                    icon: myProfile.photoURL || null,
+                    name: safeName,
+                    icon: safeIcon,
                     role: 'host',
                     isMuted: false,
                     joinedAt: serverTimestamp()
@@ -826,11 +830,15 @@
                 currentRole = 'host';
             } else {
                 currentRole = 'listener';
+                // ★修正: myProfile が null の場合でもエラーにならないように安全に取得
+                const safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
+                const safeIcon = myProfile ? myProfile.photoURL : null;
+
                 const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'participants', currentUser.uid);
                 await setDoc(partRef, {
                     uid: currentUser.uid,
-                    name: myProfile.name || myProfile.userId,
-                    icon: myProfile.photoURL || null,
+                    name: safeName,
+                    icon: safeIcon,
                     role: 'listener',
                     handRaised: false,
                     joinedAt: serverTimestamp()
@@ -1013,11 +1021,15 @@
             const text = input.value.trim();
             if(!text || !currentRoomId) return;
             
+            // ★修正: myProfile が null の場合でもエラーにならないように安全に取得
+            const safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
+            const safeIcon = myProfile ? myProfile.photoURL : null;
+
             if(!isAdminMock) {
                 await setDoc(doc(collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'comments')), {
                     uid: currentUser.uid,
-                    name: myProfile.name || myProfile.userId,
-                    icon: myProfile.photoURL || null,
+                    name: safeName,
+                    icon: safeIcon,
                     text: text,
                     timestamp: serverTimestamp()
                 });
