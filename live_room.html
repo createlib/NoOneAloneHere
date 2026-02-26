@@ -981,7 +981,7 @@
         }
 
         window.leaveLiveRoom = async () => {
-            if (isLeaving) return; // 二重アラート・二重処理を防止
+            if (isLeaving) return; // 二重アラート防止
             
             if (!currentRoomId || !currentUser) {
                 window.location.href = 'home.html';
@@ -1012,9 +1012,47 @@
         window.endLiveCast = async () => {
             if(!isAdminMock) {
                 try {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId), { status: 'ended' });
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId));
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId);
+                    const roomSnap = await getDoc(roomRef);
+                    
+                    if (roomSnap.exists()) {
+                        const roomData = roomSnap.data();
+                        
+                        // リスナー側に終了を通知するため、まずはステータスをendedに変更
+                        await updateDoc(roomRef, { status: 'ended' });
+
+                        // ★追加: 「録音して残す」設定の場合、ポッドキャストへデータを移行して自動投稿する
+                        if (roomData.isRecord) {
+                            const podcastData = {
+                                authorId: roomData.hostId,
+                                authorName: roomData.hostName,
+                                authorIcon: roomData.hostIcon,
+                                sourceType: 'live_archive', // ライブアーカイブであることを明記
+                                audioUrl: '', // ※音声ファイル自体は後から編集画面でアップロードする
+                                isEmbed: false,
+                                thumbnailUrl: roomData.thumbUrl || null,
+                                title: roomData.title,
+                                description: roomData.desc || 'この配信は SIGNAL CAST（ライブ配信） のアーカイブです。',
+                                guests: roomData.guestsStr ? roomData.guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [],
+                                tags: roomData.tags || [],
+                                allowComments: true, 
+                                duration: 0, 
+                                createdAt: roomData.startedAt || serverTimestamp(),
+                                updatedAt: serverTimestamp()
+                            };
+                            
+                            const newPodcastRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'podcasts'));
+                            await setDoc(newPodcastRef, podcastData);
+                            
+                            alert('配信が終了しました。\nアーカイブ設定がONのため、ポッドキャストとして自動投稿されました。\n※音声ファイルはご自身で録音したものをマイページからアップロードしてください。');
+                        }
+                    }
+
+                    // ルームを完全に削除
+                    await deleteDoc(roomRef);
                 } catch(e){ console.error(e); }
+            } else {
+                alert('【テスト】配信が終了しました。アーカイブ設定ONの場合はポッドキャストに保存されます。');
             }
             closeModalUI();
         };
