@@ -38,7 +38,7 @@
         .bottom-nav-content { height: 4rem; display: flex; justify-content: space-around; align-items: center; width: 100%; }
         .body-pb-nav { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
 
-        /* ====== ライブ配信 (SIGNAL CAST) 用のスタイル ====== */
+        /* ====== ライブ配信通知アイコン用 ====== */
         @keyframes pulse-ring {
             0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
             70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
@@ -47,22 +47,6 @@
         .live-ring {
             border-color: #d4af37 !important;
             animation: pulse-ring 2s infinite;
-        }
-        @keyframes ripple {
-            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.6); }
-            70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
-        }
-        .speaking-ripple {
-            animation: ripple 1.2s infinite;
-            border-color: #d4af37 !important;
-        }
-        .dark-scrollbar::-webkit-scrollbar { width: 6px; }
-        .dark-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .dark-scrollbar::-webkit-scrollbar-thumb { background-color: #5c4a3d; border-radius: 10px; }
-        
-        input[type="radio"]:checked + div, input[type="checkbox"]:checked + div {
-            background-color: #3e2723; color: #d4af37; border-color: #b8860b;
         }
     </style>
 </head>
@@ -151,18 +135,18 @@
                 <button onclick="toggleTheaterMenu()" class="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors border border-brand-200 shadow-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="space-y-3">
-                <a href="videos.html" class="flex items-center gap-4 p-4 border border-brand-200 rounded-sm hover:bg-brand-50 transition-colors shadow-sm bg-white">
-                    <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-film"></i></div>
+                <a href="videos.html" class="flex items-center gap-4 p-4 border border-brand-400 bg-brand-50 rounded-sm shadow-sm">
+                    <div class="w-12 h-12 bg-[#3e2723] text-[#f7f5f0] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-film"></i></div>
                     <div>
                         <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH THEATER</h4>
-                        <p class="text-[10px] text-brand-500 mt-1 font-bold">動画で想いや活動の軌跡を共有</p>
+                        <p class="text-[10px] text-brand-600 mt-1 font-bold">動画で想いや活動の軌跡を共有</p>
                     </div>
                 </a>
-                <a href="podcasts.html" class="flex items-center gap-4 p-4 border border-[#b8860b] bg-brand-50 rounded-sm shadow-sm">
-                    <div class="w-12 h-12 bg-[#3e2723] text-[#d4af37] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-podcast"></i></div>
+                <a href="podcasts.html" class="flex items-center gap-4 p-4 border border-brand-200 rounded-sm hover:bg-brand-50 transition-colors shadow-sm bg-white">
+                    <div class="w-12 h-12 bg-brand-100 text-[#b8860b] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-podcast"></i></div>
                     <div>
                         <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH CAST</h4>
-                        <p class="text-[10px] text-[#b8860b] mt-1 font-bold">音声で深い考えや対話を配信</p>
+                        <p class="text-[10px] text-brand-500 mt-1 font-bold">音声で深い考えや対話を配信</p>
                     </div>
                 </a>
             </div>
@@ -186,7 +170,7 @@
                         <i class="fa-solid fa-headphones text-white text-3xl"></i>
                     </div>
                 </div>
-                <div id="live-badge" class="hidden absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-3 py-1 rounded-sm text-[10px] font-bold tracking-widest border border-[#b8860b] shadow-md z-20 flex items-center gap-1">
+                <div id="live-badge" class="hidden absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-3 py-1 rounded-sm text-[10px] font-bold tracking-widest border border-[#b8860b] shadow-md z-20 flex items-center gap-1 whitespace-nowrap">
                     <span class="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span> LIVE配信中
                 </div>
             </div>
@@ -235,11 +219,6 @@
         </div>
     </main>
 
-    <!-- Notification -->
-    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[8000] hidden transition-all duration-300 translate-y-20">
-        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#d4af37] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
@@ -276,20 +255,7 @@
         let isLikedVideosLoaded = false;
         let isLikedPodcastsLoaded = false;
 
-        // ====== ライブ配信状態管理 ======
         let roomUnsubscribe = null;
-
-        // ====== ヘルパー関数 ======
-        window.showNotification = (msg, isError = false) => {
-            const notif = document.getElementById('notification');
-            const msgEl = document.getElementById('notif-message');
-            msgEl.textContent = msg;
-            notif.classList.remove('hidden', 'translate-y-20');
-            setTimeout(() => {
-                notif.classList.add('translate-y-20');
-                setTimeout(() => notif.classList.add('hidden'), 300);
-            }, 3000);
-        };
 
         // --- Auth State ---
         onAuthStateChanged(auth, async (user) => {
@@ -400,13 +366,18 @@
         // ライブ配信 (SIGNAL CAST) への導線
         // ==============================================================
 
-        // ルーム作成ページへの遷移
         window.openCreateRoomModal = () => {
             if (!currentUser) return alert('ログインが必要です');
             window.location.href = 'live_room.html?action=create';
         };
 
-        // ルームの監視（アイコンのエフェクト）
+        window.attemptJoinLive = () => {
+            const badge = document.getElementById('live-badge');
+            if (badge && !badge.classList.contains('hidden')) {
+                window.location.href = `live_room.html?roomId=${urlTargetUid}`;
+            }
+        };
+
         function checkLiveStatus() {
             if (isAdminMock) return; 
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', urlTargetUid);
@@ -429,12 +400,6 @@
                             btnCreate.onclick = () => window.location.href = `live_room.html?roomId=${urlTargetUid}`;
                         }
                     }
-                    
-                    // クリックで入室
-                    document.getElementById('author-profile-link').onclick = (e) => {
-                        e.preventDefault();
-                        window.location.href = `live_room.html?roomId=${urlTargetUid}`;
-                    };
                 } else {
                     // 配信していない
                     if(ring) ring.classList.remove('live-ring', 'cursor-pointer');
@@ -447,8 +412,6 @@
                             btnCreate.onclick = window.openCreateRoomModal;
                         }
                     }
-                    // 元のリンク動作に戻す
-                    document.getElementById('author-profile-link').onclick = null;
                 }
             });
         }
@@ -658,7 +621,7 @@
         }
 
         window.addEventListener('unload', () => {
-            closeModalUI();
+            if(roomUnsubscribe) roomUnsubscribe();
         });
     </script>
 </body>
