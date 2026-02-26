@@ -307,6 +307,9 @@
         const action = urlParams.get('action');
         const targetRoomId = urlParams.get('roomId');
 
+        // ★追加: デフォルトアイコンの定義（世界観に合わせたカラー）
+        const DEFAULT_ICON = 'https://via.placeholder.com/150/f7f5f0/c8b9a6?text=U';
+
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         let currentUser = null;
         let myProfile = null;
@@ -649,7 +652,7 @@
                     
                     list.innerHTML += `
                         <div class="flex ${align} w-full mb-3">
-                            ${!isMe ? `<img src="${c.icon||'https://via.placeholder.com/30'}" class="w-6 h-6 rounded-full mr-2 self-end object-cover">` : ''}
+                            ${!isMe ? `<img src="${c.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-6 h-6 rounded-full mr-2 self-end object-cover">` : ''}
                             <div class="max-w-[80%]">
                                 ${!isMe ? `<p class="text-[8px] text-[#a09080] mb-0.5 ml-1">${c.name}</p>` : ''}
                                 <div class="${bg} px-3 py-2 rounded-sm text-xs leading-relaxed break-words shadow-sm">${c.text}</div>
@@ -674,7 +677,7 @@
                 <div class="flex flex-col items-center gap-2">
                     <div id="speaker-${s.uid}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-[#5c4a3d] bg-black relative shadow-lg transition-all ${ringClass}">
                         ${hostIcon}
-                        <img src="${s.icon || 'https://via.placeholder.com/150'}" class="w-full h-full rounded-full object-cover">
+                        <img src="${s.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-full h-full rounded-full object-cover">
                         ${micIcon}
                     </div>
                     <span class="text-xs font-bold tracking-widest text-[#dcd4c6] max-w-[100px] truncate text-center">${s.name}</span>
@@ -733,7 +736,7 @@
                 return `
                 <div class="flex items-center justify-between p-2 hover:bg-black/20 rounded-sm transition-colors group border-b border-[#5c4a3d]/50 last:border-0">
                     <div class="flex items-center gap-2 min-w-0">
-                        <img src="${l.icon||'https://via.placeholder.com/30'}" class="w-6 h-6 rounded-full object-cover border border-[#5c4a3d]">
+                        <img src="${l.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-6 h-6 rounded-full object-cover border border-[#5c4a3d]">
                         <span class="text-xs text-[#dcd4c6] truncate">${l.name}</span>
                     </div>
                     <div class="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -985,9 +988,17 @@
             document.body.style.overflow = '';
             currentRoomId = null;
             currentRole = 'none';
-            isLeaving = false; // リセット
+            isLeaving = false; 
             
-            window.location.href = 'home.html';
+            // ★修正: 戻る画面をHOME固定から、履歴に基づく元の画面へ変更
+            if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
+                window.history.back();
+            } else if (targetRoomId) {
+                // 直接URLで来た場合などは、配信者のプロフィールへ
+                window.location.href = `user_contents.html?uid=${targetRoomId}`;
+            } else {
+                window.location.href = 'home.html';
+            }
         }
 
         function setupMockLiveUI() {
