@@ -23,7 +23,7 @@
     <style>
         body { font-family: 'Noto Serif JP', serif; background-color: #f7f5f0; color: #4a3b32; }
         .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
-        input:focus, textarea:focus { outline: none; border-color: #b8860b !important; box-shadow: 0 0 0 1px #b8860b !important; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #b8860b !important; box-shadow: 0 0 0 1px #b8860b !important; }
         .tag-cb:checked + div { background-color: #3e2723; color: #d4af37; border-color: #b8860b; }
         
         .form-section {
@@ -44,6 +44,12 @@
         }
 
         .tab-btn.active { border-bottom-color: #b8860b; color: #b8860b; font-weight: bold; }
+        
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen bg-texture pb-20">
@@ -68,7 +74,7 @@
         <div class="mb-8 text-center">
             <p class="text-sm text-brand-600 tracking-widest leading-relaxed">
                 あなたの声で、深い考えや対話を届けましょう。<br>
-                <span class="text-xs text-brand-400">※音声ファイルのアップロード、または各種サービスのURL指定が可能です。</span>
+                <span class="text-xs text-brand-400">※音声ファイルのアップロード、各種サービスのURL指定、または生配信が可能です。</span>
             </p>
         </div>
 
@@ -76,19 +82,24 @@
             
             <!-- Audio Input -->
             <div class="form-section">
-                <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-solid fa-music text-[#b8860b] mr-2"></i>音声データ <span class="text-red-500">*</span></label>
+                <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-solid fa-music text-[#b8860b] mr-2"></i>音声データ・配信方法 <span class="text-red-500">*</span></label>
                 
                 <!-- Tabs -->
-                <div class="flex gap-6 mb-4 border-b border-brand-200">
-                    <button type="button" id="tab-upload" onclick="switchAudioType('upload')" class="tab-btn active pb-2 border-b-2 text-sm tracking-widest transition-colors">ファイルをアップロード</button>
-                    <button type="button" id="tab-url" onclick="switchAudioType('url')" class="tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-sm tracking-widest transition-colors">URLを指定</button>
+                <div class="flex gap-4 sm:gap-6 mb-4 border-b border-brand-200 overflow-x-auto no-scrollbar">
+                    <button type="button" id="tab-upload" onclick="switchAudioType('upload')" class="tab-btn active pb-2 border-b-2 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap">ファイルをアップロード</button>
+                    <button type="button" id="tab-url" onclick="switchAudioType('url')" class="tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap">URLを指定</button>
+                    <button type="button" id="tab-live" onclick="switchAudioType('live')" class="hidden pb-2 border-b-2 border-transparent text-red-400 hover:text-red-600 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap">
+                        <i class="fa-solid fa-satellite-dish mr-1"></i>生配信 (SIGNAL CAST)
+                    </button>
                 </div>
 
+                <!-- ファイルアップロード -->
                 <div id="audio-upload-area">
                     <p class="text-xs text-brand-500 mb-3">MP3形式などの音声ファイルを選択してください。（※上限: 30MB）</p>
                     <input type="file" id="audio-file" accept="audio/mp3, audio/mpeg, audio/mp4, audio/m4a" class="block w-full text-sm text-brand-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-[#b8860b] hover:file:bg-brand-100 file:border file:border-brand-200 file:cursor-pointer transition-colors bg-[#f7f5f0] p-2 rounded-sm border border-brand-200" onchange="previewAudioUpload(this)">
                 </div>
 
+                <!-- URL指定 -->
                 <div id="audio-url-area" class="hidden">
                     <p class="text-[10px] sm:text-xs text-brand-500 mb-2 leading-relaxed">
                         <b>Spotify</b>, <b>Apple Podcasts</b>, <b>Google Drive</b> などのリンクを貼り付けると、自動で公式プレイヤーが埋め込まれます。または、直接再生可能な <code>.mp3</code> URLを入力してください。
@@ -112,7 +123,7 @@
             <!-- Thumbnail -->
             <div class="form-section">
                 <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest"><i class="fa-solid fa-image text-[#b8860b] mr-2"></i>サムネイル画像 <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
-                <p class="text-xs text-brand-500 mb-4">設定しない場合は、NOAH CASTのデフォルト背景が適用されます。<br>※Spotify等の埋め込みリンクを使用する場合は、そのサービスの画像が表示されるため設定不要です。</p>
+                <p class="text-xs text-brand-500 mb-4">設定しない場合は、NOAH CASTのデフォルト背景が適用されます。<br>※Spotify等の埋め込みリンクを使用する場合は設定不要です。</p>
                 <div class="flex flex-col items-center sm:flex-row gap-6">
                     <div class="relative w-full sm:w-64 aspect-video bg-brand-50 rounded-sm border-2 border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner">
                         <input type="file" id="thumb-file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="previewThumb(this)">
@@ -154,15 +165,18 @@
                     <p class="text-xs text-brand-500 mb-4">配信内容に合うものを選択してください。</p>
                     
                     <div class="flex flex-wrap gap-2.5 mb-4" id="preset-tags">
-                        <label class="cursor-pointer"><input type="checkbox" value="対談・インタビュー" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">対談・インタビュー</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="ひとり語り" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">ひとり語り</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="ノウハウ共有" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">ノウハウ共有</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="活動報告" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm">活動報告</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="対談・インタビュー" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm whitespace-nowrap">対談・インタビュー</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="ひとり語り" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm whitespace-nowrap">ひとり語り</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="ノウハウ共有" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm whitespace-nowrap">ノウハウ共有</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="活動報告" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm whitespace-nowrap">活動報告</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="ビジネス" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm whitespace-nowrap">ビジネス</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="恋愛" class="tag-cb hidden"><div class="px-4 py-2 border border-brand-200 text-xs font-bold text-brand-700 rounded-sm tracking-widest hover:bg-brand-50 transition-all shadow-sm whitespace-nowrap">恋愛</div></label>
                     </div>
                     <input type="text" id="custom-tags" class="w-full border border-brand-200 rounded-sm p-3 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="その他のタグ (カンマ区切りで入力)">
                 </div>
 
-                <div class="border-t border-brand-100 pt-6">
+                <!-- コメント設定 (録音投稿用) -->
+                <div id="comments-setting-area" class="border-t border-brand-100 pt-6">
                     <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-regular fa-comments text-brand-400 mr-2"></i>コメント機能の設定</label>
                     <div class="flex gap-6">
                         <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
@@ -173,9 +187,54 @@
                         </label>
                     </div>
                 </div>
+
+                <!-- ライブ配信専用設定 (非表示) -->
+                <div id="live-settings-area" class="hidden border-t border-brand-100 pt-6">
+                    <label class="block text-sm font-bold text-red-600 mb-4 tracking-widest flex items-center gap-2"><i class="fa-solid fa-satellite-dish animate-pulse"></i>ライブ配信設定</label>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">公開範囲 <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select id="room-privacy" class="w-full appearance-none border border-brand-200 rounded-sm p-3 pr-8 bg-white text-sm font-bold text-brand-700 focus:border-[#b8860b] focus:ring-[#b8860b] truncate">
+                                    <option value="public">🌍 公開（SETTLER以上）</option>
+                                    <option value="followers">👥 フォロワー限定</option>
+                                    <option value="invite">🔒 招待制（クローズド）</option>
+                                    <option value="community">🏢 コミュニティ限定</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-brand-400 pointer-events-none text-xs"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">ルーム種別 <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select id="room-type" class="w-full appearance-none border border-brand-200 rounded-sm p-3 pr-8 bg-white text-sm font-bold text-brand-700 focus:border-[#b8860b] focus:ring-[#b8860b] truncate">
+                                    <option value="talk">💬 通常トーク</option>
+                                    <option value="panel">🗣 パネルディスカッション</option>
+                                    <option value="interview">🎤 インタビュー形式</option>
+                                    <option value="music">🎵 音楽・ライブ形式</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-brand-400 pointer-events-none text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-brand-50 p-4 border border-brand-200 rounded-sm">
+                        <label class="block text-xs font-bold text-brand-800 mb-3 tracking-widest">アーカイブ設定</label>
+                        <div class="flex flex-wrap gap-3">
+                            <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
+                                <input type="radio" name="roomRecord" value="true" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音して残す
+                            </label>
+                            <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
+                                <input type="radio" name="roomRecord" value="false" checked class="text-[#b8860b] focus:ring-[#b8860b]"> 録音しない
+                            </label>
+                        </div>
+                        <p class="text-[10px] text-brand-500 mt-2 text-center sm:text-left">※「録音して残す」を選択すると、配信終了後に自動でポッドキャストとして公開されます。</p>
+                    </div>
+                </div>
             </div>
 
-            <!-- ★追加: 管理者専用 代理投稿セクション -->
+            <!-- 管理者専用 代理投稿セクション -->
             <div id="admin-override-section" class="hidden form-section space-y-4 border-red-300 before:bg-red-500 bg-red-50/30">
                 <h3 class="text-sm font-bold text-red-600 mb-1 tracking-widest"><i class="fa-solid fa-crown mr-2"></i>【管理者機能】 代理投稿</h3>
                 <p class="text-xs text-brand-600 mb-3">他のユーザーとして投稿する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br>※空欄の場合はあなた自身として投稿されます。</p>
@@ -205,8 +264,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        // ★修正: getDocs, query, where, collection を追加
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
@@ -220,7 +278,7 @@
         let myData = null;
         let isAdmin = false;
         
-        let audioInputType = 'upload'; // 'upload' or 'url'
+        let audioInputType = 'upload'; // 'upload' | 'url' | 'live'
         let currentAudioFile = null;
         let currentThumbFile = null;
         let currentDuration = 0; 
@@ -233,12 +291,33 @@
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
+        // ランクのレベル定義 (権限比較用)
+        const rankLevels = {
+            'arrival': 0,
+            'settler': 1,
+            'builder': 2,
+            'guardian': 3,
+            'covenant': 4,
+            'admin': 99
+        };
+
+        function getRankLevel(rank) {
+            return rankLevels[rank] || 0;
+        }
+
+        const getVal = (id, def = '') => { 
+            const el = document.getElementById(id); 
+            if (!el) return def;
+            return (el.value === undefined || el.value === null) ? def : el.value; 
+        };
+
         onAuthStateChanged(auth, async (user) => {
             if(isAdminMock) {
                 currentUser = { uid: 'test_admin_uid' };
                 isAdmin = true;
-                myData = { name: '管理者', photoURL: '' };
-                document.getElementById('admin-override-section').classList.remove('hidden'); // モック表示
+                myData = { name: '管理者', photoURL: '', membershipRank: 'admin' };
+                document.getElementById('admin-override-section').classList.remove('hidden'); 
+                checkLiveTabVisibility();
                 if(editPid) loadEditData();
                 return;
             }
@@ -251,7 +330,6 @@
                         myData = snap.data();
                         const rank = myData.membershipRank || 'arrival';
                         
-                        // ★追加: 管理者判定と代理投稿UIの表示
                         if(myData.userId === 'admin') {
                             isAdmin = true;
                             document.getElementById('admin-override-section').classList.remove('hidden');
@@ -264,25 +342,45 @@
                     }
                 } catch(e){}
                 
+                checkLiveTabVisibility();
                 if(editPid) loadEditData();
             } else {
                 window.location.href = 'login.html';
             }
         });
 
+        // ライブ配信タブの表示制御 (GUARDIAN以上のみ)
+        function checkLiveTabVisibility() {
+            const btnLive = document.getElementById('tab-live');
+            const rLevel = getRankLevel((myData?.membershipRank || 'arrival').toLowerCase());
+            
+            // GUARDIAN (3) 以上、または編集モードでない場合のみ
+            if ((rLevel >= 3 || isAdminMock || isAdmin) && !editPid) {
+                btnLive.classList.remove('hidden');
+                btnLive.classList.add('inline-flex');
+            } else {
+                btnLive.classList.add('hidden');
+                btnLive.classList.remove('inline-flex');
+            }
+        }
+
         window.switchAudioType = (type) => {
             audioInputType = type;
             const btnUpload = document.getElementById('tab-upload');
             const btnUrl = document.getElementById('tab-url');
+            const btnLive = document.getElementById('tab-live');
+            
             const areaUpload = document.getElementById('audio-upload-area');
             const areaUrl = document.getElementById('audio-url-area');
             const playerContainer = document.getElementById('audio-preview-container');
-            const player = document.getElementById('audio-player');
-            const embedPlayer = document.getElementById('embed-player');
+            const liveSettingsArea = document.getElementById('live-settings-area');
+            const commentsSettingArea = document.getElementById('comments-setting-area');
+            const btnSave = document.getElementById('btn-save');
 
+            // Reset States
             playerContainer.classList.add('hidden');
-            player.src = '';
-            embedPlayer.src = '';
+            document.getElementById('audio-player').src = '';
+            document.getElementById('embed-player').src = '';
             currentAudioFile = null;
             currentDuration = 0; 
             parsedAudioUrl = '';
@@ -291,17 +389,39 @@
             document.getElementById('audio-file').value = '';
             document.getElementById('audio-url').value = '';
 
+            // Reset Button Styles
+            btnUpload.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap';
+            btnUrl.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap';
+            
+            // Live Button Base Style
+            const baseLiveClass = 'tab-btn pb-2 border-b-2 border-transparent text-red-400 hover:text-red-600 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap inline-flex items-center gap-1';
+            btnLive.className = baseLiveClass;
+
+            // Hide all areas first
+            areaUpload.classList.add('hidden');
+            areaUrl.classList.add('hidden');
+            liveSettingsArea.classList.add('hidden');
+            commentsSettingArea.classList.remove('hidden'); // Default show comments
+
             if (type === 'upload') {
-                btnUpload.className = 'tab-btn active pb-2 border-b-2 text-sm tracking-widest transition-colors';
-                btnUrl.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-sm tracking-widest transition-colors';
+                btnUpload.className = 'tab-btn active pb-2 border-b-2 text-[#b8860b] border-[#b8860b] font-bold text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap';
                 areaUpload.classList.remove('hidden');
-                areaUrl.classList.add('hidden');
-            } else {
-                btnUrl.className = 'tab-btn active pb-2 border-b-2 text-sm tracking-widest transition-colors';
-                btnUpload.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-sm tracking-widest transition-colors';
+                btnSave.innerHTML = '<i class="fa-solid fa-podcast text-xl"></i> 音声を配信する';
+                btnSave.className = 'w-full py-4 bg-gradient-to-r from-[#2a1a17] to-[#3e2723] text-[#d4af37] font-bold text-lg rounded-sm hover:from-[#1a110f] hover:to-[#2a1a17] transition-all shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-3 transform hover:-translate-y-0.5';
+            } else if (type === 'url') {
+                btnUrl.className = 'tab-btn active pb-2 border-b-2 text-[#b8860b] border-[#b8860b] font-bold text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap';
                 areaUrl.classList.remove('hidden');
-                areaUpload.classList.add('hidden');
+                btnSave.innerHTML = '<i class="fa-solid fa-podcast text-xl"></i> 音声を配信する';
+                btnSave.className = 'w-full py-4 bg-gradient-to-r from-[#2a1a17] to-[#3e2723] text-[#d4af37] font-bold text-lg rounded-sm hover:from-[#1a110f] hover:to-[#2a1a17] transition-all shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-3 transform hover:-translate-y-0.5';
+            } else if (type === 'live') {
+                btnLive.className = baseLiveClass + ' active text-red-600 border-red-600 font-bold';
+                liveSettingsArea.classList.remove('hidden');
+                commentsSettingArea.classList.add('hidden');
+                btnSave.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse text-xl"></i> ライブ配信を START する';
+                btnSave.className = 'w-full py-4 bg-gradient-to-r from-[#3e2723] to-red-900 text-white font-bold text-lg rounded-sm hover:from-[#2a1a17] hover:to-red-800 transition-all shadow-xl tracking-widest border border-red-600 flex items-center justify-center gap-3 transform hover:-translate-y-0.5';
             }
+            
+            checkLiveTabVisibility(); // 権限による非表示を再適用
         };
 
         // --- URLを解析して埋め込み用リンクを生成する関数 ---
@@ -311,32 +431,20 @@
 
             if (!url) return { isEmbed: false, url: '' };
 
-            // Spotify
             if (url.includes('open.spotify.com/episode/')) {
                 const match = url.match(/episode\/([a-zA-Z0-9]+)/);
-                if (match) {
-                    embedUrl = `https://open.spotify.com/embed/episode/${match[1]}?utm_source=generator`;
-                    isEmbed = true;
-                }
+                if (match) { embedUrl = `https://open.spotify.com/embed/episode/${match[1]}?utm_source=generator`; isEmbed = true; }
             } else if (url.includes('open.spotify.com/show/')) {
                 const match = url.match(/show\/([a-zA-Z0-9]+)/);
-                if (match) {
-                    embedUrl = `https://open.spotify.com/embed/show/${match[1]}?utm_source=generator`;
-                    isEmbed = true;
-                }
+                if (match) { embedUrl = `https://open.spotify.com/embed/show/${match[1]}?utm_source=generator`; isEmbed = true; }
             } 
-            // Apple Podcasts
             else if (url.includes('podcasts.apple.com')) {
                 embedUrl = url.replace('podcasts.apple.com', 'embed.podcasts.apple.com');
                 isEmbed = true;
             } 
-            // Google Drive
             else if (url.includes('drive.google.com/file/d/')) {
                 const match = url.match(/d\/([a-zA-Z0-9_-]+)/);
-                if (match) {
-                    embedUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
-                    isEmbed = true;
-                }
+                if (match) { embedUrl = `https://drive.google.com/file/d/${match[1]}/preview`; isEmbed = true; }
             }
 
             return { isEmbed, url: isEmbed ? embedUrl : url };
@@ -376,14 +484,12 @@
                 container.classList.remove('hidden');
 
                 if (isEmbedMode) {
-                    // Spotify/Appleなどの埋め込み
                     audioPlayer.classList.add('hidden');
                     audioPlayer.src = '';
                     embedPlayer.src = parsedAudioUrl;
                     embedPlayer.classList.remove('hidden');
-                    currentDuration = 0; // 外部サービスの場合は長さ取得不可
+                    currentDuration = 0; 
                 } else {
-                    // 通常のMP3直リンク等
                     embedPlayer.classList.add('hidden');
                     embedPlayer.src = '';
                     audioPlayer.src = parsedAudioUrl;
@@ -432,7 +538,6 @@
                     
                     if (data.sourceType === 'url') {
                         switchAudioType('url');
-                        // 元の入力URLが保存されていない場合は、変換後の埋め込みURLをそのまま表示
                         document.getElementById('audio-url').value = data.audioUrl || '';
                         previewAudioUrl(data.audioUrl);
                     } else {
@@ -475,8 +580,8 @@
             let finalAudioUrl = '';
             let finalThumbUrl = '';
 
-            // 未入力チェック
-            if (!editPid) {
+            // 未入力チェック (Liveの場合は不要)
+            if (audioInputType !== 'live' && !editPid) {
                 if (audioInputType === 'upload' && !currentAudioFile && !isAdminMock) {
                     return alert('音声ファイルを選択してください');
                 }
@@ -487,13 +592,13 @@
 
             // ファイルサイズチェック
             if (audioInputType === 'upload' && currentAudioFile) {
-                const maxSize = 30 * 1024 * 1024; // 30MB制限
+                const maxSize = 30 * 1024 * 1024; 
                 if (currentAudioFile.size > maxSize) {
                     return alert(`音声ファイルが大きすぎます (上限30MB)\n現在のサイズ: ${(currentAudioFile.size / 1024 / 1024).toFixed(1)}MB`);
                 }
             }
             if (currentThumbFile) {
-                const maxThumbSize = 5 * 1024 * 1024; // 5MB制限
+                const maxThumbSize = 5 * 1024 * 1024; 
                 if (currentThumbFile.size > maxThumbSize) {
                     return alert(`画像サイズが大きすぎます (上限5MB)\n現在のサイズ: ${(currentThumbFile.size / 1024 / 1024).toFixed(1)}MB`);
                 }
@@ -508,10 +613,103 @@
             if (!isAdminMock) {
                 modal.classList.remove('hidden');
                 progressBar.style.width = '5%';
-                progressText.textContent = 'アップロードの準備中...';
+                progressText.textContent = audioInputType === 'live' ? '配信の準備中...' : 'アップロードの準備中...';
             }
 
             try {
+                // --- LiveCast (生配信) の場合の処理 ---
+                if (audioInputType === 'live') {
+                    
+                    // 過去データの初期化
+                    if (!isAdminMock) {
+                        try {
+                            const oldCommentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'comments');
+                            const oldCommentsSnap = await getDocs(oldCommentsRef);
+                            const deleteComments = oldCommentsSnap.docs.map(d => deleteDoc(d.ref));
+                            
+                            const oldPartsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'participants');
+                            const oldPartsSnap = await getDocs(oldPartsRef);
+                            const deleteParts = oldPartsSnap.docs.map(d => deleteDoc(d.ref));
+                            
+                            await Promise.all([...deleteComments, ...deleteParts]);
+                        } catch (initErr) {
+                            console.warn("古いデータの初期化エラー (無視して続行):", initErr);
+                        }
+                    }
+
+                    // サムネイルアップロード
+                    if (currentThumbFile && !isAdminMock) {
+                        try {
+                            const snap = await uploadBytesResumable(ref(storage, `live_thumbs/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`), currentThumbFile);
+                            finalThumbUrl = await getDownloadURL(snap.ref);
+                        } catch(err) {
+                            console.warn("Thumbnail upload failed:", err);
+                        }
+                    }
+
+                    // ユーザー情報解決
+                    let finalAuthorId = currentUser.uid;
+                    let finalAuthorName = myData.name || myData.userId;
+                    let finalAuthorIcon = myData.photoURL || null;
+
+                    const overrideUserIdInput = document.getElementById('override-userid');
+                    const overrideUserId = overrideUserIdInput ? overrideUserIdInput.value.trim() : '';
+
+                    if (isAdmin && overrideUserId && !isAdminMock) {
+                        const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                        const q = query(usersRef, where("userId", "==", overrideUserId));
+                        const querySnapshot = await getDocs(q);
+                        if (!querySnapshot.empty) {
+                            const targetDoc = querySnapshot.docs[0];
+                            finalAuthorId = targetDoc.id;
+                            const tData = targetDoc.data();
+                            finalAuthorName = tData.name || tData.userId;
+                            finalAuthorIcon = tData.photoURL || null;
+                        }
+                    }
+
+                    const checkedTags = Array.from(document.querySelectorAll('.tag-cb:checked')).map(cb => cb.value);
+                    const customTags = document.getElementById('custom-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
+                    const tags = [...new Set([...checkedTags, ...customTags])];
+
+                    const roomData = {
+                        hostId: finalAuthorId,
+                        hostName: finalAuthorName,
+                        hostIcon: finalAuthorIcon,
+                        title: title,
+                        desc: document.getElementById('description').value,
+                        guestsStr: document.getElementById('guests').value,
+                        privacy: getVal('room-privacy'),
+                        type: getVal('room-type'),
+                        tags: tags,
+                        isRecord: document.querySelector('input[name="roomRecord"]:checked').value === 'true',
+                        thumbUrl: finalThumbUrl || null,
+                        status: 'live',
+                        startedAt: serverTimestamp()
+                    };
+
+                    if (!isAdminMock) {
+                        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', finalAuthorId);
+                        await setDoc(roomRef, roomData);
+
+                        const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', finalAuthorId, 'participants', finalAuthorId);
+                        await setDoc(partRef, {
+                            uid: finalAuthorId,
+                            name: finalAuthorName,
+                            icon: finalAuthorIcon,
+                            role: 'host',
+                            isMuted: false,
+                            joinedAt: serverTimestamp()
+                        });
+                    }
+
+                    // ライブ配信画面へ遷移
+                    window.location.href = `live_room.html?roomId=${finalAuthorId}`;
+                    return;
+                }
+
+                // --- 通常の Podcast (録音) の場合の処理 ---
+                
                 // 1. Audio Upload
                 if (audioInputType === 'upload' && currentAudioFile && !isAdminMock) {
                     const storageRef = ref(storage, `podcasts/audio/${currentUser.uid}/${Date.now()}_${currentAudioFile.name}`);
@@ -525,7 +723,6 @@
                                 progressText.textContent = `音声をアップロード中... (${Math.floor(5 + p)}%)`;
                             }, 
                             (error) => {
-                                console.error("Audio Upload Error:", error);
                                 reject(new Error(`音声のアップロードに失敗: ${error.message}`));
                             }, 
                             async () => {
@@ -539,7 +736,6 @@
                         );
                     });
                 } else if (audioInputType === 'url') {
-                    // ★ URLモードの場合は、パース済みのURLか、そのままのURLを適用
                     const rawUrl = document.getElementById('audio-url').value.trim();
                     const parsed = parsePodcastUrl(rawUrl);
                     finalAudioUrl = parsed.url;
@@ -559,7 +755,6 @@
                                 progressText.textContent = `画像をアップロード中... (${Math.floor(80 + p)}%)`;
                             }, 
                             (error) => {
-                                console.error("Thumb Upload Error:", error);
                                 reject(new Error(`画像のアップロードに失敗: ${error.message}`));
                             }, 
                             async () => {
@@ -589,7 +784,7 @@
                 progressBar.style.width = '100%';
                 progressText.textContent = 'データを保存しています...';
 
-                // ★追加: 代理投稿ユーザーの解決
+                // 代理投稿ユーザーの解決
                 let finalAuthorId = currentUser.uid;
                 let finalAuthorName = myData.name || myData.userId;
                 let finalAuthorIcon = myData.photoURL || null;
@@ -638,9 +833,9 @@
 
                 const docId = editPid || Date.now().toString();
                 const podcastData = {
-                    authorId: finalAuthorId,         // ★修正: 決定したID
-                    authorName: finalAuthorName,     // ★修正: 決定した名前
-                    authorIcon: finalAuthorIcon,     // ★修正: 決定したアイコン
+                    authorId: finalAuthorId,
+                    authorName: finalAuthorName,
+                    authorIcon: finalAuthorIcon,
                     sourceType: audioInputType,
                     audioUrl: finalAudioUrl || (isAdminMock ? 'dummy_audio.mp3' : ''),
                     isEmbed: isEmbedMode,
@@ -671,7 +866,7 @@
                 
             } catch(error) {
                 console.error(error);
-                alert(`保存中にエラーが発生しました。\n${error.message}\n\n※通信環境やファイルのサイズをご確認ください。`);
+                alert(`処理中にエラーが発生しました。\n${error.message}`);
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 保存を再試行';
                 btn.disabled = false;
                 modal.classList.add('hidden');
