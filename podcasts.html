@@ -171,6 +171,16 @@
             </p>
         </div>
 
+        <!-- ★追加: LIVE NOW セクション (生配信中のみ表示) -->
+        <div id="live-now-section" class="hidden mb-8 border-b border-brand-200 pb-8">
+            <h2 class="font-bold text-red-600 text-sm md:text-base font-serif tracking-widest mb-5 flex items-center px-1 sm:px-0">
+                <i class="fa-solid fa-satellite-dish animate-pulse mr-2 text-lg"></i>配信中の SIGNAL CAST
+            </h2>
+            <div id="live-now-scroll" class="flex overflow-x-auto gap-4 sm:gap-6 pb-4 pt-1 no-scrollbar snap-x px-1 sm:px-0">
+                <!-- JSでストーリーズ風のアイコンリストが挿入されます -->
+            </div>
+        </div>
+
         <!-- Search & Tags -->
         <div class="mb-8 sticky top-16 z-30 glass-bar py-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:bg-transparent sm:backdrop-blur-none sm:border-none">
             <div class="flex flex-col xl:flex-row gap-4 mb-4 items-center justify-between">
@@ -256,7 +266,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        // ★修正: onSnapshot, query, where を追加
+        import { getFirestore, collection, getDocs, doc, getDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
@@ -264,12 +275,16 @@
         const db = getFirestore(app);
         const appId = 'default-app-id';
 
+        const DEFAULT_ICON = 'https://via.placeholder.com/150/f7f5f0/c8b9a6?text=U';
+
         let currentUser = null;
         let isAdmin = false;
         let myRank = 'arrival';
         let allPodcasts = [];
         let followingIds = [];
         let currentTag = '';
+        
+        let liveRoomsUnsubscribe = null; // ★生配信監視用
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
@@ -283,6 +298,7 @@
                 document.getElementById('btn-post').classList.add('inline-flex');
                 updateNavForAuth(true);
                 fetchPodcasts();
+                listenLiveRooms(); // ★追加
                 return;
             }
 
@@ -307,11 +323,81 @@
                 } catch(e) { console.error(e); }
                 updateNavForAuth(true);
                 fetchPodcasts();
+                listenLiveRooms(); // ★追加
             } else {
                 updateNavForAuth(false);
                 fetchPodcasts();
+                listenLiveRooms(); // ★追加（非ログインでも配信中一覧は見れる）
             }
         });
+
+        // ★追加: リアルタイムに生配信中(live)のルームを監視して表示する
+        function listenLiveRooms() {
+            if (isAdminMock) {
+                // テスト表示用
+                renderLiveRooms([{
+                    id: 'test_admin_uid',
+                    hostName: 'NOAH 運営',
+                    hostIcon: 'https://via.placeholder.com/150',
+                    title: '現在テスト配信中です！'
+                }]);
+                return;
+            }
+
+            const liveRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms');
+            const q = query(liveRef, where('status', '==', 'live'));
+            
+            liveRoomsUnsubscribe = onSnapshot(q, (snap) => {
+                let rooms = [];
+                snap.forEach(docSnap => {
+                    rooms.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                
+                // 新しい順にソート
+                rooms.sort((a, b) => {
+                    const tA = a.startedAt?.toMillis ? a.startedAt.toMillis() : 0;
+                    const tB = b.startedAt?.toMillis ? b.startedAt.toMillis() : 0;
+                    return tB - tA;
+                });
+                
+                renderLiveRooms(rooms);
+            }, (error) => {
+                console.error("Live rooms fetch error:", error);
+            });
+        }
+
+        // ★追加: 生配信中(live)のルームを画面に描画する
+        function renderLiveRooms(rooms) {
+            const section = document.getElementById('live-now-section');
+            const scroll = document.getElementById('live-now-scroll');
+            
+            if (rooms.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            
+            section.classList.remove('hidden');
+            scroll.innerHTML = rooms.map(r => {
+                const icon = r.hostIcon || DEFAULT_ICON;
+                const name = r.hostName || '名無し';
+                const title = r.title || '配信中';
+                
+                return `
+                <a href="live_room.html?roomId=${r.id}" class="flex flex-col items-center gap-2 group w-[72px] sm:w-[88px] shrink-0 snap-start">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full p-[2px] bg-gradient-to-tr from-red-500 via-orange-400 to-[#b8860b] shadow-md group-hover:scale-105 transition-transform">
+                        <div class="w-full h-full bg-[#fffdf9] rounded-full p-[2px]">
+                            <img src="${icon}" onerror="this.src='${DEFAULT_ICON}'" class="w-full h-full rounded-full object-cover">
+                        </div>
+                        <div class="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-sm tracking-widest border border-red-800 shadow-sm whitespace-nowrap z-10">LIVE</div>
+                    </div>
+                    <div class="text-center w-full mt-1 px-1">
+                        <p class="text-xs sm:text-sm font-bold text-brand-900 truncate group-hover:text-red-600 transition-colors tracking-wide">${name}</p>
+                        <p class="text-[9px] sm:text-[10px] text-brand-500 truncate mt-0.5">${title}</p>
+                    </div>
+                </a>
+                `;
+            }).join('');
+        }
 
         window.toggleTheaterMenu = () => {
             const menu = document.getElementById('sp-theater-menu');
@@ -554,6 +640,11 @@
             document.getElementById('more-modal').classList.add('hidden');
             document.body.style.overflow = '';
         };
+
+        // ★追加: ページを離れる際に監視を解除
+        window.addEventListener('unload', () => {
+            if (liveRoomsUnsubscribe) liveRoomsUnsubscribe();
+        });
 
     </script>
 </body>
