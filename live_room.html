@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIGNAL CAST | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { brand: { 50: '#f7f5f0', 100: '#e8dfd1', 200: '#dcd4c6', 300: '#c8b9a6', 400: '#a09080', 500: '#8b6a4f', 600: '#725b3f', 700: '#5c4a3d', 800: '#4a3b32', 900: '#3e2723' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Serif JP', serif; }
+        .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #c8b9a6; border-radius: 10px; }
+
+        .dark-scrollbar::-webkit-scrollbar { width: 6px; }
+        .dark-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .dark-scrollbar::-webkit-scrollbar-thumb { background-color: #5c4a3d; border-radius: 10px; }
+
+        input[type="radio"]:checked + div, input[type="checkbox"]:checked + div {
+            background-color: #3e2723; color: #d4af37; border-color: #b8860b;
+        }
+
+        /* ライブ配信エフェクト */
+        @keyframes ripple {
+            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.6); }
+            70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+        .speaking-ripple {
+            animation: ripple 1.2s infinite;
+            border-color: #d4af37 !important;
+        }
+    </style>
+</head>
+<body class="antialiased h-screen w-screen overflow-hidden">
+
+    <!-- 1. ルーム作成ビュー -->
+    <div id="create-view" class="hidden h-full w-full bg-texture bg-[#f7f5f0] items-center justify-center p-4">
+        <div class="bg-[#fffdf9] w-full max-w-2xl max-h-[95vh] rounded-sm shadow-2xl flex flex-col border border-brand-300">
+            <div class="p-5 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] shrink-0">
+                <h3 class="font-bold text-lg text-brand-900 font-serif tracking-widest flex items-center gap-2">
+                    <i class="fa-solid fa-satellite-dish text-[#b8860b]"></i> SIGNAL CAST 配信設定
+                </h3>
+                <button onclick="history.back()" class="text-brand-400 hover:text-brand-700 bg-brand-50 w-8 h-8 rounded-sm flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+                <div>
+                    <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">配信タイトル <span class="text-red-500">*</span></label>
+                    <input type="text" id="room-title" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm" placeholder="今夜のテーマや雑談内容" required>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">概要・トピック</label>
+                    <textarea id="room-desc" rows="3" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm leading-relaxed" placeholder="話す内容やリスナーへのメッセージ"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">ゲスト <span class="text-[10px] text-brand-400 font-normal ml-1">(予定している登壇者)</span></label>
+                    <input type="text" id="room-guests" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm" placeholder="例: @user_id, 〇〇さん">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">公開範囲 <span class="text-red-500">*</span></label>
+                        <select id="room-privacy" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm font-bold text-brand-700">
+                            <option value="public">🌍 公開（SETTLER以上）</option>
+                            <option value="followers">👥 フォロワー限定</option>
+                            <option value="invite">🔒 招待制（クローズド）</option>
+                            <option value="community">🏢 コミュニティ限定</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">ルーム種別 <span class="text-red-500">*</span></label>
+                        <select id="room-type" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm font-bold text-brand-700">
+                            <option value="talk">通常トーク</option>
+                            <option value="panel">パネルディスカッション</option>
+                            <option value="interview">インタビュー形式</option>
+                            <option value="music">音楽・ライブ形式</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">カテゴリ・タグ</label>
+                    <div class="flex flex-wrap gap-2">
+                        <label class="cursor-pointer"><input type="checkbox" value="ビジネス" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">ビジネス</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="テック" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">テック</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="恋愛" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">恋愛</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="自己成長" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">自己成長</div></label>
+                        <label class="cursor-pointer"><input type="checkbox" value="投資" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">投資</div></label>
+                    </div>
+                </div>
+
+                <div class="bg-brand-50 p-4 border border-brand-200 rounded-sm">
+                    <label class="block text-xs font-bold text-brand-800 mb-3 tracking-widest">アーカイブ設定</label>
+                    <div class="flex gap-6">
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-white border border-brand-200 px-4 py-2 rounded-sm shadow-sm">
+                            <input type="radio" name="roomRecord" value="true" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音して残す
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-white border border-brand-200 px-4 py-2 rounded-sm shadow-sm">
+                            <input type="radio" name="roomRecord" value="false" checked class="text-[#b8860b] focus:ring-[#b8860b]"> 録音しない
+                        </label>
+                    </div>
+                    <p class="text-[10px] text-brand-500 mt-2">「録音して残す」を選択すると、配信終了後に自動でポッドキャストとして公開されます。</p>
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">サムネイル (任意)</label>
+                    <input type="file" id="room-thumb" accept="image/*" class="w-full text-xs text-brand-600 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-[10px] file:font-bold file:bg-brand-100 file:text-brand-800 bg-brand-50 border border-brand-200 p-2 rounded-sm">
+                </div>
+
+            </div>
+            
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] shrink-0">
+                <button onclick="startLiveCast()" id="btn-start-cast" class="w-full py-4 bg-gradient-to-r from-[#3e2723] to-[#2a1a17] text-[#d4af37] font-bold rounded-sm shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-2 transform hover:-translate-y-0.5 transition-all">
+                    <i class="fa-solid fa-satellite-dish animate-pulse"></i> 配信を START する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ライブ配信ビュー (黒背景) -->
+    <div id="live-view" class="hidden flex-col h-full w-full bg-[#1a110f] text-[#f7f5f0] font-sans">
+        <!-- Header -->
+        <div class="flex justify-between items-center bg-[#2a1a17] p-3 sm:p-4 border-b border-[#5c4a3d] shrink-0 shadow-md">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="bg-red-600 text-white px-2 py-0.5 rounded-sm text-[9px] font-bold tracking-widest flex items-center gap-1 animate-pulse">
+                    <i class="fa-solid fa-satellite-dish"></i> LIVE
+                </div>
+                <h2 id="live-header-title" class="font-bold text-sm sm:text-base tracking-widest truncate">ルームタイトル</h2>
+            </div>
+            <div class="flex items-center gap-4 shrink-0">
+                <div class="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-full border border-[#5c4a3d]">
+                    <i class="fa-solid fa-headphones text-[#b8860b] text-xs"></i>
+                    <span id="live-listener-count" class="text-xs font-bold font-mono">0</span>
+                </div>
+                <button onclick="leaveLiveRoom()" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 transition-colors flex items-center justify-center border border-[#5c4a3d]">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Body -->
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+            <!-- スピーカーエリア -->
+            <div class="flex-1 p-4 sm:p-8 overflow-y-auto dark-scrollbar relative">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.05)_0%,transparent_60%)] pointer-events-none"></div>
+                <div id="speakers-grid" class="flex flex-wrap justify-center content-start gap-6 sm:gap-10 relative z-10 max-w-4xl mx-auto h-full pt-10">
+                    <!-- JSでスピーカーのアイコンが挿入されます -->
+                </div>
+            </div>
+
+            <!-- 右側パネル -->
+            <div class="w-full lg:w-80 bg-[#2a1a17] flex flex-col border-t lg:border-t-0 lg:border-l border-[#5c4a3d] shrink-0 h-[45vh] lg:h-auto z-20">
+                <div class="flex border-b border-[#5c4a3d] shrink-0">
+                    <button onclick="switchLiveTab('comments')" id="tab-live-comments" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors">コメント</button>
+                    <button onclick="switchLiveTab('listeners')" id="tab-live-listeners" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors hidden">リスナー管理</button>
+                </div>
+
+                <!-- Comments Area -->
+                <div id="area-live-comments" class="flex-1 flex flex-col overflow-hidden">
+                    <div id="live-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3 dark-scrollbar">
+                        <div class="text-center py-4 text-[#725b3f] text-xs tracking-widest">ここにコメントが表示されます</div>
+                    </div>
+                    <div class="p-3 bg-[#1a110f] border-t border-[#5c4a3d] shrink-0">
+                        <form onsubmit="sendLiveComment(event)" class="flex gap-2 relative">
+                            <input type="text" id="live-comment-input" class="flex-1 bg-[#2a1a17] text-[#f7f5f0] text-sm p-3 pr-10 rounded-sm border border-[#5c4a3d] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all placeholder-[#725b3f]" placeholder="コメントを送信..." required>
+                            <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#d4af37] hover:text-white transition-colors p-2">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Listeners Area -->
+                <div id="area-live-listeners" class="hidden flex-1 flex flex-col overflow-hidden">
+                    <div class="p-3 bg-[#1a110f] border-b border-[#5c4a3d] shrink-0 flex justify-between items-center">
+                        <span class="text-[10px] text-[#a09080] tracking-widest">登壇リクエスト</span>
+                        <span id="req-count" class="bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-sm font-bold">0</span>
+                    </div>
+                    <div id="live-listeners-list" class="flex-1 overflow-y-auto p-2 space-y-1 dark-scrollbar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- アクションバー -->
+        <div class="bg-[#1a110f] border-t border-[#5c4a3d] p-3 sm:p-4 shrink-0 flex justify-center items-center gap-4 relative z-30">
+            <button id="btn-raise-hand" onclick="toggleHandRaise()" class="hidden px-6 py-3 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] rounded-full text-xs font-bold tracking-widest hover:bg-[#2a1a17] transition-colors shadow-md">
+                <i class="fa-solid fa-hand mr-2"></i> 登壇をリクエスト
+            </button>
+            <button id="btn-mic" onclick="toggleMic()" class="hidden w-14 h-14 rounded-full bg-[#d4af37] text-[#1a110f] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform">
+                <i class="fa-solid fa-microphone" id="icon-mic"></i>
+            </button>
+            <button id="btn-leave-stage" onclick="leaveStage()" class="hidden px-4 py-2 bg-transparent text-[#a09080] border border-[#5c4a3d] rounded-full text-xs font-bold tracking-widest hover:text-[#f7f5f0] hover:bg-[#3e2723] transition-colors">
+                降壇する
+            </button>
+            <button id="btn-end-cast" onclick="endLiveCast()" class="hidden px-4 py-2 bg-red-900/50 text-red-400 border border-red-800 rounded-full text-xs font-bold tracking-widest hover:bg-red-800 hover:text-white transition-colors ml-4">
+                配信を終了
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-10 left-1/2 transform -translate-x-1/2 z-[8000] hidden transition-all duration-300 translate-y-10">
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]">
+            <i class="fa-solid fa-check text-[#d4af37] text-lg"></i>
+            <span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span>
+        </div>
+    </div>
+
+    <!-- LiveKit Client & jose -->
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+        import * as jose from 'https://cdn.jsdelivr.net/npm/jose@5.2.3/+esm';
+
+        const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        const appId = 'default-app-id';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+        const targetRoomId = urlParams.get('roomId');
+
+        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
+        let currentUser = null;
+        let myProfile = null;
+        let myRank = 'arrival';
+        let isAdmin = false;
+
+        let currentRoomId = null; 
+        let currentRole = 'none'; 
+        let roomUnsubscribe = null;
+        let partsUnsubscribe = null;
+        let commentsUnsubscribe = null;
+        let isHandRaised = false;
+
+        const LIVEKIT_URL = "wss://noonealonehere-eoyjqp8c.livekit.cloud";
+        const LIVEKIT_API_KEY = "APIvGriAyz8L7Tm";
+        const LIVEKIT_API_SECRET = "IvJ9RG8pdaey7sKqJ8Hh9qFZxvYINz776eT6zStiLuL";
+        let livekitRoom = null;
+
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let isMicActive = false;
+        let micInterval = null;
+
+        const getVal = (id, def = '') => { 
+            const el = document.getElementById(id); 
+            return el ? el.value : def; 
+        };
+
+        window.showNotification = (msg, isError = false) => {
+            const notif = document.getElementById('notification');
+            document.getElementById('notif-message').textContent = msg;
+            notif.classList.remove('hidden', 'translate-y-10');
+            setTimeout(() => {
+                notif.classList.add('translate-y-10');
+                setTimeout(() => notif.classList.add('hidden'), 300);
+            }, 3000);
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (isAdminMock) {
+                currentUser = { uid: 'test_admin_uid' };
+                isAdmin = true;
+                myRank = 'covenant';
+                myProfile = { name: '管理者', userId: 'admin', photoURL: 'https://via.placeholder.com/150' };
+                initView();
+                return;
+            }
+
+            if (user && !user.isAnonymous) {
+                currentUser = user;
+                try {
+                    const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
+                    if (snap.exists()) {
+                        myProfile = snap.data();
+                        myRank = myProfile.membershipRank || 'arrival';
+                        if (myProfile.userId === 'admin') isAdmin = true;
+                    }
+                } catch(e){}
+                initView();
+            } else {
+                if(action === 'create') {
+                    alert('配信を始めるにはログインが必要です');
+                    window.location.href = 'login.html';
+                } else if(targetRoomId) {
+                    if(confirm('視聴するにはログインが必要です。ログインしますか？')) {
+                        window.location.href = 'login.html';
+                    } else {
+                        window.location.href = 'home.html';
+                    }
+                } else {
+                    window.location.href = 'home.html';
+                }
+            }
+        });
+
+        function initView() {
+            if (action === 'create') {
+                if (myRank === 'arrival' && !isAdmin && !isAdminMock) {
+                    alert('イベント企画は SETTLER 以上の機能です。契約変更をご検討ください。');
+                    window.location.href = 'upgrade.html';
+                    return;
+                }
+                document.getElementById('create-view').classList.remove('hidden');
+                document.getElementById('create-view').classList.add('flex');
+            } else if (targetRoomId) {
+                document.getElementById('live-view').classList.remove('hidden');
+                document.getElementById('live-view').classList.add('flex');
+                joinLiveRoom(targetRoomId);
+            } else {
+                window.location.href = 'home.html';
+            }
+        }
+
+        async function generateLiveKitToken(roomName, participantName, isPublisher) {
+            const secret = new TextEncoder().encode(LIVEKIT_API_SECRET);
+            const jwt = await new jose.SignJWT({
+                video: { room: roomName, roomJoin: true, canPublish: isPublisher, canSubscribe: true },
+                name: participantName,
+            })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuer(LIVEKIT_API_KEY)
+            .setSubject(currentUser.uid)
+            .setExpirationTime('12h')
+            .sign(secret);
+            return jwt;
+        }
+
+        async function connectLiveKit(roomName, isPublisher) {
+            try {
+                if (livekitRoom) await livekitRoom.disconnect();
+                
+                const token = await generateLiveKitToken(roomName, myProfile?.name || currentUser.uid, isPublisher);
+                livekitRoom = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+
+                livekitRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+                    if (track.kind === 'audio') document.body.appendChild(track.attach());
+                });
+
+                livekitRoom.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, (speakers) => {
+                    document.querySelectorAll('[id^="speaker-"]').forEach(el => el.classList.remove('speaking-ripple'));
+                    speakers.forEach(speaker => {
+                        const el = document.getElementById(`speaker-${speaker.identity}`);
+                        if (el) el.classList.add('speaking-ripple');
+                    });
+                });
+
+                await livekitRoom.connect(LIVEKIT_URL, token);
+                if (isPublisher) await livekitRoom.localParticipant.setMicrophoneEnabled(true);
+            } catch(e) {
+                console.error("LiveKit connection error", e);
+                alert("音声サーバーへの接続に失敗しました。");
+            }
+        }
+
+        async function disconnectLiveKit() {
+            if (livekitRoom) {
+                await livekitRoom.disconnect();
+                livekitRoom = null;
+            }
+        }
+
+        window.startLiveCast = async () => {
+            if (!currentUser) return;
+            const title = getVal('room-title');
+            if(!title) return alert("タイトルは必須です");
+
+            const btn = document.getElementById('btn-start-cast');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 準備中...';
+            btn.disabled = true;
+
+            try {
+                let thumbUrl = null;
+                const fileEl = document.getElementById('room-thumb');
+                if (fileEl && fileEl.files[0] && !isAdminMock) {
+                    const snap = await uploadBytes(ref(storage, `live_thumbs/${currentUser.uid}/${Date.now()}_${fileEl.files[0].name}`), fileEl.files[0]);
+                    thumbUrl = await getDownloadURL(snap.ref);
+                }
+
+                const checkedTags = Array.from(document.querySelectorAll('.room-tag-cb:checked')).map(cb => cb.value);
+                const isRecord = document.querySelector('input[name="roomRecord"]:checked').value === 'true';
+
+                const safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
+                const safeIcon = myProfile ? myProfile.photoURL : null;
+
+                const roomData = {
+                    hostId: currentUser.uid,
+                    hostName: safeName,
+                    hostIcon: safeIcon,
+                    title: title,
+                    desc: getVal('room-desc'),
+                    guestsStr: getVal('room-guests'),
+                    privacy: getVal('room-privacy'),
+                    type: getVal('room-type'),
+                    tags: checkedTags,
+                    isRecord: isRecord,
+                    thumbUrl: thumbUrl,
+                    status: 'live',
+                    startedAt: serverTimestamp()
+                };
+
+                if (!isAdminMock) {
+                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid);
+                    await setDoc(roomRef, roomData);
+
+                    const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'participants', currentUser.uid);
+                    await setDoc(partRef, {
+                        uid: currentUser.uid,
+                        name: safeName,
+                        icon: safeIcon,
+                        role: 'host',
+                        isMuted: false,
+                        joinedAt: serverTimestamp()
+                    });
+                }
+
+                document.getElementById('create-view').classList.add('hidden');
+                document.getElementById('create-view').classList.remove('flex');
+                document.getElementById('live-view').classList.remove('hidden');
+                document.getElementById('live-view').classList.add('flex');
+                
+                // URLをリロードせずに書き換え
+                window.history.replaceState(null, '', `?roomId=${currentUser.uid}`);
+                
+                joinLiveRoom(currentUser.uid);
+
+            } catch (e) {
+                console.error(e);
+                alert('配信の開始に失敗しました。');
+                btn.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse"></i> 配信を START する';
+                btn.disabled = false;
+            }
+        };
+
+        window.joinLiveRoom = async (hostUid) => {
+            currentRoomId = hostUid;
+            
+            if (isAdminMock) {
+                document.getElementById('live-header-title').textContent = "テスト配信ルーム";
+                setupMockLiveUI();
+                return;
+            }
+
+            if (currentUser.uid === hostUid) {
+                currentRole = 'host';
+            } else {
+                currentRole = 'listener';
+                const safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
+                const safeIcon = myProfile ? myProfile.photoURL : null;
+
+                const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'participants', currentUser.uid);
+                await setDoc(partRef, {
+                    uid: currentUser.uid,
+                    name: safeName,
+                    icon: safeIcon,
+                    role: 'listener',
+                    handRaised: false,
+                    joinedAt: serverTimestamp()
+                }, { merge: true });
+            }
+
+            await connectLiveKit(hostUid, currentRole === 'host');
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid);
+            roomUnsubscribe = onSnapshot(roomRef, (snap) => {
+                if (!snap.exists() || snap.data().status !== 'live') {
+                    alert('この配信は終了しました。');
+                    leaveLiveRoom();
+                    return;
+                }
+                document.getElementById('live-header-title').textContent = snap.data().title || '配信中';
+            });
+
+            const partsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'participants');
+            partsUnsubscribe = onSnapshot(partsRef, async (snap) => {
+                let speakers = [];
+                let listeners = [];
+                let myData = null;
+
+                snap.forEach(docSnap => {
+                    const p = docSnap.data();
+                    if (p.uid === currentUser.uid) myData = p;
+                    if (p.role === 'host' || p.role === 'speaker') speakers.push(p);
+                    if (p.role === 'listener') listeners.push(p);
+                });
+
+                if (myData) {
+                    const prevRole = currentRole;
+                    currentRole = myData.role;
+                    isHandRaised = myData.handRaised || false;
+
+                    if (prevRole === 'listener' && currentRole === 'speaker') {
+                        await connectLiveKit(currentRoomId, true);
+                    } else if (prevRole === 'speaker' && currentRole === 'listener') {
+                        await connectLiveKit(currentRoomId, false);
+                    }
+                }
+                updateLiveUI(speakers, listeners);
+            });
+
+            const commentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'comments');
+            const q = query(commentsRef, orderBy('timestamp', 'asc'), limit(50));
+            commentsUnsubscribe = onSnapshot(q, (snap) => {
+                const list = document.getElementById('live-comments-list');
+                list.innerHTML = '';
+                snap.forEach(docSnap => {
+                    const c = docSnap.data();
+                    const isMe = c.uid === currentUser.uid;
+                    const align = isMe ? 'justify-end' : 'justify-start';
+                    const bg = isMe ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-[#f7f5f0] text-[#3e2723]';
+                    
+                    list.innerHTML += `
+                        <div class="flex ${align} w-full mb-3">
+                            ${!isMe ? `<img src="${c.icon||'https://via.placeholder.com/30'}" class="w-6 h-6 rounded-full mr-2 self-end object-cover">` : ''}
+                            <div class="max-w-[80%]">
+                                ${!isMe ? `<p class="text-[8px] text-[#a09080] mb-0.5 ml-1">${c.name}</p>` : ''}
+                                <div class="${bg} px-3 py-2 rounded-sm text-xs leading-relaxed break-words shadow-sm">${c.text}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.scrollTop = list.scrollHeight;
+            });
+        };
+
+        function updateLiveUI(speakers, listeners) {
+            document.getElementById('live-listener-count').textContent = listeners.length;
+            
+            const grid = document.getElementById('speakers-grid');
+            grid.innerHTML = speakers.map(s => {
+                const micIcon = s.isMuted ? '<i class="fa-solid fa-microphone-slash text-red-500 absolute bottom-0 right-0 bg-black/50 rounded-full p-1 text-[8px]"></i>' : '';
+                const hostIcon = s.role === 'host' ? '<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] text-[8px] px-2 py-0.5 rounded-sm font-bold border border-[#b8860b]">HOST</div>' : '';
+                const ringClass = s.isSpeaking ? 'speaking-ripple' : ''; // Web Audio API Fallback
+                
+                return `
+                <div class="flex flex-col items-center gap-2">
+                    <div id="speaker-${s.uid}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-[#5c4a3d] bg-black relative shadow-lg transition-all ${ringClass}">
+                        ${hostIcon}
+                        <img src="${s.icon || 'https://via.placeholder.com/150'}" class="w-full h-full rounded-full object-cover">
+                        ${micIcon}
+                    </div>
+                    <span class="text-xs font-bold tracking-widest text-[#dcd4c6] max-w-[100px] truncate text-center">${s.name}</span>
+                </div>
+                `;
+            }).join('');
+
+            const btnRaise = document.getElementById('btn-raise-hand');
+            const btnMic = document.getElementById('btn-mic');
+            const btnLeaveStage = document.getElementById('btn-leave-stage');
+            const btnEnd = document.getElementById('btn-end-cast');
+            const tabListeners = document.getElementById('tab-live-listeners');
+
+            btnRaise.classList.add('hidden');
+            btnMic.classList.add('hidden');
+            btnLeaveStage.classList.add('hidden');
+            btnEnd.classList.add('hidden');
+            
+            if (currentRole === 'host') {
+                btnMic.classList.remove('hidden');
+                btnEnd.classList.remove('hidden');
+                tabListeners.classList.remove('hidden');
+                renderListenersAdmin(listeners); 
+                if(!isMicActive) startMicAnalysis();
+            } else if (currentRole === 'speaker') {
+                btnMic.classList.remove('hidden');
+                btnLeaveStage.classList.remove('hidden');
+                tabListeners.classList.add('hidden');
+                if(!isMicActive) startMicAnalysis();
+            } else if (currentRole === 'listener') {
+                if (myRank === 'guardian' || myRank === 'covenant' || isAdmin) {
+                    btnRaise.classList.remove('hidden');
+                    if (isHandRaised) {
+                        btnRaise.innerHTML = '<i class="fa-solid fa-hand text-brand-200 mr-2"></i> リクエスト中...';
+                        btnRaise.classList.replace('bg-[#3e2723]', 'bg-[#5c4a3d]');
+                    } else {
+                        btnRaise.innerHTML = '<i class="fa-solid fa-hand mr-2"></i> 登壇をリクエスト';
+                        btnRaise.classList.replace('bg-[#5c4a3d]', 'bg-[#3e2723]');
+                    }
+                }
+                tabListeners.classList.add('hidden');
+                stopMicAnalysis();
+            }
+        }
+
+        function renderListenersAdmin(listeners) {
+            const list = document.getElementById('live-listeners-list');
+            let reqCount = 0;
+            list.innerHTML = listeners.map(l => {
+                if (l.handRaised) reqCount++;
+                const reqBtn = l.handRaised 
+                    ? `<button onclick="approveSpeaker('${l.uid}')" class="bg-[#d4af37] text-[#2a1a17] text-[9px] font-bold px-2 py-1 rounded-sm shadow-sm hover:bg-[#b8860b] transition-colors">承認</button>` 
+                    : '';
+                return `
+                <div class="flex items-center justify-between p-2 hover:bg-black/20 rounded-sm transition-colors group border-b border-[#5c4a3d]/50 last:border-0">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <img src="${l.icon||'https://via.placeholder.com/30'}" class="w-6 h-6 rounded-full object-cover border border-[#5c4a3d]">
+                        <span class="text-xs text-[#dcd4c6] truncate">${l.name}</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        ${reqBtn}
+                        <button onclick="kickUser('${l.uid}')" class="text-red-500 hover:text-red-400" title="退出させる"><i class="fa-solid fa-ban text-xs"></i></button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            document.getElementById('req-count').textContent = reqCount;
+        }
+
+        window.switchLiveTab = (tab) => {
+            const btnCom = document.getElementById('tab-live-comments');
+            const btnLis = document.getElementById('tab-live-listeners');
+            const areaCom = document.getElementById('area-live-comments');
+            const areaLis = document.getElementById('area-live-listeners');
+
+            if (tab === 'comments') {
+                btnCom.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors';
+                btnLis.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors';
+                areaCom.classList.remove('hidden');
+                areaLis.classList.add('hidden');
+            } else {
+                btnLis.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors';
+                btnCom.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors';
+                areaLis.classList.remove('hidden');
+                areaCom.classList.add('hidden');
+            }
+        };
+
+        window.sendLiveComment = async (e) => {
+            e.preventDefault();
+            if(!currentUser) return;
+            const input = document.getElementById('live-comment-input');
+            const text = input.value.trim();
+            if(!text || !currentRoomId) return;
+            
+            const safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
+            const safeIcon = myProfile ? myProfile.photoURL : null;
+
+            if(!isAdminMock) {
+                await setDoc(doc(collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'comments')), {
+                    uid: currentUser.uid,
+                    name: safeName,
+                    icon: safeIcon,
+                    text: text,
+                    timestamp: serverTimestamp()
+                });
+            } else {
+                document.getElementById('live-comments-list').innerHTML += `<div class="text-[#d4af37] text-xs p-2">テスト: ${text}</div>`;
+            }
+            input.value = '';
+        };
+
+        window.toggleHandRaise = async () => {
+            if(!currentRoomId || !currentUser) return;
+            if(!isAdminMock) {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), {
+                    handRaised: !isHandRaised
+                });
+            }
+        };
+
+        window.approveSpeaker = async (targetUid) => {
+            if(!currentRoomId) return;
+            if(!isAdminMock) {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', targetUid), {
+                    role: 'speaker',
+                    handRaised: false
+                });
+            }
+        };
+
+        window.leaveStage = async () => {
+            if(!currentRoomId || !currentUser) return;
+            if(!isAdminMock) {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), {
+                    role: 'listener',
+                    isSpeaking: false
+                });
+            }
+            stopMicAnalysis();
+        };
+
+        window.kickUser = async (targetUid) => {
+            if(!confirm("このユーザーをルームから退出させますか？")) return;
+            if(!isAdminMock) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', targetUid));
+            }
+        };
+
+        window.toggleMic = async () => {
+            const icon = document.getElementById('icon-mic');
+            const isMuted = icon.classList.contains('fa-microphone-slash'); 
+            
+            if (livekitRoom && livekitRoom.localParticipant) {
+                await livekitRoom.localParticipant.setMicrophoneEnabled(isMuted);
+            }
+
+            if (!isMuted) {
+                icon.className = 'fa-solid fa-microphone-slash text-red-900';
+                document.getElementById('btn-mic').classList.replace('bg-[#d4af37]', 'bg-[#5c4a3d]');
+                if(!isAdminMock) updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: true, isSpeaking: false });
+            } else {
+                icon.className = 'fa-solid fa-microphone text-[#1a110f]';
+                document.getElementById('btn-mic').classList.replace('bg-[#5c4a3d]', 'bg-[#d4af37]');
+                if(!isAdminMock) updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: false });
+            }
+        };
+
+        // --- Web Audio API によるマイク波形検知 (LiveKitイベントのフォールバック) ---
+        async function startMicAnalysis() {
+            if (isMicActive) return;
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                isMicActive = true;
+                
+                let lastUpdateTime = 0;
+                
+                function analyze() {
+                    if(!isMicActive) return;
+                    analyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for(let i=0; i<bufferLength; i++) sum += dataArray[i];
+                    let avg = sum / bufferLength;
+                    
+                    const mySpeakerEl = document.getElementById(`speaker-${currentUser.uid}`);
+                    const isMuted = document.getElementById('icon-mic')?.classList.contains('fa-microphone-slash');
+                    const isTalkingNow = avg > 15 && !isMuted;
+                    
+                    if(mySpeakerEl) {
+                        if(isTalkingNow) mySpeakerEl.classList.add('speaking-ripple');
+                        else mySpeakerEl.classList.remove('speaking-ripple');
+                    }
+
+                    const now = Date.now();
+                    if (now - lastUpdateTime > 1000 && !isAdminMock && currentRoomId && currentRole !== 'listener') {
+                        updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), {
+                            isSpeaking: isTalkingNow
+                        }).catch(e=>{});
+                        lastUpdateTime = now;
+                    }
+                    micInterval = requestAnimationFrame(analyze);
+                }
+                analyze();
+            } catch(e) {
+                console.warn("マイクアクセス不可");
+            }
+        }
+
+        function stopMicAnalysis() {
+            isMicActive = false;
+            if(micInterval) cancelAnimationFrame(micInterval);
+            if(microphone) microphone.disconnect();
+            if(audioContext) audioContext.close();
+            if(!isAdminMock && currentUser && currentRoomId && currentRole !== 'listener') {
+                updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isSpeaking: false }).catch(e=>{});
+            }
+        }
+
+        window.leaveLiveRoom = async () => {
+            if (!currentRoomId || !currentUser) {
+                window.location.href = 'home.html';
+                return;
+            }
+            stopMicAnalysis();
+
+            if (!isAdminMock) {
+                if (currentRole === 'host') {
+                    if(confirm("ルームを退出すると配信が終了します。よろしいですか？")) {
+                        await endLiveCast();
+                    } else {
+                        startMicAnalysis();
+                        return;
+                    }
+                } else {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid));
+                    closeModalUI();
+                }
+            } else {
+                closeModalUI();
+            }
+        };
+
+        window.endLiveCast = async () => {
+            if(!isAdminMock) {
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId), { status: 'ended' });
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId));
+                } catch(e){ console.error(e); }
+            }
+            stopMicAnalysis();
+            closeModalUI();
+        };
+
+        async function closeModalUI() {
+            if(roomUnsubscribe) roomUnsubscribe();
+            if(partsUnsubscribe) partsUnsubscribe();
+            if(commentsUnsubscribe) commentsUnsubscribe();
+            await disconnectLiveKit(); 
+            window.location.href = 'home.html';
+        }
+
+        function setupMockLiveUI() {
+            updateLiveUI([
+                { uid: currentUser.uid, name: 'ホスト(あなた)', role: 'host', isSpeaking: true },
+                { uid: 'u1', name: 'ゲストA', role: 'speaker', isSpeaking: false }
+            ], [
+                { uid: 'u2', name: 'リスナー太郎', role: 'listener', handRaised: true }
+            ]);
+        }
+
+    </script>
+</body>
+</html>
