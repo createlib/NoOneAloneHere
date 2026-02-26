@@ -425,11 +425,15 @@
         <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#d4af37] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
     </div>
 
+    <!-- ★ LiveKit Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, getDoc, query, where, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+        import * as jose from 'https://cdn.jsdelivr.net/npm/jose@5.2.3/+esm'; // ★ LiveKitトークン制作用
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
@@ -438,9 +442,9 @@
         const storage = getStorage(app);
         const appId = 'default-app-id';
 
+        // URL処理
         const urlParams = new URLSearchParams(window.location.search);
         const urlTargetUid = urlParams.get('uid');
-
         if (!urlTargetUid) {
             alert('ユーザーが指定されていません');
             window.location.href = 'home.html';
@@ -460,6 +464,8 @@
         let myPodcasts = [];
         let likedVideos = [];
         let likedPodcasts = [];
+        let isLikedVideosLoaded = false;
+        let isLikedPodcastsLoaded = false;
 
         // ====== ライブ配信状態管理 ======
         let currentRoomId = null; 
@@ -469,13 +475,31 @@
         let commentsUnsubscribe = null;
         let isHandRaised = false;
 
-        // Web Audio API によるマイク波形検知用
-        let audioContext = null;
-        let analyser = null;
-        let microphone = null;
-        let isMicActive = false;
-        let micInterval = null;
+        // ====== LiveKit 通信設定 ======
+        const LIVEKIT_URL = "wss://noonealonehere-eoyjqp8c.livekit.cloud";
+        const LIVEKIT_API_KEY = "APIvGriAyz8L7Tm";
+        const LIVEKIT_API_SECRET = "IvJ9RG8pdaey7sKqJ8Hh9qFZxvYINz776eT6zStiLuL";
+        let livekitRoom = null;
 
+        // ====== ヘルパー関数 ======
+        const getVal = (id, def = '') => { 
+            const el = document.getElementById(id); 
+            if (!el) return def;
+            return (el.value === undefined || el.value === null) ? def : el.value; 
+        };
+
+        window.showNotification = (msg, isError = false) => {
+            const notif = document.getElementById('notification');
+            const msgEl = document.getElementById('notif-message');
+            msgEl.textContent = msg;
+            notif.classList.remove('hidden', 'translate-y-20');
+            setTimeout(() => {
+                notif.classList.add('translate-y-20');
+                setTimeout(() => notif.classList.add('hidden'), 300);
+            }, 3000);
+        };
+
+        // --- Auth State ---
         onAuthStateChanged(auth, async (user) => {
             if (isAdminMock) {
                 currentUser = { uid: 'test_admin_uid' };
@@ -483,8 +507,8 @@
                 myRank = 'covenant';
                 myProfile = { name: '管理者', userId: 'admin', photoURL: 'https://via.placeholder.com/150' };
                 if (urlTargetUid === 'test_admin_uid') {
-                    document.getElementById('tab-liked-videos').classList.remove('hidden');
-                    document.getElementById('tab-liked-podcasts').classList.remove('hidden');
+                    document.getElementById('tab-liked-videos')?.classList.remove('hidden');
+                    document.getElementById('tab-liked-podcasts')?.classList.remove('hidden');
                 }
                 await loadUserInfo();
                 loadMyContents();
@@ -495,8 +519,8 @@
             if (user && !user.isAnonymous) {
                 currentUser = user;
                 if (currentUser.uid === urlTargetUid) {
-                    document.getElementById('tab-liked-videos').classList.remove('hidden');
-                    document.getElementById('tab-liked-podcasts').classList.remove('hidden');
+                    document.getElementById('tab-liked-videos')?.classList.remove('hidden');
+                    document.getElementById('tab-liked-podcasts')?.classList.remove('hidden');
                 }
                 try {
                     const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
@@ -570,26 +594,92 @@
                 document.getElementById('user-job').textContent = targetUserData.jobTitle || '';
                 if (targetUserData.photoURL) document.getElementById('header-icon').src = targetUserData.photoURL;
                 
-                document.getElementById('author-profile-link').href = `user.html?uid=${urlTargetUid}`;
-                document.getElementById('btn-profile').href = `user.html?uid=${urlTargetUid}`;
+                const btnProfile = document.getElementById('btn-profile');
+                if(btnProfile) btnProfile.href = `user.html?uid=${urlTargetUid}`;
 
-                // 配信作成ボタンの表示判定 (本人のページ かつ GUARDIAN以上)
                 const canHost = (myRank === 'guardian' || myRank === 'covenant' || isAdmin);
                 if (currentUser && currentUser.uid === urlTargetUid && canHost) {
-                    document.getElementById('btn-create-room').classList.remove('hidden');
+                    document.getElementById('btn-create-room')?.classList.remove('hidden');
                 }
-            } catch (e) {
-                console.error("User fetch error", e);
-            }
+            } catch (e) { console.error("User fetch error", e); }
         }
 
         // ==============================================================
-        // ライブ配信 (SIGNAL CAST) 関連のロジック
+        // LiveKit & SIGNAL CAST ロジック
         // ==============================================================
 
-        // --- 1. ルームの監視（アイコンのエフェクト） ---
+        // --- LiveKit Token Generation (ブラウザ内で強引に生成) ---
+        async function generateLiveKitToken(roomName, participantName, isPublisher) {
+            const secret = new TextEncoder().encode(LIVEKIT_API_SECRET);
+            const jwt = await new jose.SignJWT({
+                video: { 
+                    room: roomName, 
+                    roomJoin: true,
+                    canPublish: isPublisher,
+                    canSubscribe: true
+                },
+                name: participantName,
+            })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuer(LIVEKIT_API_KEY)
+            .setSubject(currentUser.uid)
+            .setExpirationTime('12h')
+            .sign(secret);
+            return jwt;
+        }
+
+        // --- LiveKit 接続 ---
+        async function connectLiveKit(roomName, isPublisher) {
+            try {
+                if (livekitRoom) await livekitRoom.disconnect();
+                
+                const token = await generateLiveKitToken(roomName, myProfile?.name || currentUser.uid, isPublisher);
+                
+                livekitRoom = new LivekitClient.Room({
+                    adaptiveStream: true,
+                    dynacast: true,
+                });
+
+                // 音声トラックを受け取った時の処理
+                livekitRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
+                    if (track.kind === 'audio') {
+                        const audioElement = track.attach();
+                        // 画面には見えない形でDOMに追加し、音を鳴らす
+                        document.body.appendChild(audioElement);
+                    }
+                });
+
+                // スピーカー（喋っている人）が変わった時に波形エフェクトを制御
+                livekitRoom.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, (speakers) => {
+                    document.querySelectorAll('[id^="speaker-"]').forEach(el => el.classList.remove('speaking-ripple'));
+                    speakers.forEach(speaker => {
+                        const el = document.getElementById(`speaker-${speaker.identity}`);
+                        if (el) el.classList.add('speaking-ripple');
+                    });
+                });
+
+                await livekitRoom.connect(LIVEKIT_URL, token);
+
+                if (isPublisher) {
+                    // スピーカーならマイクをオンにする
+                    await livekitRoom.localParticipant.setMicrophoneEnabled(true);
+                }
+            } catch(e) {
+                console.error("LiveKit connection error", e);
+                alert("音声サーバーへの接続に失敗しました。");
+            }
+        }
+
+        async function disconnectLiveKit() {
+            if (livekitRoom) {
+                await livekitRoom.disconnect();
+                livekitRoom = null;
+            }
+        }
+
+        // --- ルーム状態の監視 (アイコンエフェクト表示) ---
         function checkLiveStatus() {
-            if (isAdminMock) return; // モックはスキップ
+            if (isAdminMock) return; 
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', urlTargetUid);
             
             onSnapshot(roomRef, (snap) => {
@@ -600,28 +690,21 @@
 
                 if (snap.exists() && snap.data().status === 'live') {
                     // 配信中
-                    ring.classList.add('live-ring', 'cursor-pointer');
-                    badge.classList.remove('hidden');
-                    overlay.classList.remove('hidden');
+                    if(ring) ring.classList.add('live-ring', 'cursor-pointer');
+                    if(badge) badge.classList.remove('hidden');
+                    if(overlay) overlay.classList.remove('hidden');
                     
-                    // ホスト自身ならボタンを「配信ルームに戻る」に変更
                     if (currentUser && currentUser.uid === urlTargetUid) {
                         if(btnCreate) {
                             btnCreate.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse"></i> 配信ルームに戻る';
                             btnCreate.onclick = () => joinLiveRoom(urlTargetUid);
                         }
                     }
-                    
-                    // クリックで入室
-                    document.getElementById('author-profile-link').onclick = (e) => {
-                        e.preventDefault();
-                        joinLiveRoom(urlTargetUid);
-                    };
                 } else {
-                    // 配信していない
-                    ring.classList.remove('live-ring', 'cursor-pointer');
-                    badge.classList.add('hidden');
-                    overlay.classList.add('hidden');
+                    // 配信終了・非開催
+                    if(ring) ring.classList.remove('live-ring', 'cursor-pointer');
+                    if(badge) badge.classList.add('hidden');
+                    if(overlay) overlay.classList.add('hidden');
                     
                     if (currentUser && currentUser.uid === urlTargetUid && (myRank === 'guardian' || myRank === 'covenant' || isAdmin)) {
                         if(btnCreate) {
@@ -629,13 +712,19 @@
                             btnCreate.onclick = openCreateRoomModal;
                         }
                     }
-                    // 元のリンク動作に戻す
-                    document.getElementById('author-profile-link').onclick = null;
                 }
             });
         }
 
-        // --- 2. ルーム作成 ---
+        // ★修正: HTMLからonclickで呼ばれる関数を定義
+        window.attemptJoinLive = () => {
+            const badge = document.getElementById('live-badge');
+            // バッジが表示されている＝LIVE中 の場合のみ入室処理を走らせる
+            if (badge && !badge.classList.contains('hidden')) {
+                joinLiveRoom(urlTargetUid);
+            }
+        };
+
         window.openCreateRoomModal = () => {
             if (!currentUser) return alert('ログインが必要です');
             document.getElementById('create-room-modal').classList.remove('hidden');
@@ -654,7 +743,6 @@
             btn.disabled = true;
 
             try {
-                // サムネイルアップロード(任意)
                 let thumbUrl = null;
                 const fileEl = document.getElementById('room-thumb');
                 if (fileEl && fileEl.files[0] && !isAdminMock) {
@@ -684,28 +772,25 @@
                 if (isAdminMock) {
                     alert('【テスト】配信を開始しました');
                     closeCreateRoomModal();
-                    joinLiveRoom(currentUser.uid); // モックで入室
+                    joinLiveRoom(currentUser.uid); 
                     return;
                 }
 
-                // 1. ルーム作成
                 const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid);
                 await setDoc(roomRef, roomData);
 
-                // 2. 自身をホストとして参加者サブコレクションに登録
                 const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'participants', currentUser.uid);
                 await setDoc(partRef, {
                     uid: currentUser.uid,
                     name: myProfile.name || myProfile.userId,
                     icon: myProfile.photoURL || null,
                     role: 'host',
-                    isSpeaking: false,
                     isMuted: false,
                     joinedAt: serverTimestamp()
                 });
 
                 closeCreateRoomModal();
-                joinLiveRoom(currentUser.uid); // 入室へ
+                joinLiveRoom(currentUser.uid);
 
             } catch (e) {
                 console.error(e);
@@ -716,14 +801,12 @@
             }
         };
 
-        // --- 3. ルーム入室・監視 ---
         window.joinLiveRoom = async (hostUid) => {
             if (!currentUser && !isAdminMock) {
                 if(confirm('視聴するにはログインが必要です。ログインしますか？')) window.location.href = 'login.html';
                 return;
             }
 
-            // 権限チェック (リスナーはSETTLER以上)
             if (myRank === 'arrival' && !isAdmin && !isAdminMock) {
                 alert('ライブ配信の視聴・参加は SETTLER 以上の会員限定です。');
                 return;
@@ -731,7 +814,7 @@
 
             currentRoomId = hostUid;
             document.getElementById('live-cast-modal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // 背景スクロール禁止
+            document.body.style.overflow = 'hidden'; 
 
             if (isAdminMock) {
                 document.getElementById('live-header-title').textContent = "テスト配信ルーム";
@@ -739,12 +822,10 @@
                 return;
             }
 
-            // 自分がホストか判定
             if (currentUser.uid === hostUid) {
                 currentRole = 'host';
             } else {
                 currentRole = 'listener';
-                // リスナーとしてDBに登録
                 const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'participants', currentUser.uid);
                 await setDoc(partRef, {
                     uid: currentUser.uid,
@@ -756,7 +837,10 @@
                 }, { merge: true });
             }
 
-            // ルーム情報の監視
+            // ★LiveKit サーバーに接続 (ホストならpublish権限あり、リスナーならなし)
+            await connectLiveKit(hostUid, currentRole === 'host');
+
+            // --- Firestore監視 ---
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid);
             roomUnsubscribe = onSnapshot(roomRef, (snap) => {
                 if (!snap.exists() || snap.data().status !== 'live') {
@@ -764,13 +848,11 @@
                     leaveLiveRoom();
                     return;
                 }
-                const data = snap.data();
-                document.getElementById('live-header-title').textContent = data.title || '配信中';
+                document.getElementById('live-header-title').textContent = snap.data().title || '配信中';
             });
 
-            // 参加者リストの監視
             const partsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'participants');
-            partsUnsubscribe = onSnapshot(partsRef, (snap) => {
+            partsUnsubscribe = onSnapshot(partsRef, async (snap) => {
                 let speakers = [];
                 let listeners = [];
                 let myData = null;
@@ -782,16 +864,21 @@
                     if (p.role === 'listener') listeners.push(p);
                 });
 
-                // 自分のロールが更新されたかチェック（ホストに承認された等）
                 if (myData) {
+                    const prevRole = currentRole;
                     currentRole = myData.role;
                     isHandRaised = myData.handRaised || false;
+
+                    // ロールが変更された場合、LiveKitの接続を張り直す（権限の変更のため）
+                    if (prevRole === 'listener' && currentRole === 'speaker') {
+                        await connectLiveKit(currentRoomId, true);
+                    } else if (prevRole === 'speaker' && currentRole === 'listener') {
+                        await connectLiveKit(currentRoomId, false);
+                    }
                 }
-                
                 updateLiveUI(speakers, listeners);
             });
 
-            // コメントの監視
             const commentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'comments');
             const q = query(commentsRef, orderBy('timestamp', 'asc'), limit(50));
             commentsUnsubscribe = onSnapshot(q, (snap) => {
@@ -817,22 +904,18 @@
             });
         };
 
-        // --- 4. ライブUIの更新 ---
         function updateLiveUI(speakers, listeners) {
-            // リスナー数
             document.getElementById('live-listener-count').textContent = listeners.length;
             
-            // スピーカーグリッドの描画
             const grid = document.getElementById('speakers-grid');
             grid.innerHTML = speakers.map(s => {
-                // 発声中かどうかのエフェクトクラス
-                const ringClass = s.isSpeaking ? 'speaking-ripple' : '';
+                // LiveKitがActiveSpeakersを検知してクラスを付与するので、初期状態は通常でOK
                 const micIcon = s.isMuted ? '<i class="fa-solid fa-microphone-slash text-red-500 absolute bottom-0 right-0 bg-black/50 rounded-full p-1 text-[8px]"></i>' : '';
                 const hostIcon = s.role === 'host' ? '<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] text-[8px] px-2 py-0.5 rounded-sm font-bold border border-[#b8860b]">HOST</div>' : '';
                 
                 return `
                 <div class="flex flex-col items-center gap-2">
-                    <div id="speaker-${s.uid}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-[#5c4a3d] bg-black relative shadow-lg transition-all ${ringClass}">
+                    <div id="speaker-${s.uid}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-[#5c4a3d] bg-black relative shadow-lg transition-all">
                         ${hostIcon}
                         <img src="${s.icon || 'https://via.placeholder.com/150'}" class="w-full h-full rounded-full object-cover">
                         ${micIcon}
@@ -842,7 +925,6 @@
                 `;
             }).join('');
 
-            // アクションバーのボタン表示制御
             const btnRaise = document.getElementById('btn-raise-hand');
             const btnMic = document.getElementById('btn-mic');
             const btnLeaveStage = document.getElementById('btn-leave-stage');
@@ -858,15 +940,12 @@
                 btnMic.classList.remove('hidden');
                 btnEnd.classList.remove('hidden');
                 tabListeners.classList.remove('hidden');
-                renderListenersAdmin(listeners); // ホスト用リスナー管理画面
-                if(!isMicActive) startMicAnalysis(); // ホストなら自動でマイク解析開始
+                renderListenersAdmin(listeners); 
             } else if (currentRole === 'speaker') {
                 btnMic.classList.remove('hidden');
                 btnLeaveStage.classList.remove('hidden');
                 tabListeners.classList.add('hidden');
-                if(!isMicActive) startMicAnalysis();
             } else if (currentRole === 'listener') {
-                // スピーカーになれるのはGUARDIAN以上
                 if (myRank === 'guardian' || myRank === 'covenant' || isAdmin) {
                     btnRaise.classList.remove('hidden');
                     if (isHandRaised) {
@@ -878,11 +957,9 @@
                     }
                 }
                 tabListeners.classList.add('hidden');
-                stopMicAnalysis();
             }
         }
 
-        // ホスト用のリスナー一覧と承認UI
         function renderListenersAdmin(listeners) {
             const list = document.getElementById('live-listeners-list');
             const reqCountEl = document.getElementById('req-count');
@@ -907,11 +984,9 @@
                 </div>
                 `;
             }).join('');
-            
             reqCountEl.textContent = reqCount;
         }
 
-        // --- 5. インタラクション群 ---
         window.switchLiveTab = (tab) => {
             const btnCom = document.getElementById('tab-live-comments');
             const btnLis = document.getElementById('tab-live-listeners');
@@ -946,25 +1021,21 @@
                     text: text,
                     timestamp: serverTimestamp()
                 });
-            } else {
-                document.getElementById('live-comments-list').innerHTML += `<div class="text-[#d4af37] text-xs p-2">テスト: ${text}</div>`;
             }
             input.value = '';
         };
 
         window.toggleHandRaise = async () => {
             if(!currentRoomId || !currentUser) return;
-            const newState = !isHandRaised;
             if(!isAdminMock) {
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), {
-                    handRaised: newState
+                    handRaised: !isHandRaised
                 });
             }
         };
 
         window.approveSpeaker = async (targetUid) => {
-            if(!currentRoomId) return;
-            if(!isAdminMock) {
+            if(!currentRoomId || !isAdminMock) {
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', targetUid), {
                     role: 'speaker',
                     handRaised: false
@@ -976,11 +1047,9 @@
             if(!currentRoomId || !currentUser) return;
             if(!isAdminMock) {
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), {
-                    role: 'listener',
-                    isSpeaking: false
+                    role: 'listener'
                 });
             }
-            stopMicAnalysis();
         };
 
         window.kickUser = async (targetUid) => {
@@ -990,105 +1059,40 @@
             }
         };
 
-        window.toggleMic = () => {
+        window.toggleMic = async () => {
             const icon = document.getElementById('icon-mic');
-            if (icon.classList.contains('fa-microphone')) {
+            const isMuted = icon.classList.contains('fa-microphone-slash'); 
+            
+            if (livekitRoom && livekitRoom.localParticipant) {
+                // LiveKit側のマイクON/OFFを切り替え
+                await livekitRoom.localParticipant.setMicrophoneEnabled(isMuted);
+            }
+
+            if (!isMuted) {
                 icon.className = 'fa-solid fa-microphone-slash text-red-900';
                 document.getElementById('btn-mic').classList.replace('bg-[#d4af37]', 'bg-[#5c4a3d]');
-                if(!isAdminMock) {
-                    updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: true, isSpeaking: false });
-                }
+                if(!isAdminMock) updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: true });
             } else {
                 icon.className = 'fa-solid fa-microphone text-[#1a110f]';
                 document.getElementById('btn-mic').classList.replace('bg-[#5c4a3d]', 'bg-[#d4af37]');
-                if(!isAdminMock) {
-                    updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: false });
-                }
+                if(!isAdminMock) updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: false });
             }
         };
 
-        // --- 6. Web Audio API によるマイク波形検知 ---
-        async function startMicAnalysis() {
-            if (isMicActive) return;
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                microphone = audioContext.createMediaStreamSource(stream);
-                microphone.connect(analyser);
-                analyser.fftSize = 256;
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                isMicActive = true;
-                
-                let lastUpdateTime = 0;
-                
-                function analyze() {
-                    if(!isMicActive) return;
-                    analyser.getByteFrequencyData(dataArray);
-                    let sum = 0;
-                    for(let i=0; i<bufferLength; i++) sum += dataArray[i];
-                    let avg = sum / bufferLength;
-                    
-                    // 音量が一定以上ならUIにエフェクト (ローカル描画用)
-                    const mySpeakerEl = document.getElementById(`speaker-${currentUser.uid}`);
-                    const isMuted = document.getElementById('icon-mic')?.classList.contains('fa-microphone-slash');
-                    
-                    const isTalkingNow = avg > 15 && !isMuted;
-                    
-                    if(mySpeakerEl) {
-                        if(isTalkingNow) mySpeakerEl.classList.add('speaking-ripple');
-                        else mySpeakerEl.classList.remove('speaking-ripple');
-                    }
-
-                    // Firestoreの更新頻度を抑える (約1秒に1回)
-                    const now = Date.now();
-                    if (now - lastUpdateTime > 1000 && !isAdminMock && currentRoomId && currentRole !== 'listener') {
-                        updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), {
-                            isSpeaking: isTalkingNow
-                        }).catch(e=>{});
-                        lastUpdateTime = now;
-                    }
-                    
-                    micInterval = requestAnimationFrame(analyze);
-                }
-                analyze();
-            } catch(e) {
-                console.warn("マイクへのアクセスが拒否されました。波形エフェクトは無効になります。", e);
-            }
-        }
-
-        function stopMicAnalysis() {
-            isMicActive = false;
-            if(micInterval) cancelAnimationFrame(micInterval);
-            if(microphone) microphone.disconnect();
-            if(audioContext) audioContext.close();
-            // DBの状態リセット
-            if(!isAdminMock && currentUser && currentRoomId && currentRole !== 'listener') {
-                updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isSpeaking: false }).catch(e=>{});
-            }
-        }
-
-        // --- 7. 退出・終了 ---
         window.leaveLiveRoom = async () => {
             if (!currentRoomId || !currentUser) {
                 closeModalUI();
                 return;
             }
 
-            stopMicAnalysis();
-
             if (!isAdminMock) {
                 if (currentRole === 'host') {
-                    // ホストが離れると配信終了
                     if(confirm("ルームを退出すると配信が終了します。よろしいですか？")) {
                         await endLiveCast();
                     } else {
-                        startMicAnalysis(); // キャンセルなら再開
                         return;
                     }
                 } else {
-                    // 一般参加者の退出
                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid));
                     closeModalUI();
                 }
@@ -1100,38 +1104,24 @@
         window.endLiveCast = async () => {
             if(!isAdminMock) {
                 try {
-                    // Statusをendedにする(リスナーの監視トリガーで退出させる)
                     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId), { status: 'ended' });
-                    // その後、ドキュメントを消す(今回は簡易的に完全削除)
                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId));
                 } catch(e){ console.error(e); }
             }
-            stopMicAnalysis();
             closeModalUI();
             showNotification('配信を終了しました');
         };
 
-        function closeModalUI() {
+        async function closeModalUI() {
             if(roomUnsubscribe) roomUnsubscribe();
             if(partsUnsubscribe) partsUnsubscribe();
             if(commentsUnsubscribe) commentsUnsubscribe();
+            await disconnectLiveKit(); // 通信切断
             document.getElementById('live-cast-modal').classList.add('hidden');
             document.body.style.overflow = '';
             currentRoomId = null;
             currentRole = 'none';
         }
-
-        function setupMockLiveUI() {
-            updateLiveUI([
-                { uid: currentUser.uid, name: 'ホスト(あなた)', role: 'host', isSpeaking: true },
-                { uid: 'u1', name: 'ゲストA', role: 'speaker', isSpeaking: false }
-            ], [
-                { uid: 'u2', name: 'リスナー太郎', role: 'listener', handRaised: true },
-                { uid: 'u3', name: 'リスナー花子', role: 'listener', handRaised: false }
-            ]);
-            document.getElementById('live-comments-list').innerHTML = '<div class="text-[#d4af37] text-xs p-2">テスト: 配信が開始されました</div>';
-        }
-
 
         // ==========================================
         // Data Load & Render (Videos / Podcasts)
@@ -1219,8 +1209,10 @@
                 btn.classList.add('border-transparent', 'text-brand-400');
             });
             const activeBtn = document.getElementById(`tab-${tabName}`);
-            activeBtn.classList.remove('border-transparent', 'text-brand-400');
-            activeBtn.classList.add('active', 'border-[#b8860b]', 'text-[#b8860b]');
+            if(activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-brand-400');
+                activeBtn.classList.add('active', 'border-[#b8860b]', 'text-[#b8860b]');
+            }
 
             if (tabName === 'liked-videos' && !isLikedVideosLoaded && !isAdminMock) {
                 await loadLikedVideos();
@@ -1267,14 +1259,9 @@
                         </div>
                     </div>
                     <div class="p-4 flex gap-3 flex-1">
-                        <img src="${v.authorIcon || 'https://via.placeholder.com/40'}" class="w-8 h-8 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/40?text=U'">
                         <div class="flex-1 min-w-0 flex flex-col justify-between">
                             <div>
                                 <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-brand-600 transition-colors font-serif tracking-wide">${v.title || 'タイトルなし'}</h3>
-                                <div class="flex items-center text-[10px] text-brand-500 mb-1">
-                                    <span class="truncate hover:text-brand-800 transition-colors font-bold tracking-widest">${v.authorName || '名無し'}</span>
-                                    <i class="fa-solid fa-circle-check text-[9px] ml-1 text-[#d4af37]"></i>
-                                </div>
                             </div>
                             <p class="text-[9px] text-brand-400 font-mono tracking-widest">${dateStr}</p>
                         </div>
@@ -1327,8 +1314,6 @@
                     
                     <div class="flex flex-wrap items-center justify-between gap-2 mt-auto pt-3 border-t border-brand-100/70">
                         <div class="flex items-center gap-1.5 min-w-0 pr-2">
-                            <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-5 h-5 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/24?text=U'">
-                            <span class="text-[10px] text-brand-700 truncate font-bold tracking-widest">${p.authorName || '名無し'}</span>
                             ${durationHtml}
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
@@ -1343,10 +1328,7 @@
         }
 
         window.addEventListener('unload', () => {
-            if(roomUnsubscribe) roomUnsubscribe();
-            if(partsUnsubscribe) partsUnsubscribe();
-            if(commentsUnsubscribe) commentsUnsubscribe();
-            stopMicAnalysis();
+            closeModalUI();
         });
     </script>
 </body>
