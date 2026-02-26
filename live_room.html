@@ -54,10 +54,9 @@
         }
     </style>
 </head>
-<!-- ★修正: スマホのブラウザUIバー対策のため h-screen ではなく h-[100dvh] を使用 -->
 <body class="antialiased h-[100dvh] w-screen overflow-hidden bg-[#f7f5f0] bg-texture relative">
 
-    <!-- Standalone Background (ミニプレーヤー時に背景として表示される) -->
+    <!-- Standalone Background -->
     <div id="standalone-bg" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
         <i class="fa-solid fa-satellite-dish text-6xl text-brand-300 mb-6 opacity-30"></i>
         <h1 class="text-4xl font-serif text-brand-300 tracking-[0.4em] opacity-30 font-bold">SIGNAL CAST</h1>
@@ -159,8 +158,7 @@
         </div>
     </div>
 
-    <!-- 2. ライブ配信ビュー (全画面モーダル / ミニプレーヤー切替対応) -->
-    <!-- ★修正: 高さを100dvhに設定してスマホのツールバー対策 -->
+    <!-- 2. ライブ配信ビュー -->
     <div id="live-cast-modal" class="hidden absolute inset-0 z-[7000] bg-[#1a110f] flex-col text-[#f7f5f0] font-sans transition-all duration-300 h-[100dvh]">
         
         <!-- Full UI -->
@@ -201,7 +199,6 @@
                     <!-- Tabs -->
                     <div class="flex border-b border-[#5c4a3d] shrink-0 relative">
                         <button onclick="switchLiveTab('comments')" id="tab-live-comments" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors">コメント</button>
-                        <!-- ★修正: 参加者タブに通知バッジを組み込み -->
                         <button onclick="switchLiveTab('listeners')" id="tab-live-listeners" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors hidden relative">
                             参加者
                             <span id="tab-req-badge" class="hidden absolute top-1.5 right-1.5 sm:top-1/2 sm:transform sm:-translate-y-1/2 bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">0</span>
@@ -244,7 +241,6 @@
             </div>
 
             <!-- アクションバー (ボトム固定) -->
-            <!-- ★修正: pb-[calc(1rem+env(safe-area-inset-bottom))] でスマホのホームバーに隠れないよう余白を追加 -->
             <div class="bg-[#1a110f] border-t border-[#5c4a3d] px-3 py-4 sm:p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shrink-0 flex justify-center items-center gap-4 relative z-30">
                 <button id="btn-raise-hand" onclick="toggleHandRaise()" class="hidden px-6 py-3 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] rounded-full text-xs font-bold tracking-widest hover:bg-[#2a1a17] transition-colors shadow-md">
                     <i class="fa-solid fa-hand mr-2"></i> 登壇をリクエスト
@@ -323,7 +319,7 @@
         let partsUnsubscribe = null;
         let commentsUnsubscribe = null;
         let isHandRaised = false;
-        let isLeaving = false; // 二重退出防止フラグ
+        let isLeaving = false; 
 
         const LIVEKIT_URL = "wss://noonealonehere-eoyjqp8c.livekit.cloud";
         const LIVEKIT_API_KEY = "APIvGriAyz8L7Tm";
@@ -338,24 +334,9 @@
         
         let isMiniPlayer = false;
 
-        // ★ ランクのレベル定義 (権限比較用)
-        const rankLevels = {
-            'arrival': 0,
-            'settler': 1,
-            'builder': 2,
-            'guardian': 3,
-            'covenant': 4,
-            'admin': 99
-        };
-
-        function getRankLevel(rank) {
-            return rankLevels[rank] || 0;
-        }
-
-        const getVal = (id, def = '') => { 
-            const el = document.getElementById(id); 
-            return el ? el.value : def; 
-        };
+        const rankLevels = { 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 };
+        function getRankLevel(rank) { return rankLevels[rank] || 0; }
+        const getVal = (id, def = '') => { const el = document.getElementById(id); return el ? el.value : def; };
 
         window.showNotification = (msg, isError = false) => {
             const notif = document.getElementById('notification');
@@ -384,10 +365,7 @@
                     if (snap.exists()) {
                         myProfile = snap.data();
                         myRank = myProfile.membershipRank || 'arrival';
-                        if (myProfile.userId === 'admin') {
-                            isAdmin = true;
-                            myRank = 'admin';
-                        }
+                        if (myProfile.userId === 'admin') { isAdmin = true; myRank = 'admin'; }
                     }
                 } catch(e){}
                 initView();
@@ -405,11 +383,11 @@
         });
 
         function initView() {
-            const rLevel = getRankLevel(myRank);
+            const rLevel = getRankLevel((myRank || 'arrival').toLowerCase());
             
-            // 権限チェック
-            const isAuthorizedHost = rLevel >= 3 || isAdmin || isAdminMock;     // GUARDIAN以上
-            const isAuthorizedListener = rLevel >= 1 || isAdmin || isAdminMock; // SETTLER以上
+            // 権限チェック (ホスト=GUARDIAN以上, リスナー=SETTLER以上)
+            const isAuthorizedHost = rLevel >= 3 || isAdmin || isAdminMock;
+            const isAuthorizedListener = rLevel >= 1 || isAdmin || isAdminMock;
 
             if (action === 'create') {
                 if (!isAuthorizedHost) {
@@ -505,8 +483,12 @@
                 let thumbUrl = null;
                 const fileEl = document.getElementById('room-thumb');
                 if (fileEl && fileEl.files[0] && !isAdminMock) {
-                    const snap = await uploadBytes(ref(storage, `live_thumbs/${currentUser.uid}/${Date.now()}_${fileEl.files[0].name}`), fileEl.files[0]);
-                    thumbUrl = await getDownloadURL(snap.ref);
+                    try {
+                        const snap = await uploadBytes(ref(storage, `live_thumbs/${currentUser.uid}/${Date.now()}_${fileEl.files[0].name}`), fileEl.files[0]);
+                        thumbUrl = await getDownloadURL(snap.ref);
+                    } catch (uploadErr) {
+                        console.warn("Thumbnail upload failed:", uploadErr);
+                    }
                 }
 
                 const checkedTags = Array.from(document.querySelectorAll('.room-tag-cb:checked')).map(cb => cb.value);
@@ -556,7 +538,7 @@
 
             } catch (e) {
                 console.error(e);
-                alert('配信の開始に失敗しました。');
+                alert('配信の開始に失敗しました。\n' + e.message);
                 btn.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse"></i> 配信を START する';
                 btn.disabled = false;
             }
@@ -594,7 +576,11 @@
                 }, { merge: true });
             }
 
-            connectLiveKit(hostUid, currentRole === 'host').catch(e => {});
+            // LiveKitの接続は非同期で裏で走らせ、UIは止めない
+            connectLiveKit(hostUid, currentRole === 'host').catch(e => {
+                console.error("LiveKit connection handled:", e);
+                showNotification("音声サーバーに接続できませんでしたが、チャットは利用可能です。", true);
+            });
 
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid);
             roomUnsubscribe = onSnapshot(roomRef, (snap) => {
@@ -715,8 +701,8 @@
                 tabListeners.classList.add('hidden');
                 if(!isMicActive) startMicAnalysis();
             } else if (currentRole === 'listener') {
-                const rLevel = getRankLevel(myRank);
-                // ★修正: 登壇リクエストできるのは BUILDER (2) 以上
+                const rLevel = getRankLevel((myRank || 'arrival').toLowerCase());
+                // BUILDER(2) 以上で登壇リクエスト可能
                 if (rLevel >= 2 || isAdmin || isAdminMock) {
                     btnRaise.classList.remove('hidden');
                     if (isHandRaised) {
@@ -756,7 +742,6 @@
             
             document.getElementById('req-count').textContent = reqCount;
             
-            // ★追加: 参加者タブに通知バッジを表示
             const tabBadge = document.getElementById('tab-req-badge');
             if (tabBadge) {
                 if (reqCount > 0) {
@@ -867,7 +852,6 @@
             }
         };
 
-        // --- ミニプレーヤー切替 ---
         window.toggleMiniPlayer = () => {
             const modal = document.getElementById('live-cast-modal');
             const fullUi = document.getElementById('live-full-ui');
@@ -948,7 +932,7 @@
         }
 
         window.leaveLiveRoom = async () => {
-            if (isLeaving) return; // 二重アラート防止
+            if (isLeaving) return; // 二重アラート・二重処理を防止
             
             if (!currentRoomId || !currentUser) {
                 window.location.href = 'home.html';
@@ -997,7 +981,7 @@
             document.body.style.overflow = '';
             currentRoomId = null;
             currentRole = 'none';
-            isLeaving = false;
+            isLeaving = false; // リセット
             
             window.location.href = 'home.html';
         }
