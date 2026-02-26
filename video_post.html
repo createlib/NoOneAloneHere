@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>動画を投稿 | NOAH</title>
+    <title>動画を投稿 | NOAH THEATER</title>
     <link rel="icon" href="img/icon.png">
     
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
@@ -23,7 +23,7 @@
     <style>
         body { font-family: 'Noto Serif JP', serif; background-color: #f7f5f0; color: #4a3b32; }
         .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
-        input:focus, textarea:focus { outline: none; border-color: #8b6a4f !important; box-shadow: 0 0 0 1px #8b6a4f !important; }
+        input:focus, textarea:focus { outline: none; border-color: #b8860b !important; box-shadow: 0 0 0 1px #b8860b !important; }
         .tag-cb:checked + div { background-color: #3e2723; color: #d4af37; border-color: #b8860b; }
         
         .form-section {
@@ -40,8 +40,10 @@
             position: absolute;
             top: 0; left: 0;
             width: 4px; height: 100%;
-            background-color: #8b6a4f;
+            background-color: #b8860b;
         }
+
+        .tab-btn.active { border-bottom-color: #b8860b; color: #b8860b; font-weight: bold; }
     </style>
 </head>
 <body class="antialiased min-h-screen bg-texture pb-20">
@@ -55,7 +57,7 @@
                 <span class="hidden sm:inline">キャンセル</span>
             </a>
             <h1 class="font-serif font-bold text-brand-900 tracking-widest text-lg flex items-center gap-2">
-                <i class="fa-solid fa-film text-brand-400"></i> 動画の投稿・編集
+                <i class="fa-solid fa-film text-[#b8860b]"></i> 動画の投稿・編集
             </h1>
             <div class="w-20"></div>
         </div>
@@ -65,45 +67,83 @@
         
         <div class="mb-8 text-center">
             <p class="text-sm text-brand-600 tracking-widest leading-relaxed">
-                あなたのピッチ、PR、活動記録を共有しましょう。<br>
-                <span class="text-xs text-brand-400">※YouTube または Vimeo の動画URLが必要です。</span>
+                あなたの活動やPRを動画で届けましょう。<br>
+                <span class="text-xs text-brand-400">※動画ファイルのアップロード、またはYouTube等のURL指定が可能です。</span>
             </p>
         </div>
 
         <form id="post-form" onsubmit="saveVideo(event)" class="space-y-8">
             
-            <!-- Video URL & Preview -->
+            <!-- Video Input -->
             <div class="form-section">
-                <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest"><i class="fa-brands fa-youtube mr-2 text-[#FF0000]"></i>動画リンク <span class="text-red-500">*</span></label>
-                <p class="text-xs text-brand-500 mb-3">YouTube または Vimeo のURLを貼り付けてください。自動でプレビューが表示されます。</p>
-                <div class="relative group">
-                    <input type="url" id="video-url" required class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm mb-4 focus:bg-white transition-colors" placeholder="https://www.youtube.com/watch?v=..." onchange="previewVideo()">
-                </div>
+                <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-solid fa-video text-[#b8860b] mr-2"></i>動画データ <span class="text-red-500">*</span></label>
                 
-                <!-- Preview Box -->
-                <div id="preview-area" class="hidden mt-2">
-                    <div class="flex items-center justify-between mb-3 border-b border-brand-100 pb-2">
-                        <p class="text-xs font-bold text-brand-500 tracking-widest uppercase">Preview</p>
-                        <i class="fa-solid fa-circle-check text-green-600"></i>
+                <!-- Tabs -->
+                <div class="flex gap-6 mb-4 border-b border-brand-200">
+                    <!-- ★変更: 初期状態を「URLを指定」にし、「ファイルをアップロード」に準備中バッジを追加 -->
+                    <button type="button" id="tab-url" onclick="switchVideoType('url')" class="tab-btn active pb-2 border-b-2 text-sm tracking-widest transition-colors">URLを指定</button>
+                    <button type="button" id="tab-upload" onclick="switchVideoType('upload')" class="tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-sm tracking-widest transition-colors flex items-center gap-1.5">
+                        ファイルをアップロード <span class="text-[9px] bg-brand-100 text-brand-600 px-1.5 py-0.5 rounded-sm font-bold tracking-widest">準備中</span>
+                    </button>
+                </div>
+
+                <!-- ★変更: URLエリアをデフォルトで表示状態に変更 -->
+                <div id="video-url-area">
+                    <p class="text-[10px] sm:text-xs text-brand-500 mb-2 leading-relaxed">
+                        <b>YouTube</b>, <b>Vimeo</b>, <b>Google Drive</b> などのリンクを貼り付けると、自動で公式プレイヤーが埋め込まれます。または、直接再生可能な <code>.mp4</code> URLを入力してください。
+                    </p>
+                    <input type="url" id="video-url" class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="https://www.youtube.com/watch?v=..." oninput="previewVideoUrl(this.value)">
+                </div>
+
+                <!-- ★変更: アップロードエリアをデフォルトで非表示に変更 -->
+                <div id="video-upload-area" class="hidden">
+                    <p class="text-xs text-brand-500 mb-3">MP4形式などの動画ファイルを選択してください。（※上限: 100MB）</p>
+                    <input type="file" id="video-file" accept="video/mp4, video/webm, video/quicktime" class="block w-full text-sm text-brand-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-[#b8860b] hover:file:bg-brand-100 file:border file:border-brand-200 file:cursor-pointer transition-colors bg-[#f7f5f0] p-2 rounded-sm border border-brand-200" onchange="previewVideoUpload(this)">
+                </div>
+
+                <!-- Video Preview -->
+                <div id="video-preview-container" class="mt-4 hidden bg-brand-50 p-4 rounded-sm border border-brand-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-[10px] font-bold text-brand-500 tracking-widest uppercase">Preview</p>
+                        <i class="fa-solid fa-circle-check text-green-600 text-xs"></i>
                     </div>
-                    <div id="player-preview" class="w-full aspect-video bg-black rounded-sm overflow-hidden border border-brand-300 shadow-inner"></div>
+                    <!-- 通常のビデオプレイヤー -->
+                    <video id="video-player" controls class="w-full rounded-sm bg-black max-h-64"></video>
+                    <!-- 外部サービス埋め込み用のiframe -->
+                    <iframe id="embed-player" class="w-full hidden rounded-sm shadow-inner bg-black aspect-video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+
+            <!-- Thumbnail -->
+            <div class="form-section">
+                <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest"><i class="fa-solid fa-image text-[#b8860b] mr-2"></i>サムネイル画像 <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
+                <p class="text-xs text-brand-500 mb-4">設定しない場合は、NOAH THEATERのデフォルト背景が適用されます。<br>※YouTube等の埋め込みリンクを使用する場合は、自動で画像が取得されるため設定不要です（あとから上書きも可能です）。</p>
+                <div class="flex flex-col items-center sm:flex-row gap-6">
+                    <div class="relative w-full sm:w-64 aspect-video bg-brand-50 rounded-sm border-2 border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner">
+                        <input type="file" id="thumb-file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="previewThumb(this)">
+                        <img id="thumb-preview" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <div id="thumb-placeholder" class="group-hover:scale-110 transition-transform flex flex-col items-center">
+                            <i class="fa-solid fa-image text-3xl mb-2"></i>
+                            <span class="text-xs tracking-widest font-bold">画像を選択</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Basic Info -->
             <div class="form-section space-y-6">
                 <div>
-                    <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest">動画のタイトル <span class="text-red-500">*</span></label>
-                    <input type="text" id="title" required class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm font-bold focus:bg-white transition-colors" placeholder="視聴者の興味を惹くタイトルを入力">
+                    <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest">動画タイトル <span class="text-red-500">*</span></label>
+                    <input type="text" id="title" required class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm font-bold focus:bg-white transition-colors" placeholder="動画のタイトルを入力">
                 </div>
 
                 <div>
                     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-2 gap-2">
-                        <label class="block text-sm font-bold text-brand-900 tracking-widest">概要欄</label>
+                        <label class="block text-sm font-bold text-brand-900 tracking-widest">概要欄・説明</label>
                         <span class="text-[10px] bg-[#f7f5f0] text-brand-600 px-2 py-1 rounded-sm border border-brand-200 font-bold tracking-widest flex items-center gap-1 w-fit"><i class="fa-brands fa-markdown text-brand-400"></i>Markdown対応</span>
                     </div>
-                    <p class="text-xs text-brand-500 mb-3">動画の説明、関連リンク、PRしたい内容を自由に記述してください。</p>
-                    <textarea id="description" rows="8" class="w-full border border-brand-200 rounded-sm p-4 bg-[#f7f5f0] text-sm leading-relaxed focus:bg-white transition-colors" placeholder="・この動画の目的&#13;&#10;・募集しているパートナー像&#13;&#10;・詳細リンク： https://..."></textarea>
+                    <p class="text-xs text-brand-500 mb-3">この動画の内容や、関連リンクなどを記述してください。</p>
+                    <textarea id="description" rows="6" class="w-full border border-brand-200 rounded-sm p-4 bg-[#f7f5f0] text-sm leading-relaxed focus:bg-white transition-colors" placeholder="・動画の概要&#13;&#10;・今回のテーマについて&#13;&#10;・関連リンク集"></textarea>
                 </div>
             </div>
 
@@ -127,7 +167,7 @@
                     <label class="block text-sm font-bold text-brand-900 mb-4 tracking-widest"><i class="fa-regular fa-comments text-brand-400 mr-2"></i>コメント機能の設定</label>
                     <div class="flex gap-6">
                         <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
-                            <input type="radio" name="allowComments" value="true" checked class="text-[#8b6a4f] focus:ring-[#8b6a4f]"> 許可する
+                            <input type="radio" name="allowComments" value="true" checked class="text-[#b8860b] focus:ring-[#b8860b]"> 許可する
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
                             <input type="radio" name="allowComments" value="false" class="text-brand-400 focus:ring-brand-400"> 許可しない
@@ -151,27 +191,45 @@
         </form>
     </main>
 
+    <!-- プログレスモーダル -->
+    <div id="progress-modal" class="hidden fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center">
+        <div class="bg-[#fffdf9] p-8 rounded-sm shadow-2xl border border-brand-300 text-center max-w-sm w-full mx-4">
+            <i class="fa-solid fa-cloud-arrow-up text-4xl text-[#b8860b] mb-4 animate-bounce"></i>
+            <h3 class="text-lg font-bold text-brand-900 font-serif tracking-widest mb-2">アップロード中...</h3>
+            <p id="progress-text" class="text-xs text-brand-500 mb-4 tracking-widest">しばらくお待ちください</p>
+            <div class="w-full bg-brand-100 rounded-full h-2.5 overflow-hidden">
+                <div id="progress-bar" class="bg-[#b8860b] h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        // ★修正: getDocs, query, where を追加
         import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
         const appId = 'default-app-id';
 
         let currentUser = null;
         let myData = null;
         let isAdmin = false;
         
+        // ★変更: 初期値を 'url' に変更
+        let videoInputType = 'url'; // 'upload' or 'url'
+        let currentVideoFile = null;
+        let currentThumbFile = null;
+        
+        let parsedVideoUrl = '';
+        let isEmbedMode = false;
+
         const urlParams = new URLSearchParams(window.location.search);
         const editVid = urlParams.get('vid');
-        
-        let parsedEmbedUrl = '';
-        let parsedThumbUrl = '';
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
@@ -180,7 +238,7 @@
                 currentUser = { uid: 'test_admin_uid' };
                 isAdmin = true;
                 myData = { name: '管理者', photoURL: '' };
-                document.getElementById('admin-override-section').classList.remove('hidden'); // モックでも表示
+                document.getElementById('admin-override-section').classList.remove('hidden');
                 if(editVid) loadEditData();
                 return;
             }
@@ -193,7 +251,6 @@
                         myData = snap.data();
                         const rank = myData.membershipRank || 'arrival';
                         
-                        // ★追加: 管理者判定と代理投稿UIの表示
                         if(myData.userId === 'admin') {
                             isAdmin = true;
                             document.getElementById('admin-override-section').classList.remove('hidden');
@@ -212,8 +269,149 @@
             }
         });
 
+        window.switchVideoType = (type) => {
+            // ★追加: 新規投稿時かつ管理者以外はアップロードタブへの切り替えをブロック
+            if (type === 'upload' && !editVid && !isAdminMock && !isAdmin) {
+                alert('動画ファイルの直接アップロード機能は現在準備中です。\nYouTube等の「URLを指定」機能をご利用ください。');
+                return;
+            }
+
+            videoInputType = type;
+            const btnUpload = document.getElementById('tab-upload');
+            const btnUrl = document.getElementById('tab-url');
+            const areaUpload = document.getElementById('video-upload-area');
+            const areaUrl = document.getElementById('video-url-area');
+            const playerContainer = document.getElementById('video-preview-container');
+            const player = document.getElementById('video-player');
+            const embedPlayer = document.getElementById('embed-player');
+
+            playerContainer.classList.add('hidden');
+            player.src = '';
+            embedPlayer.src = '';
+            currentVideoFile = null;
+            parsedVideoUrl = '';
+            isEmbedMode = false;
+            
+            document.getElementById('video-file').value = '';
+            document.getElementById('video-url').value = '';
+
+            if (type === 'upload') {
+                btnUpload.className = 'tab-btn active pb-2 border-b-2 text-sm tracking-widest transition-colors flex items-center gap-1.5';
+                btnUrl.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-sm tracking-widest transition-colors';
+                areaUpload.classList.remove('hidden');
+                areaUrl.classList.add('hidden');
+            } else {
+                btnUrl.className = 'tab-btn active pb-2 border-b-2 text-sm tracking-widest transition-colors';
+                btnUpload.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-sm tracking-widest transition-colors flex items-center gap-1.5';
+                areaUrl.classList.remove('hidden');
+                areaUpload.classList.add('hidden');
+            }
+        };
+
+        // --- URLを解析して埋め込み用リンクを生成する関数 ---
+        function parseVideoUrl(url) {
+            let embedUrl = null;
+            let isEmbed = false;
+            let thumbUrl = null;
+
+            if (!url) return { isEmbed: false, url: '', thumbUrl: null };
+
+            // YouTube
+            const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+            if (ytMatch && ytMatch[1]) {
+                embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+                thumbUrl = `https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`;
+                isEmbed = true;
+            }
+            // Vimeo
+            else if (url.includes('vimeo.com')) {
+                const vimeoMatch = url.match(/(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_\-]+)?/i);
+                if (vimeoMatch && vimeoMatch[1]) {
+                    embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                    isEmbed = true;
+                }
+            } 
+            // Google Drive
+            else if (url.includes('drive.google.com/file/d/')) {
+                const match = url.match(/d\/([a-zA-Z0-9_-]+)/);
+                if (match) {
+                    embedUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
+                    isEmbed = true;
+                }
+            }
+
+            return { isEmbed, url: isEmbed ? embedUrl : url, thumbUrl };
+        }
+
+        window.previewVideoUpload = (input) => {
+            const file = input.files[0];
+            if (file) {
+                currentVideoFile = file;
+                const url = URL.createObjectURL(file);
+                const player = document.getElementById('video-player');
+                const embedPlayer = document.getElementById('embed-player');
+                
+                isEmbedMode = false;
+                embedPlayer.classList.add('hidden');
+                
+                player.src = url;
+                player.classList.remove('hidden');
+                document.getElementById('video-preview-container').classList.remove('hidden');
+            }
+        };
+
+        window.previewVideoUrl = (url) => {
+            const container = document.getElementById('video-preview-container');
+            const videoPlayer = document.getElementById('video-player');
+            const embedPlayer = document.getElementById('embed-player');
+
+            if (url) {
+                const parsed = parseVideoUrl(url);
+                parsedVideoUrl = parsed.url;
+                isEmbedMode = parsed.isEmbed;
+                
+                container.classList.remove('hidden');
+
+                if (isEmbedMode) {
+                    videoPlayer.classList.add('hidden');
+                    videoPlayer.src = '';
+                    embedPlayer.src = parsedVideoUrl;
+                    embedPlayer.classList.remove('hidden');
+                    
+                    // YouTubeの場合は自動的にサムネイルもセットする（ユーザーが手動で上書き可能）
+                    if (parsed.thumbUrl && !currentThumbFile) {
+                        const img = document.getElementById('thumb-preview');
+                        img.src = parsed.thumbUrl;
+                        img.classList.remove('hidden');
+                        document.getElementById('thumb-placeholder').classList.add('hidden');
+                    }
+                } else {
+                    embedPlayer.classList.add('hidden');
+                    embedPlayer.src = '';
+                    videoPlayer.src = parsedVideoUrl;
+                    videoPlayer.classList.remove('hidden');
+                }
+            } else {
+                container.classList.add('hidden');
+                parsedVideoUrl = '';
+                isEmbedMode = false;
+            }
+        };
+
+        window.previewThumb = (input) => {
+            const file = input.files[0];
+            if (file) {
+                currentThumbFile = file;
+                const url = URL.createObjectURL(file);
+                const img = document.getElementById('thumb-preview');
+                img.src = url;
+                img.classList.remove('hidden');
+                document.getElementById('thumb-placeholder').classList.add('hidden');
+            }
+        };
+
         async function loadEditData() {
-            if(isAdminMock) return; // ダミー回避
+            if(isAdminMock) return; 
             try {
                 const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'videos', editVid));
                 if(snap.exists()) {
@@ -224,15 +422,33 @@
                         return;
                     }
                     
-                    document.getElementById('video-url').value = data.sourceUrl || '';
                     document.getElementById('title').value = data.title || '';
                     document.getElementById('description').value = data.description || '';
                     
+                    if (data.sourceType === 'url' || data.embedUrl) {
+                        switchVideoType('url');
+                        document.getElementById('video-url').value = data.sourceUrl || data.embedUrl || '';
+                        previewVideoUrl(data.sourceUrl || data.embedUrl);
+                    } else {
+                        switchVideoType('upload');
+                        document.getElementById('video-preview-container').classList.remove('hidden');
+                        document.getElementById('embed-player').classList.add('hidden');
+                        const player = document.getElementById('video-player');
+                        player.src = data.sourceUrl || '';
+                        player.classList.remove('hidden');
+                    }
+
+                    if (data.thumbnailUrl) {
+                        const img = document.getElementById('thumb-preview');
+                        img.src = data.thumbnailUrl;
+                        img.classList.remove('hidden');
+                        document.getElementById('thumb-placeholder').classList.add('hidden');
+                    }
+
                     if(data.allowComments === false) {
                         document.querySelector('input[name="allowComments"][value="false"]').checked = true;
                     }
 
-                    // tags
                     const allTags = data.tags || [];
                     document.querySelectorAll('.tag-cb').forEach(cb => {
                         if(allTags.includes(cb.value)) { cb.checked = true; }
@@ -242,137 +458,221 @@
                     document.getElementById('custom-tags').value = customTags.join(', ');
 
                     document.getElementById('btn-save').innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 編集を保存する';
-                    window.previewVideo();
                 }
             } catch(e){}
         }
 
-        window.previewVideo = async () => {
-            const url = document.getElementById('video-url').value.trim();
-            if(!url) { document.getElementById('preview-area').classList.add('hidden'); return; }
-
-            const ytId = getYouTubeId(url);
-            const vimId = getVimeoId(url);
-
-            if(ytId) {
-                parsedEmbedUrl = `https://www.youtube.com/embed/${ytId}`;
-                parsedThumbUrl = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
-            } else if (vimId) {
-                parsedEmbedUrl = `https://player.vimeo.com/video/${vimId}`;
-                try {
-                    const res = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`);
-                    const data = await res.json();
-                    parsedThumbUrl = data.thumbnail_url;
-                } catch(e) { parsedThumbUrl = 'https://via.placeholder.com/640x360?text=Vimeo+Video'; }
-            } else {
-                alert("YouTubeまたはVimeoのURLを正しく入力してください。");
-                document.getElementById('preview-area').classList.add('hidden');
-                parsedEmbedUrl = ''; parsedThumbUrl = '';
-                return;
-            }
-
-            document.getElementById('player-preview').innerHTML = `<iframe src="${parsedEmbedUrl}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>`;
-            document.getElementById('preview-area').classList.remove('hidden');
-        };
-
-        function getYouTubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
-        function getVimeoId(url) {
-            const regExp = /(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_\-]+)?/i;
-            const match = url.match(regExp);
-            return match ? match[1] : null;
-        }
-
         window.saveVideo = async (e) => {
             e.preventDefault();
-            if(!parsedEmbedUrl) { alert("有効な動画URLを入力してプレビューを完了してください"); return; }
             
-            const btn = document.getElementById('btn-save');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2 text-xl"></i> 保存中...';
-            btn.disabled = true;
-
             const title = document.getElementById('title').value.trim();
-            const desc = document.getElementById('description').value;
-            const sourceUrl = document.getElementById('video-url').value.trim();
-            const allowComments = document.querySelector('input[name="allowComments"]:checked').value === 'true';
+            let finalVideoUrl = '';
+            let finalThumbUrl = '';
+            let finalEmbedUrl = '';
 
-            // Tags
-            const checkedTags = Array.from(document.querySelectorAll('.tag-cb:checked')).map(cb => cb.value);
-            const customTags = document.getElementById('custom-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
-            const tags = [...new Set([...checkedTags, ...customTags])];
-
-            // ★追加: 代理投稿ユーザーの解決
-            let finalAuthorId = currentUser.uid;
-            let finalAuthorName = myData.name || myData.userId;
-            let finalAuthorIcon = myData.photoURL || null;
-
-            const overrideUserIdInput = document.getElementById('override-userid');
-            const overrideUserId = overrideUserIdInput ? overrideUserIdInput.value.trim() : '';
-
-            if (isAdmin && overrideUserId && !isAdminMock) {
-                try {
-                    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
-                    const q = query(usersRef, where("userId", "==", overrideUserId));
-                    const querySnapshot = await getDocs(q);
-                    
-                    if (querySnapshot.empty) {
-                        alert(`エラー: 指定されたユーザーID「@${overrideUserId}」は見つかりませんでした。\n正しいIDを指定するか、空欄にしてやり直してください。`);
-                        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 動画を公開する';
-                        btn.disabled = false;
-                        return;
-                    }
-                    
-                    const targetDoc = querySnapshot.docs[0];
-                    finalAuthorId = targetDoc.id;
-                    const tData = targetDoc.data();
-                    finalAuthorName = tData.name || tData.userId;
-                    finalAuthorIcon = tData.photoURL || null;
-                    
-                } catch (error) {
-                    console.error("Override fetch error:", error);
-                    alert("代理投稿ユーザーの取得中にエラーが発生しました。");
-                    btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 動画を公開する';
-                    btn.disabled = false;
-                    return;
+            // 未入力チェック
+            if (!editVid) {
+                if (videoInputType === 'upload' && !currentVideoFile && !isAdminMock) {
+                    return alert('動画ファイルを選択してください');
+                }
+                if (videoInputType === 'url' && !document.getElementById('video-url').value.trim() && !isAdminMock) {
+                    return alert('動画のURLを入力してください');
                 }
             }
 
-            const docId = editVid || Date.now().toString(); // edit or new
-            const videoData = {
-                authorId: finalAuthorId,          // ★修正: 決定したID
-                authorName: finalAuthorName,      // ★修正: 決定した名前
-                authorIcon: finalAuthorIcon,      // ★修正: 決定したアイコン
-                sourceUrl: sourceUrl,
-                embedUrl: parsedEmbedUrl,
-                thumbnailUrl: parsedThumbUrl,
-                title: title,
-                description: desc,
-                tags: tags,
-                allowComments: allowComments,
-                updatedAt: new Date().toISOString()
-            };
-
-            if(!editVid) videoData.createdAt = videoData.updatedAt;
-
-            if(isAdminMock) {
-                alert(`保存成功(テスト)\n代理ID: ${overrideUserId || 'なし'}`);
-                window.location.href = 'videos.html';
-                return;
+            // ファイルサイズチェック
+            if (videoInputType === 'upload' && currentVideoFile) {
+                const maxSize = 100 * 1024 * 1024; // 100MB制限
+                if (currentVideoFile.size > maxSize) {
+                    return alert(`動画ファイルが大きすぎます (上限100MB)\n現在のサイズ: ${(currentVideoFile.size / 1024 / 1024).toFixed(1)}MB`);
+                }
+            }
+            if (currentThumbFile) {
+                const maxThumbSize = 5 * 1024 * 1024; // 5MB制限
+                if (currentThumbFile.size > maxThumbSize) {
+                    return alert(`画像サイズが大きすぎます (上限5MB)\n現在のサイズ: ${(currentThumbFile.size / 1024 / 1024).toFixed(1)}MB`);
+                }
+            }
+            
+            const btn = document.getElementById('btn-save');
+            const modal = document.getElementById('progress-modal');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            
+            btn.disabled = true;
+            if (!isAdminMock) {
+                modal.classList.remove('hidden');
+                progressBar.style.width = '5%';
+                progressText.textContent = 'アップロードの準備中...';
             }
 
             try {
+                // 1. Video Upload
+                if (videoInputType === 'upload' && currentVideoFile && !isAdminMock) {
+                    const storageRef = ref(storage, `videos/video/${currentUser.uid}/${Date.now()}_${currentVideoFile.name}`);
+                    const uploadTask = uploadBytesResumable(storageRef, currentVideoFile);
+                    
+                    await new Promise((resolve, reject) => {
+                        uploadTask.on('state_changed', 
+                            (snapshot) => {
+                                const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 75; 
+                                progressBar.style.width = (5 + p) + '%';
+                                progressText.textContent = `動画をアップロード中... (${Math.floor(5 + p)}%)`;
+                            }, 
+                            (error) => {
+                                console.error("Video Upload Error:", error);
+                                reject(new Error(`動画のアップロードに失敗: ${error.message}`));
+                            }, 
+                            async () => {
+                                try {
+                                    finalVideoUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                                    resolve();
+                                } catch(err) {
+                                    reject(new Error("動画URLの取得に失敗しました"));
+                                }
+                            }
+                        );
+                    });
+                } else if (videoInputType === 'url') {
+                    const rawUrl = document.getElementById('video-url').value.trim();
+                    const parsed = parseVideoUrl(rawUrl);
+                    finalVideoUrl = rawUrl; // オリジナルのURLを保持
+                    finalEmbedUrl = parsed.url; // 埋め込み用URL
+                    isEmbedMode = parsed.isEmbed;
+                    
+                    // サムネイルが選択されていない場合、YouTubeのサムネイルを適用
+                    if (!currentThumbFile && parsed.thumbUrl) {
+                        finalThumbUrl = parsed.thumbUrl;
+                    }
+                }
+
+                // 2. Thumbnail Upload
+                if (currentThumbFile && !isAdminMock) {
+                    const thumbRef = ref(storage, `videos/thumbnails/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`);
+                    const thumbUploadTask = uploadBytesResumable(thumbRef, currentThumbFile);
+                    
+                    await new Promise((resolve, reject) => {
+                        thumbUploadTask.on('state_changed', 
+                            (snapshot) => {
+                                const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 15;
+                                progressBar.style.width = (80 + p) + '%';
+                                progressText.textContent = `画像をアップロード中... (${Math.floor(80 + p)}%)`;
+                            }, 
+                            (error) => {
+                                console.error("Thumb Upload Error:", error);
+                                reject(new Error(`画像のアップロードに失敗: ${error.message}`));
+                            }, 
+                            async () => {
+                                try {
+                                    finalThumbUrl = await getDownloadURL(thumbUploadTask.snapshot.ref);
+                                    resolve();
+                                } catch(err) {
+                                    reject(new Error("画像URLの取得に失敗しました"));
+                                }
+                            }
+                        );
+                    });
+                }
+
+                if (editVid && !isAdminMock) {
+                    const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'videos', editVid));
+                    if(snap.exists()) {
+                        const oldData = snap.data();
+                        if (!finalVideoUrl && !finalEmbedUrl) {
+                            finalVideoUrl = oldData.sourceUrl || '';
+                            finalEmbedUrl = oldData.embedUrl || '';
+                            isEmbedMode = !!oldData.embedUrl;
+                        }
+                        if (!finalThumbUrl) finalThumbUrl = oldData.thumbnailUrl;
+                    }
+                }
+
+                progressBar.style.width = '100%';
+                progressText.textContent = 'データを保存しています...';
+
+                // 代理投稿ユーザーの解決
+                let finalAuthorId = currentUser.uid;
+                let finalAuthorName = myData.name || myData.userId;
+                let finalAuthorIcon = myData.photoURL || null;
+
+                const overrideUserIdInput = document.getElementById('override-userid');
+                const overrideUserId = overrideUserIdInput ? overrideUserIdInput.value.trim() : '';
+
+                if (isAdmin && overrideUserId && !isAdminMock) {
+                    try {
+                        const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                        const q = query(usersRef, where("userId", "==", overrideUserId));
+                        const querySnapshot = await getDocs(q);
+                        
+                        if (querySnapshot.empty) {
+                            alert(`エラー: 指定されたユーザーID「@${overrideUserId}」は見つかりませんでした。\n正しいIDを指定するか、空欄にしてやり直してください。`);
+                            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-xl"></i> 動画を公開する';
+                            btn.disabled = false;
+                            modal.classList.add('hidden');
+                            return;
+                        }
+                        
+                        const targetDoc = querySnapshot.docs[0];
+                        finalAuthorId = targetDoc.id;
+                        const tData = targetDoc.data();
+                        finalAuthorName = tData.name || tData.userId;
+                        finalAuthorIcon = tData.photoURL || null;
+                        
+                    } catch (error) {
+                        console.error("Override fetch error:", error);
+                        alert("代理投稿ユーザーの取得中にエラーが発生しました。");
+                        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up text-xl"></i> 動画を公開する';
+                        btn.disabled = false;
+                        modal.classList.add('hidden');
+                        return;
+                    }
+                }
+
+                const desc = document.getElementById('description').value;
+                const allowComments = document.querySelector('input[name="allowComments"]:checked').value === 'true';
+
+                const checkedTags = Array.from(document.querySelectorAll('.tag-cb:checked')).map(cb => cb.value);
+                const customTags = document.getElementById('custom-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
+                const tags = [...new Set([...checkedTags, ...customTags])];
+
+                const docId = editVid || Date.now().toString();
+                const videoData = {
+                    authorId: finalAuthorId,
+                    authorName: finalAuthorName,
+                    authorIcon: finalAuthorIcon,
+                    sourceType: videoInputType,
+                    sourceUrl: finalVideoUrl || (isAdminMock ? 'dummy_video.mp4' : ''),
+                    embedUrl: isEmbedMode ? finalEmbedUrl : '', // iframe表示用URL
+                    thumbnailUrl: finalThumbUrl || null,
+                    title: title,
+                    description: desc,
+                    tags: tags,
+                    allowComments: allowComments,
+                    updatedAt: new Date().toISOString()
+                };
+
+                if(!editVid) videoData.createdAt = videoData.updatedAt;
+
+                if(isAdminMock) {
+                    alert(`保存成功(テスト)\n※代理ID: ${overrideUserId || 'なし'}`);
+                    window.location.href = 'videos.html';
+                    return;
+                }
+
+                // データベースに保存
                 const vidRef = doc(db, 'artifacts', appId, 'public', 'data', 'videos', docId);
                 await setDoc(vidRef, videoData, { merge: true });
+                
+                // 再生ページへ移動
                 window.location.href = `video_detail.html?vid=${docId}`;
+                
             } catch(error) {
                 console.error(error);
-                alert("保存に失敗しました");
+                alert(`保存中にエラーが発生しました。\n${error.message}\n\n※通信環境やファイルのサイズをご確認ください。`);
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2 text-xl"></i> 保存を再試行';
                 btn.disabled = false;
+                modal.classList.add('hidden');
+                progressBar.style.width = '0%';
             }
         };
     </script>
