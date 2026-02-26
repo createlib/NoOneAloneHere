@@ -36,6 +36,12 @@
             background-color: #3e2723; color: #d4af37; border-color: #b8860b;
         }
 
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
         /* ライブ配信エフェクト */
         @keyframes ripple {
             0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.6); }
@@ -48,173 +54,225 @@
         }
     </style>
 </head>
-<body class="antialiased h-screen w-screen overflow-hidden">
+<body class="antialiased h-screen w-screen overflow-hidden bg-[#f7f5f0] bg-texture relative">
+
+    <!-- Standalone Background (ミニプレーヤー時に背景として表示される) -->
+    <div id="standalone-bg" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
+        <i class="fa-solid fa-satellite-dish text-6xl text-brand-300 mb-6 opacity-30"></i>
+        <h1 class="text-4xl font-serif text-brand-300 tracking-[0.4em] opacity-30 font-bold">SIGNAL CAST</h1>
+        <p class="text-sm text-brand-400 tracking-widest mt-4 opacity-50 font-bold">配信中 / バックグラウンド再生</p>
+        <p class="text-[10px] text-brand-400 tracking-widest mt-6 opacity-50">※他のページへ遷移すると配信は終了・切断されます</p>
+    </div>
 
     <!-- 1. ルーム作成ビュー -->
-    <div id="create-view" class="hidden h-full w-full bg-texture bg-[#f7f5f0] items-center justify-center p-4">
-        <div class="bg-[#fffdf9] w-full max-w-2xl max-h-[95vh] rounded-sm shadow-2xl flex flex-col border border-brand-300">
-            <div class="p-5 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] shrink-0">
-                <h3 class="font-bold text-lg text-brand-900 font-serif tracking-widest flex items-center gap-2">
+    <div id="create-view" class="hidden absolute inset-0 z-10 items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-[#fffdf9] w-full max-w-2xl my-auto rounded-md shadow-2xl flex flex-col border border-[#b8860b]">
+            <div class="p-4 sm:p-5 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] shrink-0 rounded-t-md">
+                <h3 class="font-bold text-base sm:text-lg text-brand-900 font-serif tracking-widest flex items-center gap-2">
                     <i class="fa-solid fa-satellite-dish text-[#b8860b]"></i> SIGNAL CAST 配信設定
                 </h3>
-                <button onclick="history.back()" class="text-brand-400 hover:text-brand-700 bg-brand-50 w-8 h-8 rounded-sm flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="history.back()" class="text-brand-400 hover:text-brand-700 bg-brand-50 w-8 h-8 rounded-sm flex items-center justify-center transition-colors border border-brand-100"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <div class="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
-                <div>
-                    <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">配信タイトル <span class="text-red-500">*</span></label>
-                    <input type="text" id="room-title" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm" placeholder="今夜のテーマや雑談内容" required>
+            <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+                
+                <div class="bg-brand-50 p-4 sm:p-5 border border-brand-200 rounded-sm">
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">配信タイトル <span class="text-red-500">*</span></label>
+                        <input type="text" id="room-title" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:ring-[#b8860b] focus:border-[#b8860b]" placeholder="今夜のテーマや雑談内容" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">概要・トピック</label>
+                        <textarea id="room-desc" rows="3" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm leading-relaxed focus:ring-[#b8860b] focus:border-[#b8860b]" placeholder="話す内容やリスナーへのメッセージ"></textarea>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">概要・トピック</label>
-                    <textarea id="room-desc" rows="3" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm leading-relaxed" placeholder="話す内容やリスナーへのメッセージ"></textarea>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">公開範囲 <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select id="room-privacy" class="w-full appearance-none border border-brand-200 rounded-sm p-3 pr-8 bg-white text-sm font-bold text-brand-700 focus:border-[#b8860b] focus:ring-[#b8860b] truncate">
+                                <option value="public">🌍 公開（SETTLER以上）</option>
+                                <option value="followers">👥 フォロワー限定</option>
+                                <option value="invite">🔒 招待制（クローズド）</option>
+                                <option value="community">🏢 コミュニティ限定</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-brand-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">ルーム種別 <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select id="room-type" class="w-full appearance-none border border-brand-200 rounded-sm p-3 pr-8 bg-white text-sm font-bold text-brand-700 focus:border-[#b8860b] focus:ring-[#b8860b] truncate">
+                                <option value="talk">💬 通常トーク</option>
+                                <option value="panel">🗣 パネルディスカッション</option>
+                                <option value="interview">🎤 インタビュー形式</option>
+                                <option value="music">🎵 音楽・ライブ形式</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-brand-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">ゲスト <span class="text-[10px] text-brand-400 font-normal ml-1">(予定している登壇者)</span></label>
-                    <input type="text" id="room-guests" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm" placeholder="例: @user_id, 〇〇さん">
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">公開範囲 <span class="text-red-500">*</span></label>
-                        <select id="room-privacy" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm font-bold text-brand-700">
-                            <option value="public">🌍 公開（SETTLER以上）</option>
-                            <option value="followers">👥 フォロワー限定</option>
-                            <option value="invite">🔒 招待制（クローズド）</option>
-                            <option value="community">🏢 コミュニティ限定</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">ルーム種別 <span class="text-red-500">*</span></label>
-                        <select id="room-type" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm font-bold text-brand-700">
-                            <option value="talk">通常トーク</option>
-                            <option value="panel">パネルディスカッション</option>
-                            <option value="interview">インタビュー形式</option>
-                            <option value="music">音楽・ライブ形式</option>
-                        </select>
-                    </div>
+                    <input type="text" id="room-guests" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:border-[#b8860b]" placeholder="例: @user_id, 〇〇さん">
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">カテゴリ・タグ</label>
                     <div class="flex flex-wrap gap-2">
-                        <label class="cursor-pointer"><input type="checkbox" value="ビジネス" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">ビジネス</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="テック" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">テック</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="恋愛" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">恋愛</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="自己成長" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">自己成長</div></label>
-                        <label class="cursor-pointer"><input type="checkbox" value="投資" class="room-tag-cb hidden"><div class="px-3 py-1 border border-brand-200 text-[10px] font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">投資</div></label>
+                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="ビジネス" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">ビジネス</div></label>
+                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="テック" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">テック</div></label>
+                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="恋愛" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">恋愛</div></label>
+                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="自己成長" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">自己成長</div></label>
+                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="投資" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">投資</div></label>
                     </div>
                 </div>
 
                 <div class="bg-brand-50 p-4 border border-brand-200 rounded-sm">
-                    <label class="block text-xs font-bold text-brand-800 mb-3 tracking-widest">アーカイブ設定</label>
-                    <div class="flex gap-6">
-                        <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-white border border-brand-200 px-4 py-2 rounded-sm shadow-sm">
+                    <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">アーカイブ設定</label>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
                             <input type="radio" name="roomRecord" value="true" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音して残す
                         </label>
-                        <label class="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-white border border-brand-200 px-4 py-2 rounded-sm shadow-sm">
+                        <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
                             <input type="radio" name="roomRecord" value="false" checked class="text-[#b8860b] focus:ring-[#b8860b]"> 録音しない
                         </label>
                     </div>
-                    <p class="text-[10px] text-brand-500 mt-2">「録音して残す」を選択すると、配信終了後に自動でポッドキャストとして公開されます。</p>
+                    <p class="text-[10px] text-brand-500 mt-2 text-center sm:text-left">※「録音して残す」を選択すると、配信終了後にポッドキャストとして公開されます。</p>
                 </div>
                 
                 <div>
                     <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">サムネイル (任意)</label>
-                    <input type="file" id="room-thumb" accept="image/*" class="w-full text-xs text-brand-600 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-[10px] file:font-bold file:bg-brand-100 file:text-brand-800 bg-brand-50 border border-brand-200 p-2 rounded-sm">
+                    <input type="file" id="room-thumb" accept="image/*" class="w-full text-xs text-brand-600 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-[10px] file:font-bold file:bg-brand-100 file:text-brand-800 bg-brand-50 border border-brand-200 p-2 rounded-sm cursor-pointer hover:bg-[#fffdf9] transition-colors">
                 </div>
 
             </div>
             
-            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] shrink-0">
-                <button onclick="startLiveCast()" id="btn-start-cast" class="w-full py-4 bg-gradient-to-r from-[#3e2723] to-[#2a1a17] text-[#d4af37] font-bold rounded-sm shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-2 transform hover:-translate-y-0.5 transition-all">
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] shrink-0 rounded-b-md">
+                <button onclick="startLiveCast()" id="btn-start-cast" class="w-full py-4 bg-gradient-to-r from-[#3e2723] to-[#2a1a17] text-[#d4af37] font-bold rounded-sm shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-2 transform hover:-translate-y-0.5 transition-all text-sm sm:text-base">
                     <i class="fa-solid fa-satellite-dish animate-pulse"></i> 配信を START する
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 2. ライブ配信ビュー (黒背景) -->
-    <div id="live-view" class="hidden flex-col h-full w-full bg-[#1a110f] text-[#f7f5f0] font-sans">
-        <!-- Header -->
-        <div class="flex justify-between items-center bg-[#2a1a17] p-3 sm:p-4 border-b border-[#5c4a3d] shrink-0 shadow-md">
-            <div class="flex items-center gap-3 min-w-0">
-                <div class="bg-red-600 text-white px-2 py-0.5 rounded-sm text-[9px] font-bold tracking-widest flex items-center gap-1 animate-pulse">
-                    <i class="fa-solid fa-satellite-dish"></i> LIVE
+    <!-- 2. ライブ配信ビュー (全画面モーダル / ミニプレーヤー切替対応) -->
+    <div id="live-cast-modal" class="hidden absolute inset-0 z-[7000] bg-[#1a110f] flex-col text-[#f7f5f0] font-sans transition-all duration-300">
+        
+        <!-- Full UI -->
+        <div id="live-full-ui" class="flex flex-col h-full w-full">
+            <!-- Header -->
+            <div class="flex justify-between items-center bg-[#2a1a17] p-3 sm:p-4 border-b border-[#5c4a3d] shrink-0 shadow-md">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button onclick="toggleMiniPlayer()" class="text-[#a09080] hover:text-[#dcd4c6] px-2 transition-colors" title="ミニプレーヤーにする"><i class="fa-solid fa-chevron-down"></i></button>
+                    <div class="bg-red-600 text-white px-2 py-0.5 rounded-sm text-[9px] font-bold tracking-widest flex items-center gap-1 animate-pulse">
+                        <i class="fa-solid fa-satellite-dish"></i> LIVE
+                    </div>
+                    <h2 id="live-header-title" class="font-bold text-sm sm:text-base tracking-widest truncate">ルームタイトル</h2>
                 </div>
-                <h2 id="live-header-title" class="font-bold text-sm sm:text-base tracking-widest truncate">ルームタイトル</h2>
+                <div class="flex items-center gap-4 shrink-0">
+                    <div class="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-full border border-[#5c4a3d]">
+                        <i class="fa-solid fa-headphones text-[#b8860b] text-xs"></i>
+                        <span id="live-listener-count" class="text-xs font-bold font-mono">0</span>
+                    </div>
+                    <button onclick="leaveLiveRoom()" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 transition-colors flex items-center justify-center border border-[#5c4a3d]" title="退出する">
+                        <i class="fa-solid fa-power-off text-xs"></i>
+                    </button>
+                </div>
             </div>
-            <div class="flex items-center gap-4 shrink-0">
-                <div class="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-full border border-[#5c4a3d]">
-                    <i class="fa-solid fa-headphones text-[#b8860b] text-xs"></i>
-                    <span id="live-listener-count" class="text-xs font-bold font-mono">0</span>
+
+            <!-- Main Body -->
+            <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+                
+                <!-- スピーカーエリア (左側) -->
+                <div class="flex-1 p-4 sm:p-8 overflow-y-auto dark-scrollbar relative">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.05)_0%,transparent_60%)] pointer-events-none"></div>
+                    <div id="speakers-grid" class="flex flex-wrap justify-center content-start gap-6 sm:gap-10 relative z-10 max-w-4xl mx-auto h-full pt-10">
+                        <!-- JSでスピーカーのアイコンが挿入されます -->
+                    </div>
                 </div>
-                <button onclick="leaveLiveRoom()" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 transition-colors flex items-center justify-center border border-[#5c4a3d]">
-                    <i class="fa-solid fa-xmark"></i>
+
+                <!-- 右側パネル (コメント / リスナー / 概要) -->
+                <div class="w-full lg:w-80 bg-[#2a1a17] flex flex-col border-t lg:border-t-0 lg:border-l border-[#5c4a3d] shrink-0 h-[45vh] lg:h-auto z-20">
+                    <!-- Tabs -->
+                    <div class="flex border-b border-[#5c4a3d] shrink-0">
+                        <button onclick="switchLiveTab('comments')" id="tab-live-comments" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors">コメント</button>
+                        <button onclick="switchLiveTab('listeners')" id="tab-live-listeners" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors hidden">参加者</button>
+                        <button onclick="switchLiveTab('info')" id="tab-live-info" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors">概要</button>
+                    </div>
+
+                    <!-- Comments Area -->
+                    <div id="area-live-comments" class="flex-1 flex flex-col overflow-hidden">
+                        <div id="live-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3 dark-scrollbar">
+                            <div class="text-center py-4 text-[#725b3f] text-xs tracking-widest">ここにコメントが表示されます</div>
+                        </div>
+                        <div class="p-3 bg-[#1a110f] border-t border-[#5c4a3d] shrink-0">
+                            <form onsubmit="sendLiveComment(event)" class="flex gap-2 relative">
+                                <input type="text" id="live-comment-input" class="flex-1 bg-[#2a1a17] text-[#f7f5f0] text-sm p-3 pr-10 rounded-sm border border-[#5c4a3d] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all placeholder-[#725b3f]" placeholder="コメントを送信..." required>
+                                <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#d4af37] hover:text-white transition-colors p-2">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Listeners Area -->
+                    <div id="area-live-listeners" class="hidden flex-1 flex flex-col overflow-hidden">
+                        <div class="p-3 bg-[#1a110f] border-b border-[#5c4a3d] shrink-0 flex justify-between items-center">
+                            <span class="text-[10px] text-[#a09080] tracking-widest">登壇リクエスト</span>
+                            <span id="req-count" class="bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-sm font-bold">0</span>
+                        </div>
+                        <div id="live-listeners-list" class="flex-1 overflow-y-auto p-2 space-y-1 dark-scrollbar"></div>
+                    </div>
+
+                    <!-- Info Area (概要欄) -->
+                    <div id="area-live-info" class="hidden flex-1 flex flex-col overflow-y-auto p-5 dark-scrollbar">
+                        <h3 id="live-info-title" class="font-bold text-base mb-3 text-[#d4af37] tracking-widest font-serif leading-snug">ルームタイトル</h3>
+                        <div id="live-info-tags" class="flex flex-wrap gap-1.5 mb-5"></div>
+                        <h4 class="text-[10px] text-[#a09080] tracking-widest mb-1.5 font-bold"><i class="fa-solid fa-align-left mr-1"></i>トピック・概要</h4>
+                        <div class="text-xs text-[#dcd4c6] leading-relaxed whitespace-pre-wrap bg-black/20 p-4 rounded-sm border border-[#5c4a3d] shadow-inner" id="live-info-desc"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- アクションバー -->
+            <div class="bg-[#1a110f] border-t border-[#5c4a3d] p-3 sm:p-4 shrink-0 flex justify-center items-center gap-4 relative z-30">
+                <button id="btn-raise-hand" onclick="toggleHandRaise()" class="hidden px-6 py-3 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] rounded-full text-xs font-bold tracking-widest hover:bg-[#2a1a17] transition-colors shadow-md">
+                    <i class="fa-solid fa-hand mr-2"></i> 登壇をリクエスト
+                </button>
+                <button id="btn-mic" onclick="toggleMic()" class="hidden w-14 h-14 rounded-full bg-[#d4af37] text-[#1a110f] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-microphone" id="icon-mic"></i>
+                </button>
+                <button id="btn-leave-stage" onclick="leaveStage()" class="hidden px-4 py-2 bg-transparent text-[#a09080] border border-[#5c4a3d] rounded-full text-xs font-bold tracking-widest hover:text-[#f7f5f0] hover:bg-[#3e2723] transition-colors">
+                    降壇する
+                </button>
+                <button id="btn-end-cast" onclick="leaveLiveRoom()" class="hidden px-4 py-2 bg-red-900/50 text-red-400 border border-red-800 rounded-full text-xs font-bold tracking-widest hover:bg-red-800 hover:text-white transition-colors ml-4">
+                    配信を終了
                 </button>
             </div>
         </div>
 
-        <!-- Main Body -->
-        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-            <!-- スピーカーエリア -->
-            <div class="flex-1 p-4 sm:p-8 overflow-y-auto dark-scrollbar relative">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.05)_0%,transparent_60%)] pointer-events-none"></div>
-                <div id="speakers-grid" class="flex flex-wrap justify-center content-start gap-6 sm:gap-10 relative z-10 max-w-4xl mx-auto h-full pt-10">
-                    <!-- JSでスピーカーのアイコンが挿入されます -->
+        <!-- Mini UI (ながら聴き用) -->
+        <div id="live-mini-ui" class="hidden h-full w-full flex items-center justify-between px-4 bg-[#2a1a17] border border-[#b8860b] rounded-md shadow-2xl relative overflow-hidden cursor-pointer" onclick="toggleMiniPlayer()">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(212,175,55,0.1)_0%,transparent_60%)] pointer-events-none"></div>
+            <div class="flex items-center gap-3 min-w-0 relative z-10">
+                <div class="w-10 h-10 rounded-full bg-black border-2 border-[#5c4a3d] flex items-center justify-center relative shadow-md">
+                    <i class="fa-solid fa-satellite-dish text-[#d4af37] animate-pulse"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[9px] text-[#b8860b] font-bold tracking-widest mb-0.5">SIGNAL CAST 配信中</p>
+                    <p id="mini-title" class="text-xs font-bold text-white truncate w-32 sm:w-48 font-serif">ルームタイトル</p>
                 </div>
             </div>
-
-            <!-- 右側パネル -->
-            <div class="w-full lg:w-80 bg-[#2a1a17] flex flex-col border-t lg:border-t-0 lg:border-l border-[#5c4a3d] shrink-0 h-[45vh] lg:h-auto z-20">
-                <div class="flex border-b border-[#5c4a3d] shrink-0">
-                    <button onclick="switchLiveTab('comments')" id="tab-live-comments" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors">コメント</button>
-                    <button onclick="switchLiveTab('listeners')" id="tab-live-listeners" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors hidden">リスナー管理</button>
-                </div>
-
-                <!-- Comments Area -->
-                <div id="area-live-comments" class="flex-1 flex flex-col overflow-hidden">
-                    <div id="live-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3 dark-scrollbar">
-                        <div class="text-center py-4 text-[#725b3f] text-xs tracking-widest">ここにコメントが表示されます</div>
-                    </div>
-                    <div class="p-3 bg-[#1a110f] border-t border-[#5c4a3d] shrink-0">
-                        <form onsubmit="sendLiveComment(event)" class="flex gap-2 relative">
-                            <input type="text" id="live-comment-input" class="flex-1 bg-[#2a1a17] text-[#f7f5f0] text-sm p-3 pr-10 rounded-sm border border-[#5c4a3d] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all placeholder-[#725b3f]" placeholder="コメントを送信..." required>
-                            <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#d4af37] hover:text-white transition-colors p-2">
-                                <i class="fa-solid fa-paper-plane"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Listeners Area -->
-                <div id="area-live-listeners" class="hidden flex-1 flex flex-col overflow-hidden">
-                    <div class="p-3 bg-[#1a110f] border-b border-[#5c4a3d] shrink-0 flex justify-between items-center">
-                        <span class="text-[10px] text-[#a09080] tracking-widest">登壇リクエスト</span>
-                        <span id="req-count" class="bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-sm font-bold">0</span>
-                    </div>
-                    <div id="live-listeners-list" class="flex-1 overflow-y-auto p-2 space-y-1 dark-scrollbar"></div>
-                </div>
+            <div class="flex items-center gap-3 relative z-10">
+                <button onclick="event.stopPropagation(); leaveLiveRoom();" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 transition-colors flex items-center justify-center border border-[#5c4a3d]" title="退出する">
+                    <i class="fa-solid fa-power-off text-white text-xs"></i>
+                </button>
             </div>
         </div>
 
-        <!-- アクションバー -->
-        <div class="bg-[#1a110f] border-t border-[#5c4a3d] p-3 sm:p-4 shrink-0 flex justify-center items-center gap-4 relative z-30">
-            <button id="btn-raise-hand" onclick="toggleHandRaise()" class="hidden px-6 py-3 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] rounded-full text-xs font-bold tracking-widest hover:bg-[#2a1a17] transition-colors shadow-md">
-                <i class="fa-solid fa-hand mr-2"></i> 登壇をリクエスト
-            </button>
-            <button id="btn-mic" onclick="toggleMic()" class="hidden w-14 h-14 rounded-full bg-[#d4af37] text-[#1a110f] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform">
-                <i class="fa-solid fa-microphone" id="icon-mic"></i>
-            </button>
-            <button id="btn-leave-stage" onclick="leaveStage()" class="hidden px-4 py-2 bg-transparent text-[#a09080] border border-[#5c4a3d] rounded-full text-xs font-bold tracking-widest hover:text-[#f7f5f0] hover:bg-[#3e2723] transition-colors">
-                降壇する
-            </button>
-            <button id="btn-end-cast" onclick="endLiveCast()" class="hidden px-4 py-2 bg-red-900/50 text-red-400 border border-red-800 rounded-full text-xs font-bold tracking-widest hover:bg-red-800 hover:text-white transition-colors ml-4">
-                配信を終了
-            </button>
-        </div>
     </div>
 
     <!-- Notification Toast -->
@@ -230,7 +288,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
         import * as jose from 'https://cdn.jsdelivr.net/npm/jose@5.2.3/+esm';
@@ -258,6 +316,7 @@
         let partsUnsubscribe = null;
         let commentsUnsubscribe = null;
         let isHandRaised = false;
+        let isLeaving = false; // 二重退出防止フラグ
 
         const LIVEKIT_URL = "wss://noonealonehere-eoyjqp8c.livekit.cloud";
         const LIVEKIT_API_KEY = "APIvGriAyz8L7Tm";
@@ -269,6 +328,8 @@
         let microphone = null;
         let isMicActive = false;
         let micInterval = null;
+        
+        let isMiniPlayer = false; // ミニプレーヤー状態フラグ
 
         const getVal = (id, def = '') => { 
             const el = document.getElementById(id); 
@@ -325,15 +386,14 @@
         function initView() {
             if (action === 'create') {
                 if (myRank === 'arrival' && !isAdmin && !isAdminMock) {
-                    alert('イベント企画は SETTLER 以上の機能です。契約変更をご検討ください。');
+                    alert('配信機能は SETTLER 以上の機能です。契約変更をご検討ください。');
                     window.location.href = 'upgrade.html';
                     return;
                 }
                 document.getElementById('create-view').classList.remove('hidden');
                 document.getElementById('create-view').classList.add('flex');
             } else if (targetRoomId) {
-                document.getElementById('live-view').classList.remove('hidden');
-                document.getElementById('live-view').classList.add('flex');
+                document.getElementById('live-cast-modal').classList.remove('hidden');
                 joinLiveRoom(targetRoomId);
             } else {
                 window.location.href = 'home.html';
@@ -444,8 +504,7 @@
 
                 document.getElementById('create-view').classList.add('hidden');
                 document.getElementById('create-view').classList.remove('flex');
-                document.getElementById('live-view').classList.remove('hidden');
-                document.getElementById('live-view').classList.add('flex');
+                document.getElementById('live-cast-modal').classList.remove('hidden');
                 
                 // URLをリロードせずに書き換え
                 window.history.replaceState(null, '', `?roomId=${currentUser.uid}`);
@@ -462,9 +521,14 @@
 
         window.joinLiveRoom = async (hostUid) => {
             currentRoomId = hostUid;
+            isLeaving = false;
+            document.body.style.overflow = 'hidden'; 
             
             if (isAdminMock) {
                 document.getElementById('live-header-title').textContent = "テスト配信ルーム";
+                document.getElementById('mini-title').textContent = "テスト配信ルーム";
+                document.getElementById('live-info-title').textContent = "テスト配信ルーム";
+                document.getElementById('live-info-desc').textContent = "モックデータです";
                 setupMockLiveUI();
                 return;
             }
@@ -492,11 +556,24 @@
             const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid);
             roomUnsubscribe = onSnapshot(roomRef, (snap) => {
                 if (!snap.exists() || snap.data().status !== 'live') {
-                    alert('この配信は終了しました。');
-                    leaveLiveRoom();
+                    if(!isLeaving) {
+                        alert('この配信は終了しました。');
+                        isLeaving = true;
+                        leaveLiveRoom();
+                    }
                     return;
                 }
-                document.getElementById('live-header-title').textContent = snap.data().title || '配信中';
+                const data = snap.data();
+                document.getElementById('live-header-title').textContent = data.title || '配信中';
+                document.getElementById('mini-title').textContent = data.title || '配信中';
+                document.getElementById('live-info-title').textContent = data.title || '配信中';
+                document.getElementById('live-info-desc').textContent = data.desc || '概要はありません。';
+                
+                const tagsEl = document.getElementById('live-info-tags');
+                tagsEl.innerHTML = '';
+                if(data.tags && data.tags.length > 0) {
+                    tagsEl.innerHTML = data.tags.map(t => `<span class="bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#d4af37] px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">${t}</span>`).join('');
+                }
             });
 
             const partsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'participants');
@@ -558,7 +635,7 @@
             grid.innerHTML = speakers.map(s => {
                 const micIcon = s.isMuted ? '<i class="fa-solid fa-microphone-slash text-red-500 absolute bottom-0 right-0 bg-black/50 rounded-full p-1 text-[8px]"></i>' : '';
                 const hostIcon = s.role === 'host' ? '<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] text-[8px] px-2 py-0.5 rounded-sm font-bold border border-[#b8860b]">HOST</div>' : '';
-                const ringClass = s.isSpeaking ? 'speaking-ripple' : ''; // Web Audio API Fallback
+                const ringClass = s.isSpeaking ? 'speaking-ripple' : ''; 
                 
                 return `
                 <div class="flex flex-col items-center gap-2">
@@ -635,22 +712,22 @@
         }
 
         window.switchLiveTab = (tab) => {
-            const btnCom = document.getElementById('tab-live-comments');
-            const btnLis = document.getElementById('tab-live-listeners');
-            const areaCom = document.getElementById('area-live-comments');
-            const areaLis = document.getElementById('area-live-listeners');
-
-            if (tab === 'comments') {
-                btnCom.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors';
-                btnLis.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors';
-                areaCom.classList.remove('hidden');
-                areaLis.classList.add('hidden');
-            } else {
-                btnLis.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors';
-                btnCom.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors';
-                areaLis.classList.remove('hidden');
-                areaCom.classList.add('hidden');
-            }
+            const tabs = ['comments', 'listeners', 'info'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-live-${t}`);
+                const area = document.getElementById(`area-live-${t}`);
+                if(!btn || !area) return;
+                
+                if (t === tab) {
+                    btn.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors';
+                    area.classList.remove('hidden');
+                } else {
+                    let hideClass = '';
+                    if (t === 'listeners' && currentRole !== 'host') hideClass = ' hidden';
+                    btn.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors' + hideClass;
+                    area.classList.add('hidden');
+                }
+            });
         };
 
         window.sendLiveComment = async (e) => {
@@ -672,7 +749,7 @@
                     timestamp: serverTimestamp()
                 });
             } else {
-                document.getElementById('live-comments-list').innerHTML += `<div class="text-[#d4af37] text-xs p-2">テスト: ${text}</div>`;
+                document.getElementById('live-comments-list').innerHTML += `<div class="flex justify-end w-full mb-3"><div class="bg-[#3e2723] text-[#d4af37] px-3 py-2 rounded-sm text-xs shadow-sm">テスト: ${text}</div></div>`;
             }
             input.value = '';
         };
@@ -733,7 +810,32 @@
             }
         };
 
-        // --- Web Audio API によるマイク波形検知 (LiveKitイベントのフォールバック) ---
+        // --- ミニプレーヤー切替 ---
+        window.toggleMiniPlayer = () => {
+            const modal = document.getElementById('live-cast-modal');
+            const fullUi = document.getElementById('live-full-ui');
+            const miniUi = document.getElementById('live-mini-ui');
+            
+            isMiniPlayer = !isMiniPlayer;
+            
+            if (isMiniPlayer) {
+                modal.classList.remove('inset-0');
+                modal.classList.add('bottom-[5rem]', 'right-4', 'w-[calc(100%-2rem)]', 'sm:w-80', 'h-[72px]', 'rounded-md', 'shadow-2xl');
+                fullUi.classList.add('hidden');
+                fullUi.classList.remove('flex');
+                miniUi.classList.remove('hidden');
+                document.body.style.overflow = ''; // 背景スクロール許可
+            } else {
+                modal.classList.add('inset-0');
+                modal.classList.remove('bottom-[5rem]', 'right-4', 'w-[calc(100%-2rem)]', 'sm:w-80', 'h-[72px]', 'rounded-md', 'shadow-2xl');
+                miniUi.classList.add('hidden');
+                fullUi.classList.remove('hidden');
+                fullUi.classList.add('flex');
+                document.body.style.overflow = 'hidden'; 
+            }
+        };
+
+        // --- Web Audio API ---
         async function startMicAnalysis() {
             if (isMicActive) return;
             try {
@@ -775,9 +877,7 @@
                     micInterval = requestAnimationFrame(analyze);
                 }
                 analyze();
-            } catch(e) {
-                console.warn("マイクアクセス不可");
-            }
+            } catch(e) { console.warn("マイクアクセス不可"); }
         }
 
         function stopMicAnalysis() {
@@ -791,20 +891,24 @@
         }
 
         window.leaveLiveRoom = async () => {
+            if (isLeaving) return; 
             if (!currentRoomId || !currentUser) {
                 window.location.href = 'home.html';
                 return;
             }
+
+            if (!isAdminMock && currentRole === 'host') {
+                if(!confirm("ルームを退出すると配信が終了します。よろしいですか？")) {
+                    return;
+                }
+            }
+            
+            isLeaving = true;
             stopMicAnalysis();
 
             if (!isAdminMock) {
                 if (currentRole === 'host') {
-                    if(confirm("ルームを退出すると配信が終了します。よろしいですか？")) {
-                        await endLiveCast();
-                    } else {
-                        startMicAnalysis();
-                        return;
-                    }
+                    await endLiveCast();
                 } else {
                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid));
                     closeModalUI();
@@ -821,7 +925,6 @@
                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId));
                 } catch(e){ console.error(e); }
             }
-            stopMicAnalysis();
             closeModalUI();
         };
 
@@ -830,6 +933,14 @@
             if(partsUnsubscribe) partsUnsubscribe();
             if(commentsUnsubscribe) commentsUnsubscribe();
             await disconnectLiveKit(); 
+            
+            if(isMiniPlayer) toggleMiniPlayer(); 
+            document.getElementById('live-cast-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+            currentRoomId = null;
+            currentRole = 'none';
+            isLeaving = false;
+            
             window.location.href = 'home.html';
         }
 
