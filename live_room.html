@@ -134,13 +134,22 @@
                     <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">アーカイブ設定</label>
                     <div class="flex flex-wrap gap-3">
                         <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
-                            <input type="radio" name="roomRecord" value="true" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音して残す
+                            <!-- ★変更: onchangeイベントを追加 -->
+                            <input type="radio" name="roomRecord" value="true" onchange="toggleRecordWarning(true)" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音して残す
                         </label>
                         <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
-                            <input type="radio" name="roomRecord" value="false" checked class="text-[#b8860b] focus:ring-[#b8860b]"> 録音しない
+                            <!-- ★変更: onchangeイベントを追加 -->
+                            <input type="radio" name="roomRecord" value="false" checked onchange="toggleRecordWarning(false)" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音しない
                         </label>
                     </div>
                     <p class="text-[10px] text-brand-500 mt-2 text-center sm:text-left">※「録音して残す」を選択すると、配信終了後にポッドキャストとして公開されます。</p>
+                    
+                    <!-- ★追加: 録音に関する目立つ注意書き (初期状態は非表示) -->
+                    <div id="record-warning" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-sm text-red-600 text-[10px] sm:text-xs leading-relaxed shadow-inner">
+                        <span class="font-bold block mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>【重要】自動録音機能はありません</span>
+                        システム側での録音は行われません。必ずご自身の端末（スマホのボイスレコーダー等）で別途録音を行ってください。<br>
+                        配信終了後に作成される「ポッドキャスト枠」の編集画面から、録音した音声ファイルをアップロードできます。
+                    </div>
                 </div>
                 
                 <div>
@@ -346,36 +355,26 @@
         
         let isMiniPlayer = false;
 
-        // ★追加: 匿名化用の変数
-        window.anonymousName = null;
-
         const rankLevels = { 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 };
         function getRankLevel(rank) { return rankLevels[rank] || 0; }
         const getVal = (id, def = '') => { const el = document.getElementById(id); return el ? el.value : def; };
 
-        // ★追加: プロフィール公開設定に応じた参加者情報を取得する関数
-        function getParticipantInfo() {
-            let safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
-            let safeIcon = myProfile ? myProfile.photoURL : null;
-
-            // 自分がホスト（配信者）でない場合のみ匿名化の判定を行う
-            if (currentRole !== 'host' && !isAdminMock) {
-                const isPublicSetting = myProfile && myProfile.profilePublic === 'true';
-                const isPaidMember = myRank !== 'arrival';
-                const canPublish = isPaidMember || isAdmin;
-                
-                // プロフィールが非公開、または無料会員（検索非表示）の場合は匿名化する
-                if (!(isPublicSetting && canPublish)) {
-                    if (!window.anonymousName) {
-                        // 1〜9999のランダムな数字を付与
-                        window.anonymousName = 'listener' + Math.floor(Math.random() * 10000);
+        // ★追加: アーカイブ設定時の注意表示を制御する関数
+        window.toggleRecordWarning = (isRecord) => {
+            const warningEl = document.getElementById('record-warning');
+            if (warningEl) {
+                if (isRecord) {
+                    warningEl.classList.remove('hidden');
+                    // 初回のみポップアップで強めに注意喚起
+                    if (!window.hasShownRecordAlert) {
+                        alert("【重要確認】\n配信の自動録音機能はありません。\n\n必ずご自身のボイスレコーダー等で録音を行い、配信終了後にマイページから音声ファイルをアップロードしてください。");
+                        window.hasShownRecordAlert = true;
                     }
-                    safeName = window.anonymousName;
-                    safeIcon = DEFAULT_ICON;
+                } else {
+                    warningEl.classList.add('hidden');
                 }
             }
-            return { safeName, safeIcon };
-        }
+        };
 
         window.showNotification = (msg, isError = false) => {
             const notif = document.getElementById('notification');
