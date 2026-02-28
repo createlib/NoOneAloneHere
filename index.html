@@ -43,38 +43,50 @@
 <body class="min-h-screen bg-texture overflow-x-hidden">
 
   <!-- --- HERO SECTION --- -->
-  <section class="relative min-h-screen flex flex-col items-center justify-center p-6 bg-[#f7f5f0] overflow-hidden">
-    <!-- アンティークなビネット効果 -->
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(62,39,35,0.08)_100%)] pointer-events-none z-0"></div>
-    <!-- 差し込む光のエフェクト -->
-    <div class="absolute -top-[50%] -left-[20%] w-[150%] h-[200%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4)_0%,transparent_50%)] pointer-events-none z-0"></div>
+  <section class="relative min-h-screen flex flex-col items-center justify-center p-6 bg-[#1a110f] overflow-hidden">
     
-    <div class="z-10 flex flex-col items-center w-full max-w-5xl">
+    <!-- ★修正: 船の背景画像を hakobune.png に変更 -->
+    <div class="absolute inset-0 z-0 flex items-center justify-center opacity-60 md:opacity-[0.85] mix-blend-screen pointer-events-none">
+      <img src="img/hakobune.png" alt="Noah's Ark" class="w-full h-full object-cover object-center" onerror="this.style.display='none';">
+    </div>
+
+    <!-- 差し込む光のエフェクト (ゴールド系) -->
+    <div class="absolute -top-[50%] -left-[20%] w-[150%] h-[200%] bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.15)_0%,transparent_50%)] pointer-events-none z-0"></div>
+    
+    <!-- アンティークなビネット効果 (暗く落とし込む) -->
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(10,5,0,0.7)_100%)] pointer-events-none z-0"></div>
+    
+    <!-- 下部へのグラデーションフェード (次の白背景セクションへ自然に繋ぐ) -->
+    <div class="absolute bottom-0 left-0 w-full h-32 md:h-48 bg-gradient-to-t from-[#f7f5f0] to-transparent z-10 pointer-events-none"></div>
+    
+    <div class="z-20 flex flex-col items-center w-full max-w-5xl mt-[-2rem] md:mt-0">
       
-      <!-- Typo with Fallback -->
-      <div class="mb-4 w-full flex justify-center">
+      <!-- ★修正: Typoの元の色を活かし、背後に光を当てて視認性を確保 -->
+      <div class="mb-4 w-full flex justify-center relative">
+        <!-- ロゴを浮かび上がらせるための背後の光（バックライト効果） -->
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,253,249,0.35)_0%,transparent_50%)] pointer-events-none blur-xl"></div>
         <img 
           src="./img/typo.png" 
           alt="NOAH Logo" 
-          class="w-[90%] md:w-[700px] h-auto object-contain drop-shadow-xl transition-transform hover:scale-[1.02] duration-700"
+          class="w-[90%] md:w-[700px] h-auto object-contain transition-transform hover:scale-[1.02] duration-700 relative z-10 drop-shadow-[0_0_15px_rgba(255,253,249,0.2)]"
           onerror="this.style.display='none'; document.getElementById('fallback-typo').style.display='block';"
         />
-        <div id="fallback-typo" style="display: none;" class="text-center font-serif tracking-[0.3em] text-[#3e2723]">
-          <h1 class="text-6xl md:text-9xl font-bold mb-2">NOAH</h1>
+        <div id="fallback-typo" style="display: none;" class="text-center font-serif tracking-[0.3em] text-[#d4af37]">
+          <h1 class="text-6xl md:text-9xl font-bold mb-2 drop-shadow-[0_0_15px_rgba(212,175,55,0.3)]">NOAH</h1>
         </div>
       </div>
 
       <!-- Subtitle -->
-      <h2 class="text-xs md:text-lg text-[#725b3f] font-serif tracking-[0.4em] md:tracking-[0.6em] uppercase mb-16 text-center border-b border-[#c8b9a6] pb-4 px-8 md:px-16">
+      <h2 class="text-xs md:text-lg text-[#dcd4c6] font-serif tracking-[0.4em] md:tracking-[0.6em] uppercase mb-16 text-center border-b border-[#dcd4c6]/30 pb-4 px-8 md:px-16 drop-shadow-md">
         No One Alone, Here
       </h2>
 
       <!-- Catch Copy -->
-      <div class="text-center space-y-6">
-        <p class="text-xl md:text-3xl text-[#4a3b32] tracking-widest font-bold leading-relaxed drop-shadow-sm">
+      <div class="text-center space-y-6 mb-10 md:mb-16">
+        <p class="text-xl md:text-3xl text-[#f7f5f0] tracking-widest font-bold leading-relaxed drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
           ここでは、誰も一人にならない。
         </p>
-        <p class="text-sm md:text-base text-[#5c4a3d] max-w-2xl mx-auto leading-loose pt-4">
+        <p class="text-sm md:text-base text-[#e8dfd1] max-w-2xl mx-auto leading-loose pt-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] font-medium">
           信頼の連鎖が、人生の最高のパートナーを引き寄せる。<br />
           共鳴と安心でつながる、完全紹介制のクローズドコミュニティ。
         </p>
