@@ -1275,14 +1275,17 @@
             if(isMiniPlayer) toggleMiniPlayer(); 
             document.getElementById('live-cast-modal').classList.add('hidden');
             document.body.style.overflow = '';
+            
+            // ★修正: 遷移先のユーザーIDを保存しておく
+            const returnUid = currentRoomId || (currentUser ? currentUser.uid : null);
+            
             currentRoomId = null;
             currentRole = 'none';
             isLeaving = false; 
             
-            if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
-                window.history.back();
-            } else if (targetRoomId) {
-                window.location.href = `user_contents.html?uid=${targetRoomId}`;
+            // ★修正: 履歴で戻るのではなく、明示的にプロフィール（またはホーム）へ遷移させる
+            if (returnUid) {
+                window.location.href = `user_contents.html?uid=${returnUid}`;
             } else {
                 window.location.href = 'home.html';
             }
