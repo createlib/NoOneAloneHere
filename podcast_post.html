@@ -156,6 +156,13 @@
                     <p class="text-xs text-brand-500 mb-3">このエピソードで話している内容や、関連リンクなどを記述してください。</p>
                     <textarea id="description" rows="6" class="w-full border border-brand-200 rounded-sm p-4 bg-[#f7f5f0] text-sm leading-relaxed focus:bg-white transition-colors" placeholder="・オープニング&#13;&#10;・今回のテーマについて&#13;&#10;・ゲストからのお知らせ"></textarea>
                 </div>
+
+                <!-- ★追加: 関連記事の入力フィールド -->
+                <div class="pt-2">
+                    <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest"><i class="fa-solid fa-link text-brand-400 mr-2"></i>関連記事 (Note等) <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
+                    <p class="text-[10px] sm:text-xs text-brand-500 mb-2">noteの記事URLを貼り付けると、概要欄に綺麗に埋め込まれて表示されます。</p>
+                    <input type="url" id="related-article" class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="https://note.com/...">
+                </div>
             </div>
 
             <!-- Tags & Settings -->
@@ -560,6 +567,9 @@
                     document.getElementById('description').value = data.description || '';
                     document.getElementById('guests').value = data.guests ? data.guests.join(', ') : '';
                     
+                    // ★追加: 関連記事データの読み込み
+                    document.getElementById('related-article').value = data.relatedArticleUrl || '';
+                    
                     currentDuration = data.duration || 0;
                     
                     if (data.sourceType === 'url') {
@@ -853,6 +863,9 @@
                 const guests = guestsStr ? guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 const allowComments = document.querySelector('input[name="allowComments"]:checked').value === 'true';
 
+                // ★追加: 関連記事URLの取得
+                const relatedArticleUrl = document.getElementById('related-article').value.trim();
+
                 const checkedTags = Array.from(document.querySelectorAll('.tag-cb:checked')).map(cb => cb.value);
                 const customTags = document.getElementById('custom-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
                 const tags = [...new Set([...checkedTags, ...customTags])];
@@ -868,6 +881,7 @@
                     thumbnailUrl: finalThumbUrl || null,
                     title: title,
                     description: desc,
+                    relatedArticleUrl: relatedArticleUrl, // ★追加: DBに保存
                     guests: guests,
                     tags: tags,
                     allowComments: allowComments,
