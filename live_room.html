@@ -119,6 +119,13 @@
                     <input type="text" id="room-guests" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:border-[#b8860b]" placeholder="例: @user_id, 〇〇さん">
                 </div>
 
+                <!-- ★追加: 関連記事の入力フィールド -->
+                <div>
+                    <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">関連記事 (Note等) <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
+                    <p class="text-[10px] text-brand-500 mb-1.5">noteのURLを指定すると、配信中の概要欄に綺麗に表示されます。</p>
+                    <input type="url" id="room-related-article" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:border-[#b8860b]" placeholder="https://note.com/...">
+                </div>
+
                 <div>
                     <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">カテゴリ・タグ</label>
                     <div class="flex flex-wrap gap-2">
@@ -578,6 +585,7 @@
                     title: title,
                     desc: getVal('room-desc'),
                     guestsStr: getVal('room-guests'),
+                    relatedArticleUrl: getVal('room-related-article'), // ★追加: 関連記事URL
                     privacy: getVal('room-privacy'),
                     type: getVal('room-type'),
                     tags: checkedTags,
@@ -662,7 +670,6 @@
                     if(!isLeaving) {
                         isLeaving = true;
                         alert('この配信は終了しました。');
-                        // ★修正: leaveLiveRoom() だと isLeaving=true でブロックされるため直接 closeModalUI() を呼ぶ
                         closeModalUI();
                     }
                     return;
@@ -671,7 +678,40 @@
                 document.getElementById('live-header-title').textContent = data.title || '配信中';
                 document.getElementById('mini-title').textContent = data.title || '配信中';
                 document.getElementById('live-info-title').textContent = data.title || '配信中';
-                document.getElementById('live-info-desc').textContent = data.desc || '概要はありません。';
+                
+                // ★修正: 概要欄＋関連記事(Note等) のレンダリング処理
+                const descContainer = document.getElementById('live-info-desc');
+                descContainer.innerHTML = ''; // 一度クリア
+                
+                const descText = document.createElement('div');
+                descText.innerHTML = data.desc ? data.desc.replace(/\n/g, '<br>') : '概要はありません。';
+                descText.className = 'whitespace-pre-wrap leading-relaxed';
+                descContainer.appendChild(descText);
+
+                if (data.relatedArticleUrl) {
+                    const articleDiv = document.createElement('div');
+                    const url = data.relatedArticleUrl;
+                    const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
+                    
+                    if (noteMatch && noteMatch[1]) {
+                        articleDiv.innerHTML = `
+                            <div class="mt-5 pt-4 border-t border-[#5c4a3d]">
+                                <h4 class="text-[10px] text-[#a09080] tracking-widest mb-3 font-bold uppercase"><i class="fa-solid fa-link mr-1"></i>関連記事</h4>
+                                <iframe class="w-full max-w-full rounded-sm border border-[#5c4a3d] bg-white" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%;" height="400"></iframe>
+                            </div>
+                        `;
+                    } else {
+                        articleDiv.innerHTML = `
+                            <div class="mt-5 pt-4 border-t border-[#5c4a3d]">
+                                <h4 class="text-[10px] text-[#a09080] tracking-widest mb-2 font-bold uppercase"><i class="fa-solid fa-link mr-1"></i>関連記事</h4>
+                                <a href="${url}" target="_blank" class="block p-3 bg-black/40 border border-[#5c4a3d] rounded-sm hover:border-[#d4af37] transition-colors text-xs text-[#dcd4c6] truncate">
+                                    <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-[#a09080]"></i>${url}
+                                </a>
+                            </div>
+                        `;
+                    }
+                    descContainer.appendChild(articleDiv);
+                }
                 
                 const tagsEl = document.getElementById('live-info-tags');
                 tagsEl.innerHTML = '';
@@ -1053,12 +1093,13 @@
                                 authorId: roomData.hostId,
                                 authorName: roomData.hostName,
                                 authorIcon: roomData.hostIcon,
-                                sourceType: 'live_archive', // ライブアーカイブであることを明記
-                                audioUrl: '', // ※音声ファイル自体は後から編集画面でアップロードする
+                                sourceType: 'live_archive', 
+                                audioUrl: '', 
                                 isEmbed: false,
                                 thumbnailUrl: roomData.thumbUrl || null,
                                 title: roomData.title,
                                 description: roomData.desc || 'この配信は SIGNAL CAST（ライブ配信） のアーカイブです。',
+                                relatedArticleUrl: roomData.relatedArticleUrl || '', // ★アーカイブにも関連記事を引き継ぐ
                                 guests: roomData.guestsStr ? roomData.guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [],
                                 tags: roomData.tags || [],
                                 allowComments: true, 
