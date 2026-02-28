@@ -280,8 +280,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-        // ★修正: uploadBytes を追加インポート
+        // ★修正: addDoc を追加インポート
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, deleteDoc, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytesResumable, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
@@ -716,6 +716,26 @@
                             isMuted: false,
                             joinedAt: serverTimestamp()
                         });
+
+                        // ★追加: フォロワーにライブ配信開始の通知を送る
+                        try {
+                            const followersSnap = await getDocs(collection(db, 'artifacts', appId, 'users', finalAuthorId, 'followers'));
+                            const notifyPromises = [];
+                            followersSnap.forEach(fDoc => {
+                                const followerId = fDoc.id;
+                                const notifRef = collection(db, 'artifacts', appId, 'users', followerId, 'notifications');
+                                notifyPromises.push(addDoc(notifRef, {
+                                    type: 'live_start',
+                                    fromUid: finalAuthorId,
+                                    contentId: finalAuthorId,
+                                    createdAt: serverTimestamp(),
+                                    isRead: false
+                                }));
+                            });
+                            await Promise.all(notifyPromises);
+                        } catch (notifyErr) {
+                            console.error("Failed to send live notifications:", notifyErr);
+                        }
                     }
 
                     window.location.href = `live_room.html?roomId=${finalAuthorId}`;
@@ -868,6 +888,28 @@
                 const pidRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', docId);
                 await setDoc(pidRef, podcastData, { merge: true });
                 
+                // ★追加: 新規投稿の場合、フォロワーに通知を送る
+                if (!editPid) {
+                    try {
+                        const followersSnap = await getDocs(collection(db, 'artifacts', appId, 'users', finalAuthorId, 'followers'));
+                        const notifyPromises = [];
+                        followersSnap.forEach(fDoc => {
+                            const followerId = fDoc.id;
+                            const notifRef = collection(db, 'artifacts', appId, 'users', followerId, 'notifications');
+                            notifyPromises.push(addDoc(notifRef, {
+                                type: 'new_podcast',
+                                fromUid: finalAuthorId,
+                                contentId: docId,
+                                createdAt: serverTimestamp(),
+                                isRead: false
+                            }));
+                        });
+                        await Promise.all(notifyPromises);
+                    } catch (notifyErr) {
+                        console.error("Failed to send podcast notifications:", notifyErr);
+                    }
+                }
+
                 window.location.href = `podcast_detail.html?pid=${docId}`;
                 
             } catch(error) {
