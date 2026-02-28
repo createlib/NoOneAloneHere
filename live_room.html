@@ -119,11 +119,11 @@
                     <input type="text" id="room-guests" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:border-[#b8860b]" placeholder="例: @user_id, 〇〇さん">
                 </div>
 
-                <!-- ★追加: 関連記事の入力フィールド -->
+                <!-- ★修正: 関連記事の入力フィールド (複数対応) -->
                 <div>
                     <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">関連記事 (Note等) <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
-                    <p class="text-[10px] text-brand-500 mb-1.5">noteのURLを指定すると、配信中の概要欄に綺麗に表示されます。</p>
-                    <input type="url" id="room-related-article" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:border-[#b8860b]" placeholder="https://note.com/...">
+                    <p class="text-[10px] text-brand-500 mb-1.5">noteのURL等を指定します。複数ある場合は「, (カンマ)」で区切ってください。</p>
+                    <input type="text" id="room-related-article" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:border-[#b8860b]" placeholder="https://note.com/..., https://...">
                 </div>
 
                 <div>
@@ -578,6 +578,10 @@
                 const safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
                 const safeIcon = myProfile ? myProfile.photoURL : null;
 
+                // ★修正: 関連記事をカンマ区切りで配列化
+                const relatedArticleInput = getVal('room-related-article');
+                const relatedArticleUrls = relatedArticleInput ? relatedArticleInput.split(',').map(s=>s.trim()).filter(s=>s) : [];
+
                 const roomData = {
                     hostId: currentUser.uid,
                     hostName: safeName,
@@ -585,7 +589,7 @@
                     title: title,
                     desc: getVal('room-desc'),
                     guestsStr: getVal('room-guests'),
-                    relatedArticleUrl: getVal('room-related-article'), // ★追加: 関連記事URL
+                    relatedArticleUrls: relatedArticleUrls, // ★配列で保存
                     privacy: getVal('room-privacy'),
                     type: getVal('room-type'),
                     tags: checkedTags,
@@ -679,37 +683,45 @@
                 document.getElementById('mini-title').textContent = data.title || '配信中';
                 document.getElementById('live-info-title').textContent = data.title || '配信中';
                 
-                // ★修正: 概要欄＋関連記事(Note等) のレンダリング処理
+                // ★修正: 概要欄＋関連記事(Note等) のレンダリング処理（複数対応＆余白調整）
                 const descContainer = document.getElementById('live-info-desc');
-                descContainer.innerHTML = ''; // 一度クリア
+                descContainer.innerHTML = ''; 
                 
                 const descText = document.createElement('div');
                 descText.innerHTML = data.desc ? data.desc.replace(/\n/g, '<br>') : '概要はありません。';
-                descText.className = 'whitespace-pre-wrap leading-relaxed';
+                descText.className = 'whitespace-pre-wrap leading-relaxed mb-4';
                 descContainer.appendChild(descText);
 
-                if (data.relatedArticleUrl) {
+                let urls = [];
+                if (data.relatedArticleUrls && Array.isArray(data.relatedArticleUrls)) {
+                    urls = data.relatedArticleUrls;
+                } else if (data.relatedArticleUrl) {
+                    urls = [data.relatedArticleUrl];
+                }
+
+                if (urls.length > 0) {
                     const articleDiv = document.createElement('div');
-                    const url = data.relatedArticleUrl;
-                    const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
+                    articleDiv.className = "mt-5 pt-4 border-t border-[#5c4a3d]";
+                    articleDiv.innerHTML = `<h4 class="text-[10px] text-[#a09080] tracking-widest mb-3 font-bold uppercase"><i class="fa-solid fa-link mr-1"></i>関連記事</h4>`;
                     
-                    if (noteMatch && noteMatch[1]) {
-                        articleDiv.innerHTML = `
-                            <div class="mt-5 pt-4 border-t border-[#5c4a3d]">
-                                <h4 class="text-[10px] text-[#a09080] tracking-widest mb-3 font-bold uppercase"><i class="fa-solid fa-link mr-1"></i>関連記事</h4>
-                                <iframe class="w-full max-w-full rounded-sm border border-[#5c4a3d] bg-white" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%;" height="400"></iframe>
-                            </div>
-                        `;
-                    } else {
-                        articleDiv.innerHTML = `
-                            <div class="mt-5 pt-4 border-t border-[#5c4a3d]">
-                                <h4 class="text-[10px] text-[#a09080] tracking-widest mb-2 font-bold uppercase"><i class="fa-solid fa-link mr-1"></i>関連記事</h4>
-                                <a href="${url}" target="_blank" class="block p-3 bg-black/40 border border-[#5c4a3d] rounded-sm hover:border-[#d4af37] transition-colors text-xs text-[#dcd4c6] truncate">
+                    const linksContainer = document.createElement('div');
+                    linksContainer.className = "space-y-4";
+
+                    urls.forEach(url => {
+                        const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
+                        if (noteMatch && noteMatch[1]) {
+                            linksContainer.innerHTML += `
+                                <iframe class="w-full max-w-full rounded-sm border border-[#5c4a3d] bg-white" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%; height: 260px;"></iframe>
+                            `;
+                        } else {
+                            linksContainer.innerHTML += `
+                                <a href="${url}" target="_blank" class="block p-3 bg-black/40 border border-[#5c4a3d] rounded-sm hover:border-[#d4af37] transition-colors text-xs text-[#dcd4c6] truncate shadow-sm">
                                     <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-[#a09080]"></i>${url}
                                 </a>
-                            </div>
-                        `;
-                    }
+                            `;
+                        }
+                    });
+                    articleDiv.appendChild(linksContainer);
                     descContainer.appendChild(articleDiv);
                 }
                 
@@ -1084,10 +1096,8 @@
                     if (roomSnap.exists()) {
                         const roomData = roomSnap.data();
                         
-                        // リスナー側に終了を通知するため、まずはステータスをendedに変更
                         await updateDoc(roomRef, { status: 'ended' });
 
-                        // ★追加: 「録音して残す」設定の場合、ポッドキャストへデータを移行して自動投稿する
                         if (roomData.isRecord) {
                             const podcastData = {
                                 authorId: roomData.hostId,
@@ -1099,7 +1109,7 @@
                                 thumbnailUrl: roomData.thumbUrl || null,
                                 title: roomData.title,
                                 description: roomData.desc || 'この配信は SIGNAL CAST（ライブ配信） のアーカイブです。',
-                                relatedArticleUrl: roomData.relatedArticleUrl || '', // ★アーカイブにも関連記事を引き継ぐ
+                                relatedArticleUrls: roomData.relatedArticleUrls || [], // ★アーカイブに配列ごと引き継ぎ
                                 guests: roomData.guestsStr ? roomData.guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [],
                                 tags: roomData.tags || [],
                                 allowComments: true, 
