@@ -206,8 +206,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-        // ★修正: uploadBytes を追加インポート
+        // ★修正: addDoc と serverTimestamp を追加インポート
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytesResumable, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
@@ -641,6 +641,28 @@
                 const vidRef = doc(db, 'artifacts', appId, 'public', 'data', 'videos', docId);
                 await setDoc(vidRef, videoData, { merge: true });
                 
+                // ★追加: 新規投稿の場合、フォロワーに通知を送る
+                if (!editVid) {
+                    try {
+                        const followersSnap = await getDocs(collection(db, 'artifacts', appId, 'users', finalAuthorId, 'followers'));
+                        const notifyPromises = [];
+                        followersSnap.forEach(fDoc => {
+                            const followerId = fDoc.id;
+                            const notifRef = collection(db, 'artifacts', appId, 'users', followerId, 'notifications');
+                            notifyPromises.push(addDoc(notifRef, {
+                                type: 'new_video',
+                                fromUid: finalAuthorId,
+                                contentId: docId,
+                                createdAt: serverTimestamp(),
+                                isRead: false
+                            }));
+                        });
+                        await Promise.all(notifyPromises);
+                    } catch (notifyErr) {
+                        console.error("Failed to send notifications:", notifyErr);
+                    }
+                }
+
                 window.location.href = `video_detail.html?vid=${docId}`;
                 
             } catch(error) {
