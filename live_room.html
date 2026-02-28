@@ -377,7 +377,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        // ★修正: addDoc を追加インポート
+        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, limit, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
         import * as jose from 'https://cdn.jsdelivr.net/npm/jose@5.2.3/+esm';
 
@@ -691,6 +692,26 @@
                         isMuted: false,
                         joinedAt: serverTimestamp()
                     });
+
+                    // ★追加: フォロワーにライブ配信開始の通知を送る
+                    try {
+                        const followersSnap = await getDocs(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'followers'));
+                        const notifyPromises = [];
+                        followersSnap.forEach(fDoc => {
+                            const followerId = fDoc.id;
+                            const notifRef = collection(db, 'artifacts', appId, 'users', followerId, 'notifications');
+                            notifyPromises.push(addDoc(notifRef, {
+                                type: 'live_start',
+                                fromUid: currentUser.uid,
+                                contentId: currentUser.uid,
+                                createdAt: serverTimestamp(),
+                                isRead: false
+                            }));
+                        });
+                        await Promise.all(notifyPromises);
+                    } catch (notifyErr) {
+                        console.error("Failed to send live notifications:", notifyErr);
+                    }
                 }
 
                 document.getElementById('create-view').classList.add('hidden');
