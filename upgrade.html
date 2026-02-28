@@ -29,7 +29,7 @@
 <body class="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-texture">
 
   <!-- ホームに戻るリンク -->
-  <div class="absolute top-4 left-4 sm:top-8 sm:left-8 z-10">
+  <div class="absolute top-4 left-4 sm:top-8 sm:left-8 z-20">
     <a href="home.html" class="inline-flex items-center text-xs font-bold text-[#8b6a4f] hover:text-[#5c4a3d] transition-colors tracking-widest">
       <i data-lucide="arrow-left" class="mr-2 w-4 h-4"></i>
       ホームに戻る
@@ -37,6 +37,7 @@
   </div>
 
   <div class="max-w-6xl mx-auto pt-10">
+    
     <!-- Header -->
     <div class="text-center mb-16">
       <i data-lucide="shield-half" class="w-10 h-10 text-[#8b6a4f] mx-auto mb-4" stroke-width="1.5"></i>
@@ -51,114 +52,260 @@
         <p class="text-xs text-[#5c4a3d] tracking-widest font-bold">現在の契約状況を確認しています...</p>
     </div>
 
-    <!-- Pricing Grid -->
-    <div id="pricing-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 hidden">
-      
-      <!-- ARRIVAL -->
-      <div class="bg-[#fffdf9] p-8 border border-[#c8b9a6] shadow-sm flex flex-col relative">
-        <div class="absolute top-0 right-0 bg-[#8b6a4f] text-white text-xs px-3 py-1 font-bold tracking-widest">無料</div>
-        <div class="mb-6">
-          <h3 class="text-2xl font-bold text-[#3e2723] mb-1">ARRIVAL</h3>
-          <p class="text-sm text-[#8b6a4f] font-bold tracking-widest">たどり着いた人</p>
-        </div>
-        <div class="text-3xl font-serif text-[#3e2723] mb-8">¥0 <span class="text-sm text-[#725b3f] font-sans">/ 月</span></div>
-        <div class="flex-grow mb-8">
-          <ul class="space-y-3 text-sm text-[#5c4a3d]">
-            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>イベント参加機能</li>
-            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>プロフィールの作成</li>
-            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>メンバー検索（一部制限あり）</li>
-          </ul>
-        </div>
-        <button id="btn-arrival" class="w-full py-3.5 bg-[#f7f5f0] text-[#a09080] font-bold text-sm tracking-widest border border-[#dcd4c6] cursor-not-allowed" disabled>
-          現在のプラン
-        </button>
-      </div>
+    <!-- メインコンテンツ (ロード完了後に表示) -->
+    <div id="pricing-content" class="hidden">
 
-      <!-- SETTLER -->
-      <div class="bg-[#fffdf9] p-8 border-2 border-[#8b6a4f] shadow-lg flex flex-col relative transform md:-translate-y-2">
-        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#8b6a4f] text-[#fffdf9] px-4 py-1 text-xs font-bold tracking-widest rounded-sm shadow-sm">
-          STANDARD
-        </div>
-        <div class="mb-6 mt-2">
-          <h3 class="text-2xl font-bold text-[#3e2723] mb-1">SETTLER</h3>
-          <p class="text-sm text-[#8b6a4f] font-bold tracking-widest">暮らす人</p>
-        </div>
-        <div class="text-4xl font-serif text-[#3e2723] mb-8">¥3,300 <span class="text-sm text-[#725b3f] font-sans">/ 月</span></div>
-        <div class="flex-grow mb-8">
-          <ul class="space-y-3 text-sm text-[#5c4a3d]">
-            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>ARRIVALの全機能</li>
-            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>イベントの企画・開催</li>
-            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>メンバー検索機能の完全解放</li>
-            <li class="flex items-start"><i data-lucide="check" class="w-4 h-4 mr-2 mt-0.5 text-[#8b6a4f]"></i>コミュニティ内での発言権</li>
-          </ul>
-        </div>
-        <a id="btn-settler" href="https://buy.stripe.com/eVq4gz28G87Bb0ldXY7bW08" target="_blank" rel="noopener noreferrer" class="block text-center w-full py-4 bg-[#8b6a4f] text-[#fffdf9] font-bold text-sm tracking-widest hover:bg-[#725b3f] transition-colors shadow-md">
-          居場所を作る (加入する)
-        </a>
-      </div>
-
-      <!-- COVENANT -->
-      <div class="bg-gradient-to-br from-[#2a1a17] to-[#3e2723] p-1 shadow-xl relative md:col-span-2 lg:col-span-1">
-        <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-4 py-1 font-bold text-xs tracking-widest flex items-center gap-1 border border-[#8b6a4f] shadow-sm">
-          <i data-lucide="shield" class="w-3 h-3"></i> 特別枠
-        </div>
-        <div class="bg-[#fffdf9] p-8 border border-[#d4af37] h-full flex flex-col">
-          <div class="mb-6 mt-2">
-            <h3 class="text-2xl font-bold text-[#3e2723] mb-1">COVENANT</h3>
-            <p class="text-sm text-[#8b6a4f] font-bold tracking-widest">託される人</p>
-          </div>
-          <div class="mb-8">
-            <div class="text-[#8b6a4f] text-xs line-through mb-1">通常 ¥69,000 / 年</div>
-            <div class="text-3xl font-serif text-[#b8860b]">¥36,900 <span class="text-xs text-[#725b3f] font-sans">/ 1年目特別価格</span></div>
-          </div>
-          <div class="flex-grow mb-8">
-            <ul class="space-y-3 text-sm text-[#5c4a3d]">
-              <li class="flex items-start"><i data-lucide="award" class="w-4 h-4 mr-2 mt-0.5 text-[#b8860b]"></i>SETTLERの全機能</li>
-              <li class="flex items-start"><i data-lucide="award" class="w-4 h-4 mr-2 mt-0.5 text-[#b8860b]"></i>中核メンバーとしての参画</li>
-              <li class="flex items-start"><i data-lucide="award" class="w-4 h-4 mr-2 mt-0.5 text-[#b8860b]"></i>コミュニティの意思決定に関与</li>
-              <li class="flex items-start"><i data-lucide="award" class="w-4 h-4 mr-2 mt-0.5 text-[#b8860b]"></i>仕事・依頼の掲載機能</li>
-            </ul>
-          </div>
-          <a id="btn-covenant" href="https://buy.stripe.com/dRm14n28GevZ0lH2fg7bW09" target="_blank" rel="noopener noreferrer" class="block text-center w-full py-4 bg-[#b8860b] text-[#fffdf9] font-bold text-sm tracking-widest hover:bg-[#996515] transition-colors shadow-md">
-            契約を結ぶ (加入する)
-          </a>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Coming Soon Section -->
-    <div class="mt-16 pt-16 border-t border-[#dcd4c6]">
-      <h3 class="text-center font-bold text-[#725b3f] tracking-widest text-sm mb-8 uppercase">準備中の役割</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto opacity-60">
-        
-        <!-- BUILDER -->
-        <div class="bg-[#f7f5f0] p-6 border border-[#dcd4c6] relative grayscale">
-          <div class="absolute inset-0 bg-black/5 flex items-center justify-center z-10 pointer-events-none">
-            <div class="bg-[#3e2723] text-white px-4 py-1 text-xs font-serif tracking-widest rotate-[-5deg] border border-[#dcd4c6]">COMING SOON</div>
-          </div>
-          <div class="mb-4">
-            <h4 class="text-lg font-bold text-gray-700">BUILDER</h4>
-            <span class="text-xs text-gray-500 tracking-widest">創る人</span>
-          </div>
-          <div class="text-xl font-serif text-gray-700 mb-4">¥6,600 <span class="text-xs font-sans">/ 月</span></div>
-          <p class="text-xs text-gray-500 leading-relaxed">仕組み・文化・プロジェクトを生む側。<br/>航海のあいだ、次の世界に何を持ち込むかを形にし始めた人。</p>
+        <!-- 共鳴価格制度の解説セクション -->
+        <div class="bg-gradient-to-br from-[#fffdf9] to-[#f7f5f0] border border-[#d4af37] p-8 sm:p-12 mb-16 shadow-lg relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-[#b8860b] m-4 pointer-events-none opacity-50"></div>
+            <div class="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-[#b8860b] m-4 pointer-events-none opacity-50"></div>
+            
+            <div class="text-center mb-8 relative z-10">
+                <h2 class="text-2xl sm:text-3xl font-bold text-[#3e2723] font-serif tracking-widest mb-2">共鳴価格制度</h2>
+                <p class="text-sm text-[#8b6a4f] tracking-widest">― 価格は、つながりの深さで決まる ―</p>
+            </div>
+            
+            <div class="max-w-3xl mx-auto text-[#5c4a3d] space-y-6 relative z-10 text-sm sm:text-base leading-relaxed">
+                <p class="text-center font-bold text-[#4a3b32] text-lg">
+                    NOAHでは、紹介した人数ではなく<br class="hidden sm:block">
+                    <span class="text-[#b8860b] text-xl border-b-2 border-[#b8860b] pb-1">「今も共に在るか」</span>を大切にします。
+                </p>
+                <p class="text-center">
+                    あなた自身と、あなたが迎え入れた5人が<br class="hidden sm:block">
+                    共にプロフィール100%の状態を保っている限り、特別価格が適用されます。
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="bg-white p-6 border border-[#e8dfd1] shadow-sm relative">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-[#8b6a4f]"></div>
+                        <h4 class="font-bold text-[#3e2723] mb-3 border-b border-[#e8dfd1] pb-2 flex items-center"><i data-lucide="check-circle" class="w-4 h-4 mr-2 text-[#8b6a4f]"></i>適用条件（更新時判定）</h4>
+                        <ul class="space-y-2 text-sm font-medium">
+                            <li>・自分のプロフィールが <span class="text-[#b8860b] font-bold">100%</span></li>
+                            <li>・紹介した5名が同時に <span class="text-[#b8860b] font-bold">100%</span></li>
+                        </ul>
+                        <p class="text-[10px] text-[#725b3f] mt-4 leading-relaxed">※更新タイミングで条件を満たしていれば、その月の請求から優遇価格が適用されます。</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 border border-[#e8dfd1] shadow-sm relative">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-[#c8b9a6]"></div>
+                        <h4 class="font-bold text-[#3e2723] mb-3 border-b border-[#e8dfd1] pb-2 flex items-center"><i data-lucide="clock" class="w-4 h-4 mr-2 text-[#8b6a4f]"></i>猶予ルール</h4>
+                        <p class="text-sm mb-2 font-medium">更新時に未達の場合：</p>
+                        <ul class="space-y-2 text-sm">
+                            <li>・<span class="text-[#b8860b] font-bold">1回分</span>の猶予期間あり</li>
+                            <li>・次回更新時に再達成すれば優遇復帰</li>
+                        </ul>
+                        <p class="text-xs text-[#8b6a4f] mt-4 font-bold tracking-widest text-center border-t border-dashed border-[#e8dfd1] pt-3">関係はやり直せます。NOAHは恐怖で縛りません。</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- GUARDIAN -->
-        <div class="bg-[#f7f5f0] p-6 border border-[#dcd4c6] relative grayscale">
-          <div class="absolute inset-0 bg-black/5 flex items-center justify-center z-10 pointer-events-none">
-            <div class="bg-[#3e2723] text-white px-4 py-1 text-xs font-serif tracking-widest rotate-[5deg] border border-[#dcd4c6]">COMING SOON</div>
-          </div>
-          <div class="mb-4">
-            <h4 class="text-lg font-bold text-gray-700">GUARDIAN</h4>
-            <span class="text-xs text-gray-500 tracking-widest">守る人</span>
-          </div>
-          <div class="text-xl font-serif text-gray-700 mb-4">¥9,900 <span class="text-xs font-sans">/ 月</span></div>
-          <p class="text-xs text-gray-500 leading-relaxed">判断・秩序・倫理に関与する立場。<br/>嵐の中でも箱舟が進み続けるよう見張り、支え、守る人。</p>
+        <!-- Pricing Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16 items-stretch">
+            
+            <!-- 1. ARRIVAL -->
+            <div class="bg-[#fffdf9] p-6 sm:p-8 border border-[#c8b9a6] shadow-sm flex flex-col relative h-full">
+                <div class="absolute top-0 right-0 bg-[#8b6a4f] text-white text-[10px] px-3 py-1 font-bold tracking-widest">無料</div>
+                <div class="mb-5">
+                    <h3 class="text-xl font-bold text-[#3e2723] mb-1 font-serif tracking-widest">ARRIVAL</h3>
+                    <p class="text-xs text-[#8b6a4f] font-bold tracking-widest">出会いと自己理解の入口</p>
+                </div>
+                <div class="text-3xl font-serif text-[#3e2723] mb-6">¥0 <span class="text-xs text-[#725b3f] font-sans">/ 月</span></div>
+                
+                <div class="flex-grow space-y-6 mb-8">
+                    <div>
+                        <p class="text-[10px] font-bold text-[#8b6a4f] mb-3 border-b border-[#e8dfd1] pb-1 uppercase tracking-widest">できること</p>
+                        <ul class="space-y-2 text-xs text-[#5c4a3d]">
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>プロフィール作成</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>プロフ100%達成で診断レポートDL</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>ユーザー一覧閲覧（検索不可）</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>イベント参加</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>コンテンツ閲覧</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-[#a09080] mb-3 border-b border-[#e8dfd1] pb-1 uppercase tracking-widest">できないこと</p>
+                        <ul class="space-y-2 text-xs text-[#a09080] opacity-80">
+                            <li class="flex items-start leading-snug"><i data-lucide="x" class="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0"></i>イベント作成</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="x" class="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0"></i>仕事・依頼掲載</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="x" class="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0"></i>動画投稿 / Podcast投稿</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="x" class="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0"></i>生配信参加（リスナー含む）</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="x" class="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0"></i>診断60分類検索</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <button id="btn-arrival" class="mt-auto w-full py-3.5 bg-[#f7f5f0] text-[#a09080] font-bold text-xs tracking-widest border border-[#dcd4c6] cursor-not-allowed">
+                    現在のプラン
+                </button>
+            </div>
+
+            <!-- 2. SETTLER -->
+            <div class="bg-[#fffdf9] p-6 sm:p-8 border-2 border-[#8b6a4f] shadow-lg flex flex-col relative h-full transform lg:-translate-y-2">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#8b6a4f] text-[#fffdf9] px-4 py-0.5 text-[10px] font-bold tracking-widest rounded-sm shadow-sm whitespace-nowrap">
+                    STANDARD
+                </div>
+                <div class="mb-5 mt-2">
+                    <h3 class="text-xl font-bold text-[#3e2723] mb-1 font-serif tracking-widest">SETTLER</h3>
+                    <p class="text-xs text-[#8b6a4f] font-bold tracking-widest">居場所をつくる人</p>
+                </div>
+                <div class="mb-6 bg-brand-50 p-4 rounded-sm border border-[#e8dfd1]">
+                    <div class="text-[11px] text-[#725b3f] mb-1 font-bold">通常: ¥3,300 / 月</div>
+                    <div class="text-2xl font-serif text-[#3e2723] font-bold flex items-end gap-1">
+                        <span class="text-[10px] font-sans text-[#b8860b] mb-1.5">共鳴価格</span>¥2,750 <span class="text-[10px] text-[#725b3f] font-sans mb-1.5">/ 月</span>
+                    </div>
+                </div>
+                
+                <div class="flex-grow space-y-6 mb-8">
+                    <div>
+                        <p class="text-[10px] font-bold text-[#8b6a4f] mb-3 border-b border-[#e8dfd1] pb-1 uppercase tracking-widest">できること</p>
+                        <ul class="space-y-2 text-xs text-[#5c4a3d]">
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i><span class="font-bold text-[#3e2723]">ARRIVALの全機能</span></li>
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>イベント作成／募集</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>動画投稿 / Podcast投稿</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>生配信リスナー参加</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>診断60分類検索</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-[#a09080] mb-3 border-b border-[#e8dfd1] pb-1 uppercase tracking-widest">できないこと</p>
+                        <ul class="space-y-2 text-xs text-[#a09080] opacity-80">
+                            <li class="flex items-start leading-snug"><i data-lucide="x" class="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0"></i>生配信登壇 / 生配信主催</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="x" class="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0"></i>仕事・依頼掲載</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <a id="btn-settler" href="https://buy.stripe.com/eVq4gz28G87Bb0ldXY7bW08" target="_blank" class="mt-auto block text-center w-full py-3.5 bg-[#8b6a4f] text-[#fffdf9] font-bold text-xs tracking-widest hover:bg-[#725b3f] transition-colors shadow-md">
+                    契約を変更する
+                </a>
+            </div>
+
+            <!-- 3. BUILDER -->
+            <div class="bg-[#fffdf9] p-6 sm:p-8 border border-[#c8b9a6] shadow-sm flex flex-col relative h-full">
+                <div class="mb-5">
+                    <h3 class="text-xl font-bold text-[#3e2723] mb-1 font-serif tracking-widest">BUILDER</h3>
+                    <p class="text-xs text-[#8b6a4f] font-bold tracking-widest">関係を育てる人</p>
+                </div>
+                <div class="mb-6 bg-brand-50 p-4 rounded-sm border border-[#e8dfd1]">
+                    <div class="text-[11px] text-[#725b3f] mb-1 font-bold">通常: ¥6,600 / 月</div>
+                    <div class="text-2xl font-serif text-[#3e2723] font-bold flex items-end gap-1">
+                        <span class="text-[10px] font-sans text-[#b8860b] mb-1.5">共鳴価格</span>¥5,500 <span class="text-[10px] text-[#725b3f] font-sans mb-1.5">/ 月</span>
+                    </div>
+                </div>
+                
+                <div class="flex-grow space-y-6 mb-8">
+                    <div>
+                        <p class="text-[10px] font-bold text-[#8b6a4f] mb-3 border-b border-[#e8dfd1] pb-1 uppercase tracking-widest">できること</p>
+                        <ul class="space-y-2 text-xs text-[#5c4a3d]">
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i><span class="font-bold text-[#3e2723]">SETTLERの全機能</span></li>
+                            <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>生配信への登壇申請</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-[#a09080] mb-3 border-b border-[#e8dfd1] pb-1 uppercase tracking-widest">できないこと</p>
+                        <ul class="space-y-2 text-xs text-[#a09080] opacity-80">
+                            <li class="flex items-start leading-snug"><i data-lucide="x" class="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0"></i>生配信主催</li>
+                            <li class="flex items-start leading-snug"><i data-lucide="x" class="w-3.5 h-3.5 mr-2 mt-0.5 shrink-0"></i>仕事・依頼掲載</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <a id="btn-builder" href="#" target="_blank" class="mt-auto block text-center w-full py-3.5 bg-[#8b6a4f] text-[#fffdf9] font-bold text-xs tracking-widest hover:bg-[#725b3f] transition-colors shadow-md">
+                    契約を変更する
+                </a>
+            </div>
+
+            <!-- 4. GUARDIAN -->
+            <div class="bg-[#fffdf9] p-6 sm:p-8 border border-[#c8b9a6] shadow-sm flex flex-col relative h-full">
+                <div class="mb-5">
+                    <h3 class="text-xl font-bold text-[#3e2723] mb-1 font-serif tracking-widest">GUARDIAN</h3>
+                    <p class="text-xs text-[#8b6a4f] font-bold tracking-widest">場を守り、創る人</p>
+                </div>
+                <div class="mb-6 bg-brand-50 p-4 rounded-sm border border-[#e8dfd1]">
+                    <div class="text-[11px] text-[#725b3f] mb-1 font-bold">通常: ¥9,900 / 月</div>
+                    <div class="text-2xl font-serif text-[#3e2723] font-bold flex items-end gap-1">
+                        <span class="text-[10px] font-sans text-[#b8860b] mb-1.5">共鳴価格</span>¥7,700 <span class="text-[10px] text-[#725b3f] font-sans mb-1.5">/ 月</span>
+                    </div>
+                </div>
+                
+                <div class="flex-grow mb-8">
+                    <p class="text-[10px] font-bold text-[#8b6a4f] mb-3 border-b border-[#e8dfd1] pb-1 uppercase tracking-widest">できること</p>
+                    <ul class="space-y-2 text-xs text-[#5c4a3d]">
+                        <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i><span class="font-bold text-[#3e2723]">BUILDERの全機能</span></li>
+                        <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>生配信主催（ライブ立ち上げ）</li>
+                        <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>MEDIA LOGでのシリーズ化</li>
+                        <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>コンテンツの体系化</li>
+                        <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#8b6a4f] shrink-0"></i>仕事・依頼掲載</li>
+                    </ul>
+                </div>
+                
+                <a id="btn-guardian" href="#" target="_blank" class="mt-auto block text-center w-full py-3.5 bg-[#8b6a4f] text-[#fffdf9] font-bold text-xs tracking-widest hover:bg-[#725b3f] transition-colors shadow-md">
+                    契約を変更する
+                </a>
+            </div>
+
+            <!-- 5. COVENANT -->
+            <div class="bg-gradient-to-br from-[#2a1a17] to-[#3e2723] p-1 shadow-2xl relative lg:col-span-2 flex flex-col h-full">
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-4 py-1 font-bold text-xs tracking-widest flex items-center gap-1 border border-[#8b6a4f] shadow-sm whitespace-nowrap z-10">
+                    <i data-lucide="shield" class="w-3 h-3"></i> 特別枠
+                </div>
+                <div class="bg-[#fffdf9] p-6 sm:p-8 border border-[#d4af37] h-full flex flex-col sm:flex-row gap-6 sm:gap-10">
+                    
+                    <div class="flex-1 flex flex-col">
+                        <div class="mb-5">
+                            <h3 class="text-2xl font-bold text-[#3e2723] mb-1 font-serif tracking-widest">COVENANT</h3>
+                            <p class="text-xs text-[#8b6a4f] font-bold tracking-widest">契約者 / 中核層</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-2">
+                            <div>
+                                <p class="text-[10px] font-bold text-[#8b6a4f] mb-3 border-b border-[#e8dfd1] pb-1 uppercase tracking-widest">立ち位置</p>
+                                <ul class="space-y-2 text-xs text-[#5c4a3d]">
+                                    <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#b8860b] shrink-0"></i><span class="font-bold text-[#3e2723]">GUARDIAN相当の全機能</span></li>
+                                    <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#b8860b] shrink-0"></i>思想的契約者</li>
+                                    <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#b8860b] shrink-0"></i>長期参加前提</li>
+                                    <li class="flex items-start leading-snug"><i data-lucide="check" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#b8860b] shrink-0"></i>コミュニティ基盤層</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-[#8b6a4f] mb-3 border-b border-[#e8dfd1] pb-1 uppercase tracking-widest">追加特典</p>
+                                <ul class="space-y-2 text-xs text-[#5c4a3d]">
+                                    <li class="flex items-start leading-snug"><i data-lucide="award" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#b8860b] shrink-0"></i>中核メンバーバッジ表示</li>
+                                    <li class="flex items-start leading-snug"><i data-lucide="award" class="w-3.5 h-3.5 mr-2 mt-0.5 text-[#b8860b] shrink-0"></i>年1回 COVENANT限定MTG</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-full sm:w-[280px] flex flex-col justify-center border-t sm:border-t-0 sm:border-l border-[#e8dfd1] pt-6 sm:pt-0 sm:pl-8 shrink-0">
+                        <div class="space-y-3 mb-8">
+                            <div class="flex justify-between items-end border-b border-dashed border-[#e8dfd1] pb-1">
+                                <span class="text-xs text-[#725b3f] font-bold">通常</span>
+                                <span class="text-sm text-[#725b3f]">¥59,400 <span class="text-[10px]">/ 年</span></span>
+                            </div>
+                            <div class="flex justify-between items-end border-b border-dashed border-[#e8dfd1] pb-1">
+                                <span class="text-xs text-[#b8860b] font-bold">共鳴価格<span class="text-[9px] ml-1">(永久優遇)</span></span>
+                                <span class="text-sm font-bold text-[#b8860b]">¥49,500 <span class="text-[10px]">/ 年</span></span>
+                            </div>
+                            
+                            <div class="mt-4 pt-4 bg-[#fef9c3]/30 p-4 border border-[#d4af37]/30 rounded-sm">
+                                <p class="text-[10px] font-bold text-red-600 mb-1 tracking-widest text-center">初年度限定（創世記369名まで）</p>
+                                <div class="text-3xl font-serif text-[#b8860b] font-bold text-center mt-2">
+                                    ¥39,800 <span class="text-xs text-[#725b3f] font-sans font-normal">/ 年</span>
+                                </div>
+                                <p class="text-[9px] text-[#725b3f] mt-2 text-center">(月額換算: 約3,316円)</p>
+                            </div>
+                        </div>
+
+                        <a id="btn-covenant" href="https://buy.stripe.com/dRm14n28GevZ0lH2fg7bW09" target="_blank" class="block text-center w-full py-4 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] font-bold text-sm tracking-widest hover:from-[#b8860b] hover:to-[#996515] hover:text-[#fffdf9] transition-all shadow-md mt-auto transform hover:-translate-y-0.5">
+                            契約を結ぶ
+                        </a>
+                    </div>
+                </div>
+            </div>
+
         </div>
-        
-      </div>
     </div>
 
   </div>
@@ -186,12 +333,12 @@
 
     onAuthStateChanged(auth, async (user) => {
         const loading = document.getElementById('loading-indicator');
-        const grid = document.getElementById('pricing-grid');
+        const content = document.getElementById('pricing-content');
 
         if (isAdminMock) {
             updateRankUI('covenant');
             loading.classList.add('hidden');
-            grid.classList.remove('hidden');
+            content.classList.remove('hidden');
             return;
         }
 
@@ -210,61 +357,74 @@
                 updateRankUI('arrival');
             }
             loading.classList.add('hidden');
-            grid.classList.remove('hidden');
+            content.classList.remove('hidden');
         } else {
             window.location.href = 'login.html';
         }
     });
 
-    function updateRankUI(rank) {
-        const arrivalBtn = document.getElementById('btn-arrival');
-        const settlerBtn = document.getElementById('btn-settler');
-        const covenantBtn = document.getElementById('btn-covenant');
-        
-        const currentPlanStyle = "w-full py-3.5 bg-[#f7f5f0] text-[#a09080] font-bold text-sm tracking-widest border border-[#dcd4c6] cursor-not-allowed flex justify-center items-center gap-2";
-        const downgradeMsgStyle = "w-full py-3.5 bg-transparent text-[#a09080] font-bold text-[10px] tracking-widest cursor-not-allowed text-center";
+    function updateRankUI(currentRank) {
+        // ランクの強さを数値化して比較しやすくする
+        const rankLevels = { 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 };
+        const rLevel = rankLevels[currentRank] || 0;
 
-        if (rank === 'arrival') {
-            // ARRIVALのまま
-            if(arrivalBtn) { 
-                arrivalBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i>現在のプラン'; 
-                arrivalBtn.className = currentPlanStyle;
+        const plans = [
+            { id: 'arrival', level: 0 },
+            { id: 'settler', level: 1, url: 'https://buy.stripe.com/eVq4gz28G87Bb0ldXY7bW08' },
+            { id: 'builder', level: 2, url: '#' }, 
+            { id: 'guardian', level: 3, url: '#' }, 
+            { id: 'covenant', level: 4, url: 'https://buy.stripe.com/dRm14n28GevZ0lH2fg7bW09' }
+        ];
+
+        // 各状態のボタンスタイル定義
+        const currentPlanStyle = "mt-auto w-full py-3.5 bg-[#f7f5f0] text-[#a09080] font-bold text-xs tracking-widest border border-[#dcd4c6] cursor-not-allowed flex justify-center items-center gap-2";
+        const downgradeMsgStyle = "mt-auto w-full py-3.5 bg-[#f7f5f0]/50 text-[#a09080] font-bold text-[10px] tracking-widest cursor-not-allowed text-center border border-dashed border-[#e8dfd1]";
+        const upgradeStyleDefault = "mt-auto block text-center w-full py-3.5 bg-[#8b6a4f] text-[#fffdf9] font-bold text-xs tracking-widest hover:bg-[#725b3f] transition-colors shadow-md";
+        const upgradeStyleCov = "mt-auto block text-center w-full py-4 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] font-bold text-sm tracking-widest hover:from-[#b8860b] hover:to-[#996515] hover:text-[#fffdf9] transition-all shadow-md transform hover:-translate-y-0.5";
+
+        plans.forEach(p => {
+            const btn = document.getElementById(`btn-${p.id}`);
+            if(!btn) return;
+
+            if (p.level === rLevel || (p.level === 4 && rLevel === 99)) {
+                // 1. 現在契約中のプラン
+                btn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i>現在のプラン';
+                btn.className = currentPlanStyle;
+                if(btn.tagName === 'A') {
+                    btn.removeAttribute('href');
+                    btn.removeAttribute('target');
+                } else {
+                    btn.disabled = true;
+                }
+            } else if (p.level < rLevel && rLevel !== 99) {
+                // 2. 現在より下のプラン (ダウングレード)
+                btn.innerHTML = '※ダウングレードは運営へお問い合わせください';
+                btn.className = downgradeMsgStyle;
+                if(btn.tagName === 'A') {
+                    btn.removeAttribute('href');
+                    btn.removeAttribute('target');
+                } else {
+                    btn.disabled = true;
+                }
+            } else {
+                // 3. 現在より上のプラン (アップグレード)
+                if (p.id === 'covenant') {
+                    btn.innerHTML = '契約を結ぶ';
+                    btn.className = upgradeStyleCov;
+                } else {
+                    btn.innerHTML = '契約を変更する';
+                    btn.className = upgradeStyleDefault;
+                }
+                
+                if (btn.tagName === 'A') {
+                    btn.href = p.url;
+                    btn.target = '_blank';
+                }
             }
-        } else if (rank === 'settler') {
-            // SETTLER
-            if(settlerBtn) { 
-                settlerBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i>現在のプラン'; 
-                settlerBtn.href = '#'; 
-                settlerBtn.className = currentPlanStyle;
-            }
-            if(arrivalBtn) { 
-                arrivalBtn.textContent = '※ダウングレードは運営へお問い合わせください'; 
-                arrivalBtn.className = downgradeMsgStyle;
-            }
-        } else if (rank === 'covenant' || rank === 'admin') {
-            // COVENANT
-            if(covenantBtn) { 
-                covenantBtn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i>現在のプラン'; 
-                covenantBtn.href = '#'; 
-                covenantBtn.className = currentPlanStyle;
-            }
-            if(arrivalBtn) { 
-                arrivalBtn.textContent = '※ダウングレードは運営へお問い合わせください'; 
-                arrivalBtn.className = downgradeMsgStyle;
-            }
-            if(settlerBtn) { 
-                settlerBtn.textContent = '※ダウングレードは運営へお問い合わせください'; 
-                settlerBtn.href = '#'; 
-                settlerBtn.className = downgradeMsgStyle;
-            }
-        }
+        });
         
-        // 再描画のためアイコン再初期化
         lucide.createIcons();
     }
-  </script>
-  <script>
-    lucide.createIcons();
   </script>
 </body>
 </html>
