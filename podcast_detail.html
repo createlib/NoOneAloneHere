@@ -564,6 +564,62 @@
                         });
                     }
 
+                    // ★追加: 関連記事 (Note等) の表示処理
+                    // すでに描画されているものがあれば初期化
+                    const existingRelated = document.getElementById('rendered-related-article');
+                    if (existingRelated) existingRelated.remove();
+                    const existingFullRelated = document.getElementById('rendered-full-related-article');
+                    if (existingFullRelated) existingFullRelated.remove();
+
+                    if (podcastData.relatedArticleUrl) {
+                        let articleHtml = '';
+                        let fullArticleHtml = '';
+                        const url = podcastData.relatedArticleUrl;
+                        
+                        // NoteのURLからIDを抽出 (通常URLまたは埋め込みURLの形式に対応)
+                        const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
+                        
+                        if (noteMatch && noteMatch[1]) {
+                            // Note用の美しい埋め込み(iframe)
+                            articleHtml = `
+                                <div id="rendered-related-article" class="mt-8 border-t border-brand-100 pt-6">
+                                    <h4 class="text-xs font-bold text-brand-500 uppercase mb-4 tracking-widest flex items-center gap-2"><i class="fa-solid fa-link text-brand-400"></i> 関連記事</h4>
+                                    <iframe class="w-full max-w-full rounded-sm border border-brand-200 shadow-sm" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%;" height="400"></iframe>
+                                </div>
+                            `;
+                            fullArticleHtml = `
+                                <div id="rendered-full-related-article" class="mt-6 border-t border-white/10 pt-4 pb-4">
+                                    <h4 class="text-[10px] text-[#b8860b] font-bold tracking-widest mb-3 uppercase flex items-center gap-2"><i class="fa-solid fa-link"></i> 関連記事</h4>
+                                    <iframe class="w-full max-w-full rounded-sm bg-white" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%;" height="400"></iframe>
+                                </div>
+                            `;
+                        } else {
+                            // 通常の汎用リンク
+                            articleHtml = `
+                                <div id="rendered-related-article" class="mt-8 border-t border-brand-100 pt-6">
+                                    <h4 class="text-xs font-bold text-brand-500 uppercase mb-4 tracking-widest flex items-center gap-2"><i class="fa-solid fa-link text-brand-400"></i> 関連記事</h4>
+                                    <a href="${url}" target="_blank" class="block p-4 bg-brand-50 border border-brand-200 rounded-sm hover:border-[#b8860b] transition-colors text-sm text-brand-700 font-bold truncate">
+                                        <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-brand-400"></i>${url}
+                                    </a>
+                                </div>
+                            `;
+                            fullArticleHtml = `
+                                <div id="rendered-full-related-article" class="mt-6 border-t border-white/10 pt-4 pb-4">
+                                    <h4 class="text-[10px] text-[#b8860b] font-bold tracking-widest mb-3 uppercase flex items-center gap-2"><i class="fa-solid fa-link"></i> 関連記事</h4>
+                                    <a href="${url}" target="_blank" class="block p-3 bg-white/5 border border-white/10 rounded-sm hover:border-[#d4af37] transition-colors text-xs text-white/90 truncate">
+                                        <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-white/50"></i>${url}
+                                    </a>
+                                </div>
+                            `;
+                        }
+                        
+                        // HTMLに挿入
+                        document.getElementById('podcast-desc').insertAdjacentHTML('afterend', articleHtml);
+                        if (fullDescEl) {
+                            fullDescEl.insertAdjacentHTML('afterend', fullArticleHtml);
+                        }
+                    }
+
                     fetchRelatedPodcasts(podcastData.authorId);
 
                     if (podcastData.allowComments === false) {
