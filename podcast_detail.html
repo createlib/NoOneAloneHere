@@ -381,38 +381,48 @@
                     const descContainer = document.getElementById('podcast-desc');
                     descContainer.innerHTML = formatText(podcastData.description || '概要はありません。');
 
-                    if (podcastData.relatedArticleUrl) {
-                        const url = podcastData.relatedArticleUrl;
-                        const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
+                    // ★修正: 関連記事 (Note等) の表示処理を複数対応＆余白調整
+                    const existingRelated = document.getElementById('rendered-related-article');
+                    if (existingRelated) existingRelated.remove();
+
+                    // 互換性のため、配列と単一文字列の両方を処理
+                    let urls = [];
+                    if (podcastData.relatedArticleUrls && Array.isArray(podcastData.relatedArticleUrls)) {
+                        urls = podcastData.relatedArticleUrls;
+                    } else if (podcastData.relatedArticleUrl) {
+                        urls = [podcastData.relatedArticleUrl];
+                    }
+
+                    if (urls.length > 0) {
+                        let articleHtml = `
+                            <div id="rendered-related-article" class="mt-8 pt-6 border-t border-brand-100">
+                                <h3 class="text-base font-bold text-brand-900 mb-4 flex items-center font-serif tracking-widest">
+                                    <div class="w-7 h-7 rounded-full bg-brand-50 flex items-center justify-center border border-brand-200 text-brand-400 shadow-inner mr-3 flex-shrink-0">
+                                        <i class="fa-solid fa-link text-xs"></i>
+                                    </div>
+                                    関連記事
+                                </h3>
+                                <div class="space-y-4">
+                        `;
                         
-                        let articleHtml = '';
-                        if (noteMatch && noteMatch[1]) {
-                            articleHtml = `
-                                <div class="mt-10 pt-8 border-t border-brand-100">
-                                    <h3 class="text-base font-bold text-brand-900 mb-5 flex items-center font-serif tracking-widest">
-                                        <div class="w-7 h-7 rounded-full bg-brand-50 flex items-center justify-center border border-brand-200 text-brand-400 shadow-inner mr-3 flex-shrink-0">
-                                            <i class="fa-solid fa-link text-xs"></i>
-                                        </div>
-                                        関連記事
-                                    </h3>
-                                    <iframe class="w-full max-w-full rounded-sm border border-brand-200 shadow-sm" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%;" height="400"></iframe>
-                                </div>
-                            `;
-                        } else {
-                            articleHtml = `
-                                <div class="mt-10 pt-8 border-t border-brand-100">
-                                    <h3 class="text-base font-bold text-brand-900 mb-5 flex items-center font-serif tracking-widest">
-                                        <div class="w-7 h-7 rounded-full bg-brand-50 flex items-center justify-center border border-brand-200 text-brand-400 shadow-inner mr-3 flex-shrink-0">
-                                            <i class="fa-solid fa-link text-xs"></i>
-                                        </div>
-                                        関連記事
-                                    </h3>
-                                    <a href="${url}" target="_blank" class="block p-4 bg-brand-50 border border-brand-200 rounded-sm hover:border-[#b8860b] transition-colors text-sm text-brand-700 font-bold truncate shadow-sm">
+                        urls.forEach(url => {
+                            const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
+                            
+                            if (noteMatch && noteMatch[1]) {
+                                // ★修正: iframeの高さを固定しすぎず、note側の推奨に近いコンパクトなサイズに
+                                articleHtml += `
+                                    <iframe class="w-full max-w-full rounded-sm border border-brand-200 shadow-sm" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%; height: 260px;"></iframe>
+                                `;
+                            } else {
+                                articleHtml += `
+                                    <a href="${url}" target="_blank" class="block p-3 bg-brand-50 border border-brand-200 rounded-sm hover:border-[#b8860b] transition-colors text-sm text-brand-700 font-bold truncate shadow-sm">
                                         <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-[#8b6a4f]"></i>${url}
                                     </a>
-                                </div>
-                            `;
-                        }
+                                `;
+                            }
+                        });
+                        
+                        articleHtml += `</div></div>`;
                         descContainer.insertAdjacentHTML('beforeend', articleHtml);
                     }
                     
