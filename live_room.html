@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIGNAL CAST | NOAH</title>
+    <title>CAST 再生 | NOAH</title>
     <link rel="icon" href="img/icon.png">
     
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     
     <script>
         tailwind.config = {
@@ -21,410 +24,403 @@
         }
     </script>
     <style>
-        body { font-family: 'Noto Serif JP', serif; }
+        body { font-family: 'Noto Serif JP', serif; background-color: #f7f5f0; color: #4a3b32; }
         .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
         
+        .prose h1, .prose h2, .prose h3 { color: #3e2723; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.5em; border-bottom: 1px solid #e8dfd1; padding-bottom: 0.3em; }
+        .prose h3 { font-size: 1.1rem; border: none; padding: 0; }
+        .prose p { margin-top: 0.5em; margin-bottom: 1em; line-height: 1.8; }
+        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
+        .prose li { margin-bottom: 0.5em; }
+        .prose a { color: #b8860b; text-decoration: underline; }
+        
+        .prose-invert h1, .prose-invert h2, .prose-invert h3 { color: #f7f5f0; border-color: rgba(255,255,255,0.2); }
+        .prose-invert strong { color: #d4af37; }
+
+        @media (max-width: 640px) {
+            .prose p, .prose ul, .prose ol, .prose li { font-size: 0.75rem; line-height: 1.6; }
+            .prose h1 { font-size: 1.1rem; }
+            .prose h2 { font-size: 1rem; }
+            .prose h3 { font-size: 0.9rem; }
+        }
+
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #c8b9a6; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(212, 175, 55, 0.3); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(212, 175, 55, 0.6); }
 
-        .dark-scrollbar::-webkit-scrollbar { width: 6px; }
-        .dark-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .dark-scrollbar::-webkit-scrollbar-thumb { background-color: #5c4a3d; border-radius: 10px; }
+        .bottom-nav-fixed {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #fffdf9; border-top: 1px solid #e8dfd1;
+            z-index: 50; height: 4rem; height: calc(4rem + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .bottom-nav-content { height: 4rem; display: flex; justify-content: space-around; align-items: center; width: 100%; }
 
-        input[type="radio"]:checked + div, input[type="checkbox"]:checked + div {
-            background-color: #3e2723; color: #d4af37; border-color: #b8860b;
-        }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+        input[type=range]::-webkit-slider-thumb { height: 18px; width: 18px; border-radius: 50%; background: #d4af37; cursor: pointer; -webkit-appearance: none; margin-top: -6px; box-shadow: 0 2px 6px rgba(0,0,0,0.5); transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-thumb:active { transform: scale(1.3); }
 
-        select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
+        #smart-player { transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+        .player-expanded { height: 100dvh; bottom: 0 !important; border-radius: 0; }
+        .player-collapsed { height: 64px; border-radius: 0.5rem 0.5rem 0 0; }
+        @media (min-width: 1024px) { .player-collapsed { height: 80px; bottom: 0 !important; border-radius: 0; } }
 
-        /* ライブ配信エフェクト */
-        @keyframes ripple {
-            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.6); }
-            70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
-        }
-        .speaking-ripple {
-            animation: ripple 1.2s infinite;
-            border-color: #d4af37 !important;
-        }
+        .player-expanded .show-collapsed { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .player-collapsed .show-expanded { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .player-expanded .show-expanded { opacity: 1; pointer-events: auto; transition: opacity 0.4s 0.2s; }
+        .player-collapsed .show-collapsed { opacity: 1; pointer-events: auto; transition: opacity 0.4s 0.2s; }
     </style>
 </head>
-<body class="antialiased h-[100dvh] w-screen overflow-hidden bg-[#f7f5f0] bg-texture relative">
+<body class="antialiased min-h-screen bg-texture">
 
-    <!-- Standalone Background -->
-    <div id="standalone-bg" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0">
-        <i class="fa-solid fa-satellite-dish text-6xl text-brand-300 mb-6 opacity-30"></i>
-        <h1 class="text-4xl font-serif text-brand-300 tracking-[0.4em] opacity-30 font-bold">SIGNAL CAST</h1>
-        <p class="text-sm text-brand-400 tracking-widest mt-4 opacity-50 font-bold">配信中 / バックグラウンド再生</p>
-        <p class="text-[10px] text-brand-400 tracking-widest mt-6 opacity-50">※他のページへ遷移すると配信は終了・切断されます</p>
-    </div>
-
-    <!-- 1. ルーム作成ビュー -->
-    <div id="create-view" class="hidden absolute inset-0 z-10 items-center justify-center p-4 overflow-y-auto h-[100dvh]">
-        <div class="bg-[#fffdf9] w-full max-w-2xl my-auto rounded-md shadow-2xl flex flex-col border border-[#b8860b]">
-            <div class="p-4 sm:p-5 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] shrink-0 rounded-t-md">
-                <h3 class="font-bold text-base sm:text-lg text-brand-900 font-serif tracking-widest flex items-center gap-2">
-                    <i class="fa-solid fa-satellite-dish text-[#b8860b]"></i> SIGNAL CAST 配信設定
-                </h3>
-                <button onclick="history.back()" class="text-brand-400 hover:text-brand-700 bg-brand-50 w-8 h-8 rounded-sm flex items-center justify-center transition-colors border border-brand-100"><i class="fa-solid fa-xmark"></i></button>
+    <!-- Navbar -->
+    <nav class="bg-[#fffdf9]/90 backdrop-blur-md border-b border-brand-200 fixed w-full z-40 top-0 h-16 shadow-sm transition-all">
+        <div class="w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
+            
+            <div class="flex items-center gap-4">
+                <a href="podcasts.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest mr-2">
+                    <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">一覧へ戻る</span>
+                </a>
             </div>
             
-            <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
-                
-                <div class="bg-brand-50 p-4 sm:p-5 border border-brand-200 rounded-sm">
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">配信タイトル <span class="text-red-500">*</span></label>
-                        <input type="text" id="room-title" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:ring-[#b8860b] focus:border-[#b8860b]" placeholder="今夜のテーマや雑談内容" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">概要・トピック</label>
-                        <textarea id="room-desc" rows="3" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm leading-relaxed focus:ring-[#b8860b] focus:border-[#b8860b]" placeholder="話す内容やリスナーへのメッセージ"></textarea>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">公開範囲 <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <select id="room-privacy" class="w-full appearance-none border border-brand-200 rounded-sm p-3 pr-8 bg-white text-sm font-bold text-brand-700 focus:border-[#b8860b] focus:ring-[#b8860b] truncate">
-                                <option value="public">🌍 公開（SETTLER以上）</option>
-                                <option value="followers">👥 フォロワー限定</option>
-                                <option value="invite">🔒 招待制（クローズド）</option>
-                                <option value="community">🏢 コミュニティ限定</option>
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-brand-400 pointer-events-none text-xs"></i>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">ルーム種別 <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <select id="room-type" class="w-full appearance-none border border-brand-200 rounded-sm p-3 pr-8 bg-white text-sm font-bold text-brand-700 focus:border-[#b8860b] focus:ring-[#b8860b] truncate">
-                                <option value="talk">💬 通常トーク</option>
-                                <option value="panel">🗣 パネルディスカッション</option>
-                                <option value="interview">🎤 インタビュー形式</option>
-                                <option value="music">🎵 音楽・ライブ形式</option>
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 transform -translate-y-1/2 text-brand-400 pointer-events-none text-xs"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">ゲスト <span class="text-[10px] text-brand-400 font-normal ml-1">(予定している登壇者)</span></label>
-                    <input type="text" id="room-guests" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:border-[#b8860b]" placeholder="例: @user_id, 〇〇さん">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">カテゴリ・タグ</label>
-                    <div class="flex flex-wrap gap-2">
-                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="ビジネス" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">ビジネス</div></label>
-                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="テック" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">テック</div></label>
-                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="恋愛" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">恋愛</div></label>
-                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="自己成長" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">自己成長</div></label>
-                        <label class="cursor-pointer whitespace-nowrap"><input type="checkbox" value="投資" class="room-tag-cb hidden"><div class="px-3 py-1.5 border border-brand-200 text-[10px] sm:text-xs font-bold text-brand-600 rounded-sm tracking-widest hover:bg-brand-50 transition-all bg-white shadow-sm">投資</div></label>
-                    </div>
-                </div>
-
-                <div class="bg-brand-50 p-4 border border-brand-200 rounded-sm">
-                    <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">アーカイブ設定</label>
-                    <div class="flex flex-wrap gap-3">
-                        <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
-                            <!-- ★変更: onchangeイベントを追加 -->
-                            <input type="radio" name="roomRecord" value="true" onchange="toggleRecordWarning(true)" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音して残す
-                        </label>
-                        <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
-                            <!-- ★変更: onchangeイベントを追加 -->
-                            <input type="radio" name="roomRecord" value="false" checked onchange="toggleRecordWarning(false)" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音しない
-                        </label>
-                    </div>
-                    <p class="text-[10px] text-brand-500 mt-2 text-center sm:text-left">※「録音して残す」を選択すると、配信終了後にポッドキャストとして公開されます。</p>
+            <div class="flex items-center gap-3 h-full">
+                <!-- ★修正: 左から「航海・イベント・さがす・メディア・マイページ」の順 -->
+                <div class="hidden lg:flex items-center gap-6 mr-4 h-full">
+                    <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海</a>
+                    <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
+                    <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
                     
-                    <!-- ★追加: 録音に関する目立つ注意書き (初期状態は非表示) -->
-                    <div id="record-warning" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-sm text-red-600 text-[10px] sm:text-xs leading-relaxed shadow-inner">
-                        <span class="font-bold block mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>【重要】自動録音機能はありません</span>
-                        システム側での録音は行われません。必ずご自身の端末（スマホのボイスレコーダー等）で別途録音を行ってください。<br>
-                        配信終了後に作成される「ポッドキャスト枠」の編集画面から、録音した音声ファイルをアップロードできます。
-                    </div>
-                </div>
-                
-                <div>
-                    <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">サムネイル (任意)</label>
-                    <input type="file" id="room-thumb" accept="image/*" class="w-full text-xs text-brand-600 file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-[10px] file:font-bold file:bg-brand-100 file:text-brand-800 bg-brand-50 border border-brand-200 p-2 rounded-sm cursor-pointer hover:bg-[#fffdf9] transition-colors">
-                </div>
-
-            </div>
-            
-            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] shrink-0 rounded-b-md">
-                <button onclick="startLiveCast()" id="btn-start-cast" class="w-full py-4 bg-gradient-to-r from-[#3e2723] to-[#2a1a17] text-[#d4af37] font-bold rounded-sm shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-2 transform hover:-translate-y-0.5 transition-all text-sm sm:text-base mb-3">
-                    <i class="fa-solid fa-satellite-dish animate-pulse"></i> 配信を START する
-                </button>
-                <!-- ★追加: 配信開始前にURLをシェアできるボタン -->
-                <button type="button" onclick="shareMyRoom()" class="w-full py-2 bg-transparent text-brand-600 font-bold text-xs tracking-widest flex items-center justify-center gap-2 hover:text-brand-800 transition-colors">
-                    <i class="fa-solid fa-share-nodes"></i> 事前に配信リンクをシェアして告知する
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. ライブ配信ビュー (全画面モーダル / ミニプレーヤー切替対応) -->
-    <div id="live-cast-modal" class="hidden absolute inset-0 z-[7000] bg-[#1a110f] flex-col text-[#f7f5f0] font-sans transition-all duration-300 h-[100dvh]">
-        
-        <!-- Full UI -->
-        <div id="live-full-ui" class="flex flex-col h-full w-full">
-            <!-- Header -->
-            <div class="flex justify-between items-center bg-[#2a1a17] p-3 sm:p-4 border-b border-[#5c4a3d] shrink-0 shadow-md">
-                <div class="flex items-center gap-3 min-w-0">
-                    <button onclick="toggleMiniPlayer()" class="text-[#a09080] hover:text-[#dcd4c6] px-2 transition-colors" title="ミニプレーヤーにする"><i class="fa-solid fa-chevron-down"></i></button>
-                    <div class="bg-red-600 text-white px-2 py-0.5 rounded-sm text-[9px] font-bold tracking-widest flex items-center gap-1 animate-pulse">
-                        <i class="fa-solid fa-satellite-dish"></i> LIVE
-                    </div>
-                    <h2 id="live-header-title" class="font-bold text-sm sm:text-base tracking-widest truncate">ルームタイトル</h2>
-                </div>
-                <div class="flex items-center gap-3 sm:gap-4 shrink-0">
-                    <!-- ★追加: 配信中画面用のシェアボタン -->
-                    <button onclick="shareLiveRoom()" class="flex items-center justify-center w-8 h-8 rounded-full bg-[#3e2723] text-[#a09080] hover:text-[#f7f5f0] hover:bg-[#5c4a3d] transition-colors border border-[#5c4a3d]" title="配信リンクをコピー">
-                        <i class="fa-solid fa-share-nodes text-xs"></i>
-                    </button>
-                    
-                    <div class="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-full border border-[#5c4a3d]">
-                        <i class="fa-solid fa-headphones text-[#b8860b] text-xs"></i>
-                        <span id="live-listener-count" class="text-xs font-bold font-mono">0</span>
-                    </div>
-                    <button onclick="leaveLiveRoom()" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 transition-colors flex items-center justify-center border border-[#5c4a3d]" title="退出する">
-                        <i class="fa-solid fa-power-off text-xs"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Main Body -->
-            <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-                
-                <!-- スピーカーエリア (左側) -->
-                <div class="flex-1 p-4 sm:p-8 overflow-y-auto dark-scrollbar relative">
-                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.05)_0%,transparent_60%)] pointer-events-none"></div>
-                    <div id="speakers-grid" class="flex flex-wrap justify-center content-start gap-6 sm:gap-10 relative z-10 max-w-4xl mx-auto h-full pt-10">
-                        <!-- JSでスピーカーのアイコンが挿入されます -->
-                    </div>
-                </div>
-
-                <!-- 右側パネル (コメント / リスナー / 概要) -->
-                <div class="w-full lg:w-80 bg-[#2a1a17] flex flex-col border-t lg:border-t-0 lg:border-l border-[#5c4a3d] shrink-0 h-[45vh] lg:h-auto z-20">
-                    <!-- Tabs -->
-                    <div class="flex border-b border-[#5c4a3d] shrink-0 relative">
-                        <button onclick="switchLiveTab('comments')" id="tab-live-comments" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors">コメント</button>
-                        <button onclick="switchLiveTab('listeners')" id="tab-live-listeners" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors hidden relative">
-                            参加者
-                            <span id="tab-req-badge" class="hidden absolute top-1.5 right-1.5 sm:top-1/2 sm:transform sm:-translate-y-1/2 bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">0</span>
+                    <div class="relative group h-full flex items-center">
+                        <button class="text-[#b8860b] transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
+                            <i class="fa-solid fa-photo-film"></i> メディア
                         </button>
-                        <button onclick="switchLiveTab('info')" id="tab-live-info" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors">概要</button>
-                    </div>
-
-                    <!-- Comments Area -->
-                    <div id="area-live-comments" class="flex-1 flex flex-col overflow-hidden">
-                        <div id="live-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3 dark-scrollbar">
-                            <div class="text-center py-4 text-[#725b3f] text-xs tracking-widest">ここにコメントが表示されます</div>
-                        </div>
-                        <div class="p-3 bg-[#1a110f] border-t border-[#5c4a3d] shrink-0">
-                            <form onsubmit="sendLiveComment(event)" class="flex gap-2 relative">
-                                <input type="text" id="live-comment-input" class="flex-1 bg-[#2a1a17] text-[#f7f5f0] text-sm p-3 pr-10 rounded-sm border border-[#5c4a3d] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all placeholder-[#725b3f]" placeholder="コメントを送信..." required>
-                                <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#d4af37] hover:text-white transition-colors p-2">
-                                    <i class="fa-solid fa-paper-plane"></i>
-                                </button>
-                            </form>
+                        <div class="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-[#fffdf9] border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity">
+                            <a href="videos.html" class="block px-4 py-3 text-sm font-bold text-brand-400 hover:bg-brand-50 hover:text-brand-700 border-b border-brand-100 transition-colors tracking-widest"><i class="fa-solid fa-film mr-2 text-brand-500"></i>THEATER</a>
+                            <a href="podcasts.html" class="block px-4 py-3 text-sm font-bold text-brand-400 hover:bg-brand-50 hover:text-brand-700 transition-colors tracking-widest"><i class="fa-solid fa-podcast mr-2 text-[#b8860b]"></i>CAST</a>
                         </div>
                     </div>
 
-                    <!-- Listeners Area -->
-                    <div id="area-live-listeners" class="hidden flex-1 flex flex-col overflow-hidden">
-                        <div class="p-3 bg-[#1a110f] border-b border-[#5c4a3d] shrink-0 flex justify-between items-center">
-                            <span class="text-[10px] text-[#a09080] tracking-widest">登壇リクエスト</span>
-                            <span id="req-count" class="bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-sm font-bold">0</span>
-                        </div>
-                        <div id="live-listeners-list" class="flex-1 overflow-y-auto p-2 space-y-1 dark-scrollbar"></div>
-                    </div>
-
-                    <!-- Info Area (概要欄) -->
-                    <div id="area-live-info" class="hidden flex-1 flex flex-col overflow-y-auto p-5 dark-scrollbar">
-                        <h3 id="live-info-title" class="font-bold text-base mb-3 text-[#d4af37] tracking-widest font-serif leading-snug">ルームタイトル</h3>
-                        <div id="live-info-tags" class="flex flex-wrap gap-1.5 mb-5"></div>
-                        <h4 class="text-[10px] text-[#a09080] tracking-widest mb-1.5 font-bold"><i class="fa-solid fa-align-left mr-1"></i>トピック・概要</h4>
-                        <div class="text-xs text-[#dcd4c6] leading-relaxed whitespace-pre-wrap bg-black/20 p-4 rounded-sm border border-[#5c4a3d] shadow-inner" id="live-info-desc"></div>
-                    </div>
+                    <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
-            </div>
 
-            <!-- アクションバー (ボトム固定) -->
-            <div class="bg-[#1a110f] border-t border-[#5c4a3d] px-3 py-4 sm:p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shrink-0 flex justify-center items-center gap-4 relative z-30">
-                <button id="btn-raise-hand" onclick="toggleHandRaise()" class="hidden px-6 py-3 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] rounded-full text-xs font-bold tracking-widest hover:bg-[#2a1a17] transition-colors shadow-md">
-                    <i class="fa-solid fa-hand mr-2"></i> 登壇をリクエスト
-                </button>
-                <button id="btn-mic" onclick="toggleMic()" class="hidden w-14 h-14 rounded-full bg-[#d4af37] text-[#1a110f] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform">
-                    <i class="fa-solid fa-microphone" id="icon-mic"></i>
-                </button>
-                <button id="btn-leave-stage" onclick="leaveStage()" class="hidden px-4 py-2 bg-transparent text-[#a09080] border border-[#5c4a3d] rounded-full text-xs font-bold tracking-widest hover:text-[#f7f5f0] hover:bg-[#3e2723] transition-colors">
-                    降壇する
-                </button>
-                <button id="btn-end-cast" onclick="leaveLiveRoom()" class="hidden px-4 py-2 bg-red-900/50 text-red-400 border border-red-800 rounded-full text-xs font-bold tracking-widest hover:bg-red-800 hover:text-white transition-colors ml-4">
-                    配信を終了
-                </button>
+                <div class="flex items-center gap-2 border-l border-brand-200 pl-4 ml-2">
+                    <button id="btn-edit" onclick="goToEdit()" class="hidden items-center px-3 py-1.5 bg-[#fffdf9] text-brand-700 text-xs font-bold rounded-sm shadow-sm hover:bg-brand-50 transition-colors border border-brand-300 tracking-widest">
+                        <i class="fa-solid fa-pen sm:mr-1"></i> <span class="hidden sm:inline">編集</span>
+                    </button>
+                    <button id="btn-delete" onclick="deletePodcast()" class="hidden items-center px-3 py-1.5 bg-red-50 text-red-700 text-xs font-bold rounded-sm shadow-sm hover:bg-red-100 transition-colors border border-red-200 tracking-widest">
+                        <i class="fa-solid fa-trash sm:mr-1"></i> <span class="hidden sm:inline">削除</span>
+                    </button>
+                </div>
             </div>
         </div>
+    </nav>
 
-        <!-- Mini UI (ながら聴き用) -->
-        <div id="live-mini-ui" class="hidden h-full w-full flex items-center justify-between px-4 bg-[#2a1a17] border border-[#b8860b] rounded-md shadow-2xl relative overflow-hidden cursor-pointer" onclick="toggleMiniPlayer()">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(212,175,55,0.1)_0%,transparent_60%)] pointer-events-none"></div>
-            <div class="flex items-center gap-3 min-w-0 relative z-10">
-                <div class="w-10 h-10 rounded-full bg-black border-2 border-[#5c4a3d] flex items-center justify-center relative shadow-md">
-                    <i class="fa-solid fa-satellite-dish text-[#d4af37] animate-pulse"></i>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-[9px] text-[#b8860b] font-bold tracking-widest mb-0.5">SIGNAL CAST 配信中</p>
-                    <p id="mini-title" class="text-xs font-bold text-white truncate w-32 sm:w-48 font-serif">ルームタイトル</p>
-                </div>
+    <!-- ★修正: 左から「航海・イベント・さがす・メディア・マイページ」の順 -->
+    <nav class="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div class="bottom-nav-content">
+            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-ship text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">航海</span>
+            </a>
+            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-hourglass-half text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">イベント</span>
+            </a>
+            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-compass text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">さがす</span>
+            </a>
+            <a href="javascript:void(0)" onclick="toggleTheaterMenu()" class="flex flex-col items-center justify-center w-full h-full text-[#b8860b] border-t-2 border-[#b8860b] pt-[2px] transition-colors">
+                <i class="fa-solid fa-photo-film text-xl mb-1"></i>
+                <span class="text-[10px] font-bold tracking-widest">メディア</span>
+            </a>
+            <a href="user.html" class="auth-required flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">マイページ</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- SP用 メディア選択ポップアップ -->
+    <div id="sp-theater-menu" class="hidden fixed inset-0 z-[6000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end justify-center">
+        <div class="absolute inset-0" onclick="toggleTheaterMenu()"></div>
+        <div class="bg-[#fffdf9] bg-texture w-full rounded-t-xl p-6 transform transition-transform translate-y-full relative shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sp-theater-menu-content">
+            <div class="flex justify-between items-center mb-4 border-b border-brand-200 pb-3">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center"><i class="fa-solid fa-photo-film text-brand-500 mr-2"></i>メディアを選択</h3>
+                <button onclick="toggleTheaterMenu()" class="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors border border-brand-200 shadow-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="flex items-center gap-3 relative z-10">
-                <button onclick="event.stopPropagation(); leaveLiveRoom();" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 transition-colors flex items-center justify-center border border-[#5c4a3d]" title="退出する">
-                    <i class="fa-solid fa-power-off text-white text-xs"></i>
-                </button>
+            <div class="space-y-3">
+                <a href="videos.html" class="flex items-center gap-4 p-4 border border-brand-200 rounded-sm hover:bg-brand-50 transition-colors shadow-sm bg-white">
+                    <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-film"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH THEATER</h4>
+                        <p class="text-[10px] text-brand-500 mt-1 font-bold">動画で想いや活動の軌跡を共有</p>
+                    </div>
+                </a>
+                <a href="podcasts.html" class="flex items-center gap-4 p-4 border border-[#b8860b] bg-brand-50 rounded-sm shadow-sm">
+                    <div class="w-12 h-12 bg-[#3e2723] text-[#d4af37] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-podcast"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH CAST</h4>
+                        <p class="text-[10px] text-[#b8860b] mt-1 font-bold">音声で深い考えや対話を配信</p>
+                    </div>
+                </a>
             </div>
         </div>
-
     </div>
+
+    <!-- 隠しオーディオ要素 -->
+    <audio id="core-player" preload="metadata"></audio>
+
+    <!-- Smart Player (Bottom Sheet & Mini Player) -->
+    <div id="smart-player" class="fixed w-full left-0 z-[5000] bg-[#1a110f] text-white shadow-[0_-10px_40px_rgba(0,0,0,0.5)] player-expanded flex flex-col overflow-hidden">
+        
+        <img id="player-bg" src="" class="absolute inset-0 w-full h-full object-cover opacity-20 blur-3xl scale-150 pointer-events-none show-expanded">
+        <div class="absolute inset-0 bg-gradient-to-t from-[#1a110f] via-[#1a110f]/80 to-transparent pointer-events-none show-expanded"></div>
+
+        <button onclick="togglePlayerSize()" class="absolute top-4 left-4 sm:top-6 sm:left-6 text-white/70 hover:text-white p-3 show-expanded z-30 flex items-center gap-2 bg-black/20 rounded-full backdrop-blur-md transition-colors border border-white/10 shadow-lg">
+            <i class="fa-solid fa-chevron-down text-lg"></i>
+            <span class="text-xs font-bold tracking-widest pr-1">しまう</span>
+        </button>
+
+        <div class="absolute inset-0 w-full h-full flex items-center justify-between px-4 show-collapsed cursor-pointer bg-[#2a1a17] border-t border-[#3e2723] hover:bg-[#3e2723] transition-colors" onclick="togglePlayerSize()">
+            <div class="absolute top-0 left-0 h-0.5 bg-[#d4af37]" id="mini-progress" style="width: 0%;"></div>
+            
+            <div class="flex items-center gap-3 w-full min-w-0 pr-4">
+                <img id="mini-thumb" src="https://via.placeholder.com/150" class="w-10 h-10 rounded-sm object-cover shadow-md flex-shrink-0 border border-white/10">
+                <div class="min-w-0 flex-1">
+                    <h4 id="mini-title" class="text-sm font-bold truncate text-white tracking-widest font-serif">Loading...</h4>
+                    <p id="mini-author" class="text-[10px] text-brand-400 truncate tracking-widest"></p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 flex-shrink-0">
+                <button id="btn-like-mini" onclick="toggleLike(event)" class="text-brand-400 hover:text-red-500 text-lg transition-colors p-2"><i class="fa-regular fa-heart" id="icon-like-mini"></i></button>
+                <div id="mini-controls-area">
+                    <button id="btn-play-mini" onclick="togglePlay(event)" class="w-10 h-10 rounded-full bg-[#d4af37] text-[#1a110f] flex items-center justify-center hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-0.5"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center px-6 pb-safe-bottom lg:pb-12 pt-16 show-expanded relative z-20 overflow-y-auto">
+            <div class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
+                
+                <!-- フリップカードUI -->
+                <div id="flip-wrapper" class="w-full max-w-[300px] sm:max-w-[400px] h-[300px] sm:h-[400px] mb-8 lg:mb-0 relative cursor-pointer transition-all duration-500 ease-in-out [perspective:1000px] shrink-0" onclick="toggleFlip()" title="タップしてメモを見る">
+                    <div id="flip-inner" class="w-full h-full relative transition-transform duration-700 ease-in-out" style="transform-style: preserve-3d; transform: rotateY(0deg);">
+                        <div class="absolute inset-0 w-full h-full rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden group bg-[#1a110f]" style="backface-visibility: hidden;">
+                            <img id="full-thumb" src="https://via.placeholder.com/600" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]">
+                            <div class="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/20 text-white/70 shadow-lg pointer-events-none group-hover:bg-black/70 group-hover:text-white transition-colors">
+                                <i class="fa-solid fa-align-left text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-md rounded-lg shadow-2xl overflow-hidden flex flex-col p-5 sm:p-8 border border-white/5" style="backface-visibility: hidden; transform: rotateY(180deg);">
+                            <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-2 text-left" onclick="event.stopPropagation()">
+                                <h3 class="text-[#d4af37] text-sm sm:text-base font-bold tracking-widest flex items-center gap-2 font-serif mb-4 border-b border-white/10 pb-2">
+                                    <i class="fa-solid fa-align-left"></i> エピソードメモ
+                                </h3>
+                                <div id="guests-area-full" class="mb-4 hidden">
+                                    <p class="text-[10px] font-bold text-[#b8860b] tracking-widest mb-1">GUEST</p>
+                                    <p id="guests-text-full" class="text-xs text-white font-bold bg-white/10 px-2 py-1 rounded-sm inline-block tracking-widest border border-white/5"></p>
+                                </div>
+                                <div id="full-podcast-desc" class="prose prose-sm md:prose-base prose-invert max-w-none text-white/90 leading-relaxed tracking-wide font-medium drop-shadow-sm"></div>
+                            </div>
+                            <div class="mt-3 text-center shrink-0 pt-2 border-t border-white/10">
+                                <span class="text-white/40 text-[10px] tracking-widest font-bold flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-rotate"></i> タップして画像に戻る
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 外部プレイヤー埋め込みコンテナ -->
+                <div id="embed-wrapper" class="w-full max-w-[400px] lg:max-w-[600px] hidden mb-8 lg:mb-0 shrink-0">
+                    <iframe id="embed-iframe" class="w-full min-h-[250px] sm:min-h-[352px] rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 bg-black/50" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+                    <div class="mt-6 text-center animate-pulse">
+                        <span class="text-white/40 text-[10px] tracking-widest font-bold flex flex-col items-center justify-center gap-1">
+                            <i class="fa-solid fa-arrow-up text-lg"></i> 
+                            <span>上のプレイヤーを直接操作して再生してください</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="w-full max-w-md flex flex-col">
+                    <div class="flex justify-between items-end mb-8">
+                        <div class="min-w-0 flex-1 pr-4">
+                            <div id="full-tags" class="flex flex-wrap gap-1.5 mb-3"></div>
+                            <h2 id="full-title" class="text-2xl sm:text-3xl font-bold truncate text-white mb-2 font-serif tracking-widest">Loading...</h2>
+                            <!-- ★変更: リンク先を user_contents.html に変更 -->
+                            <a id="full-author-link" href="#" class="text-sm text-[#d4af37] hover:text-[#b8860b] transition-colors truncate tracking-widest flex items-center gap-1 w-fit">
+                                <span id="full-author"></span> <i class="fa-solid fa-circle-check text-[10px]"></i>
+                            </a>
+                        </div>
+                        <button id="btn-like-full" onclick="toggleLike(event)" class="text-3xl text-gray-400 hover:text-red-500 transition-colors pb-1"><i class="fa-regular fa-heart" id="icon-like-full"></i></button>
+                    </div>
+                    
+                    <div id="custom-controls-area">
+                        <div class="w-full flex flex-col mb-8">
+                            <input type="range" id="seek-slider" value="0" min="0" max="100" class="w-full mb-3">
+                            <div class="flex justify-between text-xs text-gray-400 font-mono tracking-widest">
+                                <span id="time-current">0:00</span>
+                                <span id="time-duration">0:00</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-center gap-10 mb-8">
+                            <button onclick="skip(-15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒戻る"><i class="fa-solid fa-rotate-left"></i></button>
+                            <button id="btn-play-full" onclick="togglePlay()" class="w-20 h-20 bg-[#d4af37] text-[#1a110f] rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform"><i class="fa-solid fa-play ml-1"></i></button>
+                            <button onclick="skip(15)" class="text-gray-400 hover:text-white text-2xl transition-colors" title="15秒進む"><i class="fa-solid fa-rotate-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="w-full max-w-[1600px] mx-auto pt-24 px-4 sm:px-6 lg:px-8 pb-[300px] lg:pb-[200px]">
+        
+        <div class="bg-brand-50 p-3 rounded-sm border border-brand-200 text-center mb-8 shadow-sm max-w-4xl mx-auto">
+            <p class="text-[10px] sm:text-xs text-brand-600 font-bold tracking-widest"><i class="fa-solid fa-circle-info mr-1"></i> 配信を聴きながら、下の詳細やコメントを読むことができます。</p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-10 xl:gap-12">
+            
+            <div class="flex-1 min-w-0 space-y-8">
+                
+                <div class="flex flex-row justify-between items-center gap-2 pb-5 border-b border-brand-200 px-1 sm:px-0">
+                    <!-- ★変更: リンク先を user_contents.html に変更 -->
+                    <a id="author-link" href="#" class="flex items-center gap-2 sm:gap-3 group cursor-pointer bg-[#fffdf9] pr-3 py-1 sm:py-1.5 rounded-full border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b] min-w-0">
+                        <img id="author-icon" src="https://via.placeholder.com/48" class="w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover flex-shrink-0 ml-0.5" onerror="this.src='https://via.placeholder.com/48?text=U'">
+                        <div class="min-w-0">
+                            <p id="author-name" class="font-bold text-brand-900 text-[10px] sm:text-sm flex items-center gap-1 truncate transition-colors group-hover:text-[#b8860b]">
+                                名無し <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37]"></i>
+                            </p>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <p id="podcast-date-small" class="text-[8px] sm:text-[10px] text-brand-400 font-mono tracking-wider"></p>
+                                <p id="podcast-duration-small" class="text-[8px] sm:text-[10px] text-[#b8860b] font-mono tracking-wider bg-brand-50 px-1.5 rounded-sm border border-brand-200 hidden"></p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button onclick="toggleLike()" id="btn-like" class="flex items-center gap-1.5 sm:gap-2 bg-[#fffdf9] border border-brand-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold text-brand-700 hover:bg-brand-50 shadow-sm transition-all">
+                            <i class="fa-regular fa-heart text-sm sm:text-base text-brand-400" id="icon-like"></i> <span id="like-count">0</span>
+                        </button>
+                        <button onclick="sharePodcast()" class="flex items-center gap-1.5 sm:gap-2 bg-[#fffdf9] border border-brand-200 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-bold text-brand-700 hover:bg-brand-50 shadow-sm transition-all">
+                            <i class="fa-solid fa-share-nodes text-sm sm:text-base text-brand-400"></i> <span class="hidden sm:inline">シェア</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-brand-200 m-2 pointer-events-none"></div>
+                    <h3 class="font-bold text-brand-900 mb-4 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-align-left text-brand-400"></i> エピソードメモ
+                    </h3>
+                    <div id="guests-area" class="mb-4 hidden">
+                        <p class="text-[10px] font-bold text-brand-500 tracking-widest mb-1">GUEST</p>
+                        <p id="guests-text" class="text-xs text-brand-800 font-bold bg-brand-50 p-2 rounded-sm border border-brand-100 inline-block"></p>
+                    </div>
+                    <div id="podcast-desc" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed tracking-wide"></div>
+                </div>
+
+                <!-- Comments Section -->
+                <div id="comments-section" class="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm mb-12">
+                    <h3 class="font-bold text-brand-900 mb-6 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
+                        <i class="fa-regular fa-comments text-brand-400"></i> コメント (<span id="comment-count">0</span>)
+                    </h3>
+                    
+                    <div id="comment-form-area" class="mb-8 flex gap-3 sm:gap-4">
+                        <img id="my-comment-icon" src="https://via.placeholder.com/40" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/40?text=U'">
+                        <div class="flex-1">
+                            <textarea id="comment-input" rows="2" class="w-full border border-brand-200 rounded-sm p-3 bg-brand-50 text-sm focus:bg-white transition-colors resize-none leading-relaxed" placeholder="感想や気付きをコメントしよう..."></textarea>
+                            
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-2 gap-3">
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" id="comment-is-private" class="w-4 h-4 text-[#b8860b] border-brand-300 rounded-sm focus:ring-[#b8860b]">
+                                    <span class="text-[10px] text-brand-600 font-bold tracking-widest group-hover:text-brand-800 transition-colors"><i class="fa-solid fa-lock mr-1"></i>投稿者にのみ公開する</span>
+                                </label>
+                                <button onclick="submitComment()" id="btn-submit-comment" class="px-5 py-2 bg-[#3e2723] text-[#d4af37] font-bold text-xs rounded-sm hover:bg-[#2a1a17] transition-colors tracking-widest shadow-sm border border-[#b8860b]">コメントを投稿</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="comments-list" class="space-y-6">
+                        <div class="text-center py-6 text-brand-400 text-xs tracking-widest"><i class="fa-solid fa-spinner fa-spin mr-2"></i>読み込み中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 xl:col-span-1">
+                <div id="related-section" class="hidden bg-[#fffdf9] border border-brand-200 rounded-sm p-5 shadow-sm lg:sticky lg:top-24">
+                    <h3 class="font-bold text-brand-900 mb-5 text-sm tracking-widest border-b border-brand-100 pb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-headphones text-[#b8860b]"></i> この作者の他の配信
+                    </h3>
+                    <div id="related-podcasts-list" class="space-y-4"></div>
+                    <div class="mt-6 text-center">
+                        <!-- ★変更: リンク先を user_contents.html に変更 -->
+                        <a id="btn-more-author" href="#" class="text-[10px] sm:text-xs font-bold text-brand-600 hover:text-[#b8860b] transition-colors tracking-widest">一覧をもっと見る <i class="fa-solid fa-chevron-right ml-1"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
 
     <!-- Notification Toast -->
-    <div id="notification" class="fixed top-10 left-1/2 transform -translate-x-1/2 z-[8000] hidden transition-all duration-300 translate-y-10">
-        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]">
-            <i class="fa-solid fa-check text-[#d4af37] text-lg"></i>
-            <span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span>
-        </div>
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[6000] hidden transition-all duration-300 translate-y-20">
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#d4af37] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
     </div>
-
-    <!-- LiveKit Client & jose -->
-    <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
-        import * as jose from 'https://cdn.jsdelivr.net/npm/jose@5.2.3/+esm';
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, setDoc, serverTimestamp, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const storage = getStorage(app);
         const appId = 'default-app-id';
 
         const urlParams = new URLSearchParams(window.location.search);
-        const action = urlParams.get('action');
-        const targetRoomId = urlParams.get('roomId');
+        const pid = urlParams.get('pid');
 
-        // ★追加: デフォルトアイコンの定義（世界観に合わせたカラー）
-        const DEFAULT_ICON = 'https://via.placeholder.com/150/f7f5f0/c8b9a6?text=U';
+        if (!pid) window.location.href = 'podcasts.html';
 
-        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         let currentUser = null;
         let myProfile = null;
-        let myRank = 'arrival';
+        let podcastData = null;
         let isAdmin = false;
-
-        let currentRoomId = null; 
-        let currentRole = 'none'; 
-        let roomUnsubscribe = null;
-        let partsUnsubscribe = null;
+        let isLiked = false;
         let commentsUnsubscribe = null;
-        let isHandRaised = false;
-        let isLeaving = false; 
+        let likesUnsubscribe = null;
 
-        const LIVEKIT_URL = "wss://noonealonehere-eoyjqp8c.livekit.cloud";
-        const LIVEKIT_API_KEY = "APIvGriAyz8L7Tm";
-        const LIVEKIT_API_SECRET = "IvJ9RG8pdaey7sKqJ8Hh9qFZxvYINz776eT6zStiLuL";
-        let livekitRoom = null;
+        const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
-        let audioContext = null;
-        let analyser = null;
-        let microphone = null;
-        let isMicActive = false;
-        let micInterval = null;
+        // --- Player Elements & State ---
+        const audio = document.getElementById('core-player');
         
-        let isMiniPlayer = false;
-
-        const rankLevels = { 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 };
-        function getRankLevel(rank) { return rankLevels[rank] || 0; }
-        const getVal = (id, def = '') => { const el = document.getElementById(id); return el ? el.value : def; };
-
-        // ★追加: アーカイブ設定時の注意表示を制御する関数
-        window.toggleRecordWarning = (isRecord) => {
-            const warningEl = document.getElementById('record-warning');
-            if (warningEl) {
-                if (isRecord) {
-                    warningEl.classList.remove('hidden');
-                    // 初回のみポップアップで強めに注意喚起
-                    if (!window.hasShownRecordAlert) {
-                        alert("【重要確認】\n配信の自動録音機能はありません。\n\n必ずご自身のボイスレコーダー等で録音を行い、配信終了後にマイページから音声ファイルをアップロードしてください。");
-                        window.hasShownRecordAlert = true;
-                    }
-                } else {
-                    warningEl.classList.add('hidden');
-                }
-            }
-        };
-
-        window.showNotification = (msg, isError = false) => {
-            const notif = document.getElementById('notification');
-            document.getElementById('notif-message').textContent = msg;
-            notif.classList.remove('hidden', 'translate-y-10');
-            setTimeout(() => {
-                notif.classList.add('translate-y-10');
-                setTimeout(() => notif.classList.add('hidden'), 300);
-            }, 3000);
-        };
-
-        // ★追加: 配信準備画面からのシェア用（自分のURL）
-        window.shareMyRoom = () => {
-            if (!currentUser) return;
-            const url = `${window.location.origin}${window.location.pathname}?roomId=${currentUser.uid}`;
-            copyToClipboard(url, 'あなたの配信ルームURLをコピーしました！\nSNS等で告知してください。');
-        };
-
-        // ★追加: 配信中画面からのシェア用（現在のルームのURL）
-        window.shareLiveRoom = () => {
-            const roomId = currentRoomId || targetRoomId || currentUser?.uid;
-            if (!roomId) return;
-            const url = `${window.location.origin}${window.location.pathname}?roomId=${roomId}`;
-            copyToClipboard(url, '配信ルームのURLをコピーしました！');
-        };
-
-        function copyToClipboard(text, successMsg) {
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.position = "fixed";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showNotification(successMsg);
-            } catch (err) {
-                console.error('Copy failed', err);
-                alert('URLのコピーに失敗しました。\n' + text);
-            }
-            document.body.removeChild(textArea);
-        }
+        const playBtnFull = document.getElementById('btn-play-full');
+        const playBtnMini = document.getElementById('btn-play-mini');
+        const seekBar = document.getElementById('seek-slider');
+        const timeCurrent = document.getElementById('time-current');
+        const timeDuration = document.getElementById('time-duration');
+        const miniProgress = document.getElementById('mini-progress');
+        const playerContainer = document.getElementById('smart-player');
+        
+        let isPlaying = false;
+        let isExpanded = true;
 
         onAuthStateChanged(auth, async (user) => {
             if (isAdminMock) {
                 currentUser = { uid: 'test_admin_uid' };
                 isAdmin = true;
-                myRank = 'admin';
-                myProfile = { name: '管理者', userId: 'admin', photoURL: 'https://via.placeholder.com/150' };
-                initView();
+                myProfile = { name: '管理者', photoURL: 'https://via.placeholder.com/40' };
+                document.getElementById('my-comment-icon').src = myProfile.photoURL;
+                loadPodcastData();
                 return;
             }
 
@@ -434,688 +430,626 @@
                     const snap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                     if (snap.exists()) {
                         myProfile = snap.data();
-                        myRank = myProfile.membershipRank || 'arrival';
-                        if (myProfile.userId === 'admin') { isAdmin = true; myRank = 'admin'; }
+                        document.getElementById('my-comment-icon').src = myProfile.photoURL || 'https://via.placeholder.com/40?text=U';
+                        if (myProfile.userId === 'admin') isAdmin = true;
                     }
-                } catch(e){}
-                initView();
+                } catch(e) {}
             } else {
-                if(action === 'create' || targetRoomId) {
-                    if(confirm('参加するにはログインが必要です。ログインしますか？')) {
-                        window.location.href = 'login.html';
-                    } else {
-                        window.location.href = 'home.html';
+                document.getElementById('comment-form-area').innerHTML = '<div class="w-full text-center py-4 bg-brand-50 border border-brand-200 rounded-sm text-xs font-bold text-brand-600 tracking-widest">コメントを投稿するには乗船（ログイン）が必要です。</div>';
+            }
+            loadPodcastData();
+        });
+
+        window.toggleTheaterMenu = () => {
+            const menu = document.getElementById('sp-theater-menu');
+            const content = document.getElementById('sp-theater-menu-content');
+            if (menu && menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => { if(content) content.classList.remove('translate-y-full'); }, 10);
+            } else if(menu) {
+                if(content) content.classList.add('translate-y-full');
+                setTimeout(() => menu.classList.add('hidden'), 300);
+            }
+        };
+
+        function formatText(text) {
+            if (!text) return '';
+            let rawHtml = '';
+            try {
+                if (window.marked) rawHtml = window.marked.parse(text, { breaks: true });
+                else rawHtml = text.replace(/\n/g, '<br>');
+            } catch (e) { rawHtml = text.replace(/\n/g, '<br>'); }
+            return window.DOMPurify.sanitize(rawHtml);
+        }
+
+        async function loadPodcastData() {
+            try {
+                const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid));
+                if (snap.exists()) {
+                    podcastData = snap.data();
+                    
+                    document.getElementById('full-title').textContent = podcastData.title || 'タイトルなし';
+                    document.getElementById('mini-title').textContent = podcastData.title || 'タイトルなし';
+                    
+                    const safeName = podcastData.authorName || '名無し';
+                    document.getElementById('full-author').textContent = safeName;
+                    document.getElementById('mini-author').textContent = safeName;
+                    
+                    // ★修正: フルプレイヤーの投稿者リンクを MEDIA LOG に変更
+                    document.getElementById('full-author-link').href = `user_contents.html?uid=${podcastData.authorId}`;
+                    
+                    const authorNameEl = document.getElementById('author-name');
+                    if(authorNameEl) authorNameEl.innerHTML = `${safeName} <i class="fa-solid fa-circle-check text-[10px] text-[#d4af37] ml-0.5"></i>`;
+                    
+                    // ★修正: メイン画面の投稿者アイコンリンクを MEDIA LOG に変更
+                    const authorLinkEl = document.getElementById('author-link');
+                    if(authorLinkEl) authorLinkEl.href = `user_contents.html?uid=${podcastData.authorId}`;
+                    
+                    // ★修正: 「一覧をもっと見る」のリンクを MEDIA LOG に変更
+                    const btnMoreEl = document.getElementById('btn-more-author');
+                    if(btnMoreEl) btnMoreEl.href = `user_contents.html?uid=${podcastData.authorId}`;
+
+                    if (podcastData.authorIcon) {
+                        const ai = document.getElementById('author-icon');
+                        if(ai) ai.src = podcastData.authorIcon;
                     }
+
+                    const d = new Date(podcastData.createdAt || podcastData.updatedAt);
+                    const dateFormatted = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+                    
+                    const dateSmallEl = document.getElementById('podcast-date-small');
+                    if(dateSmallEl) dateSmallEl.textContent = dateFormatted;
+
+                    if (podcastData.duration) {
+                        const durationEl = document.getElementById('podcast-duration-small');
+                        if (durationEl) {
+                            durationEl.innerHTML = `<i class="fa-regular fa-clock mr-0.5"></i>${formatTime(podcastData.duration)}`;
+                            durationEl.classList.remove('hidden');
+                        }
+                    }
+
+                    const defaultThumb = 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=1000&auto=format&fit=crop';
+                    const thumbUrl = podcastData.thumbnailUrl || defaultThumb;
+                    document.getElementById('full-thumb').src = thumbUrl;
+                    document.getElementById('player-bg').src = thumbUrl;
+                    document.getElementById('mini-thumb').src = thumbUrl;
+
+                    if (podcastData.isEmbed) {
+                        document.getElementById('flip-wrapper').classList.add('hidden');
+                        document.getElementById('embed-wrapper').classList.remove('hidden');
+                        document.getElementById('embed-iframe').src = podcastData.audioUrl;
+                        
+                        document.getElementById('custom-controls-area').classList.add('hidden');
+                        document.getElementById('mini-controls-area').classList.add('hidden');
+                        document.getElementById('mini-progress').classList.add('hidden');
+                        
+                        document.getElementById('full-title').innerHTML += ' <span class="text-[10px] bg-brand-50 text-brand-600 px-2 py-1 rounded-sm border border-brand-200 font-sans tracking-widest align-middle ml-2">外部サービス再生</span>';
+                        document.getElementById('mini-title').innerHTML += ' <span class="text-[8px] bg-brand-50 text-brand-600 px-1 py-0.5 rounded-sm">外部</span>';
+                        
+                    } else {
+                        if (podcastData.audioUrl) {
+                            audio.src = podcastData.audioUrl;
+                            audio.load();
+                        } else {
+                            document.getElementById('full-title').innerHTML = `<span class="text-red-500 text-lg">音声データがありません</span>`;
+                        }
+                    }
+
+                    document.getElementById('podcast-desc').innerHTML = formatText(podcastData.description);
+                    
+                    const guestsArray = Array.isArray(podcastData.guests) ? podcastData.guests : (podcastData.guests ? [podcastData.guests] : []);
+                    if (guestsArray.length > 0) {
+                        document.getElementById('guests-area').classList.remove('hidden');
+                        document.getElementById('guests-text').textContent = guestsArray.join(', ');
+                    }
+
+                    const fullDescEl = document.getElementById('full-podcast-desc');
+                    if (fullDescEl) {
+                        fullDescEl.innerHTML = formatText(podcastData.description);
+                    }
+                    if (guestsArray.length > 0) {
+                        const guestFullArea = document.getElementById('guests-area-full');
+                        const guestFullText = document.getElementById('guests-text-full');
+                        if(guestFullArea && guestFullText) {
+                            guestFullArea.classList.remove('hidden');
+                            guestFullText.textContent = guestsArray.join(', ');
+                        }
+                    }
+
+                    const fullTagsEl = document.getElementById('full-tags');
+                    fullTagsEl.innerHTML = '';
+                    if (podcastData.tags) {
+                        podcastData.tags.forEach(tag => {
+                            fullTagsEl.innerHTML += `<span class="bg-white/10 text-[#d4af37] px-2 py-0.5 rounded-sm text-[9px] font-bold tracking-widest">#${tag}</span>`;
+                        });
+                    }
+
+                    // ★追加: 関連記事 (Note等) の表示処理
+                    // すでに描画されているものがあれば初期化
+                    const existingRelated = document.getElementById('rendered-related-article');
+                    if (existingRelated) existingRelated.remove();
+                    const existingFullRelated = document.getElementById('rendered-full-related-article');
+                    if (existingFullRelated) existingFullRelated.remove();
+
+                    if (podcastData.relatedArticleUrl) {
+                        let articleHtml = '';
+                        let fullArticleHtml = '';
+                        const url = podcastData.relatedArticleUrl;
+                        
+                        // NoteのURLからIDを抽出 (通常URLまたは埋め込みURLの形式に対応)
+                        const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
+                        
+                        if (noteMatch && noteMatch[1]) {
+                            // Note用の美しい埋め込み(iframe)
+                            articleHtml = `
+                                <div id="rendered-related-article" class="mt-8 border-t border-brand-100 pt-6">
+                                    <h4 class="text-xs font-bold text-brand-500 uppercase mb-4 tracking-widest flex items-center gap-2"><i class="fa-solid fa-link text-brand-400"></i> 関連記事</h4>
+                                    <iframe class="w-full max-w-full rounded-sm border border-brand-200 shadow-sm" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%;" height="400"></iframe>
+                                </div>
+                            `;
+                            fullArticleHtml = `
+                                <div id="rendered-full-related-article" class="mt-6 border-t border-white/10 pt-4 pb-4">
+                                    <h4 class="text-[10px] text-[#b8860b] font-bold tracking-widest mb-3 uppercase flex items-center gap-2"><i class="fa-solid fa-link"></i> 関連記事</h4>
+                                    <iframe class="w-full max-w-full rounded-sm bg-white" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%;" height="400"></iframe>
+                                </div>
+                            `;
+                        } else {
+                            // 通常の汎用リンク
+                            articleHtml = `
+                                <div id="rendered-related-article" class="mt-8 border-t border-brand-100 pt-6">
+                                    <h4 class="text-xs font-bold text-brand-500 uppercase mb-4 tracking-widest flex items-center gap-2"><i class="fa-solid fa-link text-brand-400"></i> 関連記事</h4>
+                                    <a href="${url}" target="_blank" class="block p-4 bg-brand-50 border border-brand-200 rounded-sm hover:border-[#b8860b] transition-colors text-sm text-brand-700 font-bold truncate">
+                                        <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-brand-400"></i>${url}
+                                    </a>
+                                </div>
+                            `;
+                            fullArticleHtml = `
+                                <div id="rendered-full-related-article" class="mt-6 border-t border-white/10 pt-4 pb-4">
+                                    <h4 class="text-[10px] text-[#b8860b] font-bold tracking-widest mb-3 uppercase flex items-center gap-2"><i class="fa-solid fa-link"></i> 関連記事</h4>
+                                    <a href="${url}" target="_blank" class="block p-3 bg-white/5 border border-white/10 rounded-sm hover:border-[#d4af37] transition-colors text-xs text-white/90 truncate">
+                                        <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-white/50"></i>${url}
+                                    </a>
+                                </div>
+                            `;
+                        }
+                        
+                        // HTMLに挿入
+                        document.getElementById('podcast-desc').insertAdjacentHTML('afterend', articleHtml);
+                        if (fullDescEl) {
+                            fullDescEl.insertAdjacentHTML('afterend', fullArticleHtml);
+                        }
+                    }
+
+                    fetchRelatedPodcasts(podcastData.authorId);
+
+                    if (podcastData.allowComments === false) {
+                        document.getElementById('comments-section').innerHTML = '<div class="text-center py-6 text-brand-400 text-xs tracking-widest bg-[#fffdf9] rounded-sm border border-brand-200"><i class="fa-solid fa-comment-slash mr-2"></i>コメントはオフになっています</div>';
+                    } else {
+                        listenComments();
+                    }
+                    
+                    listenLikes();
+
+                    if ((currentUser && currentUser.uid === podcastData.authorId) || isAdmin) {
+                        document.getElementById('btn-edit').classList.remove('hidden');
+                        document.getElementById('btn-edit').classList.add('inline-flex');
+                        document.getElementById('btn-delete').classList.remove('hidden');
+                        document.getElementById('btn-delete').classList.add('inline-flex');
+                    }
+                    
+                    document.body.style.overflow = 'hidden';
+
                 } else {
-                    window.location.href = 'home.html';
+                    document.querySelector('main').innerHTML = '<div class="text-center py-20 text-brand-500 font-bold tracking-widest bg-[#fffdf9] border border-brand-200 rounded-sm mt-10">指定された音声は存在しないか、削除されました。</div>';
+                    playerContainer.classList.add('hidden');
                 }
+            } catch (e) {
+                console.error(e);
+                document.querySelector('main').innerHTML = '<div class="text-center py-20 text-red-500 font-bold tracking-widest">エラーが発生しました。</div>';
+            }
+        }
+
+        window.toggleFlip = () => {
+            const wrapper = document.getElementById('flip-wrapper');
+            const inner = document.getElementById('flip-inner');
+            
+            if (inner.style.transform === 'rotateY(180deg)') {
+                inner.style.transform = 'rotateY(0deg)';
+                wrapper.classList.remove('max-w-[90%]', 'sm:max-w-[600px]', 'lg:max-w-[800px]');
+                wrapper.classList.add('max-w-[300px]', 'sm:max-w-[400px]');
+            } else {
+                inner.style.transform = 'rotateY(180deg)';
+                wrapper.classList.remove('max-w-[300px]', 'sm:max-w-[400px]');
+                wrapper.classList.add('max-w-[90%]', 'sm:max-w-[600px]', 'lg:max-w-[800px]');
+            }
+        };
+
+        audio.addEventListener('error', (e) => {
+            console.error("Audio playback error:", e);
+            const notif = document.getElementById('notification');
+            const msgEl = document.getElementById('notif-message');
+            if (notif && msgEl) {
+                msgEl.textContent = '音声の読み込みに失敗しました。';
+                notif.classList.remove('hidden', 'translate-y-20');
+                notif.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-red-500 text-lg';
+                notif.classList.replace('bg-[#3e2723]', 'bg-[#fffdf9]');
+                notif.classList.replace('text-[#f7f5f0]', 'text-red-700');
+                setTimeout(() => {
+                    notif.classList.add('translate-y-20');
+                    setTimeout(() => notif.classList.add('hidden'), 300);
+                }, 3000);
             }
         });
 
-        function initView() {
-            const rLevel = getRankLevel((myRank || 'arrival').toLowerCase());
+        window.togglePlay = (e) => {
+            if (e) e.stopPropagation();
+            if (!audio.src || audio.src === window.location.href) return alert("音声データが設定されていません");
             
-            // 権限チェック (ホスト=GUARDIAN以上, リスナー=SETTLER以上)
-            const isAuthorizedHost = rLevel >= 3 || isAdmin || isAdminMock;
-            const isAuthorizedListener = rLevel >= 1 || isAdmin || isAdminMock;
-
-            if (action === 'create') {
-                if (!isAuthorizedHost) {
-                    alert('配信をホストしてルームを作成できるのは GUARDIAN 以上の機能です。契約変更をご検討ください。');
-                    window.location.href = 'upgrade.html';
-                    return;
-                }
-                document.getElementById('create-view').classList.remove('hidden');
-                document.getElementById('create-view').classList.add('flex');
-            } else if (targetRoomId) {
-                if (!isAuthorizedListener) {
-                    alert('ライブ配信の視聴・参加は SETTLER 以上の会員限定です。契約変更をご検討ください。');
-                    window.location.href = 'upgrade.html';
-                    return;
-                }
-                document.getElementById('live-cast-modal').classList.remove('hidden');
-                joinLiveRoom(targetRoomId);
+            if (isPlaying) {
+                audio.pause();
             } else {
-                window.location.href = 'home.html';
+                audio.play().catch(err => {
+                    console.error("Play error:", err);
+                    alert("再生できませんでした。通信環境やファイル形式をご確認ください。");
+                });
             }
+        };
+
+        audio.onplay = () => {
+            isPlaying = true;
+            playBtnFull.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            playBtnMini.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        };
+
+        audio.onpause = () => {
+            isPlaying = false;
+            playBtnFull.innerHTML = '<i class="fa-solid fa-play ml-1"></i>';
+            playBtnMini.innerHTML = '<i class="fa-solid fa-play ml-0.5"></i>';
+        };
+
+        audio.ontimeupdate = () => {
+            if (!audio.duration) return;
+            const progress = (audio.currentTime / audio.duration) * 100;
+            seekBar.value = progress;
+            miniProgress.style.width = `${progress}%`;
+            timeCurrent.textContent = formatTime(audio.currentTime);
+            
+            seekBar.style.background = `linear-gradient(to right, #d4af37 0%, #d4af37 ${progress}%, rgba(255,255,255,0.2) ${progress}%, rgba(255,255,255,0.2) 100%)`;
+        };
+
+        audio.onloadedmetadata = () => {
+            timeDuration.textContent = formatTime(audio.duration);
+        };
+
+        seekBar.addEventListener('input', (e) => {
+            if (!audio.duration) return;
+            const val = e.target.value;
+            audio.currentTime = (val / 100) * audio.duration;
+            seekBar.style.background = `linear-gradient(to right, #d4af37 0%, #d4af37 ${val}%, rgba(255,255,255,0.2) ${val}%, rgba(255,255,255,0.2) 100%)`;
+        });
+
+        window.skip = (seconds) => {
+            if (!audio.duration) return;
+            audio.currentTime += seconds;
+        };
+
+        function formatTime(sec) {
+            if(isNaN(sec) || !isFinite(sec)) return "0:00";
+            const min = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${min}:${s < 10 ? '0'+s : s}`;
         }
 
-        async function generateLiveKitToken(roomName, participantName, isPublisher) {
-            const secret = new TextEncoder().encode(LIVEKIT_API_SECRET);
-            const jwt = await new jose.SignJWT({
-                video: { room: roomName, roomJoin: true, canPublish: isPublisher, canSubscribe: true },
-                name: participantName,
-            })
-            .setProtectedHeader({ alg: 'HS256' })
-            .setIssuer(LIVEKIT_API_KEY)
-            .setSubject(currentUser.uid)
-            .setExpirationTime('12h')
-            .sign(secret);
-            return jwt;
-        }
-
-        async function connectLiveKit(roomName, isPublisher) {
-            try {
-                if (livekitRoom) await livekitRoom.disconnect();
+        window.togglePlayerSize = () => {
+            if (isExpanded) {
+                isExpanded = false;
+                playerContainer.classList.remove('player-expanded');
+                playerContainer.classList.add('player-collapsed');
+                document.body.style.overflow = ''; 
                 
-                const token = await generateLiveKitToken(roomName, myProfile?.name || currentUser.uid, isPublisher);
-                livekitRoom = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+                if (window.innerWidth < 1024) {
+                    playerContainer.style.bottom = 'calc(4rem + env(safe-area-inset-bottom))';
+                } else {
+                    playerContainer.style.bottom = '0';
+                }
+            } else {
+                isExpanded = true;
+                playerContainer.classList.remove('player-collapsed');
+                playerContainer.classList.add('player-expanded');
+                document.body.style.overflow = 'hidden'; 
+                playerContainer.style.bottom = '0';
+            }
+        };
 
-                livekitRoom.on(LivekitClient.RoomEvent.TrackSubscribed, (track) => {
-                    if (track.kind === 'audio') document.body.appendChild(track.attach());
+        async function fetchRelatedPodcasts(authorId) {
+            if (isAdminMock) return;
+            try {
+                const podRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
+                const q = query(podRef, where('authorId', '==', authorId));
+                const snap = await getDocs(q);
+                
+                let related = [];
+                snap.forEach(doc => {
+                    if (doc.id !== pid) {
+                        related.push({ id: doc.id, ...doc.data() });
+                    }
                 });
+                
+                related.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                const list = document.getElementById('related-podcasts-list');
+                
+                if (related.length === 0) {
+                    document.getElementById('related-section').classList.add('hidden');
+                    return;
+                }
+                
+                document.getElementById('related-section').classList.remove('hidden');
+                
+                let html = '';
+                related.slice(0, 4).forEach(p => {
+                    const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
+                    const date = new Date(p.createdAt || p.updatedAt);
+                    const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+                    
+                    let plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
+                    const tagsHtml = (p.tags || []).slice(0,2).map(t => `<span class="text-[8px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('');
 
-                livekitRoom.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, (speakers) => {
-                    document.querySelectorAll('[id^="speaker-"]').forEach(el => el.classList.remove('speaking-ripple'));
-                    speakers.forEach(speaker => {
-                        const el = document.getElementById(`speaker-${speaker.identity}`);
-                        if (el) el.classList.add('speaking-ripple');
-                    });
+                    const durationStr = p.duration ? formatTime(p.duration) : '';
+                    const durationHtml = durationStr ? `<span class="text-[8px] sm:text-[9px] text-[#b8860b] font-mono tracking-wider ml-1 bg-brand-50 px-1 rounded-sm border border-brand-100"><i class="fa-regular fa-clock mr-0.5"></i>${durationStr}</span>` : '';
+
+                    html += `
+                    <a href="podcast_detail.html?pid=${p.id}" class="flex flex-col bg-[#fffdf9] p-3 sm:p-4 rounded-md border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full">
+                        <div class="flex gap-3 items-start mb-2.5">
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-inner mt-0.5">
+                                <img src="${thumbUrl}" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
+                                    <i class="fa-solid fa-play text-white/90 text-sm sm:text-base shadow-sm drop-shadow-md"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0 flex flex-col justify-center min-h-[3rem] sm:min-h-[3.5rem]">
+                                <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors m-0 tracking-wide">${p.title || 'タイトルなし'}</h3>
+                            </div>
+                        </div>
+                        
+                        <p class="text-[10px] sm:text-[11px] text-brand-500 line-clamp-2 leading-relaxed mb-3 flex-1 tracking-wide">${plainDesc}</p>
+                        
+                        <div class="flex flex-wrap items-center justify-between gap-2 mt-auto pt-2.5 border-t border-brand-100/70">
+                            <div class="flex items-center gap-1.5 min-w-0 pr-1">
+                                <img src="${p.authorIcon || 'https://via.placeholder.com/24'}" class="w-4 h-4 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" onerror="this.src='https://via.placeholder.com/24?text=U'">
+                                <span class="text-[9px] sm:text-[10px] text-brand-700 truncate font-bold tracking-widest">${p.authorName || '名無し'}</span>
+                                ${durationHtml}
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <div class="flex gap-1">${tagsHtml}</div>
+                                <span class="text-[8px] sm:text-[9px] text-brand-400 font-mono">${dateStr}</span>
+                            </div>
+                        </div>
+                    </a>
+                    `;
                 });
-
-                await livekitRoom.connect(LIVEKIT_URL, token);
-                if (isPublisher) await livekitRoom.localParticipant.setMicrophoneEnabled(true);
+                list.innerHTML = html;
+                
             } catch(e) {
-                console.warn("音声サーバーへの接続に失敗しました。チャットのみの利用となります。");
+                console.error("Related podcasts fetch error", e);
             }
         }
 
-        async function disconnectLiveKit() {
-            if (livekitRoom) {
-                await livekitRoom.disconnect();
-                livekitRoom = null;
+        function listenComments() {
+            if (isAdminMock) {
+                document.getElementById('comments-list').innerHTML = '<div class="text-center py-6 text-brand-400 text-xs tracking-widest">モック環境ではコメントは表示されません</div>';
+                return;
             }
+            
+            const commentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'comments');
+            const q = query(commentsRef, orderBy('createdAt', 'desc'));
+            
+            commentsUnsubscribe = onSnapshot(q, (snapshot) => {
+                document.getElementById('comment-count').textContent = snapshot.size;
+                const list = document.getElementById('comments-list');
+                
+                if (snapshot.empty) {
+                    list.innerHTML = '<div class="text-center py-8 text-brand-400 text-xs tracking-widest border border-dashed border-brand-200 bg-brand-50 rounded-sm">まだコメントはありません。<br>最初の感想を伝えてみましょう！</div>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(docSnap => {
+                    const c = docSnap.data();
+                    const d = c.createdAt ? new Date(c.createdAt.toMillis()) : new Date();
+                    const dateStr = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                    
+                    let delBtn = '';
+                    if (isAdmin || (currentUser && currentUser.uid === c.userId) || (currentUser && currentUser.uid === podcastData.authorId)) {
+                        delBtn = `<button onclick="deleteComment('${docSnap.id}')" class="text-red-400 hover:text-red-600 text-xs transition-colors ml-4"><i class="fa-solid fa-trash"></i></button>`;
+                    }
+
+                    let textHtml = `<p class="text-[11px] sm:text-xs text-brand-700 leading-relaxed whitespace-pre-wrap">${c.text}</p>`;
+                    let bgClass = "bg-brand-50 border-brand-100";
+                    
+                    if (c.isPrivate) {
+                        const isOwner = currentUser && currentUser.uid === c.userId;
+                        const isAuthor = currentUser && currentUser.uid === podcastData.authorId;
+                        
+                        if (isAdmin || isOwner || isAuthor) {
+                            bgClass = "bg-red-50 border-red-200";
+                            textHtml = `
+                                <div class="mb-1.5 text-[9px] sm:text-[10px] text-red-500 font-bold tracking-widest flex items-center gap-1 border-b border-red-200 pb-1 w-fit"><i class="fa-solid fa-lock"></i> 投稿者にのみ公開されています</div>
+                                <p class="text-[11px] sm:text-xs text-brand-900 leading-relaxed whitespace-pre-wrap">${c.text}</p>
+                            `;
+                        } else {
+                            textHtml = `
+                                <div class="py-2 text-[10px] sm:text-xs text-brand-400 italic flex items-center gap-2 tracking-widest font-bold"><i class="fa-solid fa-lock"></i> このコメントは投稿者のみ公開されています</div>
+                            `;
+                        }
+                    }
+
+                    html += `
+                    <div class="flex gap-3 sm:gap-4 group">
+                        <img src="${c.userIcon || 'https://via.placeholder.com/40'}" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm mt-1" onerror="this.src='https://via.placeholder.com/40?text=U'">
+                        <div class="flex-1 min-w-0">
+                            <div class="${bgClass} border p-3 sm:p-4 rounded-sm rounded-tl-none shadow-sm relative">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-brand-900 text-xs tracking-widest">${c.userName || '名無し'}</span>
+                                        <span class="text-[9px] text-brand-400 font-mono">${dateStr}</span>
+                                    </div>
+                                    ${delBtn}
+                                </div>
+                                ${textHtml}
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+                list.innerHTML = html;
+            }, (error) => {
+                console.error("Comments error:", error);
+            });
         }
 
-        window.startLiveCast = async () => {
-            if (!currentUser) return;
-            const title = getVal('room-title');
-            if(!title) return alert("タイトルは必須です");
-
-            const btn = document.getElementById('btn-start-cast');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 準備中...';
+        window.submitComment = async () => {
+            if (!currentUser) return alert('コメントするにはログインが必要です');
+            const input = document.getElementById('comment-input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const isPrivate = document.getElementById('comment-is-private').checked;
+            const btn = document.getElementById('btn-submit-comment');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             btn.disabled = true;
 
             try {
-                // ★修正: データ初期化時のエラーをキャッチし、失敗しても配信を開始できるように安全化
                 if (!isAdminMock) {
-                    try {
-                        const oldCommentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'comments');
-                        const oldCommentsSnap = await getDocs(oldCommentsRef);
-                        const deleteComments = oldCommentsSnap.docs.map(d => deleteDoc(d.ref));
-                        
-                        const oldPartsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'participants');
-                        const oldPartsSnap = await getDocs(oldPartsRef);
-                        const deleteParts = oldPartsSnap.docs.map(d => deleteDoc(d.ref));
-                        
-                        await Promise.all([...deleteComments, ...deleteParts]);
-                    } catch (initErr) {
-                        console.warn("古いデータの初期化に失敗しました (無視して続行します):", initErr);
-                    }
-                }
-
-                let thumbUrl = null;
-                const fileEl = document.getElementById('room-thumb');
-                if (fileEl && fileEl.files[0] && !isAdminMock) {
-                    try {
-                        const snap = await uploadBytes(ref(storage, `live_thumbs/${currentUser.uid}/${Date.now()}_${fileEl.files[0].name}`), fileEl.files[0]);
-                        thumbUrl = await getDownloadURL(snap.ref);
-                    } catch (uploadErr) {
-                        console.warn("Thumbnail upload failed:", uploadErr);
-                    }
-                }
-
-                const checkedTags = Array.from(document.querySelectorAll('.room-tag-cb:checked')).map(cb => cb.value);
-                const isRecord = document.querySelector('input[name="roomRecord"]:checked').value === 'true';
-
-                const safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
-                const safeIcon = myProfile ? myProfile.photoURL : null;
-
-                const roomData = {
-                    hostId: currentUser.uid,
-                    hostName: safeName,
-                    hostIcon: safeIcon,
-                    title: title,
-                    desc: getVal('room-desc'),
-                    guestsStr: getVal('room-guests'),
-                    privacy: getVal('room-privacy'),
-                    type: getVal('room-type'),
-                    tags: checkedTags,
-                    isRecord: isRecord,
-                    thumbUrl: thumbUrl,
-                    status: 'live',
-                    startedAt: serverTimestamp()
-                };
-
-                if (!isAdminMock) {
-                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid);
-                    await setDoc(roomRef, roomData);
-
-                    const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'participants', currentUser.uid);
-                    await setDoc(partRef, {
-                        uid: currentUser.uid,
-                        name: safeName,
-                        icon: safeIcon,
-                        role: 'host',
-                        isMuted: false,
-                        joinedAt: serverTimestamp()
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'comments'), {
+                        userId: currentUser.uid,
+                        userName: myProfile?.name || myProfile?.userId || '名無し',
+                        userIcon: myProfile?.photoURL || null,
+                        text: text,
+                        isPrivate: isPrivate,
+                        createdAt: serverTimestamp()
                     });
+                } else {
+                    alert(`【テスト】コメント送信 (Private: ${isPrivate})`);
                 }
-
-                document.getElementById('create-view').classList.add('hidden');
-                document.getElementById('create-view').classList.remove('flex');
-                document.getElementById('live-cast-modal').classList.remove('hidden');
-                
-                window.history.replaceState(null, '', `?roomId=${currentUser.uid}`);
-                
-                joinLiveRoom(currentUser.uid);
-
-            } catch (e) {
-                console.error(e);
-                alert('配信の開始に失敗しました。\n' + e.message);
-                btn.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse"></i> 配信を START する';
+                input.value = '';
+                document.getElementById('comment-is-private').checked = false;
+            } catch(e) {
+                console.error("Comment submit error:", e);
+                alert(`コメントの送信に失敗しました。\nエラー詳細: ${e.message}`);
+            } finally {
+                btn.innerHTML = 'コメントを投稿';
                 btn.disabled = false;
             }
         };
 
-        window.joinLiveRoom = async (hostUid) => {
-            currentRoomId = hostUid;
-            isLeaving = false; 
-            document.body.style.overflow = 'hidden'; 
-            
-            if (isAdminMock) {
-                document.getElementById('live-header-title').textContent = "テスト配信ルーム";
-                document.getElementById('mini-title').textContent = "テスト配信ルーム";
-                document.getElementById('live-info-title').textContent = "テスト配信ルーム";
-                document.getElementById('live-info-desc').textContent = "モックデータです";
-                setupMockLiveUI();
-                return;
-            }
-
-            if (currentUser.uid === hostUid) {
-                currentRole = 'host';
-            } else {
-                currentRole = 'listener';
-                // ★修正: 参加者情報の取得（匿名化対応）
-                const { safeName, safeIcon } = getParticipantInfo();
-
-                const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'participants', currentUser.uid);
-                await setDoc(partRef, {
-                    uid: currentUser.uid,
-                    name: safeName,
-                    icon: safeIcon,
-                    role: 'listener',
-                    handRaised: false,
-                    joinedAt: serverTimestamp()
-                }, { merge: true });
-            }
-
-            // LiveKitの接続は非同期で裏で走らせ、UIは止めない
-            connectLiveKit(hostUid, currentRole === 'host').catch(e => {
-                console.error("LiveKit connection handled:", e);
-                showNotification("音声サーバーに接続できませんでしたが、チャットは利用可能です。", true);
-            });
-
-            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid);
-            roomUnsubscribe = onSnapshot(roomRef, (snap) => {
-                if (!snap.exists() || snap.data().status !== 'live') {
-                    if(!isLeaving) {
-                        isLeaving = true;
-                        alert('この配信は終了しました。');
-                        // ★修正: leaveLiveRoom() だと isLeaving=true でブロックされるため直接 closeModalUI() を呼ぶ
-                        closeModalUI();
-                    }
-                    return;
-                }
-                const data = snap.data();
-                document.getElementById('live-header-title').textContent = data.title || '配信中';
-                document.getElementById('mini-title').textContent = data.title || '配信中';
-                document.getElementById('live-info-title').textContent = data.title || '配信中';
-                document.getElementById('live-info-desc').textContent = data.desc || '概要はありません。';
-                
-                const tagsEl = document.getElementById('live-info-tags');
-                tagsEl.innerHTML = '';
-                if(data.tags && data.tags.length > 0) {
-                    tagsEl.innerHTML = data.tags.map(t => `<span class="bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#d4af37] px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">${t}</span>`).join('');
-                }
-            });
-
-            const partsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'participants');
-            partsUnsubscribe = onSnapshot(partsRef, async (snap) => {
-                let speakers = [];
-                let listeners = [];
-                let myData = null;
-
-                snap.forEach(docSnap => {
-                    const p = docSnap.data();
-                    if (p.uid === currentUser.uid) myData = p;
-                    if (p.role === 'host' || p.role === 'speaker') speakers.push(p);
-                    if (p.role === 'listener') listeners.push(p);
-                });
-
-                if (myData) {
-                    const prevRole = currentRole;
-                    currentRole = myData.role;
-                    isHandRaised = myData.handRaised || false;
-
-                    if (prevRole === 'listener' && currentRole === 'speaker') {
-                        connectLiveKit(currentRoomId, true).catch(e=>{});
-                    } else if (prevRole === 'speaker' && currentRole === 'listener') {
-                        connectLiveKit(currentRoomId, false).catch(e=>{});
-                    }
-                }
-                updateLiveUI(speakers, listeners);
-            });
-
-            const commentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'comments');
-            const q = query(commentsRef, orderBy('timestamp', 'asc'), limit(50));
-            commentsUnsubscribe = onSnapshot(q, (snap) => {
-                const list = document.getElementById('live-comments-list');
-                list.innerHTML = '';
-                snap.forEach(docSnap => {
-                    const c = docSnap.data();
-                    const isMe = c.uid === currentUser.uid;
-                    const align = isMe ? 'justify-end' : 'justify-start';
-                    const bg = isMe ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-[#f7f5f0] text-[#3e2723]';
-                    
-                    list.innerHTML += `
-                        <div class="flex ${align} w-full mb-3">
-                            ${!isMe ? `<img src="${c.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-6 h-6 rounded-full mr-2 self-end object-cover">` : ''}
-                            <div class="max-w-[80%]">
-                                ${!isMe ? `<p class="text-[8px] text-[#a09080] mb-0.5 ml-1">${c.name}</p>` : ''}
-                                <div class="${bg} px-3 py-2 rounded-sm text-xs leading-relaxed break-words shadow-sm">${c.text}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                list.scrollTop = list.scrollHeight;
-            });
-        };
-
-        function updateLiveUI(speakers, listeners) {
-            document.getElementById('live-listener-count').textContent = listeners.length;
-            
-            const grid = document.getElementById('speakers-grid');
-            grid.innerHTML = speakers.map(s => {
-                const micIcon = s.isMuted ? '<i class="fa-solid fa-microphone-slash text-red-500 absolute bottom-0 right-0 bg-black/50 rounded-full p-1 text-[8px]"></i>' : '';
-                const hostIcon = s.role === 'host' ? '<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] text-[8px] px-2 py-0.5 rounded-sm font-bold border border-[#b8860b]">HOST</div>' : '';
-                const ringClass = s.isSpeaking ? 'speaking-ripple' : ''; 
-                
-                return `
-                <div class="flex flex-col items-center gap-2">
-                    <div id="speaker-${s.uid}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-[#5c4a3d] bg-black relative shadow-lg transition-all ${ringClass}">
-                        ${hostIcon}
-                        <img src="${s.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-full h-full rounded-full object-cover">
-                        ${micIcon}
-                    </div>
-                    <span class="text-xs font-bold tracking-widest text-[#dcd4c6] max-w-[100px] truncate text-center">${s.name}</span>
-                </div>
-                `;
-            }).join('');
-
-            const btnRaise = document.getElementById('btn-raise-hand');
-            const btnMic = document.getElementById('btn-mic');
-            const btnLeaveStage = document.getElementById('btn-leave-stage');
-            const btnEnd = document.getElementById('btn-end-cast');
-            const tabListeners = document.getElementById('tab-live-listeners');
-
-            btnRaise.classList.add('hidden');
-            btnMic.classList.add('hidden');
-            btnLeaveStage.classList.add('hidden');
-            btnEnd.classList.add('hidden');
-            
-            if (currentRole === 'host') {
-                btnMic.classList.remove('hidden');
-                btnEnd.classList.remove('hidden');
-                tabListeners.classList.remove('hidden');
-                renderListenersAdmin(listeners); 
-                if(!isMicActive) startMicAnalysis();
-            } else if (currentRole === 'speaker') {
-                btnMic.classList.remove('hidden');
-                btnLeaveStage.classList.remove('hidden');
-                tabListeners.classList.add('hidden');
-                if(!isMicActive) startMicAnalysis();
-            } else if (currentRole === 'listener') {
-                const rLevel = getRankLevel((myRank || 'arrival').toLowerCase());
-                // BUILDER(2) 以上で登壇リクエスト可能
-                if (rLevel >= 2 || isAdmin || isAdminMock) {
-                    btnRaise.classList.remove('hidden');
-                    if (isHandRaised) {
-                        btnRaise.innerHTML = '<i class="fa-solid fa-hand text-brand-200 mr-2"></i> リクエスト中...';
-                        btnRaise.classList.replace('bg-[#3e2723]', 'bg-[#5c4a3d]');
-                    } else {
-                        btnRaise.innerHTML = '<i class="fa-solid fa-hand mr-2"></i> 登壇をリクエスト';
-                        btnRaise.classList.replace('bg-[#5c4a3d]', 'bg-[#3e2723]');
-                    }
-                }
-                tabListeners.classList.add('hidden');
-                stopMicAnalysis();
-            }
-        }
-
-        function renderListenersAdmin(listeners) {
-            const list = document.getElementById('live-listeners-list');
-            let reqCount = 0;
-            list.innerHTML = listeners.map(l => {
-                if (l.handRaised) reqCount++;
-                const reqBtn = l.handRaised 
-                    ? `<button onclick="approveSpeaker('${l.uid}')" class="bg-[#d4af37] text-[#2a1a17] text-[9px] font-bold px-2 py-1 rounded-sm shadow-sm hover:bg-[#b8860b] transition-colors">承認</button>` 
-                    : '';
-                return `
-                <div class="flex items-center justify-between p-2 hover:bg-black/20 rounded-sm transition-colors group border-b border-[#5c4a3d]/50 last:border-0">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <img src="${l.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-6 h-6 rounded-full object-cover border border-[#5c4a3d]">
-                        <span class="text-xs text-[#dcd4c6] truncate">${l.name}</span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                        ${reqBtn}
-                        <button onclick="kickUser('${l.uid}')" class="text-red-500 hover:text-red-400" title="退出させる"><i class="fa-solid fa-ban text-xs"></i></button>
-                    </div>
-                </div>
-                `;
-            }).join('');
-            
-            document.getElementById('req-count').textContent = reqCount;
-            
-            const tabBadge = document.getElementById('tab-req-badge');
-            if (tabBadge) {
-                if (reqCount > 0) {
-                    tabBadge.textContent = reqCount;
-                    tabBadge.classList.remove('hidden');
-                } else {
-                    tabBadge.classList.add('hidden');
-                }
-            }
-        }
-
-        window.switchLiveTab = (tab) => {
-            const tabs = ['comments', 'listeners', 'info'];
-            tabs.forEach(t => {
-                const btn = document.getElementById(`tab-live-${t}`);
-                const area = document.getElementById(`area-live-${t}`);
-                if(!btn || !area) return;
-                
-                if (t === tab) {
-                    btn.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors relative';
-                    area.classList.remove('hidden');
-                } else {
-                    let hideClass = '';
-                    if (t === 'listeners' && currentRole !== 'host') hideClass = ' hidden';
-                    btn.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors relative' + hideClass;
-                    area.classList.add('hidden');
-                }
-            });
-        };
-
-        window.sendLiveComment = async (e) => {
-            e.preventDefault();
-            if(!currentUser) return;
-            const input = document.getElementById('live-comment-input');
-            const text = input.value.trim();
-            if(!text || !currentRoomId) return;
-            
-            // ★修正: コメント送信者情報の取得（匿名化対応）
-            const { safeName, safeIcon } = getParticipantInfo();
-
-            if(!isAdminMock) {
-                await setDoc(doc(collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'comments')), {
-                    uid: currentUser.uid,
-                    name: safeName,
-                    icon: safeIcon,
-                    text: text,
-                    timestamp: serverTimestamp()
-                });
-            } else {
-                document.getElementById('live-comments-list').innerHTML += `<div class="flex justify-end w-full mb-3"><div class="bg-[#3e2723] text-[#d4af37] px-3 py-2 rounded-sm text-xs shadow-sm">テスト: ${text}</div></div>`;
-            }
-            input.value = '';
-        };
-
-        window.toggleHandRaise = async () => {
-            if(!currentRoomId || !currentUser) return;
-            if(!isAdminMock) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), {
-                    handRaised: !isHandRaised
-                });
-            }
-        };
-
-        window.approveSpeaker = async (targetUid) => {
-            if(!currentRoomId) return;
-            if(!isAdminMock) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', targetUid), {
-                    role: 'speaker',
-                    handRaised: false
-                });
-            }
-        };
-
-        window.leaveStage = async () => {
-            if(!currentRoomId || !currentUser) return;
-            if(!isAdminMock) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), {
-                    role: 'listener',
-                    isSpeaking: false
-                });
-            }
-            stopMicAnalysis();
-        };
-
-        window.kickUser = async (targetUid) => {
-            if(!confirm("このユーザーをルームから退出させますか？")) return;
-            if(!isAdminMock) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', targetUid));
-            }
-        };
-
-        window.toggleMic = async () => {
-            const icon = document.getElementById('icon-mic');
-            const isMuted = icon.classList.contains('fa-microphone-slash'); 
-            
-            if (livekitRoom && livekitRoom.localParticipant) {
-                await livekitRoom.localParticipant.setMicrophoneEnabled(isMuted);
-            }
-
-            if (!isMuted) {
-                icon.className = 'fa-solid fa-microphone-slash text-red-900';
-                document.getElementById('btn-mic').classList.replace('bg-[#d4af37]', 'bg-[#5c4a3d]');
-                if(!isAdminMock) updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: true, isSpeaking: false });
-            } else {
-                icon.className = 'fa-solid fa-microphone text-[#1a110f]';
-                document.getElementById('btn-mic').classList.replace('bg-[#5c4a3d]', 'bg-[#d4af37]');
-                if(!isAdminMock) updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: false });
-            }
-        };
-
-        window.toggleMiniPlayer = () => {
-            const modal = document.getElementById('live-cast-modal');
-            const fullUi = document.getElementById('live-full-ui');
-            const miniUi = document.getElementById('live-mini-ui');
-            
-            isMiniPlayer = !isMiniPlayer;
-            
-            if (isMiniPlayer) {
-                modal.classList.remove('inset-0');
-                modal.classList.add('bottom-[5rem]', 'right-4', 'w-[calc(100%-2rem)]', 'sm:w-80', 'h-[72px]', 'rounded-md', 'shadow-2xl');
-                fullUi.classList.add('hidden');
-                fullUi.classList.remove('flex');
-                miniUi.classList.remove('hidden');
-                document.body.style.overflow = ''; 
-            } else {
-                modal.classList.add('inset-0');
-                modal.classList.remove('bottom-[5rem]', 'right-4', 'w-[calc(100%-2rem)]', 'sm:w-80', 'h-[72px]', 'rounded-md', 'shadow-2xl');
-                miniUi.classList.add('hidden');
-                fullUi.classList.remove('hidden');
-                fullUi.classList.add('flex');
-                document.body.style.overflow = 'hidden'; 
-            }
-        };
-
-        // --- Web Audio API ---
-        async function startMicAnalysis() {
-            if (isMicActive) return;
+        window.deleteComment = async (cid) => {
+            if(!confirm("コメントを削除しますか？")) return;
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                microphone = audioContext.createMediaStreamSource(stream);
-                microphone.connect(analyser);
-                analyser.fftSize = 256;
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                isMicActive = true;
-                
-                let lastUpdateTime = 0;
-                
-                function analyze() {
-                    if(!isMicActive) return;
-                    analyser.getByteFrequencyData(dataArray);
-                    let sum = 0;
-                    for(let i=0; i<bufferLength; i++) sum += dataArray[i];
-                    let avg = sum / bufferLength;
-                    
-                    const mySpeakerEl = document.getElementById(`speaker-${currentUser.uid}`);
-                    const isMuted = document.getElementById('icon-mic')?.classList.contains('fa-microphone-slash');
-                    const isTalkingNow = avg > 15 && !isMuted;
-                    
-                    if(mySpeakerEl) {
-                        if(isTalkingNow) mySpeakerEl.classList.add('speaking-ripple');
-                        else mySpeakerEl.classList.remove('speaking-ripple');
-                    }
-
-                    const now = Date.now();
-                    if (now - lastUpdateTime > 1000 && !isAdminMock && currentRoomId && currentRole !== 'listener') {
-                        updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), {
-                            isSpeaking: isTalkingNow
-                        }).catch(e=>{});
-                        lastUpdateTime = now;
-                    }
-                    micInterval = requestAnimationFrame(analyze);
+                if (!isAdminMock) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'comments', cid));
                 }
-                analyze();
-            } catch(e) { console.warn("マイクアクセス不可"); }
-        }
+            } catch(e) { console.error(e); alert("削除に失敗しました"); }
+        };
 
-        function stopMicAnalysis() {
-            isMicActive = false;
-            if(micInterval) cancelAnimationFrame(micInterval);
-            if(microphone) microphone.disconnect();
-            if(audioContext) audioContext.close();
-            if(!isAdminMock && currentUser && currentRoomId && currentRole !== 'listener') {
-                updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isSpeaking: false }).catch(e=>{});
-            }
-        }
-
-        window.leaveLiveRoom = async () => {
-            if (isLeaving) return; // 二重アラート防止
+        function listenLikes() {
+            if (isAdminMock) return;
+            const likesRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'likes');
             
-            if (!currentRoomId || !currentUser) {
-                window.location.href = 'home.html';
+            likesUnsubscribe = onSnapshot(likesRef, (snapshot) => {
+                document.getElementById('like-count').textContent = snapshot.size;
+                
+                if (currentUser) {
+                    const myLike = snapshot.docs.find(d => d.id === currentUser.uid);
+                    isLiked = !!myLike;
+                    
+                    const updateBtn = (id, iconId) => {
+                        const btn = document.getElementById(id);
+                        const icon = document.getElementById(iconId);
+                        if (!btn || !icon) return;
+                        if (isLiked) {
+                            icon.classList.remove('fa-regular', 'text-brand-400', 'text-gray-400');
+                            icon.classList.add('fa-solid', 'text-red-500');
+                        } else {
+                            icon.classList.remove('fa-solid', 'text-red-500');
+                            icon.classList.add('fa-regular');
+                            if(iconId === 'icon-like-full') icon.classList.add('text-gray-400');
+                            else icon.classList.add('text-brand-400');
+                        }
+                    };
+                    updateBtn('btn-like', 'icon-like');
+                    updateBtn('btn-like-mini', 'icon-like-mini');
+                    updateBtn('btn-like-full', 'icon-like-full');
+                }
+            }, (error) => {
+                console.error("Likes listener error:", error);
+            });
+        }
+
+        window.toggleLike = async (e) => {
+            if (e) e.stopPropagation();
+            if (!currentUser) return alert("いいねするにはログインが必要です");
+            if (isAdminMock) return alert("【テスト】いいねしました");
+
+            try {
+                const likeRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid, 'likes', currentUser.uid);
+                if (isLiked) {
+                    await deleteDoc(likeRef);
+                } else {
+                    await setDoc(likeRef, { timestamp: serverTimestamp() });
+                }
+            } catch(e) { 
+                console.error("Toggle like error:", e);
+                alert(`いいねに失敗しました。\nエラー詳細: ${e.message}`);
+            }
+        };
+
+        window.sharePodcast = () => {
+            const url = window.location.href;
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const notif = document.getElementById('notification');
+                document.getElementById('notif-message').textContent = 'URLをコピーしました！';
+                notif.classList.remove('hidden', 'translate-y-20');
+                setTimeout(() => notif.classList.add('translate-y-20'), 3000);
+                setTimeout(() => notif.classList.add('hidden'), 3300);
+            } catch (err) {
+                alert('コピーに失敗しました。\n' + url);
+            }
+            document.body.removeChild(textArea);
+        };
+
+        window.goToEdit = () => {
+            window.location.href = `podcast_post.html?pid=${pid}`;
+        };
+
+        window.deletePodcast = async () => {
+            if(!confirm("本当にこの音声を削除しますか？\n※この操作は元に戻せません。")) return;
+            if(isAdminMock) {
+                alert("【テスト】削除しました");
+                window.location.href = 'podcasts.html';
                 return;
             }
-
-            if (!isAdminMock && currentRole === 'host') {
-                if(!confirm("ルームを退出すると配信が終了します。よろしいですか？")) {
-                    return;
-                }
-            }
-            
-            isLeaving = true;
-            stopMicAnalysis();
-
-            if (!isAdminMock) {
-                if (currentRole === 'host') {
-                    await endLiveCast();
-                } else {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid));
-                    closeModalUI();
-                }
-            } else {
-                closeModalUI();
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', pid));
+                alert("音声を削除しました");
+                window.location.href = 'podcasts.html';
+            } catch(e) {
+                console.error(e);
+                alert("削除に失敗しました");
             }
         };
 
-        window.endLiveCast = async () => {
-            if(!isAdminMock) {
-                try {
-                    const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId);
-                    const roomSnap = await getDoc(roomRef);
-                    
-                    if (roomSnap.exists()) {
-                        const roomData = roomSnap.data();
-                        
-                        // リスナー側に終了を通知するため、まずはステータスをendedに変更
-                        await updateDoc(roomRef, { status: 'ended' });
-
-                        // ★追加: 「録音して残す」設定の場合、ポッドキャストへデータを移行して自動投稿する
-                        if (roomData.isRecord) {
-                            const podcastData = {
-                                authorId: roomData.hostId,
-                                authorName: roomData.hostName,
-                                authorIcon: roomData.hostIcon,
-                                sourceType: 'live_archive', // ライブアーカイブであることを明記
-                                audioUrl: '', // ※音声ファイル自体は後から編集画面でアップロードする
-                                isEmbed: false,
-                                thumbnailUrl: roomData.thumbUrl || null,
-                                title: roomData.title,
-                                description: roomData.desc || 'この配信は SIGNAL CAST（ライブ配信） のアーカイブです。',
-                                guests: roomData.guestsStr ? roomData.guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [],
-                                tags: roomData.tags || [],
-                                allowComments: true, 
-                                duration: 0, 
-                                createdAt: roomData.startedAt || serverTimestamp(),
-                                updatedAt: serverTimestamp()
-                            };
-                            
-                            const newPodcastRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'podcasts'));
-                            await setDoc(newPodcastRef, podcastData);
-                            
-                            alert('配信が終了しました。\nアーカイブ設定がONのため、ポッドキャストとして自動投稿されました。\n※音声ファイルはご自身で録音したものをマイページからアップロードしてください。');
-                        }
-                    }
-
-                    // ルームを完全に削除
-                    await deleteDoc(roomRef);
-                } catch(e){ console.error(e); }
-            } else {
-                alert('【テスト】配信が終了しました。アーカイブ設定ONの場合はポッドキャストに保存されます。');
-            }
-            closeModalUI();
-        };
-
-        async function closeModalUI() {
-            if(roomUnsubscribe) roomUnsubscribe();
-            if(partsUnsubscribe) partsUnsubscribe();
+        window.addEventListener('unload', () => {
             if(commentsUnsubscribe) commentsUnsubscribe();
-            await disconnectLiveKit(); 
-            
-            if(isMiniPlayer) toggleMiniPlayer(); 
-            document.getElementById('live-cast-modal').classList.add('hidden');
-            document.body.style.overflow = '';
-            currentRoomId = null;
-            currentRole = 'none';
-            isLeaving = false; 
-            
-            // ★修正: 戻る画面をHOME固定から、履歴に基づく元の画面へ変更
-            if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
-                window.history.back();
-            } else if (targetRoomId) {
-                // 直接URLで来た場合などは、配信者のプロフィールへ
-                window.location.href = `user_contents.html?uid=${targetRoomId}`;
-            } else {
-                window.location.href = 'home.html';
-            }
-        }
-
-        function setupMockLiveUI() {
-            updateLiveUI([
-                { uid: currentUser.uid, name: 'ホスト(あなた)', role: 'host', isSpeaking: true },
-                { uid: 'u1', name: 'ゲストA', role: 'speaker', isSpeaking: false }
-            ], [
-                { uid: 'u2', name: 'リスナー太郎', role: 'listener', handRaised: true }
-            ]);
-        }
-
+            if(likesUnsubscribe) likesUnsubscribe();
+        });
     </script>
 </body>
 </html>
