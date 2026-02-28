@@ -207,7 +207,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+        // ★修正: uploadBytes を追加インポート
+        import { getStorage, ref, uploadBytesResumable, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
@@ -220,8 +221,7 @@
         let myData = null;
         let isAdmin = false;
         
-        // ★変更: 初期値を 'url' に変更
-        let videoInputType = 'url'; // 'upload' or 'url'
+        let videoInputType = 'url'; 
         let currentVideoFile = null;
         let currentThumbFile = null;
         
@@ -270,7 +270,6 @@
         });
 
         window.switchVideoType = (type) => {
-            // ★追加: 新規投稿時かつ管理者以外はアップロードタブへの切り替えをブロック
             if (type === 'upload' && !editVid && !isAdminMock && !isAdmin) {
                 alert('動画ファイルの直接アップロード機能は現在準備中です。\nYouTube等の「URLを指定」機能をご利用ください。');
                 return;
@@ -308,7 +307,6 @@
             }
         };
 
-        // --- URLを解析して埋め込み用リンクを生成する関数 ---
         function parseVideoUrl(url) {
             let embedUrl = null;
             let isEmbed = false;
@@ -316,14 +314,12 @@
 
             if (!url) return { isEmbed: false, url: '', thumbUrl: null };
 
-            // YouTube
             const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
             if (ytMatch && ytMatch[1]) {
                 embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
                 thumbUrl = `https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`;
                 isEmbed = true;
             }
-            // Vimeo
             else if (url.includes('vimeo.com')) {
                 const vimeoMatch = url.match(/(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:[a-zA-Z0-9_\-]+)?/i);
                 if (vimeoMatch && vimeoMatch[1]) {
@@ -331,7 +327,6 @@
                     isEmbed = true;
                 }
             } 
-            // Google Drive
             else if (url.includes('drive.google.com/file/d/')) {
                 const match = url.match(/d\/([a-zA-Z0-9_-]+)/);
                 if (match) {
@@ -378,7 +373,6 @@
                     embedPlayer.src = parsedVideoUrl;
                     embedPlayer.classList.remove('hidden');
                     
-                    // YouTubeの場合は自動的にサムネイルもセットする（ユーザーが手動で上書き可能）
                     if (parsed.thumbUrl && !currentThumbFile) {
                         const img = document.getElementById('thumb-preview');
                         img.src = parsed.thumbUrl;
@@ -470,7 +464,6 @@
             let finalThumbUrl = '';
             let finalEmbedUrl = '';
 
-            // 未入力チェック
             if (!editVid) {
                 if (videoInputType === 'upload' && !currentVideoFile && !isAdminMock) {
                     return alert('動画ファイルを選択してください');
@@ -480,7 +473,6 @@
                 }
             }
 
-            // ファイルサイズチェック
             if (videoInputType === 'upload' && currentVideoFile) {
                 const maxSize = 100 * 1024 * 1024; // 100MB制限
                 if (currentVideoFile.size > maxSize) {
@@ -536,42 +528,29 @@
                 } else if (videoInputType === 'url') {
                     const rawUrl = document.getElementById('video-url').value.trim();
                     const parsed = parseVideoUrl(rawUrl);
-                    finalVideoUrl = rawUrl; // オリジナルのURLを保持
-                    finalEmbedUrl = parsed.url; // 埋め込み用URL
+                    finalVideoUrl = rawUrl; 
+                    finalEmbedUrl = parsed.url; 
                     isEmbedMode = parsed.isEmbed;
                     
-                    // サムネイルが選択されていない場合、YouTubeのサムネイルを適用
                     if (!currentThumbFile && parsed.thumbUrl) {
                         finalThumbUrl = parsed.thumbUrl;
                     }
                 }
 
-                // 2. Thumbnail Upload
+                // ★修正: サムネイル画像は「一括アップロード」に変更してフリーズを回避
                 if (currentThumbFile && !isAdminMock) {
-                    const thumbRef = ref(storage, `videos/thumbnails/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`);
-                    const thumbUploadTask = uploadBytesResumable(thumbRef, currentThumbFile);
+                    progressBar.style.width = '80%';
+                    progressText.textContent = '画像をアップロード中...';
                     
-                    await new Promise((resolve, reject) => {
-                        thumbUploadTask.on('state_changed', 
-                            (snapshot) => {
-                                const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 15;
-                                progressBar.style.width = (80 + p) + '%';
-                                progressText.textContent = `画像をアップロード中... (${Math.floor(80 + p)}%)`;
-                            }, 
-                            (error) => {
-                                console.error("Thumb Upload Error:", error);
-                                reject(new Error(`画像のアップロードに失敗: ${error.message}`));
-                            }, 
-                            async () => {
-                                try {
-                                    finalThumbUrl = await getDownloadURL(thumbUploadTask.snapshot.ref);
-                                    resolve();
-                                } catch(err) {
-                                    reject(new Error("画像URLの取得に失敗しました"));
-                                }
-                            }
-                        );
-                    });
+                    try {
+                        const thumbRef = ref(storage, `videos/thumbnails/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`);
+                        const snap = await uploadBytes(thumbRef, currentThumbFile);
+                        finalThumbUrl = await getDownloadURL(snap.ref);
+                        progressBar.style.width = '95%';
+                    } catch (err) {
+                        console.error("Thumb Upload Error:", err);
+                        throw new Error(`画像のアップロードに失敗: ${err.message}`);
+                    }
                 }
 
                 if (editVid && !isAdminMock) {
@@ -590,10 +569,10 @@
                 progressBar.style.width = '100%';
                 progressText.textContent = 'データを保存しています...';
 
-                // 代理投稿ユーザーの解決
+                // ★修正: myData が null の場合でもエラーにならないように安全に処理
                 let finalAuthorId = currentUser.uid;
-                let finalAuthorName = myData.name || myData.userId;
-                let finalAuthorIcon = myData.photoURL || null;
+                let finalAuthorName = myData ? (myData.name || myData.userId) : '名無し';
+                let finalAuthorIcon = myData ? myData.photoURL : null;
 
                 const overrideUserIdInput = document.getElementById('override-userid');
                 const overrideUserId = overrideUserIdInput ? overrideUserIdInput.value.trim() : '';
@@ -642,7 +621,7 @@
                     authorIcon: finalAuthorIcon,
                     sourceType: videoInputType,
                     sourceUrl: finalVideoUrl || (isAdminMock ? 'dummy_video.mp4' : ''),
-                    embedUrl: isEmbedMode ? finalEmbedUrl : '', // iframe表示用URL
+                    embedUrl: isEmbedMode ? finalEmbedUrl : '', 
                     thumbnailUrl: finalThumbUrl || null,
                     title: title,
                     description: desc,
@@ -659,11 +638,9 @@
                     return;
                 }
 
-                // データベースに保存
                 const vidRef = doc(db, 'artifacts', appId, 'public', 'data', 'videos', docId);
                 await setDoc(vidRef, videoData, { merge: true });
                 
-                // 再生ページへ移動
                 window.location.href = `video_detail.html?vid=${docId}`;
                 
             } catch(error) {
