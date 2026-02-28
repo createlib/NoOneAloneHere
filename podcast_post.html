@@ -281,7 +281,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
+        // ★修正: uploadBytes を追加インポート
+        import { getStorage, ref, uploadBytesResumable, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
         const firebaseConfig = { apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0", authDomain: "brainbridge-4b8ac.firebaseapp.com", projectId: "brainbridge-4b8ac", storageBucket: "brainbridge-4b8ac.firebasestorage.app", messagingSenderId: "803209683213", appId: "1:803209683213:web:b62d13784fa2bbbb9f5044" };
         const app = initializeApp(firebaseConfig);
@@ -307,33 +308,15 @@
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
 
-        // ランクのレベル定義 (権限比較用)
-        const rankLevels = {
-            'arrival': 0,
-            'settler': 1,
-            'builder': 2,
-            'guardian': 3,
-            'covenant': 4,
-            'admin': 99
-        };
+        const rankLevels = { 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 };
+        function getRankLevel(rank) { return rankLevels[rank] || 0; }
+        const getVal = (id, def = '') => { const el = document.getElementById(id); if (!el) return def; return (el.value === undefined || el.value === null) ? def : el.value; };
 
-        function getRankLevel(rank) {
-            return rankLevels[rank] || 0;
-        }
-
-        const getVal = (id, def = '') => { 
-            const el = document.getElementById(id); 
-            if (!el) return def;
-            return (el.value === undefined || el.value === null) ? def : el.value; 
-        };
-
-        // ★追加: アーカイブ設定時の注意表示を制御する関数
         window.toggleRecordWarning = (isRecord) => {
             const warningEl = document.getElementById('record-warning');
             if (warningEl) {
                 if (isRecord) {
                     warningEl.classList.remove('hidden');
-                    // 初回のみポップアップで強めに注意喚起
                     if (!window.hasShownRecordAlert) {
                         alert("【重要確認】\n配信の自動録音機能はありません。\n\n必ずご自身のボイスレコーダー等で録音を行い、配信終了後にマイページから音声ファイルをアップロードしてください。");
                         window.hasShownRecordAlert = true;
@@ -382,12 +365,10 @@
             }
         });
 
-        // ライブ配信タブの表示制御 (GUARDIAN以上のみ)
         function checkLiveTabVisibility() {
             const btnLive = document.getElementById('tab-live');
             const rLevel = getRankLevel((myData?.membershipRank || 'arrival').toLowerCase());
             
-            // GUARDIAN (3) 以上、または編集モードでない場合のみ
             if ((rLevel >= 3 || isAdminMock || isAdmin) && !editPid) {
                 btnLive.classList.remove('hidden');
                 btnLive.classList.add('inline-flex');
@@ -410,7 +391,6 @@
             const commentsSettingArea = document.getElementById('comments-setting-area');
             const btnSave = document.getElementById('btn-save');
 
-            // Reset States
             playerContainer.classList.add('hidden');
             document.getElementById('audio-player').src = '';
             document.getElementById('embed-player').src = '';
@@ -422,19 +402,16 @@
             document.getElementById('audio-file').value = '';
             document.getElementById('audio-url').value = '';
 
-            // Reset Button Styles
             btnUpload.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap';
             btnUrl.className = 'tab-btn pb-2 border-b-2 border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap';
             
-            // Live Button Base Style
             const baseLiveClass = 'tab-btn pb-2 border-b-2 border-transparent text-red-400 hover:text-red-600 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap inline-flex items-center gap-1';
             btnLive.className = baseLiveClass;
 
-            // Hide all areas first
             areaUpload.classList.add('hidden');
             areaUrl.classList.add('hidden');
             liveSettingsArea.classList.add('hidden');
-            commentsSettingArea.classList.remove('hidden'); // Default show comments
+            commentsSettingArea.classList.remove('hidden'); 
 
             if (type === 'upload') {
                 btnUpload.className = 'tab-btn active pb-2 border-b-2 text-[#b8860b] border-[#b8860b] font-bold text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap';
@@ -454,10 +431,9 @@
                 btnSave.className = 'w-full py-4 bg-gradient-to-r from-[#3e2723] to-red-900 text-white font-bold text-lg rounded-sm hover:from-[#2a1a17] hover:to-red-800 transition-all shadow-xl tracking-widest border border-red-600 flex items-center justify-center gap-3 transform hover:-translate-y-0.5';
             }
             
-            checkLiveTabVisibility(); // 権限による非表示を再適用
+            checkLiveTabVisibility(); 
         };
 
-        // --- URLを解析して埋め込み用リンクを生成する関数 ---
         function parsePodcastUrl(url) {
             let embedUrl = null;
             let isEmbed = false;
@@ -566,8 +542,6 @@
                     document.getElementById('title').value = data.title || '';
                     document.getElementById('description').value = data.description || '';
                     document.getElementById('guests').value = data.guests ? data.guests.join(', ') : '';
-                    
-                    // ★追加: 関連記事データの読み込み
                     document.getElementById('related-article').value = data.relatedArticleUrl || '';
                     
                     currentDuration = data.duration || 0;
@@ -616,7 +590,6 @@
             let finalAudioUrl = '';
             let finalThumbUrl = '';
 
-            // 未入力チェック (Liveの場合は不要)
             if (audioInputType !== 'live' && !editPid) {
                 if (audioInputType === 'upload' && !currentAudioFile && !isAdminMock) {
                     return alert('音声ファイルを選択してください');
@@ -626,7 +599,6 @@
                 }
             }
 
-            // ファイルサイズチェック
             if (audioInputType === 'upload' && currentAudioFile) {
                 const maxSize = 30 * 1024 * 1024; 
                 if (currentAudioFile.size > maxSize) {
@@ -655,8 +627,6 @@
             try {
                 // --- LiveCast (生配信) の場合の処理 ---
                 if (audioInputType === 'live') {
-                    
-                    // 過去データの初期化
                     if (!isAdminMock) {
                         try {
                             const oldCommentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'comments');
@@ -673,20 +643,21 @@
                         }
                     }
 
-                    // サムネイルアップロード
+                    // ★修正: サムネイル画像は「一括アップロード」に変更
                     if (currentThumbFile && !isAdminMock) {
                         try {
-                            const snap = await uploadBytesResumable(ref(storage, `live_thumbs/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`), currentThumbFile);
+                            const thumbRef = ref(storage, `live_thumbs/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`);
+                            const snap = await uploadBytes(thumbRef, currentThumbFile);
                             finalThumbUrl = await getDownloadURL(snap.ref);
                         } catch(err) {
                             console.warn("Thumbnail upload failed:", err);
                         }
                     }
 
-                    // ユーザー情報解決
+                    // ★修正: myDataがnullでも安全に処理
                     let finalAuthorId = currentUser.uid;
-                    let finalAuthorName = myData.name || myData.userId;
-                    let finalAuthorIcon = myData.photoURL || null;
+                    let finalAuthorName = myData ? (myData.name || myData.userId) : '名無し';
+                    let finalAuthorIcon = myData ? myData.photoURL : null;
 
                     const overrideUserIdInput = document.getElementById('override-userid');
                     const overrideUserId = overrideUserIdInput ? overrideUserIdInput.value.trim() : '';
@@ -739,7 +710,6 @@
                         });
                     }
 
-                    // ライブ配信画面へ遷移
                     window.location.href = `live_room.html?roomId=${finalAuthorId}`;
                     return;
                 }
@@ -778,31 +748,20 @@
                     isEmbedMode = parsed.isEmbed;
                 }
 
-                // 2. Thumbnail Upload
+                // ★修正: サムネイル画像は「一括アップロード」に変更
                 if (currentThumbFile && !isAdminMock) {
-                    const thumbRef = ref(storage, `podcasts/thumbnails/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`);
-                    const thumbUploadTask = uploadBytesResumable(thumbRef, currentThumbFile);
+                    progressBar.style.width = '80%';
+                    progressText.textContent = '画像をアップロード中...';
                     
-                    await new Promise((resolve, reject) => {
-                        thumbUploadTask.on('state_changed', 
-                            (snapshot) => {
-                                const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 15;
-                                progressBar.style.width = (80 + p) + '%';
-                                progressText.textContent = `画像をアップロード中... (${Math.floor(80 + p)}%)`;
-                            }, 
-                            (error) => {
-                                reject(new Error(`画像のアップロードに失敗: ${error.message}`));
-                            }, 
-                            async () => {
-                                try {
-                                    finalThumbUrl = await getDownloadURL(thumbUploadTask.snapshot.ref);
-                                    resolve();
-                                } catch(err) {
-                                    reject(new Error("画像URLの取得に失敗しました"));
-                                }
-                            }
-                        );
-                    });
+                    try {
+                        const thumbRef = ref(storage, `podcasts/thumbnails/${currentUser.uid}/${Date.now()}_${currentThumbFile.name}`);
+                        const snap = await uploadBytes(thumbRef, currentThumbFile);
+                        finalThumbUrl = await getDownloadURL(snap.ref);
+                        progressBar.style.width = '95%';
+                    } catch (err) {
+                        console.error("Thumb Upload Error:", err);
+                        throw new Error(`画像のアップロードに失敗: ${err.message}`);
+                    }
                 }
 
                 if (editPid && !isAdminMock) {
@@ -820,10 +779,10 @@
                 progressBar.style.width = '100%';
                 progressText.textContent = 'データを保存しています...';
 
-                // 代理投稿ユーザーの解決
+                // ★修正: myDataがnullでも安全に処理
                 let finalAuthorId = currentUser.uid;
-                let finalAuthorName = myData.name || myData.userId;
-                let finalAuthorIcon = myData.photoURL || null;
+                let finalAuthorName = myData ? (myData.name || myData.userId) : '名無し';
+                let finalAuthorIcon = myData ? myData.photoURL : null;
 
                 const overrideUserIdInput = document.getElementById('override-userid');
                 const overrideUserId = overrideUserIdInput ? overrideUserIdInput.value.trim() : '';
@@ -862,8 +821,6 @@
                 const guestsStr = document.getElementById('guests').value.trim();
                 const guests = guestsStr ? guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 const allowComments = document.querySelector('input[name="allowComments"]:checked').value === 'true';
-
-                // ★追加: 関連記事URLの取得
                 const relatedArticleUrl = document.getElementById('related-article').value.trim();
 
                 const checkedTags = Array.from(document.querySelectorAll('.tag-cb:checked')).map(cb => cb.value);
@@ -881,7 +838,7 @@
                     thumbnailUrl: finalThumbUrl || null,
                     title: title,
                     description: desc,
-                    relatedArticleUrl: relatedArticleUrl, // ★追加: DBに保存
+                    relatedArticleUrl: relatedArticleUrl, 
                     guests: guests,
                     tags: tags,
                     allowComments: allowComments,
@@ -897,11 +854,9 @@
                     return;
                 }
 
-                // データベースに保存
                 const pidRef = doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', docId);
                 await setDoc(pidRef, podcastData, { merge: true });
                 
-                // 再生ページへ移動
                 window.location.href = `podcast_detail.html?pid=${docId}`;
                 
             } catch(error) {
