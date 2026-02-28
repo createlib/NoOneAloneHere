@@ -487,8 +487,22 @@
             currentUrl.search = `?ref=${myProfile.userId}`;
             const url = currentUrl.toString();
             
+            // ★変更: 名前を取得してテンプレート文を作成
+            const userName = myProfile.name || myProfile.userId;
+            const inviteText = `${userName}さんからNOAHに招待されました。
+下記のリンクから乗船手続きを進めてください。
+
+■新規登録｜NOAH｜No One Alone, Here
+${url}
+
+■公式LINE｜公式LINEを登録し、いつでも乗船できるようにしてください。
+https://lin.ee/aaP0V9F
+
+■公式オープンチャット｜「フルネーム＠NOAHのID」でご参加ください。
+https://line.me/ti/g2/yo2C_bp7U7agH9Rz--E2YhZ4Sc4Yy1ybqhQQZw?utm_source=invitation&utm_medium=link_copy&utm_campaign=default`;
+            
             const textArea = document.createElement("textarea");
-            textArea.value = url;
+            textArea.value = inviteText; // ★変更: 作成したテキストをセット
             textArea.style.position = "fixed";
             document.body.appendChild(textArea);
             textArea.focus();
