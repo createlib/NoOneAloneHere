@@ -157,11 +157,11 @@
                     <textarea id="description" rows="6" class="w-full border border-brand-200 rounded-sm p-4 bg-[#f7f5f0] text-sm leading-relaxed focus:bg-white transition-colors" placeholder="・オープニング&#13;&#10;・今回のテーマについて&#13;&#10;・ゲストからのお知らせ"></textarea>
                 </div>
 
-                <!-- ★追加: 関連記事の入力フィールド -->
+                <!-- ★修正: 関連記事の入力フィールド (複数対応) -->
                 <div class="pt-2">
                     <label class="block text-sm font-bold text-brand-900 mb-2 tracking-widest"><i class="fa-solid fa-link text-brand-400 mr-2"></i>関連記事 (Note等) <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
-                    <p class="text-[10px] sm:text-xs text-brand-500 mb-2">noteの記事URLを貼り付けると、概要欄に綺麗に埋め込まれて表示されます。</p>
-                    <input type="url" id="related-article" class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="https://note.com/...">
+                    <p class="text-[10px] sm:text-xs text-brand-500 mb-2">noteの記事URL等を貼り付けます。複数ある場合は「, (カンマ)」で区切ってください。</p>
+                    <input type="text" id="related-article" class="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="https://note.com/..., https://...">
                 </div>
             </div>
 
@@ -542,7 +542,15 @@
                     document.getElementById('title').value = data.title || '';
                     document.getElementById('description').value = data.description || '';
                     document.getElementById('guests').value = data.guests ? data.guests.join(', ') : '';
-                    document.getElementById('related-article').value = data.relatedArticleUrl || '';
+                    
+                    // ★修正: 関連記事データの読み込み (配列と文字列の両方に対応)
+                    if (data.relatedArticleUrls && Array.isArray(data.relatedArticleUrls)) {
+                        document.getElementById('related-article').value = data.relatedArticleUrls.join(', ');
+                    } else if (data.relatedArticleUrl) {
+                        document.getElementById('related-article').value = data.relatedArticleUrl;
+                    } else {
+                        document.getElementById('related-article').value = '';
+                    }
                     
                     currentDuration = data.duration || 0;
                     
@@ -821,7 +829,10 @@
                 const guestsStr = document.getElementById('guests').value.trim();
                 const guests = guestsStr ? guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 const allowComments = document.querySelector('input[name="allowComments"]:checked').value === 'true';
-                const relatedArticleUrl = document.getElementById('related-article').value.trim();
+                
+                // ★修正: 関連記事URLをカンマ区切りで配列化
+                const relatedArticleInput = document.getElementById('related-article').value.trim();
+                const relatedArticleUrls = relatedArticleInput ? relatedArticleInput.split(',').map(s=>s.trim()).filter(s=>s) : [];
 
                 const checkedTags = Array.from(document.querySelectorAll('.tag-cb:checked')).map(cb => cb.value);
                 const customTags = document.getElementById('custom-tags').value.split(',').map(t=>t.trim()).filter(t=>t);
@@ -838,7 +849,7 @@
                     thumbnailUrl: finalThumbUrl || null,
                     title: title,
                     description: desc,
-                    relatedArticleUrl: relatedArticleUrl, 
+                    relatedArticleUrls: relatedArticleUrls, // ★配列で保存
                     guests: guests,
                     tags: tags,
                     allowComments: allowComments,
