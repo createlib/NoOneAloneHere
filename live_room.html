@@ -24,13 +24,17 @@
         body { font-family: 'Noto Serif JP', serif; }
         .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
         
+        /* ライブ配信中のダークトーン・ノイズテクスチャ */
+        .bg-dark-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); }
+
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #c8b9a6; border-radius: 10px; }
 
-        .dark-scrollbar::-webkit-scrollbar { width: 6px; }
+        .dark-scrollbar::-webkit-scrollbar { width: 4px; }
         .dark-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .dark-scrollbar::-webkit-scrollbar-thumb { background-color: #5c4a3d; border-radius: 10px; }
+        .dark-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        .dark-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(212, 175, 55, 0.5); }
 
         input[type="radio"]:checked + div, input[type="checkbox"]:checked + div {
             background-color: #3e2723; color: #d4af37; border-color: #b8860b;
@@ -42,15 +46,27 @@
             appearance: none;
         }
 
-        /* ライブ配信エフェクト */
+        /* ライブ配信エフェクト (よりリッチな光沢感) */
         @keyframes ripple {
-            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.6); }
-            70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5), inset 0 0 10px rgba(212, 175, 55, 0.3); }
+            70% { box-shadow: 0 0 0 20px rgba(212, 175, 55, 0), inset 0 0 20px rgba(212, 175, 55, 0.1); }
+            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0), inset 0 0 10px rgba(212, 175, 55, 0); }
         }
         .speaking-ripple {
-            animation: ripple 1.2s infinite;
+            animation: ripple 1.5s infinite ease-out;
             border-color: #d4af37 !important;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(20, 15, 10, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .glass-bar {
+            background: rgba(10, 5, 0, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
     </style>
 </head>
@@ -65,13 +81,14 @@
     </div>
 
     <!-- 1. ルーム作成ビュー -->
-    <div id="create-view" class="hidden absolute inset-0 z-10 items-center justify-center p-4 overflow-y-auto h-[100dvh]">
-        <div class="bg-[#fffdf9] w-full max-w-2xl my-auto rounded-md shadow-2xl flex flex-col border border-[#b8860b]">
-            <div class="p-4 sm:p-5 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] shrink-0 rounded-t-md">
-                <h3 class="font-bold text-base sm:text-lg text-brand-900 font-serif tracking-widest flex items-center gap-2">
+    <div id="create-view" class="hidden absolute inset-0 z-[100] items-center justify-center p-4 overflow-y-auto h-[100dvh] bg-[#f7f5f0]/90 backdrop-blur-md">
+        <div class="bg-[#fffdf9] bg-texture w-full max-w-2xl my-auto rounded-md shadow-2xl flex flex-col border border-[#b8860b]">
+            <div class="p-4 sm:p-5 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] shrink-0 rounded-t-md relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#b8860b] m-1 pointer-events-none"></div>
+                <h3 class="font-bold text-base sm:text-lg text-brand-900 font-serif tracking-widest flex items-center gap-2 relative z-10">
                     <i class="fa-solid fa-satellite-dish text-[#b8860b]"></i> SIGNAL CAST 配信設定
                 </h3>
-                <button onclick="history.back()" class="text-brand-400 hover:text-brand-700 bg-brand-50 w-8 h-8 rounded-sm flex items-center justify-center transition-colors border border-brand-100"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="history.back()" class="text-brand-400 hover:text-brand-700 bg-brand-50 w-8 h-8 rounded-sm flex items-center justify-center transition-colors border border-brand-100 relative z-10"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
             <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
@@ -119,7 +136,6 @@
                     <input type="text" id="room-guests" class="w-full border-brand-200 rounded-sm p-3 bg-white text-sm focus:border-[#b8860b]" placeholder="例: @user_id, 〇〇さん">
                 </div>
 
-                <!-- ★修正: 関連記事の入力フィールド (複数対応) -->
                 <div>
                     <label class="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">関連記事 (Note等) <span class="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
                     <p class="text-[10px] text-brand-500 mb-1.5">noteのURL等を指定します。複数ある場合は「, (カンマ)」で区切ってください。</p>
@@ -141,17 +157,14 @@
                     <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">アーカイブ設定</label>
                     <div class="flex flex-wrap gap-3">
                         <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
-                            <!-- ★変更: onchangeイベントを追加 -->
                             <input type="radio" name="roomRecord" value="true" onchange="toggleRecordWarning(true)" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音して残す
                         </label>
                         <label class="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
-                            <!-- ★変更: onchangeイベントを追加 -->
                             <input type="radio" name="roomRecord" value="false" checked onchange="toggleRecordWarning(false)" class="text-[#b8860b] focus:ring-[#b8860b]"> 録音しない
                         </label>
                     </div>
                     <p class="text-[10px] text-brand-500 mt-2 text-center sm:text-left">※「録音して残す」を選択すると、配信終了後にポッドキャストとして公開されます。</p>
                     
-                    <!-- ★追加: 録音に関する目立つ注意書き (初期状態は非表示) -->
                     <div id="record-warning" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-sm text-red-600 text-[10px] sm:text-xs leading-relaxed shadow-inner">
                         <span class="font-bold block mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i>【重要】自動録音機能はありません</span>
                         システム側での録音は行われません。必ずご自身の端末（スマホのボイスレコーダー等）で別途録音を行ってください。<br>
@@ -170,7 +183,6 @@
                 <button onclick="startLiveCast()" id="btn-start-cast" class="w-full py-4 bg-gradient-to-r from-[#3e2723] to-[#2a1a17] text-[#d4af37] font-bold rounded-sm shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-2 transform hover:-translate-y-0.5 transition-all text-sm sm:text-base mb-3">
                     <i class="fa-solid fa-satellite-dish animate-pulse"></i> 配信を START する
                 </button>
-                <!-- ★追加: 配信開始前にURLをシェアできるボタン -->
                 <button type="button" onclick="shareMyRoom()" class="w-full py-2 bg-transparent text-brand-600 font-bold text-xs tracking-widest flex items-center justify-center gap-2 hover:text-brand-800 transition-colors">
                     <i class="fa-solid fa-share-nodes"></i> 事前に配信リンクをシェアして告知する
                 </button>
@@ -178,31 +190,44 @@
         </div>
     </div>
 
-    <!-- 2. ライブ配信ビュー (全画面モーダル / ミニプレーヤー切替対応) -->
-    <div id="live-cast-modal" class="hidden absolute inset-0 z-[7000] bg-[#1a110f] flex-col text-[#f7f5f0] font-sans transition-all duration-300 h-[100dvh]">
+    <!-- 2. ライブ配信ビュー (透明感のあるラグジュアリーデザイン) -->
+    <div id="live-cast-modal" class="hidden absolute inset-0 z-[7000] flex-col text-[#f7f5f0] font-sans transition-all duration-500 h-[100dvh] overflow-hidden bg-[#1a110f]">
         
+        <!-- 美しい背景エフェクト -->
+        <div class="absolute inset-0 z-0 pointer-events-none">
+            <!-- オーブ光 -->
+            <div class="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[#d4af37]/10 blur-[100px]"></div>
+            <div class="absolute bottom-[-10%] right-[-10%] w-[70%] h-[70%] rounded-full bg-[#8b6a4f]/20 blur-[120px]"></div>
+            <div class="absolute top-[40%] left-[30%] w-[30%] h-[30%] rounded-full bg-[#f7f5f0]/5 blur-[80px]"></div>
+            <!-- ノイズテクスチャ -->
+            <div class="absolute inset-0 bg-dark-texture opacity-80 mix-blend-overlay"></div>
+        </div>
+
         <!-- Full UI -->
-        <div id="live-full-ui" class="flex flex-col h-full w-full">
-            <!-- Header -->
-            <div class="flex justify-between items-center bg-[#2a1a17] p-3 sm:p-4 border-b border-[#5c4a3d] shrink-0 shadow-md">
+        <div id="live-full-ui" class="flex flex-col h-full w-full relative z-10">
+            
+            <!-- Header (すりガラス) -->
+            <div class="flex justify-between items-center glass-bar p-3 sm:p-4 border-b border-white/10 shrink-0 shadow-lg relative z-20">
                 <div class="flex items-center gap-3 min-w-0">
-                    <button onclick="toggleMiniPlayer()" class="text-[#a09080] hover:text-[#dcd4c6] px-2 transition-colors" title="ミニプレーヤーにする"><i class="fa-solid fa-chevron-down"></i></button>
-                    <div class="bg-red-600 text-white px-2 py-0.5 rounded-sm text-[9px] font-bold tracking-widest flex items-center gap-1 animate-pulse">
-                        <i class="fa-solid fa-satellite-dish"></i> LIVE
+                    <button onclick="toggleMiniPlayer()" class="text-white/60 hover:text-white px-2 transition-colors" title="ミニプレーヤーにする"><i class="fa-solid fa-chevron-down"></i></button>
+                    <div class="bg-red-600/90 backdrop-blur-sm text-white px-2.5 py-0.5 rounded-sm text-[9px] font-bold tracking-widest flex items-center gap-1.5 shadow-[0_0_10px_rgba(220,38,38,0.5)] border border-red-500/50">
+                        <span class="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> LIVE
                     </div>
-                    <h2 id="live-header-title" class="font-bold text-sm sm:text-base tracking-widest truncate">ルームタイトル</h2>
+                    <h2 id="live-header-title" class="font-bold text-sm sm:text-base tracking-widest truncate font-serif drop-shadow-md text-white/90">ルームタイトル</h2>
                 </div>
                 <div class="flex items-center gap-3 sm:gap-4 shrink-0">
-                    <!-- ★追加: 配信中画面用のシェアボタン -->
-                    <button onclick="shareLiveRoom()" class="flex items-center justify-center w-8 h-8 rounded-full bg-[#3e2723] text-[#a09080] hover:text-[#f7f5f0] hover:bg-[#5c4a3d] transition-colors border border-[#5c4a3d]" title="配信リンクをコピー">
+                    <button onclick="shareLiveRoom()" class="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 text-white/70 hover:text-white hover:bg-white/20 transition-colors border border-white/10 backdrop-blur-sm shadow-sm" title="配信リンクをコピー">
                         <i class="fa-solid fa-share-nodes text-xs"></i>
                     </button>
                     
-                    <div class="flex items-center gap-1.5 bg-black/40 px-3 py-1.5 rounded-full border border-[#5c4a3d]">
-                        <i class="fa-solid fa-headphones text-[#b8860b] text-xs"></i>
-                        <span id="live-listener-count" class="text-xs font-bold font-mono">0</span>
+                    <div class="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-inner">
+                        <i class="fa-solid fa-headphones text-[#d4af37] text-xs opacity-90"></i>
+                        <span id="live-listener-count" class="text-xs font-bold font-mono text-white/90 drop-shadow-sm">0</span>
                     </div>
-                    <button onclick="leaveLiveRoom()" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 transition-colors flex items-center justify-center border border-[#5c4a3d]" title="退出する">
+                    
+                    <div class="w-px h-5 bg-white/10 mx-1 hidden sm:block"></div>
+                    
+                    <button onclick="leaveLiveRoom()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-red-600/90 text-white/80 hover:text-white transition-colors flex items-center justify-center border border-white/20 backdrop-blur-sm shadow-md" title="退出する">
                         <i class="fa-solid fa-power-off text-xs"></i>
                     </button>
                 </div>
@@ -213,34 +238,37 @@
                 
                 <!-- スピーカーエリア (左側) -->
                 <div class="flex-1 p-4 sm:p-8 overflow-y-auto dark-scrollbar relative">
-                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.05)_0%,transparent_60%)] pointer-events-none"></div>
-                    <div id="speakers-grid" class="flex flex-wrap justify-center content-start gap-6 sm:gap-10 relative z-10 max-w-4xl mx-auto h-full pt-10">
+                    <div id="speakers-grid" class="flex flex-wrap justify-center content-start gap-8 sm:gap-12 relative z-10 max-w-4xl mx-auto h-full pt-10 sm:pt-16">
                         <!-- JSでスピーカーのアイコンが挿入されます -->
                     </div>
                 </div>
 
-                <!-- 右側パネル (コメント / リスナー / 概要) -->
-                <div class="w-full lg:w-80 bg-[#2a1a17] flex flex-col border-t lg:border-t-0 lg:border-l border-[#5c4a3d] shrink-0 h-[45vh] lg:h-auto z-20">
+                <!-- 右側パネル (コメント / リスナー / 概要 - Glassmorphism) -->
+                <div class="w-full lg:w-[340px] glass-panel flex flex-col border-t lg:border-t-0 lg:border-l border-white/10 shrink-0 h-[45vh] lg:h-auto z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.3)]">
                     <!-- Tabs -->
-                    <div class="flex border-b border-[#5c4a3d] shrink-0 relative">
-                        <button onclick="switchLiveTab('comments')" id="tab-live-comments" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors">コメント</button>
-                        <button onclick="switchLiveTab('listeners')" id="tab-live-listeners" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors hidden relative">
+                    <div class="flex border-b border-white/10 shrink-0 relative bg-black/20">
+                        <button onclick="switchLiveTab('comments')" id="tab-live-comments" class="flex-1 p-3.5 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors drop-shadow-sm">コメント</button>
+                        <button onclick="switchLiveTab('listeners')" id="tab-live-listeners" class="flex-1 p-3.5 text-xs font-bold tracking-widest border-b-2 border-transparent text-white/50 hover:text-white/90 transition-colors hidden relative">
                             参加者
-                            <span id="tab-req-badge" class="hidden absolute top-1.5 right-1.5 sm:top-1/2 sm:transform sm:-translate-y-1/2 bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">0</span>
+                            <span id="tab-req-badge" class="hidden absolute top-2 right-2 sm:top-1/2 sm:transform sm:-translate-y-1/2 bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-[0_0_8px_rgba(220,38,38,0.6)]">0</span>
                         </button>
-                        <button onclick="switchLiveTab('info')" id="tab-live-info" class="flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors">概要</button>
+                        <button onclick="switchLiveTab('info')" id="tab-live-info" class="flex-1 p-3.5 text-xs font-bold tracking-widest border-b-2 border-transparent text-white/50 hover:text-white/90 transition-colors">概要</button>
                     </div>
 
                     <!-- Comments Area -->
-                    <div id="area-live-comments" class="flex-1 flex flex-col overflow-hidden">
-                        <div id="live-comments-list" class="flex-1 overflow-y-auto p-4 space-y-3 dark-scrollbar">
-                            <div class="text-center py-4 text-[#725b3f] text-xs tracking-widest">ここにコメントが表示されます</div>
+                    <div id="area-live-comments" class="flex-1 flex flex-col overflow-hidden relative">
+                        <div id="live-comments-list" class="flex-1 overflow-y-auto p-4 space-y-2 dark-scrollbar">
+                            <div class="text-center py-6 text-white/40 text-xs tracking-widest font-bold">メッセージを送信して<br>会話をはじめましょう</div>
                         </div>
-                        <div class="p-3 bg-[#1a110f] border-t border-[#5c4a3d] shrink-0">
+                        
+                        <!-- グラデーションマスク (スクロールの境界をぼかす) -->
+                        <div class="absolute bottom-[52px] left-0 w-full h-8 bg-gradient-to-t from-[rgba(26,17,15,0.8)] to-transparent pointer-events-none"></div>
+
+                        <div class="p-3 bg-black/30 border-t border-white/10 shrink-0 backdrop-blur-md">
                             <form onsubmit="sendLiveComment(event)" class="flex gap-2 relative">
-                                <input type="text" id="live-comment-input" class="flex-1 bg-[#2a1a17] text-[#f7f5f0] text-sm p-3 pr-10 rounded-sm border border-[#5c4a3d] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37] transition-all placeholder-[#725b3f]" placeholder="コメントを送信..." required>
-                                <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#d4af37] hover:text-white transition-colors p-2">
-                                    <i class="fa-solid fa-paper-plane"></i>
+                                <input type="text" id="live-comment-input" class="flex-1 bg-white/5 text-white text-sm px-4 py-2.5 pr-10 rounded-full border border-white/10 focus:border-[#d4af37]/70 focus:bg-white/10 transition-all placeholder-white/30 outline-none shadow-inner" placeholder="コメントを送信..." required>
+                                <button type="submit" class="absolute right-1.5 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-[#d4af37]/20 text-[#d4af37] hover:bg-[#d4af37] hover:text-[#1a110f] transition-all flex items-center justify-center">
+                                    <i class="fa-solid fa-paper-plane text-[10px]"></i>
                                 </button>
                             </form>
                         </div>
@@ -248,55 +276,64 @@
 
                     <!-- Listeners Area -->
                     <div id="area-live-listeners" class="hidden flex-1 flex flex-col overflow-hidden">
-                        <div class="p-3 bg-[#1a110f] border-b border-[#5c4a3d] shrink-0 flex justify-between items-center">
-                            <span class="text-[10px] text-[#a09080] tracking-widest">登壇リクエスト</span>
-                            <span id="req-count" class="bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-sm font-bold">0</span>
+                        <div class="p-3 bg-black/20 border-b border-white/5 shrink-0 flex justify-between items-center">
+                            <span class="text-[10px] text-[#d4af37] tracking-widest font-bold"><i class="fa-solid fa-hand mr-1.5"></i>登壇リクエスト</span>
+                            <span id="req-count" class="bg-red-600/80 backdrop-blur-sm border border-red-500 text-white text-[9px] px-2 py-0.5 rounded-sm font-bold shadow-sm">0</span>
                         </div>
                         <div id="live-listeners-list" class="flex-1 overflow-y-auto p-2 space-y-1 dark-scrollbar"></div>
                     </div>
 
                     <!-- Info Area (概要欄) -->
-                    <div id="area-live-info" class="hidden flex-1 flex flex-col overflow-y-auto p-5 dark-scrollbar">
-                        <h3 id="live-info-title" class="font-bold text-base mb-3 text-[#d4af37] tracking-widest font-serif leading-snug">ルームタイトル</h3>
-                        <div id="live-info-tags" class="flex flex-wrap gap-1.5 mb-5"></div>
-                        <h4 class="text-[10px] text-[#a09080] tracking-widest mb-1.5 font-bold"><i class="fa-solid fa-align-left mr-1"></i>トピック・概要</h4>
-                        <div class="text-xs text-[#dcd4c6] leading-relaxed whitespace-pre-wrap bg-black/20 p-4 rounded-sm border border-[#5c4a3d] shadow-inner" id="live-info-desc"></div>
+                    <div id="area-live-info" class="hidden flex-1 flex flex-col overflow-y-auto p-6 dark-scrollbar">
+                        <h3 id="live-info-title" class="font-bold text-lg mb-4 text-[#d4af37] tracking-widest font-serif leading-snug drop-shadow-md">ルームタイトル</h3>
+                        <div id="live-info-tags" class="flex flex-wrap gap-2 mb-6"></div>
+                        <h4 class="text-[10px] text-white/50 tracking-widest mb-2 font-bold uppercase flex items-center gap-1.5"><i class="fa-solid fa-align-left"></i>トピック・概要</h4>
+                        <div class="text-[13px] text-white/80 leading-relaxed whitespace-pre-wrap bg-white/5 p-4 rounded-sm border border-white/10 shadow-inner" id="live-info-desc"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- アクションバー (ボトム固定) -->
-            <div class="bg-[#1a110f] border-t border-[#5c4a3d] px-3 py-4 sm:p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shrink-0 flex justify-center items-center gap-4 relative z-30">
-                <button id="btn-raise-hand" onclick="toggleHandRaise()" class="hidden px-6 py-3 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] rounded-full text-xs font-bold tracking-widest hover:bg-[#2a1a17] transition-colors shadow-md">
-                    <i class="fa-solid fa-hand mr-2"></i> 登壇をリクエスト
+            <!-- アクションバー (ボトム固定 - Glassmorphism) -->
+            <div class="glass-bar border-t border-white/10 px-3 py-4 sm:p-5 pb-[calc(1rem+env(safe-area-inset-bottom))] shrink-0 flex justify-center items-center gap-4 sm:gap-6 relative z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.2)]">
+                
+                <button id="btn-raise-hand" onclick="toggleHandRaise()" class="hidden px-5 sm:px-6 py-3 sm:py-3.5 bg-white/10 text-white border border-white/20 rounded-full text-xs font-bold tracking-widest hover:bg-white/20 hover:border-[#d4af37] transition-all shadow-md backdrop-blur-sm group">
+                    <i class="fa-solid fa-hand mr-2 text-white/70 group-hover:text-[#d4af37] transition-colors"></i> 登壇をリクエスト
                 </button>
-                <button id="btn-mic" onclick="toggleMic()" class="hidden w-14 h-14 rounded-full bg-[#d4af37] text-[#1a110f] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform">
-                    <i class="fa-solid fa-microphone" id="icon-mic"></i>
+                
+                <!-- メインのマイクボタン (大きく、光沢感を) -->
+                <button id="btn-mic" onclick="toggleMic()" class="hidden w-16 h-16 rounded-full bg-gradient-to-br from-[#d4af37] to-[#b8860b] text-[#1a110f] flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform border border-[#f7f5f0]/30 relative group">
+                    <div class="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <i class="fa-solid fa-microphone relative z-10" id="icon-mic"></i>
                 </button>
-                <button id="btn-leave-stage" onclick="leaveStage()" class="hidden px-4 py-2 bg-transparent text-[#a09080] border border-[#5c4a3d] rounded-full text-xs font-bold tracking-widest hover:text-[#f7f5f0] hover:bg-[#3e2723] transition-colors">
+                
+                <button id="btn-leave-stage" onclick="leaveStage()" class="hidden px-4 py-2 bg-transparent text-white/50 border border-white/20 rounded-full text-[10px] sm:text-xs font-bold tracking-widest hover:text-white hover:bg-white/10 transition-colors backdrop-blur-sm">
                     降壇する
                 </button>
-                <button id="btn-end-cast" onclick="leaveLiveRoom()" class="hidden px-4 py-2 bg-red-900/50 text-red-400 border border-red-800 rounded-full text-xs font-bold tracking-widest hover:bg-red-800 hover:text-white transition-colors ml-4">
+                
+                <button id="btn-end-cast" onclick="leaveLiveRoom()" class="hidden px-5 py-2.5 bg-red-600/20 text-red-400 border border-red-500/50 rounded-full text-xs font-bold tracking-widest hover:bg-red-600 hover:text-white transition-all ml-2 sm:ml-6 backdrop-blur-sm shadow-[0_0_10px_rgba(220,38,38,0.2)]">
                     配信を終了
                 </button>
             </div>
         </div>
 
-        <!-- Mini UI (ながら聴き用) -->
-        <div id="live-mini-ui" class="hidden h-full w-full flex items-center justify-between px-4 bg-[#2a1a17] border border-[#b8860b] rounded-md shadow-2xl relative overflow-hidden cursor-pointer" onclick="toggleMiniPlayer()">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(212,175,55,0.1)_0%,transparent_60%)] pointer-events-none"></div>
-            <div class="flex items-center gap-3 min-w-0 relative z-10">
-                <div class="w-10 h-10 rounded-full bg-black border-2 border-[#5c4a3d] flex items-center justify-center relative shadow-md">
-                    <i class="fa-solid fa-satellite-dish text-[#d4af37] animate-pulse"></i>
+        <!-- Mini UI (ながら聴き用 - スタイリッシュに) -->
+        <div id="live-mini-ui" class="hidden h-full w-full flex items-center justify-between px-4 bg-[#1a110f]/95 backdrop-blur-xl border border-[#d4af37]/40 rounded-md shadow-[0_15px_40px_rgba(0,0,0,0.5)] relative overflow-hidden cursor-pointer group hover:border-[#d4af37]/80 transition-colors" onclick="toggleMiniPlayer()">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(212,175,55,0.15)_0%,transparent_60%)] pointer-events-none"></div>
+            <div class="flex items-center gap-3 sm:gap-4 relative z-10 min-w-0">
+                <div class="relative w-12 h-12 rounded-sm overflow-hidden border border-[#5c4a3d] shadow-md flex-shrink-0">
+                    <div class="absolute inset-0 bg-black/20 flex items-center justify-center z-10">
+                        <i class="fa-solid fa-satellite-dish text-[#d4af37] animate-pulse"></i>
+                    </div>
+                    <img id="mini-thumb" src="" class="w-full h-full object-cover opacity-60" onerror="this.src='https://via.placeholder.com/150'">
                 </div>
                 <div class="min-w-0">
-                    <p class="text-[9px] text-[#b8860b] font-bold tracking-widest mb-0.5">SIGNAL CAST 配信中</p>
-                    <p id="mini-title" class="text-xs font-bold text-white truncate w-32 sm:w-48 font-serif">ルームタイトル</p>
+                    <p class="text-[9px] text-[#d4af37] font-bold tracking-widest mb-0.5 uppercase drop-shadow-sm flex items-center gap-1.5"><span class="w-1 h-1 bg-red-500 rounded-full animate-pulse"></span>Live Now</p>
+                    <p id="mini-title" class="text-xs font-bold text-white truncate w-32 sm:w-48 font-serif tracking-wide">ルームタイトル</p>
                 </div>
             </div>
             <div class="flex items-center gap-3 relative z-10">
-                <button onclick="event.stopPropagation(); leaveLiveRoom();" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 transition-colors flex items-center justify-center border border-[#5c4a3d]" title="退出する">
-                    <i class="fa-solid fa-power-off text-white text-xs"></i>
+                <button onclick="event.stopPropagation(); leaveLiveRoom();" class="w-8 h-8 rounded-full bg-white/10 hover:bg-red-600 transition-colors flex items-center justify-center border border-white/20 backdrop-blur-sm shadow-sm text-white/80 hover:text-white" title="退出する">
+                    <i class="fa-solid fa-power-off text-xs"></i>
                 </button>
             </div>
         </div>
@@ -305,7 +342,7 @@
 
     <!-- Notification Toast -->
     <div id="notification" class="fixed top-10 left-1/2 transform -translate-x-1/2 z-[8000] hidden transition-all duration-300 translate-y-10">
-        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]">
+        <div class="bg-[#3e2723]/95 text-[#f7f5f0] px-6 py-3 rounded-sm shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex items-center gap-3 backdrop-blur-xl border border-[#b8860b]">
             <i class="fa-solid fa-check text-[#d4af37] text-lg"></i>
             <span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span>
         </div>
@@ -316,7 +353,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
         import * as jose from 'https://cdn.jsdelivr.net/npm/jose@5.2.3/+esm';
@@ -332,7 +369,6 @@
         const action = urlParams.get('action');
         const targetRoomId = urlParams.get('roomId');
 
-        // ★追加: デフォルトアイコンの定義（世界観に合わせたカラー）
         const DEFAULT_ICON = 'https://via.placeholder.com/150/f7f5f0/c8b9a6?text=U';
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
@@ -361,18 +397,37 @@
         let micInterval = null;
         
         let isMiniPlayer = false;
+        window.anonymousName = null;
 
         const rankLevels = { 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 };
         function getRankLevel(rank) { return rankLevels[rank] || 0; }
         const getVal = (id, def = '') => { const el = document.getElementById(id); return el ? el.value : def; };
 
-        // ★追加: アーカイブ設定時の注意表示を制御する関数
+        function getParticipantInfo() {
+            let safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
+            let safeIcon = myProfile ? myProfile.photoURL : null;
+
+            if (currentRole !== 'host' && !isAdminMock) {
+                const isPublicSetting = myProfile && myProfile.profilePublic === 'true';
+                const isPaidMember = myRank !== 'arrival';
+                const canPublish = isPaidMember || isAdmin;
+                
+                if (!(isPublicSetting && canPublish)) {
+                    if (!window.anonymousName) {
+                        window.anonymousName = 'listener' + Math.floor(Math.random() * 10000);
+                    }
+                    safeName = window.anonymousName;
+                    safeIcon = DEFAULT_ICON;
+                }
+            }
+            return { safeName, safeIcon };
+        }
+
         window.toggleRecordWarning = (isRecord) => {
             const warningEl = document.getElementById('record-warning');
             if (warningEl) {
                 if (isRecord) {
                     warningEl.classList.remove('hidden');
-                    // 初回のみポップアップで強めに注意喚起
                     if (!window.hasShownRecordAlert) {
                         alert("【重要確認】\n配信の自動録音機能はありません。\n\n必ずご自身のボイスレコーダー等で録音を行い、配信終了後にマイページから音声ファイルをアップロードしてください。");
                         window.hasShownRecordAlert = true;
@@ -393,14 +448,12 @@
             }, 3000);
         };
 
-        // ★追加: 配信準備画面からのシェア用（自分のURL）
         window.shareMyRoom = () => {
             if (!currentUser) return;
             const url = `${window.location.origin}${window.location.pathname}?roomId=${currentUser.uid}`;
             copyToClipboard(url, 'あなたの配信ルームURLをコピーしました！\nSNS等で告知してください。');
         };
 
-        // ★追加: 配信中画面からのシェア用（現在のルームのURL）
         window.shareLiveRoom = () => {
             const roomId = currentRoomId || targetRoomId || currentUser?.uid;
             if (!roomId) return;
@@ -462,7 +515,6 @@
         function initView() {
             const rLevel = getRankLevel((myRank || 'arrival').toLowerCase());
             
-            // 権限チェック (ホスト=GUARDIAN以上, リスナー=SETTLER以上)
             const isAuthorizedHost = rLevel >= 3 || isAdmin || isAdminMock;
             const isAuthorizedListener = rLevel >= 1 || isAdmin || isAdminMock;
 
@@ -544,7 +596,6 @@
             btn.disabled = true;
 
             try {
-                // ★修正: データ初期化時のエラーをキャッチし、失敗しても配信を開始できるように安全化
                 if (!isAdminMock) {
                     try {
                         const oldCommentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentUser.uid, 'comments');
@@ -578,7 +629,6 @@
                 const safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
                 const safeIcon = myProfile ? myProfile.photoURL : null;
 
-                // ★修正: 関連記事をカンマ区切りで配列化
                 const relatedArticleInput = getVal('room-related-article');
                 const relatedArticleUrls = relatedArticleInput ? relatedArticleInput.split(',').map(s=>s.trim()).filter(s=>s) : [];
 
@@ -589,7 +639,7 @@
                     title: title,
                     desc: getVal('room-desc'),
                     guestsStr: getVal('room-guests'),
-                    relatedArticleUrls: relatedArticleUrls, // ★配列で保存
+                    relatedArticleUrls: relatedArticleUrls, 
                     privacy: getVal('room-privacy'),
                     type: getVal('room-type'),
                     tags: checkedTags,
@@ -648,7 +698,6 @@
                 currentRole = 'host';
             } else {
                 currentRole = 'listener';
-                // ★修正: 参加者情報の取得（匿名化対応）
                 const { safeName, safeIcon } = getParticipantInfo();
 
                 const partRef = doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', hostUid, 'participants', currentUser.uid);
@@ -662,7 +711,6 @@
                 }, { merge: true });
             }
 
-            // LiveKitの接続は非同期で裏で走らせ、UIは止めない
             connectLiveKit(hostUid, currentRole === 'host').catch(e => {
                 console.error("LiveKit connection handled:", e);
                 showNotification("音声サーバーに接続できませんでしたが、チャットは利用可能です。", true);
@@ -682,8 +730,11 @@
                 document.getElementById('live-header-title').textContent = data.title || '配信中';
                 document.getElementById('mini-title').textContent = data.title || '配信中';
                 document.getElementById('live-info-title').textContent = data.title || '配信中';
+                if (data.thumbUrl) {
+                    const mt = document.getElementById('mini-thumb');
+                    if(mt) mt.src = data.thumbUrl;
+                }
                 
-                // ★修正: 概要欄＋関連記事(Note等) のレンダリング処理（複数対応＆余白調整）
                 const descContainer = document.getElementById('live-info-desc');
                 descContainer.innerHTML = ''; 
                 
@@ -701,8 +752,8 @@
 
                 if (urls.length > 0) {
                     const articleDiv = document.createElement('div');
-                    articleDiv.className = "mt-5 pt-4 border-t border-[#5c4a3d]";
-                    articleDiv.innerHTML = `<h4 class="text-[10px] text-[#a09080] tracking-widest mb-3 font-bold uppercase"><i class="fa-solid fa-link mr-1"></i>関連記事</h4>`;
+                    articleDiv.className = "mt-5 pt-4 border-t border-white/10";
+                    articleDiv.innerHTML = `<h4 class="text-[10px] text-[#d4af37] tracking-widest mb-3 font-bold uppercase flex items-center gap-1.5"><i class="fa-solid fa-link"></i>関連記事</h4>`;
                     
                     const linksContainer = document.createElement('div');
                     linksContainer.className = "space-y-4";
@@ -711,12 +762,12 @@
                         const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
                         if (noteMatch && noteMatch[1]) {
                             linksContainer.innerHTML += `
-                                <iframe class="w-full max-w-full rounded-sm border border-[#5c4a3d] bg-white" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%; height: 260px;"></iframe>
+                                <iframe class="w-full max-w-full rounded-sm border border-white/10 shadow-lg bg-white" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%; height: 260px;"></iframe>
                             `;
                         } else {
                             linksContainer.innerHTML += `
-                                <a href="${url}" target="_blank" class="block p-3 bg-black/40 border border-[#5c4a3d] rounded-sm hover:border-[#d4af37] transition-colors text-xs text-[#dcd4c6] truncate shadow-sm">
-                                    <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-[#a09080]"></i>${url}
+                                <a href="${url}" target="_blank" class="block p-3.5 bg-white/5 border border-white/10 rounded-sm hover:border-[#d4af37]/50 hover:bg-white/10 transition-all text-xs text-white/90 truncate shadow-md backdrop-blur-sm">
+                                    <i class="fa-solid fa-arrow-up-right-from-square mr-2 text-[#d4af37]"></i>${url}
                                 </a>
                             `;
                         }
@@ -728,7 +779,7 @@
                 const tagsEl = document.getElementById('live-info-tags');
                 tagsEl.innerHTML = '';
                 if(data.tags && data.tags.length > 0) {
-                    tagsEl.innerHTML = data.tags.map(t => `<span class="bg-[#d4af37]/20 border border-[#d4af37]/50 text-[#d4af37] px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">${t}</span>`).join('');
+                    tagsEl.innerHTML = data.tags.map(t => `<span class="bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#f7f5f0] px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-widest backdrop-blur-sm">#${t}</span>`).join('');
                 }
             });
 
@@ -768,14 +819,16 @@
                     const c = docSnap.data();
                     const isMe = c.uid === currentUser.uid;
                     const align = isMe ? 'justify-end' : 'justify-start';
-                    const bg = isMe ? 'bg-[#3e2723] text-[#d4af37]' : 'bg-[#f7f5f0] text-[#3e2723]';
+                    
+                    const bg = isMe ? 'bg-[#d4af37]/20 border border-[#d4af37]/30 text-[#f7f5f0] backdrop-blur-md' : 'bg-white/10 border border-white/5 text-[#f7f5f0] backdrop-blur-md';
+                    const nameColor = isMe ? 'text-[#d4af37]' : 'text-white/70';
                     
                     list.innerHTML += `
-                        <div class="flex ${align} w-full mb-3">
-                            ${!isMe ? `<img src="${c.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-6 h-6 rounded-full mr-2 self-end object-cover">` : ''}
-                            <div class="max-w-[80%]">
-                                ${!isMe ? `<p class="text-[8px] text-[#a09080] mb-0.5 ml-1">${c.name}</p>` : ''}
-                                <div class="${bg} px-3 py-2 rounded-sm text-xs leading-relaxed break-words shadow-sm">${c.text}</div>
+                        <div class="flex ${align} w-full mb-4">
+                            ${!isMe ? `<img src="${c.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-7 h-7 rounded-full mr-2.5 self-end object-cover border border-white/20 shadow-sm">` : ''}
+                            <div class="max-w-[85%]">
+                                ${!isMe ? `<p class="text-[9px] ${nameColor} mb-1 ml-1 tracking-widest font-bold">${c.name}</p>` : ''}
+                                <div class="${bg} px-3.5 py-2.5 rounded-2xl ${isMe ? 'rounded-tr-sm' : 'rounded-tl-sm'} text-xs sm:text-sm leading-relaxed break-words shadow-sm font-medium tracking-wide">${c.text}</div>
                             </div>
                         </div>
                     `;
@@ -789,18 +842,18 @@
             
             const grid = document.getElementById('speakers-grid');
             grid.innerHTML = speakers.map(s => {
-                const micIcon = s.isMuted ? '<i class="fa-solid fa-microphone-slash text-red-500 absolute bottom-0 right-0 bg-black/50 rounded-full p-1 text-[8px]"></i>' : '';
-                const hostIcon = s.role === 'host' ? '<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] text-[8px] px-2 py-0.5 rounded-sm font-bold border border-[#b8860b]">HOST</div>' : '';
-                const ringClass = s.isSpeaking ? 'speaking-ripple' : ''; 
+                const micIcon = s.isMuted ? '<i class="fa-solid fa-microphone-slash text-white absolute bottom-0 right-0 bg-red-600 rounded-full p-1.5 text-[10px] border border-white/20 shadow-md"></i>' : '';
+                const hostIcon = s.role === 'host' ? '<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] text-[9px] px-2.5 py-0.5 rounded-sm font-bold border border-[#fffdf9]/50 shadow-md tracking-widest z-10">HOST</div>' : '';
+                const ringClass = s.isSpeaking ? 'speaking-ripple' : 'border-white/10'; 
                 
                 return `
-                <div class="flex flex-col items-center gap-2">
-                    <div id="speaker-${s.uid}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-[#5c4a3d] bg-black relative shadow-lg transition-all ${ringClass}">
+                <div class="flex flex-col items-center gap-2.5">
+                    <div id="speaker-${s.uid}" class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[3px] bg-black/50 relative shadow-xl transition-all duration-300 ${ringClass}">
                         ${hostIcon}
                         <img src="${s.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-full h-full rounded-full object-cover">
                         ${micIcon}
                     </div>
-                    <span class="text-xs font-bold tracking-widest text-[#dcd4c6] max-w-[100px] truncate text-center">${s.name}</span>
+                    <span class="text-[11px] sm:text-xs font-bold tracking-widest text-white/90 max-w-[100px] truncate text-center drop-shadow-md">${s.name}</span>
                 </div>
                 `;
             }).join('');
@@ -829,15 +882,16 @@
                 if(!isMicActive) startMicAnalysis();
             } else if (currentRole === 'listener') {
                 const rLevel = getRankLevel((myRank || 'arrival').toLowerCase());
-                // BUILDER(2) 以上で登壇リクエスト可能
                 if (rLevel >= 2 || isAdmin || isAdminMock) {
                     btnRaise.classList.remove('hidden');
                     if (isHandRaised) {
-                        btnRaise.innerHTML = '<i class="fa-solid fa-hand text-brand-200 mr-2"></i> リクエスト中...';
-                        btnRaise.classList.replace('bg-[#3e2723]', 'bg-[#5c4a3d]');
+                        btnRaise.innerHTML = '<i class="fa-solid fa-hand text-[#d4af37] mr-2"></i> リクエスト中...';
+                        btnRaise.classList.replace('bg-white/10', 'bg-white/20');
+                        btnRaise.classList.add('border-[#d4af37]');
                     } else {
-                        btnRaise.innerHTML = '<i class="fa-solid fa-hand mr-2"></i> 登壇をリクエスト';
-                        btnRaise.classList.replace('bg-[#5c4a3d]', 'bg-[#3e2723]');
+                        btnRaise.innerHTML = '<i class="fa-solid fa-hand mr-2 text-white/70 group-hover:text-[#d4af37] transition-colors"></i> 登壇をリクエスト';
+                        btnRaise.classList.replace('bg-white/20', 'bg-white/10');
+                        btnRaise.classList.remove('border-[#d4af37]');
                     }
                 }
                 tabListeners.classList.add('hidden');
@@ -851,17 +905,17 @@
             list.innerHTML = listeners.map(l => {
                 if (l.handRaised) reqCount++;
                 const reqBtn = l.handRaised 
-                    ? `<button onclick="approveSpeaker('${l.uid}')" class="bg-[#d4af37] text-[#2a1a17] text-[9px] font-bold px-2 py-1 rounded-sm shadow-sm hover:bg-[#b8860b] transition-colors">承認</button>` 
+                    ? `<button onclick="approveSpeaker('${l.uid}')" class="bg-[#d4af37] text-[#2a1a17] text-[10px] font-bold px-2.5 py-1 rounded-sm shadow-md hover:bg-[#b8860b] transition-colors border border-white/20">承認</button>` 
                     : '';
                 return `
-                <div class="flex items-center justify-between p-2 hover:bg-black/20 rounded-sm transition-colors group border-b border-[#5c4a3d]/50 last:border-0">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <img src="${l.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-6 h-6 rounded-full object-cover border border-[#5c4a3d]">
-                        <span class="text-xs text-[#dcd4c6] truncate">${l.name}</span>
+                <div class="flex items-center justify-between p-2.5 hover:bg-white/10 rounded-sm transition-colors group border-b border-white/5 last:border-0">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <img src="${l.icon || DEFAULT_ICON}" onerror="this.src='${DEFAULT_ICON}'" class="w-7 h-7 rounded-full object-cover border border-white/20 shadow-sm">
+                        <span class="text-xs text-white/90 truncate tracking-wide font-medium">${l.name}</span>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div class="flex items-center gap-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         ${reqBtn}
-                        <button onclick="kickUser('${l.uid}')" class="text-red-500 hover:text-red-400" title="退出させる"><i class="fa-solid fa-ban text-xs"></i></button>
+                        <button onclick="kickUser('${l.uid}')" class="text-red-400 hover:text-red-500 w-6 h-6 flex items-center justify-center rounded-full hover:bg-red-500/20 transition-colors" title="退出させる"><i class="fa-solid fa-ban text-[10px]"></i></button>
                     </div>
                 </div>
                 `;
@@ -888,12 +942,12 @@
                 if(!btn || !area) return;
                 
                 if (t === tab) {
-                    btn.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors relative';
+                    btn.className = 'flex-1 p-3.5 text-xs font-bold tracking-widest border-b-2 border-[#d4af37] text-[#d4af37] transition-colors drop-shadow-sm';
                     area.classList.remove('hidden');
                 } else {
                     let hideClass = '';
                     if (t === 'listeners' && currentRole !== 'host') hideClass = ' hidden';
-                    btn.className = 'flex-1 p-3 text-xs font-bold tracking-widest border-b-2 border-transparent text-[#a09080] hover:text-[#dcd4c6] transition-colors relative' + hideClass;
+                    btn.className = 'flex-1 p-3.5 text-xs font-bold tracking-widest border-b-2 border-transparent text-white/50 hover:text-white/90 transition-colors relative' + hideClass;
                     area.classList.add('hidden');
                 }
             });
@@ -906,7 +960,6 @@
             const text = input.value.trim();
             if(!text || !currentRoomId) return;
             
-            // ★修正: コメント送信者情報の取得（匿名化対応）
             const { safeName, safeIcon } = getParticipantInfo();
 
             if(!isAdminMock) {
@@ -918,7 +971,7 @@
                     timestamp: serverTimestamp()
                 });
             } else {
-                document.getElementById('live-comments-list').innerHTML += `<div class="flex justify-end w-full mb-3"><div class="bg-[#3e2723] text-[#d4af37] px-3 py-2 rounded-sm text-xs shadow-sm">テスト: ${text}</div></div>`;
+                document.getElementById('live-comments-list').innerHTML += `<div class="flex justify-end w-full mb-4"><div class="bg-[#d4af37]/20 border border-[#d4af37]/30 text-[#f7f5f0] backdrop-blur-md px-3.5 py-2.5 rounded-2xl rounded-tr-sm text-xs sm:text-sm shadow-sm font-medium tracking-wide">テスト: ${text}</div></div>`;
             }
             input.value = '';
         };
@@ -962,6 +1015,7 @@
 
         window.toggleMic = async () => {
             const icon = document.getElementById('icon-mic');
+            const btn = document.getElementById('btn-mic');
             const isMuted = icon.classList.contains('fa-microphone-slash'); 
             
             if (livekitRoom && livekitRoom.localParticipant) {
@@ -969,12 +1023,12 @@
             }
 
             if (!isMuted) {
-                icon.className = 'fa-solid fa-microphone-slash text-red-900';
-                document.getElementById('btn-mic').classList.replace('bg-[#d4af37]', 'bg-[#5c4a3d]');
+                icon.className = 'fa-solid fa-microphone-slash text-white relative z-10';
+                btn.className = 'w-16 h-16 rounded-full bg-red-600/80 backdrop-blur-md text-white flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:scale-105 transition-transform border border-red-400 relative group';
                 if(!isAdminMock) updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: true, isSpeaking: false });
             } else {
-                icon.className = 'fa-solid fa-microphone text-[#1a110f]';
-                document.getElementById('btn-mic').classList.replace('bg-[#5c4a3d]', 'bg-[#d4af37]');
+                icon.className = 'fa-solid fa-microphone relative z-10';
+                btn.className = 'w-16 h-16 rounded-full bg-gradient-to-br from-[#d4af37] to-[#b8860b] text-[#1a110f] flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition-transform border border-[#f7f5f0]/30 relative group';
                 if(!isAdminMock) updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'live_rooms', currentRoomId, 'participants', currentUser.uid), { isMuted: false });
             }
         };
@@ -983,20 +1037,23 @@
             const modal = document.getElementById('live-cast-modal');
             const fullUi = document.getElementById('live-full-ui');
             const miniUi = document.getElementById('live-mini-ui');
+            const bgDeco = modal.querySelector('.pointer-events-none.z-0');
             
             isMiniPlayer = !isMiniPlayer;
             
             if (isMiniPlayer) {
-                modal.classList.remove('inset-0');
-                modal.classList.add('bottom-[5rem]', 'right-4', 'w-[calc(100%-2rem)]', 'sm:w-80', 'h-[72px]', 'rounded-md', 'shadow-2xl');
+                modal.classList.remove('inset-0', 'bg-[#1a110f]');
+                modal.classList.add('bottom-[5rem]', 'right-4', 'w-[calc(100%-2rem)]', 'sm:w-[360px]', 'h-[76px]', 'bg-transparent');
                 fullUi.classList.add('hidden');
                 fullUi.classList.remove('flex');
+                if(bgDeco) bgDeco.classList.add('hidden');
                 miniUi.classList.remove('hidden');
                 document.body.style.overflow = ''; 
             } else {
-                modal.classList.add('inset-0');
-                modal.classList.remove('bottom-[5rem]', 'right-4', 'w-[calc(100%-2rem)]', 'sm:w-80', 'h-[72px]', 'rounded-md', 'shadow-2xl');
+                modal.classList.add('inset-0', 'bg-[#1a110f]');
+                modal.classList.remove('bottom-[5rem]', 'right-4', 'w-[calc(100%-2rem)]', 'sm:w-[360px]', 'h-[76px]', 'bg-transparent');
                 miniUi.classList.add('hidden');
+                if(bgDeco) bgDeco.classList.remove('hidden');
                 fullUi.classList.remove('hidden');
                 fullUi.classList.add('flex');
                 document.body.style.overflow = 'hidden'; 
@@ -1031,8 +1088,13 @@
                     const isTalkingNow = avg > 15 && !isMuted;
                     
                     if(mySpeakerEl) {
-                        if(isTalkingNow) mySpeakerEl.classList.add('speaking-ripple');
-                        else mySpeakerEl.classList.remove('speaking-ripple');
+                        if(isTalkingNow) {
+                            mySpeakerEl.classList.add('speaking-ripple');
+                            mySpeakerEl.classList.remove('border-white/10');
+                        } else {
+                            mySpeakerEl.classList.remove('speaking-ripple');
+                            mySpeakerEl.classList.add('border-white/10');
+                        }
                     }
 
                     const now = Date.now();
@@ -1059,7 +1121,7 @@
         }
 
         window.leaveLiveRoom = async () => {
-            if (isLeaving) return; // 二重アラート防止
+            if (isLeaving) return; 
             
             if (!currentRoomId || !currentUser) {
                 window.location.href = 'home.html';
@@ -1109,7 +1171,7 @@
                                 thumbnailUrl: roomData.thumbUrl || null,
                                 title: roomData.title,
                                 description: roomData.desc || 'この配信は SIGNAL CAST（ライブ配信） のアーカイブです。',
-                                relatedArticleUrls: roomData.relatedArticleUrls || [], // ★アーカイブに配列ごと引き継ぎ
+                                relatedArticleUrls: roomData.relatedArticleUrls || [],
                                 guests: roomData.guestsStr ? roomData.guestsStr.split(',').map(s=>s.trim()).filter(s=>s) : [],
                                 tags: roomData.tags || [],
                                 allowComments: true, 
@@ -1125,7 +1187,6 @@
                         }
                     }
 
-                    // ルームを完全に削除
                     await deleteDoc(roomRef);
                 } catch(e){ console.error(e); }
             } else {
@@ -1147,11 +1208,9 @@
             currentRole = 'none';
             isLeaving = false; 
             
-            // ★修正: 戻る画面をHOME固定から、履歴に基づく元の画面へ変更
             if (window.history.length > 1 && document.referrer.includes(window.location.host)) {
                 window.history.back();
             } else if (targetRoomId) {
-                // 直接URLで来た場合などは、配信者のプロフィールへ
                 window.location.href = `user_contents.html?uid=${targetRoomId}`;
             } else {
                 window.location.href = 'home.html';
