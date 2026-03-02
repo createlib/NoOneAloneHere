@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE PERSONAL BLUEPRINT | No.50 癸丑 - 玄盤</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Serif+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* カラーパレット：癸（水）と丑（冬の土）を表現する深海色とシャンパンゴールド */
+        :root {
+            --bg-color: #060913; /* 深海・ミッドナイトブルー */
+            --surface-color: rgba(13, 19, 38, 0.6);
+            --text-main: #E2E8F0;
+            --text-muted: #8BA2BC;
+            --accent-gold: #C5A880; /* 鉱脈・王冠のゴールド */
+            --accent-blue: #3B82F6; /* 清冽な水脈 */
+            --border-light: rgba(197, 168, 128, 0.2);
+            
+            --font-serif: 'Noto Serif JP', serif;
+            --font-sans: 'Zen Kaku Gothic New', sans-serif;
+            --font-eng: 'Cinzel', serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top center, #111A35 0%, #060913 100%);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            line-height: 2.0;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            letter-spacing: 0.05em;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 60px 20px 100px;
+        }
+
+        /* アニメーション用クラス */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1), transform 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* セクション共通 */
+        section {
+            margin-bottom: 100px;
+        }
+
+        h1, h2, h3, h4, .serif {
+            font-family: var(--font-serif);
+            font-weight: 500;
+        }
+
+        .chapter-heading {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        .chapter-eng {
+            font-family: var(--font-eng);
+            color: var(--accent-gold);
+            font-size: 1rem;
+            letter-spacing: 0.3em;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .chapter-jp {
+            font-size: 1.8rem;
+            color: #fff;
+            margin: 0;
+            display: inline-block;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 15px;
+        }
+
+        /* 第1章: THE CORE */
+        .core-section {
+            text-align: center;
+            padding-top: 40px;
+            padding-bottom: 60px;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 80px;
+        }
+        .badge {
+            display: inline-block;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 8px 24px;
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            border-radius: 30px;
+            margin-bottom: 30px;
+        }
+        .ruby {
+            font-family: var(--font-eng);
+            color: var(--accent-blue);
+            letter-spacing: 0.6em;
+            font-size: 1.1rem;
+            margin-bottom: -15px;
+        }
+        .title-kanji {
+            font-size: 6.5rem;
+            color: #ffffff;
+            letter-spacing: 0.15em;
+            margin: 20px 0;
+            text-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #8BA2BC 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .catchcopy {
+            font-size: 1.6rem;
+            color: var(--text-main);
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+        .keywords {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .kw-tag {
+            background: rgba(197, 168, 128, 0.05);
+            border: 1px solid rgba(197, 168, 128, 0.3);
+            color: var(--accent-gold);
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* 第2章: THE ORIGIN */
+        .metaphor-box {
+            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+            border-left: 3px solid var(--accent-blue);
+            padding: 40px;
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        .metaphor-text {
+            font-size: 1.3rem;
+            font-style: italic;
+            color: #fff;
+            line-height: 2;
+        }
+        .body-text {
+            font-size: 1.1rem;
+            color: #C9D1D9;
+            text-align: justify;
+            margin-bottom: 30px;
+            line-height: 2.2;
+        }
+        .body-text p {
+            margin-bottom: 1.8em;
+        }
+        .highlight-text {
+            color: var(--accent-gold);
+            font-weight: 500;
+        }
+
+        /* 構造解析インフォグラフィック */
+        .structure-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 60px 0;
+            padding: 50px 20px;
+            background: var(--surface-color);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .node {
+            text-align: center;
+            width: 140px;
+        }
+        .node-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin: 0 auto 15px;
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+        }
+        .node-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        .arrow {
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            opacity: 0.6;
+        }
+
+        /* 第3章: THE PARAMETER */
+        .chart-wrapper {
+            max-width: 600px;
+            margin: 0 auto 60px;
+            position: relative;
+        }
+        .shadow-box {
+            background: linear-gradient(135deg, var(--surface-color) 0%, rgba(0,0,0,0) 100%);
+            border: 1px solid var(--border-light);
+            padding: 50px;
+            border-radius: 8px;
+        }
+        .shadow-box h3 {
+            color: var(--accent-gold);
+            font-size: 1.5rem;
+            margin-top: 0;
+            border-bottom: 1px dashed var(--border-light);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* 第4章: THE STRATEGY */
+        .matrix-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        @media (max-width: 768px) {
+            .matrix-container { grid-template-columns: 1fr; }
+            .structure-diagram { flex-direction: column; }
+            .arrow { transform: rotate(90deg); margin: 10px 0; }
+        }
+        .matrix-card {
+            padding: 40px 30px;
+            border-radius: 12px;
+            background: var(--surface-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .card-good { border-top: 4px solid #10B981; } /* 覚醒：グリーン */
+        .card-bad { border-top: 4px solid #EF4444; } /* 枯渇：レッド */
+        .matrix-title {
+            font-size: 1.4rem;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .card-good .matrix-title { color: #10B981; }
+        .card-bad .matrix-title { color: #EF4444; }
+        .matrix-list {
+            padding-left: 20px;
+            margin: 0;
+            color: #E2E8F0;
+        }
+        .matrix-list li { margin-bottom: 15px; line-height: 1.7; }
+
+        /* 第5章: THE MESSAGE */
+        .message-box {
+            text-align: center;
+            padding: 80px 50px;
+            background: radial-gradient(circle at center, rgba(59, 130, 246, 0.1) 0%, transparent 80%);
+            border-top: 1px solid var(--accent-blue);
+            border-bottom: 1px solid var(--accent-blue);
+        }
+        .message-body {
+            font-size: 1.3rem;
+            line-height: 2.4;
+            color: #fff;
+        }
+        .signature {
+            margin-top: 60px;
+            font-family: var(--font-eng);
+            color: var(--accent-gold);
+            letter-spacing: 0.2em;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <section class="core-section fade-in">
+            <div class="badge">Destiny Blueprint | No.50 癸丑（みずのとうし）</div>
+            <div class="ruby">GENBAN</div>
+            <h1 class="title-kanji serif">玄盤</h1>
+            <div class="catchcopy serif">静水深流で基盤を支える蓄積型構築者</div>
+            <div class="keywords">
+                <span class="kw-tag">#蓄積</span>
+                <span class="kw-tag">#基盤整備</span>
+                <span class="kw-tag">#長期計画</span>
+                <span class="kw-tag">#裏方統括</span>
+            </div>
+        </section>
+
+        <section class="fade-in">
+            <div class="chapter-heading">
+                <span class="chapter-eng">CHAPTER I : THE ORIGIN</span>
+                <h2 class="chapter-jp serif">魂のメカニズムと情景</h2>
+            </div>
+
+            <div class="metaphor-box">
+                <div class="metaphor-text serif">
+                    「凍てつく冬の大地。<br>表層は雪と氷に閉ざされ、一切の生命活動が止まっているかのように見える。<br>しかし、その分厚く強固な泥土のさらに奥深くでは、<br>長い年月をかけて濾過された『清らかで巨大な地下水脈』が、<br>轟音を立てて脈々と流れている。」
+                </div>
+            </div>
+
+            <div class="body-text">
+                <p>なぜあなたの魂に「玄盤（深く暗い絶対的な土台）」という名が冠されたのか。<br>それはあなたが、一過性の流行や、軽薄なスポットライトが当たる表層の世界には一切の興味を持たず、<span class="highlight-text">「何十年先も決して崩壊しない社会や組織のインフラ」</span>を、誰にも見えない地下深くで設計し、構築していく使命を帯びているからです。</p>
+
+                <p>算命学・四柱推命の五行力学において、あなたの命式は<strong>「土剋水（どこくすい＝土が水を濁らせ、塞き止める）」</strong>という、一見すると過酷な抑圧構造を持っています。浅薄な占い師はこれを「環境のプレッシャーに潰されやすい」「身動きが取れない苦労人」とネガティブに解釈するでしょう。しかし、宇宙一の専門家として断言します。それは全くの誤読です。</p>
+
+                <p>あなたの持つ「丑（冬の土）」の中には、単なる泥だけでなく、豊かな養分（己）と、鋭利な知性の濾過器である宝石（辛）、そしてあなた自身と同じ水（癸）が内包されています。あなたは外からの強烈な重圧や不条理（土）を真っ向から受け止め、それを内なる知性のフィルター（辛）に通すことで不純物を極限まで削ぎ落とし、純度100%の真理とエネルギー（水）として蓄積していく<span class="highlight-text">「究極の自己濾過システム」</span>を持っているのです。</p>
+            </div>
+
+            <div class="structure-diagram">
+                <div class="node">
+                    <div class="node-circle serif" style="border-color: #C5A880;">己</div>
+                    <div class="node-desc">重厚な冬の泥土<br>(現実の重圧・枠組み)</div>
+                </div>
+                <div class="arrow">▶︎</div>
+                <div class="node">
+                    <div class="node-circle serif" style="border-color: #E2E8F0;">辛</div>
+                    <div class="node-desc">知性と美学の濾過器<br>(不純物の排除・純化)</div>
+                </div>
+                <div class="arrow">▶︎</div>
+                <div class="node">
+                    <div class="node-circle serif" style="border-color: var(--accent-blue); color: var(--accent-blue); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);">癸</div>
+                    <div class="node-desc">深淵なる地下水<br>(極限まで蓄積された力)</div>
+                </div>
+            </div>
+
+            <div class="body-text">
+                <p>さらに特筆すべきは、あなたに宿るエネルギー値が、女王や壮年期の野心・プライドを象徴する<strong>「冠帯（かんたい）」</strong>であることです。<br>つまり、あなたの水は土に負けて枯渇しているのではありません。強固なダムの中で、<span class="highlight-text">岩をも砕くほどの凄まじい水圧（ポテンシャル）を限界まで溜め込んでいる</span>状態なのです。あなたが表舞台の派手なパフォーマンスを好まないのは、臆病だからではなく、裏から全体をコントロールし「生殺与奪の権を握る」フィクサーとしての矜持があるからです。</p>
+            </div>
+        </section>
+
+        <section class="fade-in">
+            <div class="chapter-heading">
+                <span class="chapter-eng">CHAPTER II : THE PARAMETER</span>
+                <h2 class="chapter-jp serif">才能の五次元解析とシャドウサイド</h2>
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="radarChart"></canvas>
+            </div>
+
+            <div class="shadow-box">
+                <h3 class="serif">最大の武器と、その「美しき偏り」</h3>
+                <div class="body-text" style="margin-bottom:0;">
+                    <p>データが明確に示している通り、あなたの才能は<strong>「構築・管理力」</strong>と<strong>「知略・分析力」</strong>に極端に振り切れています。他人が匙を投げるような気の遠くなる長期計画や、複雑に絡み合った状況の整理を、あなたは感情を交えず、狂いのない精度で完遂します。時間をかければかけるほど、あなたの作り出す盤面は完璧になります。</p>
+                    <p>一方で、「表現・発信力」や瞬間的な「推進・突破力」は意図的に低く出ています。アイデアを即座に形にして派手にアピールする人々を見て、「自分は動きが遅いのではないか」「地味で評価されにくいのではないか」と焦燥感を抱くこともあるでしょう。</p>
+                    <p>しかし、今日からその自己否定は完全に捨ててください。<span class="highlight-text">「軽薄に動かないこと、安易に喋らないこと」こそが、あなたの最大の武器なのです。</span><br>あなたは前線で刀を振り回す兵士ではなく、戦局全体を盤石にする「大本営の参謀」です。自己アピールにエネルギーを浪費しないからこそ、実務とインフラ構築の極致に到達できるのです。あなたの沈黙は無知ではなく、深い思考と計算の証です。</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="fade-in">
+            <div class="chapter-heading">
+                <span class="chapter-eng">CHAPTER III : THE STRATEGY</span>
+                <h2 class="chapter-jp serif">現実世界での適正環境マトリクス</h2>
+            </div>
+
+            <div class="body-text" style="text-align: center; margin-bottom: 40px;">
+                <p><strong>◆ 対人関係・リーダーシップの絶対法則 ◆</strong><br>
+                あなたは「俺についてこい」と熱弁を振るうチアリーダーではありません。<br>あなたに必要なのは、徹底的に隙のないシステムを作り上げることです。「私が基盤を作っておいたから、あとはこの上で好きに動きなさい」という<strong>環境支配型のリーダーシップ</strong>が、最も優秀な人材をあなたの元へ惹きつけます。</p>
+            </div>
+
+            <div class="matrix-container">
+                <div class="matrix-card card-good">
+                    <h3 class="matrix-title serif">⭕️ 魂が覚醒する絶対領域</h3>
+                    <ul class="matrix-list">
+                        <li>数年〜数十年単位の「長期的なビジョンと蓄積」が求められるプロジェクト。</li>
+                        <li>誰もやりたがらないが、組織にとって「絶対に崩れてはならない」基盤整備や根幹の制度設計。</li>
+                        <li>表のカリスマリーダー（象徴）を立てつつ、裏で全ての実権と予算、決定権を静かに握る「ナンバー2」のポジション。</li>
+                        <li>高度な専門知識とデータの蓄積が、そのまま権力に直結する知的で静かな職域。</li>
+                    </ul>
+                </div>
+                <div class="matrix-card card-bad">
+                    <h3 class="matrix-title serif">❌ 魂が枯渇する禁忌</h3>
+                    <ul class="matrix-list">
+                        <li>「とりあえず今すぐやって」といった、行き当たりばったりで即効性のみを求められるアジャイル型の現場。</li>
+                        <li>中身や実態のない「過剰な自己アピール」や「SNSでのバズ」ばかりが評価される軽薄な組織。</li>
+                        <li>頻繁にトップの気分でルールや方針が覆り、あなたが緻密に蓄積したデータが無意味にリセットされる環境。</li>
+                        <li>あなた自身が表舞台に立たされ、感情論で大衆を煽ることを強要される役割。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="fade-in" style="margin-bottom: 0;">
+            <div class="chapter-heading">
+                <span class="chapter-eng">CHAPTER IV : THE MESSAGE</span>
+                <h2 class="chapter-jp serif">専門家からの最終宣告</h2>
+            </div>
+
+            <div class="message-box">
+                <div class="message-body serif">
+                    「静かであることは、決して弱いということではない。」<br><br>
+                    世の中は常に、声の大きい者や動きの速い者を評価しがちです。<br>
+                    社会のスピードが異常に加速する現代において、<br>
+                    時間をかけて「本物」を構築しようとするあなたの歩みは、<br>
+                    時にひどく孤独に感じられることでしょう。<br><br>
+                    しかし、忘れないでください。<br>
+                    ハリボテの城は、嵐が来れば一瞬で崩れ去ります。<br>
+                    そのとき、吹き荒れる風の中で人々が最後にすがりつくのは、<br>
+                    あなたが静かに、しかし執念深く築き上げてきた「揺るぎない基盤」なのです。<br><br>
+                    あなたの人生は「大器晩成」であり、<br>
+                    時を重ね、蓄積するごとに圧倒的な価値と権力を帯びていきます。<br>
+                    焦る必要はありません。他人の軽薄なペースに巻き込まれる必要もありません。<br><br>
+                    あなたのその深き水脈が、やがて枯れ果てた荒野を潤し、<br>
+                    世界に新たな秩序をもたらす日を、宇宙は静かに待っています。<br>
+                    誇り高く、自分の思考の重さを信じ抜き、<br>
+                    あなただけの「盤石なる帝国」を築き上げてください。
+                </div>
+                <div class="signature">
+                    THE ULTIMATE DESTINY PROFILER
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // 1. スクロールに合わせたフェードインアニメーション
+        document.addEventListener("DOMContentLoaded", () => {
+            const faders = document.querySelectorAll('.fade-in');
+            const appearOptions = {
+                threshold: 0.15,
+                rootMargin: "0px 0px -50px 0px"
+            };
+            const appearOnScroll = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                });
+            }, appearOptions);
+
+            faders.forEach(fader => {
+                appearOnScroll.observe(fader);
+            });
+
+            // 2. Chart.js レーダーチャートの描画
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            Chart.defaults.color = '#8BA2BC';
+            Chart.defaults.font.family = "'Zen Kaku Gothic New', sans-serif";
+
+            new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: [
+                        '推進・突破力', 
+                        '表現・発信力', 
+                        '構築・管理力', 
+                        '知略・分析力', 
+                        '共感・調和力'
+                    ],
+                    datasets: [{
+                        label: '才能パラメータ',
+                        data: [30, 15, 100, 90, 65], // 癸丑(玄盤)の特性に合わせた偏り
+                        backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                        borderColor: '#C5A880',
+                        pointBackgroundColor: '#C5A880',
+                        pointBorderColor: '#060913',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#C5A880',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.05)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: {
+                                font: { size: 14, weight: '500' },
+                                color: '#E2E8F0'
+                            },
+                            ticks: {
+                                display: false, // メモリ数値を隠して神秘的に
+                                min: 0,
+                                max: 100,
+                                stepSize: 20
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 19, 38, 0.95)',
+                            titleFont: { size: 14, family: "'Noto Serif JP', serif" },
+                            bodyFont: { size: 13 },
+                            borderColor: '#C5A880',
+                            borderWidth: 1,
+                            padding: 15,
+                            callbacks: {
+                                label: function(context) {
+                                    // いびつなグラフを全肯定するプロファイリングメッセージをツールチップに仕込む
+                                    let msg = "";
+                                    switch(context.label) {
+                                        case '構築・管理力': msg = " [MAX 100] 誰も真似できない絶対的基盤構築"; break;
+                                        case '知略・分析力': msg = " [EXCELLENT 90] 長期を見通す深い洞察と濾過力"; break;
+                                        case '表現・発信力': msg = " [LOW 15] 語らずとも結果で証明する。他者に任せてOK。"; break;
+                                        case '推進・突破力': msg = " [30] 内側に秘めた静かなる冠帯の圧力"; break;
+                                        case '共感・調和力': msg = " [65] 必要な縁だけを静かに守り抜く力"; break;
+                                    }
+                                    return msg;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2500,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
