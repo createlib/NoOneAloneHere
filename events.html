@@ -49,7 +49,7 @@
             font-family: 'Noto Serif JP', serif;
             background-color: #f7f5f0; 
             color: #4a3b32;
-            overflow: hidden;
+            overflow: hidden; /* 全体を固定してスクロールは内部で行う */
         }
         
         .bg-texture {
@@ -159,7 +159,6 @@
                     <a href="events.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
                     <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
                     
-                    <!-- ★修正: シアターをメディアのドロップダウンに変更 -->
                     <div class="relative group h-full flex items-center">
                         <button class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
                             <i class="fa-solid fa-photo-film"></i> メディア
@@ -174,7 +173,6 @@
                         </div>
                     </div>
 
-                    <!-- ★修正: auth-required を削除して常時表示 -->
                     <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
@@ -285,7 +283,7 @@
 
     </div>
 
-    <!-- Create FAB & Menu (常に表示するよう修正) -->
+    <!-- Create FAB & Menu -->
     <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
             <button onclick="openCreateModal('event')" class="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest border-b border-brand-100 flex items-center justify-between">
@@ -445,7 +443,7 @@
             </div>
             
             <div class="p-5 overflow-y-auto flex-1 space-y-6">
-                <!-- ★追加: 管理者専用 代理投稿セクション -->
+                <!-- 管理者専用 代理投稿セクション -->
                 <div id="admin-override-section-event" class="hidden bg-red-50 p-4 rounded-sm border border-red-200 shadow-inner">
                     <h4 class="text-xs font-bold text-red-600 mb-2 tracking-widest"><i class="fa-solid fa-crown mr-1"></i>【管理者専用】代理投稿</h4>
                     <p class="text-[10px] text-red-500 mb-2">他のユーザーとして投稿・編集する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br>※空欄の場合は元の主催者（新規の場合はあなた自身）になります。</p>
@@ -454,13 +452,15 @@
 
                 <!-- Thumbnail -->
                 <div>
-                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">サムネイル画像</label>
-                    <div class="relative w-full h-40 bg-brand-50 rounded-sm border border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group">
-                        <input type="file" id="event-image" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                        <img id="event-image-preview" class="absolute inset-0 w-full h-full object-cover hidden">
-                        <div class="group-hover:scale-110 transition-transform flex flex-col items-center">
-                            <i class="fa-solid fa-image text-2xl mb-1"></i>
-                            <span class="text-xs tracking-widest">画像をアップロード</span>
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">イベント画像 (最大5枚) <span class="text-brand-400 text-[10px] font-normal ml-1">1枚目が一覧のサムネイルになります</span></label>
+                    <div id="event-image-previews" class="flex flex-wrap gap-2 mb-2 empty:hidden">
+                        <!-- JSでプレビューが挿入されます -->
+                    </div>
+                    <div id="event-image-add-btn" class="relative w-full h-16 bg-brand-50 rounded-sm border border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner">
+                        <input type="file" id="event-image-upload" accept="image/*" multiple class="absolute inset-0 opacity-0 cursor-pointer z-10" onclick="this.value = null" onchange="handleEventImageSelect(event)">
+                        <div class="group-hover:scale-105 transition-transform flex items-center gap-2">
+                            <i class="fa-solid fa-images text-xl"></i>
+                            <span class="text-[10px] tracking-widest font-bold">画像を選択して追加</span>
                         </div>
                     </div>
                 </div>
@@ -580,7 +580,7 @@
             <div class="p-5 overflow-y-auto flex-1 space-y-4" id="job-form-container">
                 <p class="text-xs text-brand-600 font-bold tracking-widest mb-2"><i class="fa-solid fa-circle-info mr-1"></i> 情報を詳細に記載するとマッチング率が上がります</p>
                 
-                <!-- ★追加: 管理者専用 代理投稿セクション -->
+                <!-- 管理者専用 代理投稿セクション -->
                 <div id="admin-override-section-job" class="hidden bg-red-50 p-4 rounded-sm border border-red-200 shadow-inner">
                     <h4 class="text-xs font-bold text-red-600 mb-2 tracking-widest"><i class="fa-solid fa-crown mr-1"></i>【管理者専用】代理投稿</h4>
                     <p class="text-[10px] text-red-500 mb-2">他のユーザーとして投稿・編集する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br>※空欄の場合は元の主催者（新規の場合はあなた自身）になります。</p>
@@ -776,7 +776,6 @@
                 <i class="fa-solid fa-photo-film text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">メディア</span>
             </a>
-            <!-- ★修正: auth-required を削除して常時表示 -->
             <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マイページ</span>
@@ -819,7 +818,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        // ★修正: query と where をインポートに追加
         import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
@@ -866,7 +864,11 @@
         
         let redIcon, blueIcon;
 
-        // ★修正: スマホ用メディアメニュー開閉関数をここに追加
+        // ★修正: 複数画像管理用の配列 (プレビューURLを安全に保持)
+        let currentEventImageUrls = [];
+        let currentEventImageFiles = []; // 構造を { file: File, preview: String } に変更
+
+        // SP Menu Toggle ---
         window.toggleTheaterMenu = () => {
             const menu = document.getElementById('sp-theater-menu');
             const content = document.getElementById('sp-theater-menu-content');
@@ -934,23 +936,10 @@
                 });
             }
             
-            const eventImageInput = document.getElementById('event-image');
-            if(eventImageInput) {
-                eventImageInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                            const img = document.getElementById('event-image-preview');
-                            if(img){
-                                img.src = ev.target.result;
-                                img.classList.remove('hidden');
-                            }
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
+            // 画面の初期ロード完了時にマップの再描画を強制する
+            setTimeout(() => {
+                switchView('map');
+            }, 300);
         });
 
         onAuthStateChanged(auth, async (user) => {
@@ -1067,7 +1056,9 @@
             const viewEl = document.getElementById(`view-${viewName}`);
             if(viewEl) viewEl.classList.remove('hidden');
 
-            if (viewName === 'map' && map) setTimeout(() => map.invalidateSize(), 100);
+            if (viewName === 'map' && map) {
+                setTimeout(() => map.invalidateSize(), 100);
+            }
             
             const placeholderText = viewName === 'list-jobs' ? "仕事や依頼を検索..." : "イベントや仕事を検索...";
             const pcSearch = document.getElementById('pc-map-search');
@@ -1275,6 +1266,9 @@
             }
 
             initLeafletIcons();
+            
+            // すでに初期化されている場合はスキップ
+            if (map != undefined) return;
 
             map = L.map('map', { zoomControl: false }).setView([35.6895, 139.6917], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1543,12 +1537,11 @@
                 const modal = document.getElementById('event-modal');
                 if(modal) modal.classList.remove('hidden');
                 
-                // ★追加: 管理者用フィールドの表示制御
                 if (isAdmin) {
                     const overrideSec = document.getElementById('admin-override-section-event');
                     if (overrideSec) overrideSec.classList.remove('hidden');
                 }
-                setVal('event-override-userid', ''); // フィールドを初期化
+                setVal('event-override-userid', '');
 
                 editingEventId = existingData ? existingData.id : null;
                 const titleEl = document.getElementById('event-modal-title');
@@ -1592,17 +1585,17 @@
                     const locRes = document.getElementById('location-results');
                     if(locRes) locRes.classList.add('hidden');
                     
-                    setVal('event-image', "");
-                    const imgPrev = document.getElementById('event-image-preview');
-                    if(imgPrev) {
-                        if (existingData?.thumbnailUrl) {
-                            imgPrev.src = existingData.thumbnailUrl;
-                            imgPrev.classList.remove('hidden');
-                        } else {
-                            imgPrev.src = "";
-                            imgPrev.classList.add('hidden');
-                        }
+                    if (existingData?.imageUrls && Array.isArray(existingData.imageUrls)) {
+                        currentEventImageUrls = [...existingData.imageUrls];
+                    } else if (existingData?.thumbnailUrl) {
+                        currentEventImageUrls = [existingData.thumbnailUrl]; 
+                    } else {
+                        currentEventImageUrls = [];
                     }
+                    
+                    currentEventImageFiles.forEach(item => URL.revokeObjectURL(item.preview));
+                    currentEventImageFiles = [];
+                    renderEventImagePreviews();
 
                     if (tempMarker && map) map.removeLayer(tempMarker);
                     if (selectedCoordsEvent && typeof L !== 'undefined' && map) {
@@ -1623,7 +1616,6 @@
                 const cont = document.getElementById('job-form-container');
                 if(cont) cont.scrollTop = 0;
 
-                // ★追加: 管理者用フィールドの表示制御
                 if (isAdmin) {
                     const overrideSec = document.getElementById('admin-override-section-job');
                     if (overrideSec) overrideSec.classList.remove('hidden');
@@ -1672,6 +1664,13 @@
         window.closeCreateModal = (type) => {
             const modal = document.getElementById(`${type}-modal`);
             if(modal) modal.classList.add('hidden');
+            
+            if (type === 'event') {
+                currentEventImageFiles.forEach(item => URL.revokeObjectURL(item.preview));
+                currentEventImageFiles = [];
+                currentEventImageUrls = [];
+                renderEventImagePreviews();
+            }
         };
 
         // ==========================================
@@ -1829,6 +1828,74 @@
             }
         }
 
+        // ★修正: onClick で value を null にして同じファイルを連続で選択可能にする
+        window.handleEventImageSelect = (e) => {
+            const files = Array.from(e.target.files);
+            if(files.length === 0) return;
+
+            const totalCount = currentEventImageUrls.length + currentEventImageFiles.length + files.length;
+            
+            if (totalCount > 5) {
+                alert('画像は最大5枚までです。');
+                return;
+            }
+            
+            files.forEach(file => {
+                const preview = URL.createObjectURL(file);
+                currentEventImageFiles.push({ file: file, preview: preview });
+            });
+            
+            renderEventImagePreviews();
+        };
+
+        window.renderEventImagePreviews = () => {
+            const container = document.getElementById('event-image-previews');
+            const addBtn = document.getElementById('event-image-add-btn');
+            if (!container || !addBtn) return;
+            
+            let html = '';
+            
+            // 既存URL
+            currentEventImageUrls.forEach((url, idx) => {
+                html += `
+                    <div class="relative w-20 h-20 rounded-sm border border-brand-200 overflow-hidden shadow-sm shrink-0">
+                        <img src="${url}" class="w-full h-full object-cover">
+                        <button type="button" onclick="removeEventImageUrl(${idx})" class="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors z-10"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                    </div>
+                `;
+            });
+            
+            // 新規ファイル
+            currentEventImageFiles.forEach((item, idx) => {
+                html += `
+                    <div class="relative w-20 h-20 rounded-sm border border-brand-200 overflow-hidden shadow-sm shrink-0">
+                        <img src="${item.preview}" class="w-full h-full object-cover">
+                        <button type="button" onclick="removeEventImageFile(${idx})" class="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors z-10"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                        <div class="absolute bottom-0 left-0 w-full bg-brand-500 text-white text-[8px] text-center font-bold tracking-widest py-0.5">NEW</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            if (currentEventImageUrls.length + currentEventImageFiles.length >= 5) {
+                addBtn.classList.add('hidden');
+            } else {
+                addBtn.classList.remove('hidden');
+            }
+        };
+
+        window.removeEventImageUrl = (idx) => {
+            currentEventImageUrls.splice(idx, 1);
+            renderEventImagePreviews();
+        };
+
+        window.removeEventImageFile = (idx) => {
+            // メモリ解放はすぐにせず、配列から削除するのみとする（プレビュー消去バグ防止のため）
+            currentEventImageFiles.splice(idx, 1);
+            renderEventImagePreviews();
+        };
+
         window.submitEvent = async () => {
             if (!currentUser) return;
             const btn = document.getElementById('event-submit-btn');
@@ -1847,32 +1914,53 @@
                 if (!title || !startDate || !startTime || !endDate || !endTime) return alert('タイトルと日時は必須です');
                 if (!isOnline && !selectedCoordsEvent) return alert('オフライン開催の場合は場所を設定してください');
 
-                let thumbnailUrl = null;
-                const fileEl = document.getElementById('event-image');
-                const file = fileEl ? fileEl.files[0] : null;
+                if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>送信中...';
+                if(btn) btn.disabled = true;
+
+                let finalImageUrls = [...currentEventImageUrls];
                 
-                if (file) {
-                    if (isAdminMock) {
-                        thumbnailUrl = 'https://via.placeholder.com/400x200?text=Mock+Image';
-                    } else {
-                        try {
-                            const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${Date.now()}_${file.name}`), file);
-                            thumbnailUrl = await getDownloadURL(snap.ref);
-                        } catch (e) { 
-                            console.error(e);
-                            return alert("画像のアップロードに失敗しました"); 
+                // ★修正: 画像アップロード中のエラーを防ぐためファイル名を安全な文字に変換して直列処理
+                if (currentEventImageFiles.length > 0 && !isAdminMock) {
+                    try {
+                        for (let i = 0; i < currentEventImageFiles.length; i++) {
+                            const item = currentEventImageFiles[i];
+                            const file = item.file;
+                            
+                            if (file.size > 5 * 1024 * 1024) {
+                                throw new Error(`画像「${file.name}」のサイズが大きすぎます (上限5MB)。`);
+                            }
+                            
+                            if(btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>画像をアップロード中 (${i+1}/${currentEventImageFiles.length})...`;
+                            
+                            const ext = file.name.split('.').pop() || 'jpg';
+                            const safeFileName = Date.now() + '_' + Math.random().toString(36).substring(2, 8) + '.' + ext;
+                            
+                            const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${safeFileName}`), file);
+                            const url = await getDownloadURL(snap.ref);
+                            finalImageUrls.push(url);
                         }
+                    } catch (e) {
+                        console.error(e);
+                        alert("画像のアップロードに失敗しました:\n" + e.message);
+                        if(btn) { btn.innerHTML = editingEventId ? '<i class="fa-solid fa-pen mr-2"></i>イベントを更新する' : 'イベントを企画する'; btn.disabled = false; }
+                        return; // 中断
                     }
-                } else if (editingEventId) {
-                    const oldEvt = allEvents.find(e => e.id === editingEventId);
-                    if(oldEvt) thumbnailUrl = oldEvt.thumbnailUrl;
+                } else if (currentEventImageFiles.length > 0 && isAdminMock) {
+                    finalImageUrls.push(...currentEventImageFiles.map(f => 'https://via.placeholder.com/640x360?text=Mock+Image'));
+                }
+
+                if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>データを保存中...';
+
+                // 代表サムネイル（一覧表示用）は1枚目の画像
+                let thumbnailUrl = null;
+                if (finalImageUrls.length > 0) {
+                    thumbnailUrl = finalImageUrls[0];
                 }
 
                 const customTagsStr = getVal('event-custom-tags');
                 const customTags = customTagsStr ? customTagsStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 const finalTags = [...Array.from(selectedTags), ...customTags];
                 
-                // ★修正: 代理投稿処理を含む主催者データの設定
                 let finalOrganizerId = currentUser.uid;
                 let finalOrganizerName = (myProfile && (myProfile.name || myProfile.userId)) || '主催者';
                 
@@ -1895,7 +1983,7 @@
                         
                         if (querySnapshot.empty) {
                             alert(`エラー: 指定されたユーザーID「@${overrideUserId}」は見つかりませんでした。\n正しいIDを指定するか、空欄にしてやり直してください。`);
-                            if(btn) btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する";
+                            if(btn) { btn.innerHTML = editingEventId ? '<i class="fa-solid fa-pen mr-2"></i>イベントを更新する' : 'イベントを企画する'; btn.disabled = false; }
                             return;
                         }
                         
@@ -1906,7 +1994,7 @@
                     } catch (error) {
                         console.error("Override fetch error:", error);
                         alert("代理投稿ユーザーの取得中にエラーが発生しました。");
-                        if(btn) btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する";
+                        if(btn) { btn.innerHTML = editingEventId ? '<i class="fa-solid fa-pen mr-2"></i>イベントを更新する' : 'イベントを企画する'; btn.disabled = false; }
                         return;
                     }
                 }
@@ -1921,7 +2009,9 @@
                     startDate: startDate, startTime: startTime, endDate: endDate, endTime: endTime,
                     endTimestamp: new Date(`${endDate}T${endTime}`).toISOString(),
                     description: descVal,
-                    tags: finalTags, thumbnailUrl: thumbnailUrl,
+                    tags: finalTags, 
+                    thumbnailUrl: thumbnailUrl, 
+                    imageUrls: finalImageUrls, 
                     organizerId: finalOrganizerId,
                     organizerName: finalOrganizerName,
                     isParticipantsPublic: publicParts,
@@ -1943,8 +2033,6 @@
                     eventData.locationName = getVal('event-location-name', "場所名未設定");
                     eventData.lat = selectedCoordsEvent.lat; eventData.lng = selectedCoordsEvent.lng;
                 }
-
-                if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>送信中...';
                 
                 if (isAdminMock) {
                     alert('【テスト】イベントを保存しました！(モックデータ)');
@@ -1959,12 +2047,22 @@
                 }
                 closeCreateModal('event');
                 closeDetail('event');
+                
+                // 投稿成功後に画像データをクリアする
+                currentEventImageFiles.forEach(item => URL.revokeObjectURL(item.preview));
+                currentEventImageUrls = [];
+                currentEventImageFiles = [];
+                renderEventImagePreviews();
+
                 await loadAllData(); 
             } catch (e) {
                 console.error("Submit Event Error:", e);
                 alert('処理に失敗しました。\nエラー: ' + e.message);
             } finally {
-                if(btn) btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する";
+                if(btn) { 
+                    btn.innerHTML = editingEventId ? '<i class="fa-solid fa-pen mr-2"></i>イベントを更新する' : 'イベントを企画する'; 
+                    btn.disabled = false; 
+                }
             }
         };
 
@@ -1983,7 +2081,6 @@
                 if (!title || !desc) return alert('必須項目(タイトル・詳細)を入力してください');
                 if (style !== 'フルリモート' && !selectedCoordsJob) return alert('勤務地・活動場所をマップで検索して設定してください');
 
-                // ★修正: 代理投稿処理を含む投稿者データの設定
                 let finalOrganizerId = currentUser.uid;
                 let finalOrganizerName = (myProfile && (myProfile.name || myProfile.userId)) || '投稿者';
                 let finalOrganizerAvatar = (myProfile && myProfile.photoURL) || null;
@@ -2079,7 +2176,7 @@
                 console.error("Submit Job Error:", e);
                 alert('処理に失敗しました。\nエラー: ' + e.message);
             } finally {
-                if(btn) btn.textContent = editingJobId ? "募集情報を更新する" : "募集を掲載する";
+                if(btn) btn.innerHTML = editingJobId ? '<i class="fa-solid fa-pen mr-2"></i>募集情報を更新する' : '募集を掲載する';
             }
         };
 
@@ -2095,15 +2192,70 @@
             if(job) showJobSheet(job);
         };
 
+        // スライドショー操作関数
+        window.moveEventSlide = (id, dir) => {
+            const container = document.getElementById(`event-slider-${id}`);
+            if (container) {
+                container.scrollBy({ left: dir * container.clientWidth, behavior: 'smooth' });
+            }
+        };
+
+        window.updateSlideDots = (container, id, total) => {
+            const index = Math.round(container.scrollLeft / container.clientWidth);
+            const dotsContainer = document.getElementById(`event-slider-dots-${id}`);
+            if (dotsContainer) {
+                Array.from(dotsContainer.children).forEach((dot, i) => {
+                    if (i === index) {
+                        dot.className = "w-1.5 h-1.5 rounded-full bg-white scale-125 transition-all shadow-sm";
+                    } else {
+                        dot.className = "w-1.5 h-1.5 rounded-full bg-white/50 transition-all shadow-sm";
+                    }
+                });
+            }
+        };
+
         window.showEventSheet = async (evt) => {
             const sheet = document.getElementById('event-sheet');
             const content = document.getElementById('event-sheet-content');
             if(!sheet || !content) return;
 
-            const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/400x200?text=NOAH+Event';
-            const tags = evt.tags ? evt.tags.map(t => `<span class="bg-brand-50 border border-brand-200 text-brand-600 px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">#${t}</span>`).join('') : '';
+            let sliderHtml = '';
+            let images = evt.imageUrls || (evt.thumbnailUrl ? [evt.thumbnailUrl] : ['https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=640&auto=format&fit=crop']);
             const priceNum = Number(evt.price || 0);
             const priceText = priceNum > 0 ? `¥${priceNum.toLocaleString()}` : '無料';
+
+            if (images.length <= 1) {
+                sliderHtml = `
+                <div class="relative h-48 sm:h-64 w-full rounded-sm overflow-hidden mb-4 shadow-sm border border-brand-200">
+                    <img src="${images[0]}" class="w-full h-full object-cover">
+                    <div class="absolute top-2 right-2 bg-[#3e2723]/80 backdrop-blur text-[#d4af37] px-3 py-1 rounded-sm text-xs font-bold tracking-widest border border-[#b8860b] shadow-sm z-10">${priceText}</div>
+                </div>`;
+            } else {
+                let slides = images.map((url, i) => `
+                    <div class="w-full h-full flex-shrink-0 snap-center relative">
+                        <img src="${url}" class="w-full h-full object-cover">
+                    </div>
+                `).join('');
+                
+                let dots = images.map((_, i) => `<div class="w-1.5 h-1.5 rounded-full ${i===0?'bg-white scale-125':'bg-white/50'} transition-all shadow-sm" id="slide-dot-${evt.id}-${i}"></div>`).join('');
+                
+                sliderHtml = `
+                <div class="relative h-48 sm:h-64 w-full rounded-sm overflow-hidden mb-4 shadow-sm border border-brand-200 group">
+                    <div id="event-slider-${evt.id}" class="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar" onscroll="updateSlideDots(this, '${evt.id}', ${images.length})">
+                        ${slides}
+                    </div>
+                    <!-- 矢印ボタン -->
+                    <button onclick="moveEventSlide('${evt.id}', -1)" class="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-left text-sm ml-[-2px]"></i></button>
+                    <button onclick="moveEventSlide('${evt.id}', 1)" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-right text-sm ml-[2px]"></i></button>
+                    <!-- ドットインジケーター -->
+                    <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-10" id="event-slider-dots-${evt.id}">
+                        ${dots}
+                    </div>
+                    <div class="absolute top-2 right-2 bg-[#3e2723]/80 backdrop-blur text-[#d4af37] px-3 py-1 rounded-sm text-xs font-bold tracking-widest border border-[#b8860b] shadow-sm z-10">${priceText}</div>
+                </div>`;
+            }
+
+            const tags = evt.tags ? evt.tags.map(t => `<span class="bg-brand-50 border border-brand-200 text-brand-600 px-2 py-0.5 rounded-sm text-[10px] font-bold tracking-widest">#${t}</span>`).join('') : '';
             
             const dateStr = (evt.startDate === evt.endDate) 
                     ? `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endTime || ''}`
@@ -2130,10 +2282,7 @@
 
             // Basic UI Loading State
             content.innerHTML = `
-                <div class="relative h-48 w-full rounded-sm overflow-hidden mb-4 shadow-sm border border-brand-200">
-                    <img src="${thumb}" class="w-full h-full object-cover">
-                    <div class="absolute top-2 right-2 bg-[#3e2723]/80 backdrop-blur text-[#d4af37] px-3 py-1 rounded-sm text-xs font-bold tracking-widest border border-[#b8860b] shadow-sm">${priceText}</div>
-                </div>
+                ${sliderHtml}
                 ${shareBtn}
                 <h2 class="text-xl font-bold text-brand-900 leading-tight mb-3 font-serif tracking-widest">${evt.title || '名称未設定'}</h2>
                 <div class="flex flex-wrap gap-2 mb-5">${tags}</div>
