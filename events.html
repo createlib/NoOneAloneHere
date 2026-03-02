@@ -63,8 +63,8 @@
         }
 
         /* View Areas */
-        #view-map { height: calc(100vh - 120px - env(safe-area-inset-bottom)); width: 100%; z-index: 0; }
-        #map { height: 100%; width: 100%; }
+        #view-map { height: calc(100vh - 120px - env(safe-area-inset-bottom)); width: 100%; z-index: 0; position: relative; }
+        #map { height: 100%; width: 100%; z-index: 1; }
         
         #view-list-events, #view-list-jobs { 
             height: calc(100vh - 120px - env(safe-area-inset-bottom)); 
@@ -231,7 +231,8 @@
                 </div>
             </div>
 
-            <div id="map"></div>
+            <!-- ★修正: absolute と inset-0 を追加して確実に領域を確保 -->
+            <div id="map" class="absolute inset-0 z-0"></div>
             
             <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
                 <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
@@ -934,6 +935,11 @@
                     if (!endDateInput.value) endDateInput.value = startDateInput.value;
                 });
             }
+            
+            // ★追加: 画面の初期ロード完了時にマップの再描画を強制する
+            setTimeout(() => {
+                switchView('map');
+            }, 300);
         });
 
         onAuthStateChanged(auth, async (user) => {
