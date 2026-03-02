@@ -49,7 +49,7 @@
             font-family: 'Noto Serif JP', serif;
             background-color: #f7f5f0; 
             color: #4a3b32;
-            overflow: hidden;
+            overflow: hidden; /* 全体を固定してスクロールは内部で行う */
         }
         
         .bg-texture {
@@ -60,40 +60,6 @@
             background: rgba(255, 253, 249, 0.95);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-        }
-
-        /* View Areas */
-        #view-map { height: calc(100vh - 120px - env(safe-area-inset-bottom)); width: 100%; z-index: 0; position: relative; }
-        #map { height: 100%; width: 100%; z-index: 1; }
-        
-        #view-list-events, #view-list-jobs { 
-            height: calc(100vh - 120px - env(safe-area-inset-bottom)); 
-            overflow-y: auto; 
-            padding-bottom: 6rem;
-        }
-
-        /* Bottom Nav Safe Area */
-        .pb-safe-bottom { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); }
-        
-        .bottom-nav-fixed {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: #fffdf9;
-            border-top: 1px solid #e8dfd1;
-            z-index: 1900;
-            height: 4rem;
-            height: calc(4rem + env(safe-area-inset-bottom));
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        
-        .bottom-nav-content {
-            height: 4rem;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            width: 100%;
         }
 
         /* Detail Sheet */
@@ -136,7 +102,6 @@
         #create-menu { transition: opacity 0.2s, transform 0.2s; transform-origin: bottom right; }
         .menu-open { opacity: 1; transform: scale(1); pointer-events: auto; }
         .menu-closed { opacity: 0; transform: scale(0.9); pointer-events: none; }
-
     </style>
 </head>
 <body class="antialiased h-screen w-screen relative flex flex-col bg-texture">
@@ -153,7 +118,6 @@
 
             <!-- Header Actions -->
             <div class="flex items-center gap-3">
-                <!-- PC Navigation Links -->
                 <div class="hidden lg:flex items-center gap-6 mr-4">
                     <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海</a>
                     <a href="events.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
@@ -176,7 +140,6 @@
                     <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
-                <!-- PC用 UPGRADEボタン -->
                 <a href="upgrade.html" class="auth-required hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] text-xs font-bold rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border border-[#996515]">
                     <i class="fa-solid fa-shield-halved mr-1"></i> 契約変更
                 </a>
@@ -218,11 +181,13 @@
         </div>
     </div>
 
-    <!-- Main Content Area -->
-    <div class="mt-[120px] w-full flex-1 relative z-0">
+    <!-- ★修正: マップとリストが確実な高さを保てるように fixed コンテナ化 -->
+    <!-- SPのナビゲーションバー(bottom-16) と PCの全画面表示(bottom-0) に対応 -->
+    <div class="fixed top-[110px] sm:top-[120px] bottom-16 lg:bottom-0 left-0 right-0 z-0 bg-[#f7f5f0] bg-texture">
         
         <!-- View 1: Map -->
-        <div id="view-map" class="block relative">
+        <div id="view-map" class="absolute inset-0 block">
+            <!-- 検索窓 -->
             <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md pointer-events-none">
                 <div class="relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200">
                     <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
@@ -231,10 +196,10 @@
                 </div>
             </div>
 
-            <!-- ★修正: absolute と inset-0 を追加して確実に領域を確保 -->
+            <!-- マップ本体 (領域を確実に100%確保) -->
             <div id="map" class="absolute inset-0 z-0"></div>
             
-            <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
+            <div id="adjust-location-ui" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
                 <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
                     <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-2 text-lg"></i>赤色のピンを動かして調整</p>
                     <button onclick="finishLocationAdjust()" class="w-full bg-[#3e2723] text-[#d4af37] font-bold py-3 rounded-sm shadow-md tracking-widest text-sm hover:bg-[#2a1a17] border border-[#b8860b]">
@@ -245,43 +210,46 @@
         </div>
 
         <!-- View 2: Event List -->
-        <div id="view-list-events" class="hidden max-w-4xl mx-auto px-4 pt-6">
-            <div class="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
-                <h2 class="text-xl font-bold text-brand-900 font-serif tracking-widest">イベント一覧</h2>
-                <span id="event-list-status" class="text-xs text-brand-500 tracking-widest">現在地から近い順</span>
-            </div>
-            
-            <div id="event-list-loading" class="text-center py-10 text-brand-400">
-                <i class="fa-solid fa-compass fa-spin text-2xl mb-3 opacity-70"></i>
-                <p class="text-xs tracking-widest font-bold">航海図を読み込み中...</p>
-            </div>
-            
-            <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden"></div>
-            <div id="event-list-empty" class="text-center py-10 text-brand-400 hidden">
-                <i class="fa-solid fa-anchor-circle-xmark text-3xl mb-3 opacity-50"></i>
-                <p class="text-sm font-bold tracking-widest">条件に合うイベントが見つかりません。</p>
+        <div id="view-list-events" class="absolute inset-0 hidden overflow-y-auto pb-12">
+            <div class="max-w-4xl mx-auto px-4 pt-6">
+                <div class="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
+                    <h2 class="text-xl font-bold text-brand-900 font-serif tracking-widest">イベント一覧</h2>
+                    <span id="event-list-status" class="text-xs text-brand-500 tracking-widest">現在地から近い順</span>
+                </div>
+                
+                <div id="event-list-loading" class="text-center py-10 text-brand-400">
+                    <i class="fa-solid fa-compass fa-spin text-2xl mb-3 opacity-70"></i>
+                    <p class="text-xs tracking-widest font-bold">航海図を読み込み中...</p>
+                </div>
+                
+                <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden"></div>
+                <div id="event-list-empty" class="text-center py-10 text-brand-400 hidden">
+                    <i class="fa-solid fa-anchor-circle-xmark text-3xl mb-3 opacity-50"></i>
+                    <p class="text-sm font-bold tracking-widest">条件に合うイベントが見つかりません。</p>
+                </div>
             </div>
         </div>
 
         <!-- View 3: Job List -->
-        <div id="view-list-jobs" class="hidden max-w-4xl mx-auto px-4 pt-6">
-            <div class="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
-                <h2 class="text-xl font-bold text-brand-900 font-serif tracking-widest">仕事・依頼一覧</h2>
-                <span class="text-xs text-brand-500 tracking-widest">新着順</span>
-            </div>
-            
-            <div id="job-list-loading" class="text-center py-10 text-brand-400">
-                <i class="fa-solid fa-compass fa-spin text-2xl mb-3 opacity-70"></i>
-                <p class="text-xs tracking-widest font-bold">依頼書を探しています...</p>
-            </div>
-            
-            <div id="job-list-container" class="space-y-4 hidden"></div>
-            <div id="job-list-empty" class="text-center py-10 text-brand-400 hidden">
-                <i class="fa-solid fa-anchor-circle-xmark text-3xl mb-3 opacity-50"></i>
-                <p class="text-sm font-bold tracking-widest">条件に合う仕事・依頼が見つかりません。</p>
+        <div id="view-list-jobs" class="absolute inset-0 hidden overflow-y-auto pb-12">
+            <div class="max-w-4xl mx-auto px-4 pt-6">
+                <div class="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
+                    <h2 class="text-xl font-bold text-brand-900 font-serif tracking-widest">仕事・依頼一覧</h2>
+                    <span class="text-xs text-brand-500 tracking-widest">新着順</span>
+                </div>
+                
+                <div id="job-list-loading" class="text-center py-10 text-brand-400">
+                    <i class="fa-solid fa-compass fa-spin text-2xl mb-3 opacity-70"></i>
+                    <p class="text-xs tracking-widest font-bold">依頼書を探しています...</p>
+                </div>
+                
+                <div id="job-list-container" class="space-y-4 hidden"></div>
+                <div id="job-list-empty" class="text-center py-10 text-brand-400 hidden">
+                    <i class="fa-solid fa-anchor-circle-xmark text-3xl mb-3 opacity-50"></i>
+                    <p class="text-sm font-bold tracking-widest">条件に合う仕事・依頼が見つかりません。</p>
+                </div>
             </div>
         </div>
-
     </div>
 
     <!-- Create FAB & Menu -->
@@ -396,7 +364,7 @@
                 </div>
             </div>
 
-            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom relative z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-[calc(1rem+env(safe-area-inset-bottom))] relative z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                 <button onclick="applyFilters()" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723]">
                     絞り込みを適用
                 </button>
@@ -408,7 +376,7 @@
     </div>
 
     <!-- Details Sheet (Event) -->
-    <div id="event-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture hidden">
+    <div id="event-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)] max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture hidden">
         <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onclick="closeDetail('event')">
             <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
             <div class="hidden lg:flex w-full justify-between items-center px-5">
@@ -420,7 +388,7 @@
     </div>
 
     <!-- Details Sheet (Job) -->
-    <div id="job-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture hidden">
+    <div id="job-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)] max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture hidden">
         <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onclick="closeDetail('job')">
             <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
             <div class="hidden lg:flex w-full justify-between items-center px-5">
@@ -451,14 +419,15 @@
                     <input type="text" id="event-override-userid" class="w-full border-red-200 rounded-sm text-sm p-2 bg-white" placeholder="例: taro_123">
                 </div>
 
-                <!-- ★修正: 複数画像(最大5枚)アップロードUI -->
+                <!-- 複数画像(最大5枚)アップロードUI -->
                 <div>
                     <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">イベント画像 (最大5枚) <span class="text-brand-400 text-[10px] font-normal ml-1">1枚目が一覧のサムネイルになります</span></label>
                     <div id="event-image-previews" class="flex flex-wrap gap-2 mb-2 empty:hidden">
                         <!-- JSでプレビューが挿入されます -->
                     </div>
+                    <!-- ★修正: onclickでvalueをクリアし、同じ画像も選べるようにする -->
                     <div id="event-image-add-btn" class="relative w-full h-16 bg-brand-50 rounded-sm border border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner">
-                        <input type="file" id="event-image-upload" accept="image/*" multiple class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="handleEventImageSelect(event)">
+                        <input type="file" id="event-image-upload" accept="image/*" multiple class="absolute inset-0 opacity-0 cursor-pointer z-10" onclick="this.value = null" onchange="handleEventImageSelect(event)">
                         <div class="group-hover:scale-105 transition-transform flex items-center gap-2">
                             <i class="fa-solid fa-images text-xl"></i>
                             <span class="text-[10px] tracking-widest font-bold">画像を選択して追加</span>
@@ -562,7 +531,7 @@
                 </div>
             </div>
 
-            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-[env(safe-area-inset-bottom)] sm:pb-4 flex-shrink-0">
                 <button onclick="submitEvent()" id="event-submit-btn" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b]">
                     イベントを企画する
                 </button>
@@ -749,7 +718,7 @@
 
             </div>
 
-            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-[env(safe-area-inset-bottom)] sm:pb-4 flex-shrink-0">
                 <button onclick="submitJob()" id="job-submit-btn" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b]">
                     募集を掲載する
                 </button>
@@ -862,7 +831,7 @@
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const presetTags = ["交流会", "勉強会", "スポーツ", "音楽", "アート", "グルメ", "アウトドア", "ビジネス", "初心者歓迎", "オンライン"];
         
-        let blueIcon;
+        let redIcon, blueIcon;
 
         // ★修正: 複数画像管理用の配列 (プレビューURLを安全に保持)
         let currentEventImageUrls = [];
@@ -936,7 +905,7 @@
                 });
             }
             
-            // ★追加: 画面の初期ロード完了時にマップの再描画を強制する
+            // 画面の初期ロード完了時にマップの再描画を強制する
             setTimeout(() => {
                 switchView('map');
             }, 300);
@@ -1056,7 +1025,9 @@
             const viewEl = document.getElementById(`view-${viewName}`);
             if(viewEl) viewEl.classList.remove('hidden');
 
-            if (viewName === 'map' && map) setTimeout(() => map.invalidateSize(), 100);
+            if (viewName === 'map' && map) {
+                setTimeout(() => map.invalidateSize(), 100);
+            }
             
             const placeholderText = viewName === 'list-jobs' ? "仕事や依頼を検索..." : "イベントや仕事を検索...";
             const pcSearch = document.getElementById('pc-map-search');
@@ -1264,6 +1235,9 @@
             }
 
             initLeafletIcons();
+            
+            // すでに初期化されている場合はスキップ
+            if (map != undefined) return;
 
             map = L.map('map', { zoomControl: false }).setView([35.6895, 139.6917], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1580,16 +1554,14 @@
                     const locRes = document.getElementById('location-results');
                     if(locRes) locRes.classList.add('hidden');
                     
-                    // ★修正: 画像配列の初期化を安全に行う
                     if (existingData?.imageUrls && Array.isArray(existingData.imageUrls)) {
                         currentEventImageUrls = [...existingData.imageUrls];
                     } else if (existingData?.thumbnailUrl) {
-                        currentEventImageUrls = [existingData.thumbnailUrl]; // 古い単一データへの互換性
+                        currentEventImageUrls = [existingData.thumbnailUrl]; 
                     } else {
                         currentEventImageUrls = [];
                     }
                     
-                    // 以前選択していたプレビューを破棄してメモリ解放
                     currentEventImageFiles.forEach(item => URL.revokeObjectURL(item.preview));
                     currentEventImageFiles = [];
                     renderEventImagePreviews();
@@ -1662,7 +1634,6 @@
             const modal = document.getElementById(`${type}-modal`);
             if(modal) modal.classList.add('hidden');
             
-            // ★追加: モーダルを閉じる際にプレビュー画像をメモリから解放する
             if (type === 'event') {
                 currentEventImageFiles.forEach(item => URL.revokeObjectURL(item.preview));
                 currentEventImageFiles = [];
@@ -1826,25 +1797,24 @@
             }
         }
 
-        // ★修正: プレビューのリンク切れ防止＆安全なファイル管理
+        // ★修正: onClick で value を null にして同じファイルを連続で選択可能にする
         window.handleEventImageSelect = (e) => {
             const files = Array.from(e.target.files);
+            if(files.length === 0) return;
+
             const totalCount = currentEventImageUrls.length + currentEventImageFiles.length + files.length;
             
             if (totalCount > 5) {
                 alert('画像は最大5枚までです。');
-                e.target.value = '';
                 return;
             }
             
-            // ファイルごとに一度だけプレビューURLを生成して保持する
             files.forEach(file => {
                 const preview = URL.createObjectURL(file);
                 currentEventImageFiles.push({ file: file, preview: preview });
             });
             
             renderEventImagePreviews();
-            e.target.value = ''; // 連続で同じ画像を選べるようにリセット
         };
 
         window.renderEventImagePreviews = () => {
@@ -1864,7 +1834,7 @@
                 `;
             });
             
-            // 新規ファイル（保持しているプレビューURLを使用）
+            // 新規ファイル
             currentEventImageFiles.forEach((item, idx) => {
                 html += `
                     <div class="relative w-20 h-20 rounded-sm border border-brand-200 overflow-hidden shadow-sm shrink-0">
@@ -1877,7 +1847,6 @@
             
             container.innerHTML = html;
             
-            // 5枚に達したら追加ボタンを隠す
             if (currentEventImageUrls.length + currentEventImageFiles.length >= 5) {
                 addBtn.classList.add('hidden');
             } else {
@@ -1891,9 +1860,8 @@
         };
 
         window.removeEventImageFile = (idx) => {
-            // メモリ解放を行ってから配列から削除する
-            const removedItem = currentEventImageFiles.splice(idx, 1)[0];
-            URL.revokeObjectURL(removedItem.preview);
+            // メモリ解放はすぐにせず、配列から削除するのみとする（プレビュー消去バグ防止のため）
+            currentEventImageFiles.splice(idx, 1);
             renderEventImagePreviews();
         };
 
@@ -1920,7 +1888,7 @@
 
                 let finalImageUrls = [...currentEventImageUrls];
                 
-                // ★修正: 画像アップロード中のエラーを防ぐためファイル名を安全な文字に変換
+                // ★修正: 画像アップロード中のエラーを防ぐためファイル名を安全な文字に変換して直列処理
                 if (currentEventImageFiles.length > 0 && !isAdminMock) {
                     try {
                         for (let i = 0; i < currentEventImageFiles.length; i++) {
@@ -1933,7 +1901,6 @@
                             
                             if(btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>画像をアップロード中 (${i+1}/${currentEventImageFiles.length})...`;
                             
-                            // 日本語ファイル名によるFirebaseの不具合を回避するため、ランダムな英数字にリネーム
                             const ext = file.name.split('.').pop() || 'jpg';
                             const safeFileName = Date.now() + '_' + Math.random().toString(36).substring(2, 8) + '.' + ext;
                             
@@ -2050,7 +2017,8 @@
                 closeCreateModal('event');
                 closeDetail('event');
                 
-                // ★追加: 投稿成功後に画像データをクリアする
+                // 投稿成功後に画像データをクリアする
+                currentEventImageFiles.forEach(item => URL.revokeObjectURL(item.preview));
                 currentEventImageUrls = [];
                 currentEventImageFiles = [];
                 renderEventImagePreviews();
