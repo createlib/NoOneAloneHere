@@ -159,7 +159,6 @@
                     <a href="events.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
                     <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
                     
-                    <!-- ★修正: シアターをメディアのドロップダウンに変更 -->
                     <div class="relative group h-full flex items-center">
                         <button class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
                             <i class="fa-solid fa-photo-film"></i> メディア
@@ -174,7 +173,6 @@
                         </div>
                     </div>
 
-                    <!-- ★修正: auth-required を削除して常時表示 -->
                     <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
@@ -285,7 +283,7 @@
 
     </div>
 
-    <!-- Create FAB & Menu (常に表示するよう修正) -->
+    <!-- Create FAB & Menu -->
     <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
         <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
             <button onclick="openCreateModal('event')" class="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest border-b border-brand-100 flex items-center justify-between">
@@ -452,7 +450,7 @@
                     <input type="text" id="event-override-userid" class="w-full border-red-200 rounded-sm text-sm p-2 bg-white" placeholder="例: taro_123">
                 </div>
 
-                <!-- ★修正: 複数画像(最大5枚)アップロードUIに変更 -->
+                <!-- ★修正: 複数画像(最大5枚)アップロードUI -->
                 <div>
                     <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">イベント画像 (最大5枚) <span class="text-brand-400 text-[10px] font-normal ml-1">1枚目が一覧のサムネイルになります</span></label>
                     <div id="event-image-previews" class="flex flex-wrap gap-2 mb-2 empty:hidden">
@@ -582,7 +580,6 @@
             <div class="p-5 overflow-y-auto flex-1 space-y-4" id="job-form-container">
                 <p class="text-xs text-brand-600 font-bold tracking-widest mb-2"><i class="fa-solid fa-circle-info mr-1"></i> 情報を詳細に記載するとマッチング率が上がります</p>
                 
-                <!-- ★追加: 管理者専用 代理投稿セクション -->
                 <div id="admin-override-section-job" class="hidden bg-red-50 p-4 rounded-sm border border-red-200 shadow-inner">
                     <h4 class="text-xs font-bold text-red-600 mb-2 tracking-widest"><i class="fa-solid fa-crown mr-1"></i>【管理者専用】代理投稿</h4>
                     <p class="text-[10px] text-red-500 mb-2">他のユーザーとして投稿・編集する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br>※空欄の場合は元の主催者（新規の場合はあなた自身）になります。</p>
@@ -778,7 +775,6 @@
                 <i class="fa-solid fa-photo-film text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">メディア</span>
             </a>
-            <!-- ★修正: auth-required を削除して常時表示 -->
             <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マイページ</span>
@@ -821,7 +817,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
-        // ★修正: query と where をインポートに追加
         import { getFirestore, collection, addDoc, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
@@ -868,7 +863,7 @@
         
         let redIcon, blueIcon;
 
-        // ★追加: 複数画像管理用の配列
+        // 複数画像管理用の配列
         let currentEventImageUrls = [];
         let currentEventImageFiles = [];
 
@@ -939,8 +934,6 @@
                     if (!endDateInput.value) endDateInput.value = startDateInput.value;
                 });
             }
-            
-            // ★修正: 以前の単一画像アップロードのリスナーを削除しました
         });
 
         onAuthStateChanged(auth, async (user) => {
@@ -1581,7 +1574,7 @@
                     const locRes = document.getElementById('location-results');
                     if(locRes) locRes.classList.add('hidden');
                     
-                    // ★修正: 既存の画像データ(複数)を復元
+                    // 既存の画像データを復元
                     if (existingData?.imageUrls && Array.isArray(existingData.imageUrls)) {
                         currentEventImageUrls = [...existingData.imageUrls];
                     } else if (existingData?.thumbnailUrl) {
@@ -1611,7 +1604,6 @@
                 const cont = document.getElementById('job-form-container');
                 if(cont) cont.scrollTop = 0;
 
-                // ★追加: 管理者用フィールドの表示制御
                 if (isAdmin) {
                     const overrideSec = document.getElementById('admin-override-section-job');
                     if (overrideSec) overrideSec.classList.remove('hidden');
@@ -1817,7 +1809,7 @@
             }
         }
 
-        // ★追加: 複数画像アップロード用の関数群
+        // ★修正: 複数画像アップロード用の関数群
         window.handleEventImageSelect = (e) => {
             const files = Array.from(e.target.files);
             const totalCount = currentEventImageUrls.length + currentEventImageFiles.length + files.length;
@@ -1903,25 +1895,36 @@
                 if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>送信中...';
                 if(btn) btn.disabled = true;
 
-                // ★修正: 画像の複数アップロード処理
+                // ★修正: 画像の複数アップロード処理を直列化し、安定性と進捗表示を向上
                 let finalImageUrls = [...currentEventImageUrls];
                 
                 if (currentEventImageFiles.length > 0 && !isAdminMock) {
-                    const uploadPromises = currentEventImageFiles.map(async (file) => {
-                        const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${Date.now()}_${file.name}`), file);
-                        return await getDownloadURL(snap.ref);
-                    });
                     try {
-                        const newUrls = await Promise.all(uploadPromises);
-                        finalImageUrls.push(...newUrls);
+                        for (let i = 0; i < currentEventImageFiles.length; i++) {
+                            const file = currentEventImageFiles[i];
+                            
+                            // ★追加: 5MBのサイズ制限
+                            if (file.size > 5 * 1024 * 1024) {
+                                throw new Error(`画像「${file.name}」のサイズが大きすぎます (上限5MB)。`);
+                            }
+                            
+                            if(btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>画像をアップロード中 (${i+1}/${currentEventImageFiles.length})...`;
+                            
+                            const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${Date.now()}_${file.name}`), file);
+                            const url = await getDownloadURL(snap.ref);
+                            finalImageUrls.push(url);
+                        }
                     } catch (e) {
                         console.error(e);
-                        if(btn) { btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する"; btn.disabled = false; }
-                        return alert("画像のアップロードに失敗しました");
+                        alert("画像のアップロードに失敗しました:\n" + e.message);
+                        if(btn) { btn.innerHTML = editingEventId ? '<i class="fa-solid fa-pen mr-2"></i>イベントを更新する' : 'イベントを企画する'; btn.disabled = false; }
+                        return; // 中断
                     }
                 } else if (currentEventImageFiles.length > 0 && isAdminMock) {
                     finalImageUrls.push(...currentEventImageFiles.map(f => 'https://via.placeholder.com/640x360?text=Mock+Image'));
                 }
+
+                if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>データを保存中...';
 
                 // 代表サムネイル（一覧表示用）は1枚目の画像
                 let thumbnailUrl = null;
@@ -1955,7 +1958,7 @@
                         
                         if (querySnapshot.empty) {
                             alert(`エラー: 指定されたユーザーID「@${overrideUserId}」は見つかりませんでした。\n正しいIDを指定するか、空欄にしてやり直してください。`);
-                            if(btn) { btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する"; btn.disabled = false; }
+                            if(btn) { btn.innerHTML = editingEventId ? '<i class="fa-solid fa-pen mr-2"></i>イベントを更新する' : 'イベントを企画する'; btn.disabled = false; }
                             return;
                         }
                         
@@ -1966,7 +1969,7 @@
                     } catch (error) {
                         console.error("Override fetch error:", error);
                         alert("代理投稿ユーザーの取得中にエラーが発生しました。");
-                        if(btn) { btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する"; btn.disabled = false; }
+                        if(btn) { btn.innerHTML = editingEventId ? '<i class="fa-solid fa-pen mr-2"></i>イベントを更新する' : 'イベントを企画する'; btn.disabled = false; }
                         return;
                     }
                 }
@@ -1982,8 +1985,8 @@
                     endTimestamp: new Date(`${endDate}T${endTime}`).toISOString(),
                     description: descVal,
                     tags: finalTags, 
-                    thumbnailUrl: thumbnailUrl, // 一覧用サムネイル
-                    imageUrls: finalImageUrls, // ★追加: 全画像の配列
+                    thumbnailUrl: thumbnailUrl, 
+                    imageUrls: finalImageUrls, 
                     organizerId: finalOrganizerId,
                     organizerName: finalOrganizerName,
                     isParticipantsPublic: publicParts,
@@ -2019,12 +2022,21 @@
                 }
                 closeCreateModal('event');
                 closeDetail('event');
+                
+                // ★追加: 投稿成功後に画像データをクリアする
+                currentEventImageUrls = [];
+                currentEventImageFiles = [];
+                renderEventImagePreviews();
+
                 await loadAllData(); 
             } catch (e) {
                 console.error("Submit Event Error:", e);
                 alert('処理に失敗しました。\nエラー: ' + e.message);
             } finally {
-                if(btn) { btn.textContent = editingEventId ? "イベントを更新する" : "イベントを企画する"; btn.disabled = false; }
+                if(btn) { 
+                    btn.innerHTML = editingEventId ? '<i class="fa-solid fa-pen mr-2"></i>イベントを更新する' : 'イベントを企画する'; 
+                    btn.disabled = false; 
+                }
             }
         };
 
@@ -2043,7 +2055,6 @@
                 if (!title || !desc) return alert('必須項目(タイトル・詳細)を入力してください');
                 if (style !== 'フルリモート' && !selectedCoordsJob) return alert('勤務地・活動場所をマップで検索して設定してください');
 
-                // ★修正: 代理投稿処理を含む投稿者データの設定
                 let finalOrganizerId = currentUser.uid;
                 let finalOrganizerName = (myProfile && (myProfile.name || myProfile.userId)) || '投稿者';
                 let finalOrganizerAvatar = (myProfile && myProfile.photoURL) || null;
@@ -2139,7 +2150,7 @@
                 console.error("Submit Job Error:", e);
                 alert('処理に失敗しました。\nエラー: ' + e.message);
             } finally {
-                if(btn) btn.textContent = editingJobId ? "募集情報を更新する" : "募集を掲載する";
+                if(btn) btn.innerHTML = editingJobId ? '<i class="fa-solid fa-pen mr-2"></i>募集情報を更新する' : '募集を掲載する';
             }
         };
 
@@ -2155,7 +2166,7 @@
             if(job) showJobSheet(job);
         };
 
-        // ★追加: スライドショー操作関数
+        // スライドショー操作関数
         window.moveEventSlide = (id, dir) => {
             const container = document.getElementById(`event-slider-${id}`);
             if (container) {
@@ -2182,7 +2193,6 @@
             const content = document.getElementById('event-sheet-content');
             if(!sheet || !content) return;
 
-            // ★修正: 複数画像スライドショーのHTML構築
             let sliderHtml = '';
             let images = evt.imageUrls || (evt.thumbnailUrl ? [evt.thumbnailUrl] : ['https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=640&auto=format&fit=crop']);
             const priceNum = Number(evt.price || 0);
@@ -2295,7 +2305,6 @@
                 } else {
                     partsHtml = '<div class="flex -space-x-2 overflow-hidden py-1 pl-1">';
                     
-                    // 各参加者の公開情報を取得し、アイコン表示可能か判定する
                     const participantDataPromises = participants.map(async (uid) => {
                         let avatarUrl = 'https://via.placeholder.com/32?text=U';
                         let isVisible = true;
@@ -2307,11 +2316,9 @@
                                     const data = uDoc.data();
                                     if(data.photoURL) avatarUrl = data.photoURL;
                                     
-                                    // 主催者と管理者は常に表示
                                     if (uid === evt.organizerId || isAdmin) {
                                         isVisible = true;
                                     } else {
-                                        // 検索非公開（無料会員含む）のユーザーはアイコン非表示
                                         if (data.isHidden === true) {
                                             isVisible = false;
                                         }
@@ -2337,7 +2344,6 @@
                         count++;
                     }
                     
-                    // 全参加者数から、表示したアイコンの数を引いたものを「+〇〇名」として表示
                     const remainingCount = participants.length - count;
                     if (remainingCount > 0) {
                         partsHtml += `<div class="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-[#fffdf9] bg-brand-50 text-[10px] font-bold text-brand-600 border border-brand-200">+${remainingCount}</div>`;
