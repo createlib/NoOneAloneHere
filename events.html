@@ -861,11 +861,11 @@
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const presetTags = ["交流会", "勉強会", "スポーツ", "音楽", "アート", "グルメ", "アウトドア", "ビジネス", "初心者歓迎", "オンライン"];
         
-        let redIcon, blueIcon;
+        let blueIcon;
 
-        // 複数画像管理用の配列
+        // ★修正: 複数画像管理用の配列 (プレビューURLを安全に保持)
         let currentEventImageUrls = [];
-        let currentEventImageFiles = [];
+        let currentEventImageFiles = []; // 構造を { file: File, preview: String } に変更
 
         // SP Menu Toggle ---
         window.toggleTheaterMenu = () => {
@@ -1574,7 +1574,7 @@
                     const locRes = document.getElementById('location-results');
                     if(locRes) locRes.classList.add('hidden');
                     
-                    // 既存の画像データを復元
+                    // ★修正: 画像配列の初期化を安全に行う
                     if (existingData?.imageUrls && Array.isArray(existingData.imageUrls)) {
                         currentEventImageUrls = [...existingData.imageUrls];
                     } else if (existingData?.thumbnailUrl) {
@@ -1582,6 +1582,9 @@
                     } else {
                         currentEventImageUrls = [];
                     }
+                    
+                    // 以前選択していたプレビューを破棄してメモリ解放
+                    currentEventImageFiles.forEach(item => URL.revokeObjectURL(item.preview));
                     currentEventImageFiles = [];
                     renderEventImagePreviews();
 
@@ -1652,6 +1655,14 @@
         window.closeCreateModal = (type) => {
             const modal = document.getElementById(`${type}-modal`);
             if(modal) modal.classList.add('hidden');
+            
+            // ★追加: モーダルを閉じる際にプレビュー画像をメモリから解放する
+            if (type === 'event') {
+                currentEventImageFiles.forEach(item => URL.revokeObjectURL(item.preview));
+                currentEventImageFiles = [];
+                currentEventImageUrls = [];
+                renderEventImagePreviews();
+            }
         };
 
         // ==========================================
@@ -1809,7 +1820,7 @@
             }
         }
 
-        // ★修正: 複数画像アップロード用の関数群
+        // ★修正: プレビューのリンク切れ防止＆安全なファイル管理
         window.handleEventImageSelect = (e) => {
             const files = Array.from(e.target.files);
             const totalCount = currentEventImageUrls.length + currentEventImageFiles.length + files.length;
@@ -1820,7 +1831,12 @@
                 return;
             }
             
-            currentEventImageFiles.push(...files);
+            // ファイルごとに一度だけプレビューURLを生成して保持する
+            files.forEach(file => {
+                const preview = URL.createObjectURL(file);
+                currentEventImageFiles.push({ file: file, preview: preview });
+            });
+            
             renderEventImagePreviews();
             e.target.value = ''; // 連続で同じ画像を選べるようにリセット
         };
@@ -1842,12 +1858,11 @@
                 `;
             });
             
-            // 新規ファイル
-            currentEventImageFiles.forEach((file, idx) => {
-                const tempUrl = URL.createObjectURL(file);
+            // 新規ファイル（保持しているプレビューURLを使用）
+            currentEventImageFiles.forEach((item, idx) => {
                 html += `
                     <div class="relative w-20 h-20 rounded-sm border border-brand-200 overflow-hidden shadow-sm shrink-0">
-                        <img src="${tempUrl}" class="w-full h-full object-cover">
+                        <img src="${item.preview}" class="w-full h-full object-cover">
                         <button type="button" onclick="removeEventImageFile(${idx})" class="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors z-10"><i class="fa-solid fa-xmark text-[10px]"></i></button>
                         <div class="absolute bottom-0 left-0 w-full bg-brand-500 text-white text-[8px] text-center font-bold tracking-widest py-0.5">NEW</div>
                     </div>
@@ -1870,7 +1885,9 @@
         };
 
         window.removeEventImageFile = (idx) => {
-            currentEventImageFiles.splice(idx, 1);
+            // メモリ解放を行ってから配列から削除する
+            const removedItem = currentEventImageFiles.splice(idx, 1)[0];
+            URL.revokeObjectURL(removedItem.preview);
             renderEventImagePreviews();
         };
 
@@ -1895,22 +1912,26 @@
                 if(btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>送信中...';
                 if(btn) btn.disabled = true;
 
-                // ★修正: 画像の複数アップロード処理を直列化し、安定性と進捗表示を向上
                 let finalImageUrls = [...currentEventImageUrls];
                 
+                // ★修正: 画像アップロード中のエラーを防ぐためファイル名を安全な文字に変換
                 if (currentEventImageFiles.length > 0 && !isAdminMock) {
                     try {
                         for (let i = 0; i < currentEventImageFiles.length; i++) {
-                            const file = currentEventImageFiles[i];
+                            const item = currentEventImageFiles[i];
+                            const file = item.file;
                             
-                            // ★追加: 5MBのサイズ制限
                             if (file.size > 5 * 1024 * 1024) {
                                 throw new Error(`画像「${file.name}」のサイズが大きすぎます (上限5MB)。`);
                             }
                             
                             if(btn) btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>画像をアップロード中 (${i+1}/${currentEventImageFiles.length})...`;
                             
-                            const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${Date.now()}_${file.name}`), file);
+                            // 日本語ファイル名によるFirebaseの不具合を回避するため、ランダムな英数字にリネーム
+                            const ext = file.name.split('.').pop() || 'jpg';
+                            const safeFileName = Date.now() + '_' + Math.random().toString(36).substring(2, 8) + '.' + ext;
+                            
+                            const snap = await uploadBytes(ref(storage, `events/${currentUser.uid}/${safeFileName}`), file);
                             const url = await getDownloadURL(snap.ref);
                             finalImageUrls.push(url);
                         }
