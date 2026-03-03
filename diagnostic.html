@@ -420,6 +420,7 @@
             document.getElementById('dom-message').innerHTML = d.message.map(m => `<p>${m.replace(/\n/g, '<br class="pc-only">')}</p>`).join('');
         }
 
+        // ★修正: グラフのツールチップ見切れ対応＆パディングの確保
         function renderChart(param) {
             const ctx = document.getElementById('radarChart').getContext('2d');
             const mainColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-main').trim();
@@ -429,6 +430,8 @@
             Chart.defaults.font.family = "'Zen Kaku Gothic New', sans-serif";
 
             if (chartInstance) chartInstance.destroy();
+            
+            const isMobile = window.innerWidth < 768; // スマホ判定
 
             chartInstance = new Chart(ctx, {
                 type: 'radar',
@@ -445,8 +448,11 @@
                         borderWidth: 2, pointRadius: 4, pointHoverRadius: 6
                     }]
                 },
-                // ★修正: min と max の指定場所を scales.r の直下へ移動し、stepSize を指定
                 options: {
+                    layout: {
+                        // ★追加: グラフ全体に左右の余白を持たせ、はみ出しを防ぐ
+                        padding: isMobile ? { left: 15, right: 15, top: 10, bottom: 10 } : 0
+                    },
                     scales: {
                         r: {
                             min: 0,
@@ -454,16 +460,35 @@
                             beginAtZero: true,
                             angleLines: { color: 'rgba(255, 255, 255, 0.05)' }, 
                             grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                            pointLabels: { font: { size: window.innerWidth < 768 ? 11 : 14, weight: '500' }, color: '#E2E8F0' },
+                            pointLabels: { font: { size: isMobile ? 11 : 14, weight: '500' }, color: '#E2E8F0' },
                             ticks: { display: false, stepSize: 20 }
                         }
                     },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: 'rgba(13, 19, 38, 0.95)', titleFont: { size: 14, family: "'Noto Serif JP', serif" },
-                            bodyFont: { size: 13 }, borderColor: mainColor, borderWidth: 1, padding: 15,
-                            callbacks: { label: (ctx) => " " + param.tooltips[ctx.dataIndex] }
+                            backgroundColor: 'rgba(13, 19, 38, 0.95)', 
+                            titleFont: { size: isMobile ? 13 : 14, family: "'Noto Serif JP', serif" },
+                            bodyFont: { size: isMobile ? 12 : 13 }, // ★変更: スマホ時は少し小さく
+                            borderColor: mainColor, 
+                            borderWidth: 1, 
+                            padding: isMobile ? 10 : 15, // ★変更: スマホ時はパディングも小さく
+                            callbacks: { 
+                                label: (ctx) => {
+                                    const text = param.tooltips[ctx.dataIndex];
+                                    // ★追加: スマホの時は文字列を2行に分けて幅を狭くする
+                                    if (isMobile) {
+                                        const splitIdx = text.indexOf('] ');
+                                        if (splitIdx !== -1) {
+                                            return [
+                                                " " + text.substring(0, splitIdx + 1),
+                                                " " + text.substring(splitIdx + 2)
+                                            ];
+                                        }
+                                    }
+                                    return " " + text;
+                                }
+                            }
                         }
                     },
                     animation: { duration: 2500, easing: 'easeOutQuart' }
