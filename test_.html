@@ -2,6 +2,281 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE PERSONAL OS | DB Initializer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#060913] text-gray-200 font-mono p-8 min-h-screen flex flex-col items-center justify-center">
+
+    <div class="max-w-2xl w-full bg-gray-800/50 p-8 rounded-xl shadow-2xl border border-gray-700/50 text-center backdrop-blur-sm">
+        <div class="mb-6 flex justify-center">
+            <div class="w-16 h-16 bg-[#c5a880]/20 rounded-full flex items-center justify-center text-[#c5a880]">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+            </div>
+        </div>
+        <h1 class="text-xl font-bold text-white mb-2 tracking-widest font-serif">OS BLUEPRINT DB INITIALIZER</h1>
+        <p class="text-sm text-gray-400 mb-8 leading-relaxed font-sans">
+            FirestoreにNo.1〜No.60の診断データ（型枠）を一括生成します。<br>
+            No.1とNo.50には完全版データが入り、残りの58枠は十干を自動計算した型枠がセットされます。<br>
+            <span class="text-yellow-500 text-xs">※既に執筆・編集済みのデータは自動でスキップされる安全設計です。</span>
+        </p>
+
+        <button id="btn-start" class="w-full bg-[#c5a880] hover:bg-[#d4b78f] text-gray-900 font-bold py-4 rounded-sm tracking-widest transition-colors shadow-lg">
+            全60件のデータを一括生成・登録する
+        </button>
+
+        <div id="log-container" class="hidden mt-6 text-left">
+            <div class="flex justify-between text-xs text-gray-400 mb-2 font-sans">
+                <span>PROGRESS</span>
+                <span id="progress-text">0 / 60</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-1.5 mb-4">
+                <div id="progress-bar" class="bg-[#c5a880] h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
+            </div>
+            <div id="log-box" class="h-48 overflow-y-auto bg-black/50 p-4 rounded-sm border border-gray-700/50 text-xs text-emerald-400 space-y-1.5 font-mono"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+        // ▼ 本番環境のFirebase Config ▼
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0",
+            authDomain: "brainbridge-4b8ac.firebaseapp.com",
+            projectId: "brainbridge-4b8ac",
+            storageBucket: "brainbridge-4b8ac.firebasestorage.app",
+            messagingSenderId: "803209683213",
+            appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        // 1の位から十干を判定する配列（1=甲, 2=乙... 0=癸）
+        const jukkans = ["癸", "甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬"];
+
+        const btn = document.getElementById('btn-start');
+        const logBox = document.getElementById('log-box');
+        const logContainer = document.getElementById('log-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+
+        function log(msg, colorClass = "text-emerald-400") {
+            const div = document.createElement('div');
+            div.className = colorClass;
+            div.textContent = `> ${msg}`;
+            logBox.appendChild(div);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // ==========================================
+        // ▼ No.1 完全データ (蒼幹)
+        // ==========================================
+        const dataNo1 = {
+            id: 1, jukkan: "甲", kanji: "蒼幹", ruby: "SOUKAN", catchcopy: "ゼロから天を衝く孤高の開拓者",
+            keywords: ["絶対的独立心", "ゼロイチの創造", "妥協なき直進", "始まりの柱"],
+            origin: {
+                metaphor: "「見渡す限りの真っ白な雪原。\n何もない凍てつく大地を突き破り、\nたった一本の『巨大な樹木』が天に向かって一直線に伸びている。\n誰の庇護も受けず、ただ己の根と天を目指す意思だけで\n新たな時代の風景を創り出している。」",
+                p1: "なぜあなたの行動設計図（OS）に「蒼幹」という名が冠されたのか。それはあなたが、何もない荒野に最初の杭を打ち込み、自らの背中で新しい時代の基準（スタンダード）を創り出す、六十のOSの中で最も強烈な「始まりの力」を宿しているからです。",
+                p2: "自然界の物理法則と深層心理の力学を統合した本プロファイリングにおいて、あなたのパーソナリティは<strong>「一切の妥協を排し、ただひたすらに上（理想）を目指す」</strong>という極めて純度の高い構造を持っています。誰かが作った道や既存のルールには興味がなく、前例がないからこそ燃え上がる。あなたのその強すぎる信念は、時に「頑固」「協調性がない」と評されることもあるでしょう。",
+                p3: "しかし、あなたは決して間違っていません。最初の道を作る者は、常に孤独であり、周囲の理解をすぐには得られないものです。群れに属して安心を得るのではなく、自分の足で立ち、自分の力で天を衝く。その「折れない心」と「圧倒的な独立心」こそが、やがて多くの人々が寄りかかる巨大な大樹へと成長していくのです。",
+                nodes: [ { word: "孤高の\n開拓", desc: "前例のない道を\n切り拓く絶対的な力" }, { word: "純粋な\n直進", desc: "妥協を許さず\nただ理想を追い求める" }, { word: "時代の\n原点", desc: "ゼロからイチを\n生み出す最初の柱" } ]
+            },
+            resonance: [
+                { title: "ビジネスパートナーなら", give: "誰も踏み込まない未開拓の領域へ飛び込む勇気と、ゼロから事業を立ち上げる強烈な突破力を提供します。", take: "あなたが切り拓いた道を実務レベルで整備し、細かく管理・運用してくれる「優秀な裏方」が必要です。", matches: [ { name: "No.50 玄盤", desc: "静水深流で基盤を支える蓄積型構築者" }, { name: "No.16 柔整", desc: "柔軟に場を整える調整型実務者" } ], note: "※あなたが後ろを振り返る必要はありません。前だけを見て突き進むことで組織は拡大します。" },
+                { title: "恋愛・人生のパートナーなら", give: "裏表のない真っ直ぐな愛情と、いざという時にパートナーを力強く引っ張る絶対的な頼もしさ。", take: "あなたの強すぎる意思と直進力を優しく受け止め、時には柔軟に軌道修正してくれる包容力。", matches: [ { name: "No.14 紅穏", desc: "慎重に温度を保つ内省型持続者" }, { name: "No.20 玄育", desc: "静かに縁を育てる循環型支援者" } ], note: "※あなたに正論でぶつかるのではなく、ただ静かに寄り添ってくれる存在が最大の癒しになります。" },
+                { title: "友人・交友関係なら", give: "周囲が迷っている時に、忖度のない本質的な一言で、友人の迷いを一刀両断する羅針盤となります。", take: "あなたの意見に依存するのではなく、それぞれが自立し、自分の足で立っている対等な関係性。", matches: [ { name: "No.43 赫陽", desc: "光の中心で旗を掲げ続ける理念先導者" }, { name: "No.47 白鋼", desc: "鋭利な美学で不要を断つ純化型決断者" } ], note: "※群れる必要はありません。互いの高みを目指す独立したライバルとしての関係が最適です。" },
+                { title: "人生の師匠（メンター）なら", give: "師匠のビジョンを体現するための「最初の槍」として、リスクを恐れず最前線で実行します。", take: "あなたが一直線に進むべき「正しい方向」を指し示してくれる、高い次元の哲学と視座。", matches: [ { name: "No.49 蒼海", desc: "流れを制して時代を動かす知略統率者" }, { name: "No.29 蒼嶺", desc: "水脈を束ね大局を描く統合型構想者" } ], note: "※目指すべき太陽（目標）が見つかった時、あなたの成長スピードは限界を突破します。" }
+            ],
+            parameter: {
+                stats: [100, 60, 30, 45, 15],
+                tooltips: [ " [MAX 100] 誰も止められない絶対的な推進力", " [60] 自分の信念を真っ直ぐに伝える自己主張力", " [30] 立ち上げに特化し運用・管理は他者に任せる", " [45] 複雑な計算より直感と信念を信じる", " [LOW 15] 馴れ合いや同調圧力を拒絶する力" ],
+                p1: "データが明確に示している通り、あなたの才能は<strong>「推進・行動力」</strong>に完全に振り切れています。ゼロからイチを生み出す圧倒的なエネルギーにおいて、あなたの右に出る者はいません。「誰もやっていない」「前例がない」という未開の状況こそが、あなたのエンジンに最も火をつける着火剤となります。",
+                p2: "一方で、「共感・調和力」や「構築・管理力」は意図的に低く設定されています。会議での根回しや、細かいルールの整備、皆の意見を平等にまとめるような役割はあなたの才能を完全に殺します。今日から、「人に合わせる」という行為は捨ててください。あなたが群れから離れ、一人で高くそびえ立つ大樹になった時、人々は自然とあなたの生み出した木陰に集まってくるのです。"
+            },
+            strategy: {
+                good: [ "「誰も成功していない新規事業の立ち上げ」や「前例のないプロジェクトのリーダー」。", "自分の裁量で全てを決定でき、上からの不要な干渉を受けない完全に独立したポジション。", "困難な壁を自らの信念と実力だけで突破していく、挑戦的で開拓要素の強い環境。" ],
+                bad: [ "「ルールやマニュアルがガチガチに決まっている」変化の乏しいルーティンワーク。", "協調性や同調圧力ばかりが重視され、飛び抜けた個性が「はみ出し者」として叩かれる組織。", "スピード感が遅く、意思決定に何重もの承認や根回しが必要な大企業的風土。" ]
+            },
+            message: [
+                "「最初の柱を立てる者は、常に孤独である。」",
+                "人類が未開の地を開拓できたのは、リスクを恐れずに一番最初に踏み出した者がいたからです。",
+                "あなたの中にある「誰にも曲げられない強烈な意思」は、決してわがままなどではありません。それは新しい時代を創るための絶対的なエネルギーなのです。",
+                "理解されないことを恐れないでください。あなたの見ている頂は、他の誰にも見えない高みにあるのですから。",
+                "誰の真似もせず、あなたという圧倒的な大樹を、天の果てまで真っ直ぐに伸ばし続けてください。"
+            ]
+        };
+
+        // ==========================================
+        // ▼ No.50 完全データ (玄盤)
+        // ==========================================
+        const dataNo50 = {
+            id: 50, jukkan: "癸", kanji: "玄盤", ruby: "GENBAN", catchcopy: "静水深流で基盤を支える蓄積型構築者", keywords: ["究極の蓄積", "基盤整備", "長期計画", "裏方統括の極致"],
+            origin: {
+                metaphor: "「凍てつく冬の大地。\n表層は分厚い泥と氷に閉ざされ、一切の動きがないように見える。\nしかし、その強固な岩盤のさらに奥深くでは、\n長い年月をかけて濾過された『清らかで巨大な地下水脈』が、\n轟音を立てて脈々と流れている。」",
+                p1: "なぜあなたの行動設計図（OS）に「玄盤」という名が冠されたのか。それはあなたが、一過性の流行や軽薄なスポットライトが当たる表層の世界には一切の興味を持たず、「何十年先も決して崩壊しない社会のインフラ」を、地下深くで設計していく使命を帯びているからです。",
+                p2: "自然界の物理法則と深層心理の力学を統合した本プロファイリングにおいて、あなたのパーソナリティは<strong>「強烈な重圧を内側に溜め込み、純化させる」</strong>という極めて特殊な構造を持っています。新しいプロジェクトが立ち上がり、周りが「明日どうやって儲けるか」で浮き足立っている時、あなた一人だけが「3年後、このシステムが破綻しないか」を静かに計算しています。周りとのその時間感覚の違いが、時にあなたを孤独にさせるでしょう。",
+                p3: "あなたはプレッシャーに潰されているのではありません。外からの不条理な圧力や混沌とした状況を真っ向から受け止め、それを内なる「冷徹な知性と美学のフィルター」に通すことで不純物を極限まで削ぎ落とします。そして純度100%の真理とデータだけを「深い地下水」のように蓄積していく、「究極の自己濾過システム」を内蔵しているのです。",
+                nodes: [ { word: "現実の\n重圧", desc: "社会の枠組みや\n強烈なプレッシャー" }, { word: "知性の\n濾過器", desc: "感情を排した\n精密な分析と純化" }, { word: "極限の\n蓄積", desc: "岩盤を砕くほどの\n圧倒的なポテンシャル" } ]
+            },
+            resonance: [
+                {title: "ビジネスパートナーなら", give: "絶対に崩壊しない実務基盤と冷徹なリスク管理を提供。相手の暴走を受け止める安全な着陸地点となります。", take: "あなたに欠けている「自己アピール」や「ゼロから熱狂を生む力」を持ち、堂々と旗を振る突破力が必要です。",
+                        matches: [ { name: "No.43 赫陽", desc: "光の中心で旗を掲げ続ける理念先導者" }, { name: "No.51 蒼槍", desc: "信念を最前線で貫く直進型開拓旗手" } ], note: "※あなたが表に出る必要はありません。彼らを「表の顔」として泳がせることで無敵の帝国が完成します。" },
+                {title: "恋愛・人生のパートナーなら", give: "一時的な感情の波に左右されない、何十年も続く静かで揺るぎない「生活の絶対的な安定と深い庇護」を与えます。", take: "重圧を抱え込みがちなあなたの心の氷をゆっくりと溶かす、急かさない温かさと持続的な愛情を持つ人が最適です。",
+                                matches: [ { name: "No.14 紅穏", desc: "慎重に温度を保つ内省型持続者" }, { name: "No.20 玄育", desc: "静かに縁を育てる循環型支援者" } ], note: "※言葉にしなくてもあなたの重い鎧を静かに外し、深い安心感を与えてくれる存在です。" },
+                {title: "友人・交友関係なら", give: "無駄な馴れ合いを省いた、極めて客観的で本質を突くアドバイスにより、友人の真の危機を救う「最後の砦」となります。", take: "浅い世間話ではなく、哲学や美意識、未来予測について、沈黙すら心地よいレベルで深く語り合える知性や柔軟性。",
+                        matches: [ { name: "No.10 玄審", desc: "本質を見抜き純度を高める静謐な鑑定士" }, { name: "No.16 柔整", desc: "柔軟に場を整える調整型実務者" }], note: "※お互いに干渉しすぎず、大人の知的なキャッチボールができる関係性を築けます。"},
+                { title: "人生の師匠（メンター）なら", give: "師匠が描く壮大で抽象的なビジョンを、実務レベルで寸分の狂いもなく完璧に組み上げる「最強の実行部隊」となります。", take: "あなたが陥りやすい「狭く深すぎる視野」を広げ、あなたが構築した基盤を社会規模にスケールアップさせる「大局観」。",
+                        matches: [ { name: "No.29 蒼嶺", desc: "水脈を束ね大局を描く統合型構想者" }, { name: "No.49 蒼海", desc: "流れを制して時代を動かす知略統率者" }], note: "※彼らの高い視座を取り入れることで、あなたが作るシステムは一気に巨大な帝国へと成長します。" } ],
+            parameter: {
+                stats: [30, 15, 100, 90, 65],
+                tooltips: [ "[30] 軽薄に動かない重厚なポテンシャル","[LOW 15] 自己アピールは他者に任せるのが大正解", "[MAX 100] 誰も真似できない絶対的基盤構築", "[EXCELLENT 90] 長期を見通す深い洞察と濾過力", "[65] 必要な縁だけを静かに守り抜く力" ],
+                p1: "データが明確に示している通り、あなたの才能は<strong>「構築・管理力」</strong>と<strong>「知略・分析力」</strong>に極端に振り切れています。日常や仕事のシーンで言えば、「誰もやりたがらない煩雑なルールの整備」「属人化している業務のシステム化」「数年先の資産運用計画」などにおいて、あなたは感情に流されることなく、狂いのない精度で完遂します。",
+                p2: "一方で、「表現・発信力」や瞬間的な「推進・行動力」は意図的に低く出ています。アイデアを即座に形にしてSNS等で派手にアピールする人々を見て、焦燥感を抱くこともあるでしょう。<br>しかし、今日からその自己否定は完全に捨ててください。「軽薄に動かないこと、安易に喋らないこと」こそが、あなたの最大の武器なのです。自己アピールにエネルギーを浪費しないからこそ、実務とインフラ構築の極致に到達できる。あなたの沈黙は無知ではなく、深い思考と計算の証です。"
+            },
+            strategy: {
+                good: [
+                    "数年〜数十年単位の「長期的なビジョンと蓄積」が求められるプロジェクト。",
+                    "誰もやりたがらないが、組織にとって「絶対に崩れてはならない」基盤整備や根幹の制度設計。",
+                    "表のカリスマリーダー（象徴）を立てつつ、裏で全ての実権と予算、決定権を静かに握る「ナンバー2」のポジション。"
+                ],
+                bad: [
+                    "「とりあえず今すぐやって」といった、行き当たりばったりで即効性のみを求められるアジャイル型の現場。",
+                    "中身や実態のない「過剰な自己アピール」や「ノリの良さ」ばかりが評価される軽薄な組織。",
+                    "頻繁にトップの気分でルールや方針が覆り、あなたが緻密に蓄積したデータが無意味にリセットされる環境。"
+                ]
+            },
+            message: [
+                "「静かであることは、決して弱いということではない。」",
+                "世の中は常に、声の大きい者や動きの速い者を評価しがちです。\n社会のスピードが異常に加速する現代において、\n時間をかけて「本物」を構築しようとするあなたの歩みは、時にひどく孤独に感じられることでしょう。",
+                "しかし、忘れないでください。\nハリボテの城は、嵐が来れば一瞬で崩れ去ります。\nそのとき、吹き荒れる風の中で人々が最後にすがりつくのは、あなたが静かに、しかし執念深く築き上げてきた「揺るぎない基盤」なのです。",
+                "あなたの人生は「大器晩成」であり、データを蓄積するごとに圧倒的な価値と権力を帯びていきます。",
+                "誇り高く、自分の思考の重さを信じ抜き、あなただけの「盤石なる帝国」を築き上げてください。"
+            ]
+        };
+
+        // ==========================================
+        // ▼ その他（2〜49, 51〜60）のダミーデータ生成関数
+        // ==========================================
+        function getDummyData(id) {
+            const jukkan = jukkans[id % 10]; // 十干を自動計算
+            return {
+                id: id, jukkan: jukkan, kanji: "解析待", ruby: `NO_${id}`, catchcopy: "現在システムによる解析を実行中です",
+                keywords: ["データ統合中", "OSアップデート待機", "未解放"],
+                origin: {
+                    metaphor: "「霧に包まれた未知の領域。\nデータが揃い次第、あなたの真の姿がここに浮かび上がります。」",
+                    p1: "このナンバーの行動設計図は現在システム内で構築中です。",
+                    p2: "自然界の物理法則と深層心理の力学を統合した本プロファイリングにおいて、あなたのパーソナリティは現在バックグラウンドで計算処理中です。",
+                    p3: "今後のアップデートにより、あなたの中に眠る真のポテンシャルと使命の全貌が解き明かされます。今しばらくお待ちください。",
+                    nodes: [ { word: "解析\n処理中", desc: "データの抽出" }, { word: "解析\n処理中", desc: "データの抽出" }, { word: "解析\n処理中", desc: "データの抽出" } ]
+                },
+                resonance: [
+                    { title: "ビジネスパートナーなら", give: "データの統合が完了するまでお待ちください。", take: "解析完了後に判明します。", matches: [{ name: "No.--", desc: "準備中" }], note: "※現在システムにて演算処理中..." },
+                    { title: "恋愛・人生のパートナーなら", give: "データの統合が完了するまでお待ちください。", take: "解析完了後に判明します。", matches: [{ name: "No.--", desc: "準備中" }], note: "※現在システムにて演算処理中..." },
+                    { title: "友人・交友関係なら", give: "データの統合が完了するまでお待ちください。", take: "解析完了後に判明します。", matches: [{ name: "No.--", desc: "準備中" }], note: "※現在システムにて演算処理中..." },
+                    { title: "人生の師匠（メンター）なら", give: "データの統合が完了するまでお待ちください。", take: "解析完了後に判明します。", matches: [{ name: "No.--", desc: "準備中" }], note: "※現在システムにて演算処理中..." }
+                ],
+                parameter: {
+                    stats: [50, 50, 50, 50, 50],
+                    tooltips: [" [---] 解析中", " [---] 解析中", " [---] 解析中", " [---] 解析中", " [---] 解析中"],
+                    p1: "現在のところ、パラメータの偏りは計算中です。", p2: "才能の波形が明らかになるまで、今しばらくお待ちください。"
+                },
+                strategy: { good: ["現在解析中"], bad: ["現在解析中"] },
+                message: [ "「解析システム稼働中...」", "あなたの魂の形を、言語化しています。" ]
+            };
+        }
+
+        btn.addEventListener('click', async () => {
+            if(!confirm("1〜60までの全データをFirestoreに自動構築します。\nよろしいですか？")) return;
+
+            btn.disabled = true;
+            logContainer.classList.remove('hidden');
+            logBox.innerHTML = "";
+            log("🚀 データベースの構築を開始します...", "text-emerald-400 font-bold");
+
+            let skipCount = 0;
+            let successCount = 0;
+
+            try {
+                for (let i = 1; i <= 60; i++) {
+                    const docRef = doc(db, "artifacts", appId, "os_blueprints", String(i));
+                    
+                    // ▼ 既に編集済みのデータを誤って消さないための安全装置 ▼
+                    const snap = await getDoc(docRef);
+                    if (snap.exists() && snap.data().kanji !== "解析待" && i !== 1 && i !== 50) {
+                        log(`[SKIP] No.${i} は既に執筆済みのため上書きをスキップしました。`, "text-yellow-400");
+                        skipCount++;
+                    } else {
+                        // データ生成
+                        let dataToSave;
+                        if (i === 1) dataToSave = dataNo1;
+                        else if (i === 50) dataToSave = dataNo50;
+                        else dataToSave = getDummyData(i);
+
+                        // Firestoreへ送信
+                        await setDoc(docRef, dataToSave);
+                        log(`[SUCCESS] No.${i} (${dataToSave.kanji}) を生成しました。`, "text-gray-300");
+                        successCount++;
+                    }
+
+                    // プログレスバーの更新
+                    const percent = Math.round((i / 60) * 100);
+                    progressBar.style.width = `${percent}%`;
+                    progressText.textContent = `${i} / 60`;
+                }
+                
+                log("🎉 すべてのデータ構築処理が完了しました！", "text-[#c5a880] font-bold mt-4 text-lg");
+                log(`> 作成・更新: ${successCount} 件 / スキップ: ${skipCount} 件`, "text-white");
+                btn.textContent = "データベース構築完了";
+                
+            } catch (error) {
+                console.error(error);
+                log("❌ エラーが発生しました: " + error.message, "text-red-500 font-bold");
+                btn.textContent = "エラーが発生しました";
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
     <title>DB初期データ生成ツール</title>
     <style>
         body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
