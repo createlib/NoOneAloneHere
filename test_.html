@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>六十干支データベース構築ツール</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --accent-kizahashi: #4a90e2; /* 癸のテーマカラー */
+        }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .controls { margin-bottom: 30px; padding: 20px; border: 1px dashed #666; text-align: center; }
+        button { padding: 12px 24px; font-weight: bold; cursor: pointer; background: #cead5e; border: none; border-radius: 4px; }
+        
+        /* 十干カラー判定用クラス */
+        .color-癸 { border-left: 8px solid #001f3f; background: linear-gradient(145deg, #1e1e1e, #0a141e); }
+        
+        .card { margin-top: 20px; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: none; }
+        .header { border-bottom: 1px solid #444; padding-bottom: 15px; margin-bottom: 20px; }
+        .id-badge { font-size: 0.9em; color: #aaa; }
+        .kanji { font-size: 2.5em; letter-spacing: 0.2em; margin: 10px 0; }
+        .ruby { font-size: 1.2em; color: #888; letter-spacing: 0.1em; }
+        .keywords { display: flex; gap: 10px; margin: 15px 0; }
+        .tag { background: #444; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .section-title { color: #cead5e; border-bottom: 1px solid #cead5e; margin-bottom: 10px; padding-bottom: 5px; }
+        .origin-text { font-style: italic; color: #bbb; white-space: pre-wrap; margin-bottom: 15px; }
+        
+        .node-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+        .resonance-item { margin-bottom: 15px; font-size: 0.9em; }
+        .param-row { display: flex; justify-content: space-between; margin: 5px 0; font-family: monospace; }
+        .message-box { margin-top: 30px; text-align: center; border-top: 1px double #555; padding-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="controls">
+        <h2>DB構造生成シミュレーター</h2>
+        <p>ボタンを押すと1〜60番のデータを生成し、No.50を表示します。</p>
+        <button onclick="generateDatabase()">1番〜60番を生成してNo.50を表示</button>
+    </div>
+
+    <div id="result-view">
+        </div>
+</div>
+
+<script>
+let database = [];
+
+function generateDatabase() {
+    database = [];
+    const jukkanList = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+
+    for (let i = 1; i <= 60; i++) {
+        if (i === 50) {
+            // No.50 玄盤 の詳細データ
+            database.push({
+                "id": 50,
+                "jukkan": "癸",
+                "kanji": "玄盤",
+                "ruby": "GENBAN",
+                "catchcopy": "静水深流で基盤を支える蓄積型構築者",
+                "keywords": ["究極の蓄積", "基盤整備", "長期計画", "裏方統括の極致"],
+                "origin": {
+                    "metaphor": "「凍てつく冬の大地。\n表層は分厚い泥と氷に覆われていますが、その最深部には、決して凍ることのない清冽な地下水脈が滔々と流れています。」",
+                    "p1": "なぜあなたの行動設計図（OS）に「玄盤」という名が冠されたのか。それはあなたが、目に見える華やかさではなく、文明の『地層』そのものを司る存在だからです。",
+                    "p2": "自然界の物理法則と深層心理の力学を統合した結果、あなたのエネルギーは「下降と圧縮」に向かいます。",
+                    "p3": "しかし、あなたはプレッシャーに潰されているのではありません。その圧力を利用して、誰にも届かない深さまで知性を濾過し、純度の高い『答え』を溜め込んでいるのです。",
+                    "nodes": [
+                        { "word": "現実の\n重圧", "desc": "社会の枠組みや\n強烈なプレッシャー" },
+                        { "word": "知性の\n濾過器", "desc": "感情を排した\n精密な分析と純化" },
+                        { "word": "極限の\n蓄積", "desc": "岩盤を砕くほどの\n圧倒的なポテンシャル" }
+                    ]
+                },
+                "resonance": [
+                    {
+                        "title": "ビジネスパートナーなら",
+                        "give": "絶対に崩壊しない実務基盤と冷徹なリスク管理を提供。",
+                        "take": "あなたに欠けている「自己アピール」や「ゼロから熱狂を生む力」を持ち、あなたの構築した土台の上で踊れる表現者。",
+                        "matches": [
+                            { "name": "No.43 赫陽", "desc": "光の中心で旗を掲げ続ける理念先導者" },
+                            { "name": "No.51 蒼槍", "desc": "信念を最前線で貫く直進型開拓旗手" }
+                        ],
+                        "note": "※あなたが表に出る必要はありません。彼らを「表の顔」として泳がせることで、あなたの支配領域は完成します。"
+                    },
+                    { "title": "恋愛", "give": "無言の信頼と安定感", "take": "精神的な安らぎ", "matches": [], "note": "深い理解を求めます" },
+                    { "title": "友人", "give": "的確な助言", "take": "外部情報の刺激", "matches": [], "note": "少数精鋭の付き合い" },
+                    { "title": "師匠", "give": "伝統の継承", "take": "体系的な知識", "matches": [], "note": "古典から学びます" }
+                ],
+                "parameter": {
+                    "stats": [30, 15, 100, 90, 65],
+                    "tooltips": [
+                        " [30] 軽薄に動かない重厚なポテンシャル",
+                        " [LOW 15] 自己アピールは他者に任せるのが大正解",
+                        " [MAX 100] 誰も真似できない絶対的基盤構築",
+                        " [EXCELLENT 90] 長期を見通す深い洞察と濾過力",
+                        " [65] 必要な縁だけを静かに守り抜く力"
+                    ],
+                    "p1": "データが明確に示している通り、あなたの才能は「垂直方向への深掘り」に特化しています。",
+                    "p2": "一方で、「表現・発信力」や瞬間的な「推進・行動力」は意図的に低く設定されています。これはエネルギーを霧散させないための戦略的仕様です。"
+                },
+                "strategy": {
+                    "good": [
+                        "数年〜数十年単位の「長期的なビジョンと蓄積」が求められるプロジェクト。",
+                        "誰もやりたがらないが、組織にとって「絶対に崩れてはならない」基盤整備。"
+                    ],
+                    "bad": [
+                        "「とりあえず今すぐやって」といった、行き当たりばったりで即効性のみを求められる現場。",
+                        "中身や実態のない「過剰な自己アピール」ばかりが評価される軽薄な組織。"
+                    ]
+                },
+                "message": [
+                    "「静かであることは、決して弱いということではない。」",
+                    "世の中は常に、声の大きい者や動きの速い者を評価しがちです。しかし、巨大なビルが倒れないのは、地中深くで見えない基盤が支えているからです。",
+                    "あなたのその深き水脈が、やがて枯れ果てた荒野を潤し、新たな文明を支える岩盤となるでしょう。"
+                ]
+            });
+        } else {
+            // 他の番号は空の構造のみ作成
+            database.push({
+                "id": i,
+                "jukkan": jukkanList[(i-1) % 10],
+                "kanji": `未設定 No.${i}`,
+                "ruby": "PENDING",
+                "catchcopy": "データ入力待ち",
+                "keywords": [],
+                "origin": { "metaphor": "", "p1": "", "p2": "", "p3": "", "nodes": [] },
+                "resonance": [],
+                "parameter": { "stats": [0,0,0,0,0], "tooltips": [], "p1": "", "p2": "" },
+                "strategy": { "good": [], "bad": [] },
+                "message": []
+            });
+        }
+    }
+    renderCard(49); // インデックスなので49がNo.50
+}
+
+function renderCard(index) {
+    const data = database[index];
+    const view = document.getElementById('result-view');
+    
+    let nodesHtml = data.origin.nodes.map(n => `
+        <div class="node-box"><strong>${n.word.replace('\n','<br>')}</strong><br><small>${n.desc.replace('\n','<br>')}</small></div>
+    `).join('');
+
+    let resonanceHtml = data.resonance.map(r => `
+        <div class="resonance-item">
+            <strong>【${r.title}】</strong><br>
+            <small>Give:</small> ${r.give}<br>
+            <small>Take:</small> ${r.take}<br>
+            ${r.matches ? r.matches.map(m => `<div>・${m.name}: ${m.desc}</div>`).join('') : ''}
+            <p><em>${r.note}</em></p>
+        </div>
+    `).join('');
+
+    view.innerHTML = `
+        <div class="card color-${data.jukkan}" style="display:block">
+            <div class="header">
+                <div class="id-badge">ID: ${data.id} / 十干: ${data.jukkan}</div>
+                <div class="ruby">${data.ruby}</div>
+                <div class="kanji">${data.kanji}</div>
+                <div class="catchcopy"><strong>${data.catchcopy}</strong></div>
+                <div class="keywords">${data.keywords.map(k => `<span class="tag">#${k}</span>`).join('')}</div>
+            </div>
+
+            <div class="grid">
+                <div>
+                    <h3 class="section-title">ORIGIN: 起源</h3>
+                    <div class="origin-text">${data.origin.metaphor}</div>
+                    <p>${data.origin.p1}</p>
+                    <p>${data.origin.p2}</p>
+                    ${nodesHtml}
+                </div>
+                <div>
+                    <h3 class="section-title">RESONANCE: 共鳴</h3>
+                    ${resonanceHtml}
+                    <h3 class="section-title">PARAMETER</h3>
+                    <div class="param-row"><span>推進/表現/構築/知略/共感</span></div>
+                    <div class="param-row"><span>[ ${data.parameter.stats.join(' / ')} ]</span></div>
+                    <ul style="font-size:0.8em; padding-left:20px;">
+                        ${data.parameter.tooltips.map(t => `<li>${t}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="message-box">
+                ${data.message.map(m => `<p>${m}</p>`).join('')}
+            </div>
+        </div>
+        <p style="text-align:center; color:#666;">生成済み全データ数: ${database.length}件</p>
+    `;
+}
+</script>
+
+</body>
+</html>
