@@ -390,8 +390,10 @@
             `).join('');
 
             // PARAMETER
-            document.getElementById('dom-param-p1').innerHTML = `<p>${d.parameter.p1}</p>`;
-            document.getElementById('dom-param-p2').innerHTML = `<p style="margin-bottom:0;">${d.parameter.p2.replace(/「(.*?)」/g, '<span class="highlight-text">「$1」</span>')}</p>`;
+            document.getElementById('dom-param-text').innerHTML = `
+                <p>${d.parameter.p1}</p>
+                <p style="margin-bottom:0;">${d.parameter.p2.replace(/「(.*?)」/g, '<span class="highlight-text">「$1」</span>')}</p>
+            `;
 
             // STRATEGY
             document.getElementById('dom-strat-good').innerHTML = d.strategy.good.map(s => `<li>${s}</li>`).join('');
