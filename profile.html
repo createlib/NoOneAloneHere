@@ -704,35 +704,47 @@
             return String(val);
         };
 
-        // ==========================================
-        // ★追加: 誕生日から1〜60の運命数(OSナンバー)を算出する関数
-        // (Destiny Logic の Engine.getKanshi の日干支算出ロジックを流用)
-        // ==========================================
+// ==========================================
+// ★ THE PERSONAL OS / Core Logic Engine
+// 誕生日から1〜60の運命数(OSナンバー：日干支)を算出する完全版関数
+// (タイムゾーンの時差バグを完全に排除した絶対堅牢ロジック)
+// ==========================================
 
-        function calculateOsNumber(dateStr) {
+function calculateOsNumber(dateStr) {
     if (!dateStr) return null;
 
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return null;
+    // 1. タイムゾーンによる「前日へのズレ」を防ぐため、
+    // 文字列(YYYY-MM-DD や YYYY/MM/DD)を安全に分割して明示的に数値化する
+    const parts = dateStr.split(/[-/]/);
+    if (parts.length < 3) return null;
+    
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1; // JSのDateオブジェクトの月は0〜11
+    const d = parseInt(parts[2], 10);
 
-    // Engineと同じ基準日
-    const base = new Date(1900, 1, 20);
+    // 入力値が不正な場合はNullを返し、システムクラッシュを防ぐ
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
 
-    const diffTime =
-        Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) -
-        Date.UTC(base.getFullYear(), base.getMonth(), base.getDate());
+    // 2. 世界標準時(UTC)で日付を生成し、ローカルの実行環境（海外アクセス等）の影響を完全に遮断
+    // ※ setUTCFullYear を使用することで、西暦100年未満(0〜99年)が入力されてもバグらない完全仕様
+    const targetDate = new Date(0);
+    targetDate.setUTCFullYear(y, m, d);
+    targetDate.setUTCHours(0, 0, 0, 0);
+    
+    // 3. 基準日 (甲子: 1900年2月20日) も同様にUTCで設定
+    const baseDate = new Date(0);
+    baseDate.setUTCFullYear(1900, 1, 20);
+    baseDate.setUTCHours(0, 0, 0, 0);
 
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    // 4. 経過日数を算出 (ミリ秒を日数に変換)
+    // UTC同士の計算のため、サマータイム(DST)の影響も一切受けない
+    const diffDays = Math.floor((targetDate.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // 5. JSのモジュロ演算におけるマイナス値のバグをスマートに回避する完全数式
+    // 例: (-5 % 60) が -5 になるのを防ぎ、常に0〜59の正の循環に収める
+    const day_idx = ((diffDays % 60) + 60) % 60;
 
-    // Engineの day_idx と完全に同じ計算
-    let day_idx = diffDays % 60;
-
-    // Engineは負数補正していないが、
-    // OSナンバーは1〜60にする必要があるため
-    // ここだけ数学的に正しいmodに変換
-    day_idx = (day_idx + 60) % 60;
-
-    // 0→1番（甲子）に変換
+    // 6. 0=甲子, 59=癸亥 なので +1 して「1〜60」のOSナンバーを返す
     return day_idx + 1;
 }
         // function calculateOsNumber(dateStr) {
