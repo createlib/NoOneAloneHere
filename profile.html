@@ -6,15 +6,12 @@
     <title>航海録を編集 | NOAH</title>
     <link rel="icon" href="img/icon.png">
     
-    <!-- Google Fonts: Noto Serif JP -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
@@ -77,7 +74,6 @@
 </head>
 <body class="antialiased min-h-screen bg-texture pb-20">
 
-    <!-- Navbar -->
     <nav class="glass-header border-b border-brand-200 fixed w-full z-[1500] top-0 h-16 shadow-sm">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
             <div class="flex items-center gap-4">
@@ -89,16 +85,13 @@
             <div class="font-serif font-bold text-brand-900 tracking-widest text-base sm:text-lg">
                 航海録の編集
             </div>
-            <div class="w-8 sm:w-24"></div> <!-- バランス用の余白 -->
-        </div>
+            <div class="w-8 sm:w-24"></div> </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="max-w-3xl mx-auto pt-24 px-4 sm:px-6">
         
         <form id="profile-form" onsubmit="saveProfile(event)" class="space-y-8">
             
-            <!-- プロフィール画像 -->
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200">
                 <h3 class="text-sm font-bold text-brand-800 mb-4 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-camera text-brand-400 mr-2"></i>プロフィール画像</h3>
                 <div class="flex flex-col items-center">
@@ -114,7 +107,6 @@
                 </div>
             </div>
 
-            <!-- 基本情報 -->
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-5">
                 <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-id-card text-brand-400 mr-2"></i>基本情報</h3>
                 
@@ -139,7 +131,6 @@
                         <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">活動拠点 (都道府県)</label>
                         <select id="prefecture" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]"></select>
                     </div>
-                    <!-- 出身地を追加 -->
                     <div>
                         <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">出身地</label>
                         <select id="birthplace" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]"></select>
@@ -168,7 +159,6 @@
                 </div>
             </div>
 
-            <!-- パーソナリティ -->
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-6">
                 <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-feather text-brand-400 mr-2"></i>パーソナリティ</h3>
                 
@@ -197,7 +187,6 @@
                 </div>
             </div>
 
-            <!-- マッチング情報 -->
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-6">
                 <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-handshake text-brand-400 mr-2"></i>マッチング情報</h3>
                 
@@ -213,28 +202,24 @@
                 </div>
             </div>
 
-            <!-- タグ (スキル・趣味) -->
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-6">
                 <h3 class="text-sm font-bold text-brand-800 mb-4 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-tags text-brand-400 mr-2"></i>スキルと趣味</h3>
                 
                 <div>
                     <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">スキルの選択 <span class="text-brand-400 text-[10px] font-normal ml-1">(※3つ以上で評価)</span></label>
                     <div id="skills-checkbox-container" class="space-y-3">
-                        <!-- カテゴリ別のスキルチェックボックスがここに挿入されます -->
-                    </div>
+                        </div>
                     <input type="text" id="custom-skills" placeholder="その他のスキル (カンマ区切り)" class="mt-3 w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#f7f5f0]">
                 </div>
 
                 <div class="mt-8">
                     <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">趣味の選択 <span class="text-brand-400 text-[10px] font-normal ml-1">(※3つ以上で評価)</span></label>
                     <div id="hobbies-checkbox-container" class="space-y-3">
-                        <!-- カテゴリ別の趣味チェックボックスがここに挿入されます -->
-                    </div>
+                        </div>
                     <input type="text" id="custom-hobbies" placeholder="その他の趣味 (カンマ区切り)" class="mt-3 w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#f7f5f0]">
                 </div>
             </div>
 
-            <!-- 経歴 -->
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200">
                 <h3 class="text-sm font-bold text-brand-800 mb-4 tracking-widest border-b border-brand-100 pb-2 flex items-center justify-between">
                     <span><i class="fa-solid fa-timeline text-brand-400 mr-2"></i>経歴 <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローに公開 / 1つ以上で評価)</span></span>
@@ -263,7 +248,6 @@
                 </div>
             </div>
 
-            <!-- SNSリンク -->
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-4">
                 <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-link text-brand-400 mr-2"></i>SNS・外部リンク <span class="text-brand-400 text-[10px] font-normal ml-1">(※どれか1つ以上で評価)</span></h3>
                 <div class="space-y-3">
@@ -282,7 +266,6 @@
                 </div>
             </div>
 
-            <!-- 公開設定 -->
             <div class="bg-brand-50 p-6 sm:p-8 rounded-sm shadow-inner border border-brand-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h3 class="text-sm font-bold text-brand-900 tracking-widest mb-1"><i class="fa-solid fa-eye text-brand-500 mr-2"></i>プロフィールの検索公開</h3>
@@ -294,7 +277,6 @@
                 </select>
             </div>
 
-            <!-- プロフィール充実度についてのアナウンス -->
             <div class="bg-brand-50 p-6 sm:p-8 rounded-sm shadow-inner border border-brand-200 mb-8">
                 <h3 class="text-sm font-bold text-brand-900 tracking-widest mb-2"><i class="fa-solid fa-chart-pie text-brand-500 mr-2"></i>プロフィール充実度について</h3>
                 <p class="text-xs text-brand-700 leading-relaxed tracking-wide">
@@ -308,7 +290,6 @@
                 </p>
             </div>
 
-            <!-- Submit -->
             <div class="pb-10 pt-4">
                 <button type="submit" id="btn-save" class="w-full py-4 bg-[#3e2723] text-[#d4af37] font-bold text-lg rounded-sm hover:bg-[#2a1a17] transition-colors shadow-xl tracking-widest border border-[#b8860b]">
                     <i class="fa-solid fa-floppy-disk mr-2"></i> 航海録を保存する
@@ -317,7 +298,6 @@
         </form>
     </main>
 
-    <!-- ★ Markdown Help Modal -->
     <div id="md-help-modal" class="hidden fixed inset-0 z-[4000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-[#fffdf9] bg-texture w-full max-w-md rounded-sm shadow-2xl flex flex-col border border-brand-300 overflow-hidden">
             <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9]">
@@ -364,7 +344,6 @@
         </div>
     </div>
 
-    <!-- Notification Toast -->
     <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
         <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#d4af37] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
     </div>
@@ -425,7 +404,6 @@
             "🌿 その他": ["瞑想", "マインドフルネス", "占い", "スピリチュアル", "その他"]
         };
 
-        // ★修正: undefinedが返るのを防ぎ、必ず文字列（または設定したデフォルト値）を返すように安全化
         const getVal = (id, def = '') => { 
             const el = document.getElementById(id); 
             if (!el) return def;
@@ -720,11 +698,33 @@
             return Math.min(score, 100);
         }
 
-        // ★修正: 値を安全に文字列化する関数（undefinedがFirebaseに入らないようにする）
+        // 値を安全に文字列化する関数（undefinedがFirebaseに入らないようにする）
         const safeStr = (val) => {
             if (val === undefined || val === null) return '';
             return String(val);
         };
+
+        // ==========================================
+        // ★追加: 誕生日から1〜60の運命数(OSナンバー)を算出する関数
+        // (Destiny Logic の Engine.getKanshi の日干支算出ロジックを流用)
+        // ==========================================
+        function calculateOsNumber(dateStr) {
+            if (!dateStr) return null;
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return null;
+
+            // 基準日 (甲子: 1900年2月20日)
+            const base = new Date(1900, 1, 20); 
+            const diffTime = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(base.getFullYear(), base.getMonth(), base.getDate());
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            // JavaScriptのモジュロ演算でマイナス値を正しく扱うための処理 (1900年2月20日以前への対応)
+            let day_idx = diffDays % 60;
+            if (day_idx < 0) day_idx += 60;
+
+            // 0のときが1番(甲子)、59のときが60番(癸亥)になるよう調整
+            return day_idx + 1;
+        }
 
         window.saveProfile = async (e) => {
             e.preventDefault();
@@ -764,6 +764,10 @@
                 const customHobbies = customHobbiesStr ? customHobbiesStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
                 const finalHobbies = [...new Set([...checkedHobbies, ...customHobbies])];
 
+                // ★追加: 誕生日の値からOSナンバーを算出
+                const birthDateVal = getVal('birthDate');
+                const osNumberVal = calculateOsNumber(birthDateVal);
+
                 // Gather Final Data (全ての項目に安全対策を施す)
                 const finalData = {
                     userId: safeStr(finalUserId),
@@ -777,7 +781,8 @@
                     prefecture: safeStr(getVal('prefecture')),
                     birthplace: safeStr(getVal('birthplace')),
                     gender: safeStr(getVal('gender')),
-                    birthDate: safeStr(getVal('birthDate')),
+                    birthDate: safeStr(birthDateVal),
+                    osNumber: osNumberVal, // ★追加: 算出した1〜60の番号を保存
                     birthVisibility: safeStr(getVal('birthVisibility')) || 'full',
                     bio: safeStr(getVal('bio')),
                     message: safeStr(getVal('message')),
@@ -826,7 +831,8 @@
                             email: finalData.email || null, 
                             isHidden: true,
                             referrerId: finalData.referrerId || null,
-                            profileScore: finalData.profileScore || 0
+                            profileScore: finalData.profileScore || 0,
+                            osNumber: finalData.osNumber || null // ★追加: 検索・表示用にミニマルデータにも含める
                         };
                         await setDoc(publicRef, minimalData);
                     }
@@ -852,3 +858,6 @@
     </script>
 </body>
 </html>
+
+
+
