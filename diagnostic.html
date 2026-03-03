@@ -80,7 +80,7 @@
             line-height: 1.4; 
             box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
             text-align: center;
-            white-space: nowrap; /* 意図しない改行を防ぐ */
+            white-space: nowrap;
         }
         .node-circle.highlight { border-color: var(--accent-main); color: var(--accent-main); text-shadow: 0 0 10px var(--accent-main); }
         .node-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
@@ -141,7 +141,7 @@
             .metaphor-text, .message-box { text-align: left; }
             .message-box { padding: 40px 20px; }
             .node { width: 100%; max-width: 250px; }
-            .node-circle { width: 110px; height: 110px; font-size: 0.95rem; }
+            .node-circle { width: 120px; height: 120px; font-size: 1rem; }
         }
     </style>
 </head>
@@ -445,12 +445,17 @@
                         borderWidth: 2, pointRadius: 4, pointHoverRadius: 6
                     }]
                 },
+                // ★修正: min と max の指定場所を scales.r の直下へ移動し、stepSize を指定
                 options: {
                     scales: {
                         r: {
-                            angleLines: { color: 'rgba(255, 255, 255, 0.05)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            min: 0,
+                            max: 100,
+                            beginAtZero: true,
+                            angleLines: { color: 'rgba(255, 255, 255, 0.05)' }, 
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
                             pointLabels: { font: { size: window.innerWidth < 768 ? 11 : 14, weight: '500' }, color: '#E2E8F0' },
-                            ticks: { display: false, min: 0, max: 100 }
+                            ticks: { display: false, stepSize: 20 }
                         }
                     },
                     plugins: {
