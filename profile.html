@@ -708,23 +708,50 @@
         // ★追加: 誕生日から1〜60の運命数(OSナンバー)を算出する関数
         // (Destiny Logic の Engine.getKanshi の日干支算出ロジックを流用)
         // ==========================================
+
         function calculateOsNumber(dateStr) {
-            if (!dateStr) return null;
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return null;
+    if (!dateStr) return null;
 
-            // 基準日 (甲子: 1900年2月20日)
-            const base = new Date(1900, 1, 20); 
-            const diffTime = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(base.getFullYear(), base.getMonth(), base.getDate());
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+
+    // Engineと同じ基準日
+    const base = new Date(1900, 1, 20);
+
+    const diffTime =
+        Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) -
+        Date.UTC(base.getFullYear(), base.getMonth(), base.getDate());
+
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    // Engineの day_idx と完全に同じ計算
+    let day_idx = diffDays % 60;
+
+    // Engineは負数補正していないが、
+    // OSナンバーは1〜60にする必要があるため
+    // ここだけ数学的に正しいmodに変換
+    day_idx = (day_idx + 60) % 60;
+
+    // 0→1番（甲子）に変換
+    return day_idx + 1;
+}
+        // function calculateOsNumber(dateStr) {
+        //     if (!dateStr) return null;
+        //     const d = new Date(dateStr);
+        //     if (isNaN(d.getTime())) return null;
+
+        //     // 基準日 (甲子: 1900年2月20日)
+        //     const base = new Date(1900, 1, 20); 
+        //     const diffTime = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(base.getFullYear(), base.getMonth(), base.getDate());
+        //     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
             
-            // JavaScriptのモジュロ演算でマイナス値を正しく扱うための処理 (1900年2月20日以前への対応)
-            let day_idx = diffDays % 60;
-            if (day_idx < 0) day_idx += 60;
+        //     // JavaScriptのモジュロ演算でマイナス値を正しく扱うための処理 (1900年2月20日以前への対応)
+        //     let day_idx = diffDays % 60;
+        //     if (day_idx < 0) day_idx += 60;
 
-            // 0のときが1番(甲子)、59のときが60番(癸亥)になるよう調整
-            return day_idx + 1;
-        }
+        //     // 0のときが1番(甲子)、59のときが60番(癸亥)になるよう調整
+        //     return day_idx + 1;
+        // }
 
         window.saveProfile = async (e) => {
             e.preventDefault();
