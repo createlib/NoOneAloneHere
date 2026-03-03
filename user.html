@@ -332,7 +332,42 @@
                                 </div>
                             </div>
 
-                            <div id="completion-bar-container" class="hidden my-4 p-4 bg-brand-50 border border-brand-200 relative z-20">
+
+                            <div id="diagnostic-btn-container" class="hidden mt-4 relative z-20">
+                                <a href="diagnostic.html" class="block w-full bg-gradient-to-r from-[#2a1a17] to-[#3e2723] border border-[#b8860b] text-[#f7f5f0] rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\\'20\\' height=\\'20\\' viewBox=\\'0 0 20 20\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Ccircle cx=\\'2\\' cy=\\'2\\' r=\\'1\\' fill=\\'%23ffffff\\' fill-opacity=\\'0.05\\'/%3E%3C/svg%3E')]"></div>
+                                    <div class="px-4 py-4 flex items-center justify-between relative z-10">
+                                        <div class="flex items-center gap-4">
+                                            <div class="bg-[#d4af37]/20 rounded-full p-3 group-hover:scale-110 transition-transform border border-[#d4af37]/30">
+                                                <i class="fa-solid fa-dna text-xl text-[#d4af37]"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <p class="text-[10px] font-bold text-[#c8b9a6] tracking-widest mb-1 flex items-center gap-1">
+                                                    <i class="fa-solid fa-unlock-keyhole text-[#d4af37]"></i> PROFILE 100%
+                                                </p>
+                                                <p class="text-sm sm:text-base font-black tracking-widest leading-tight font-serif">魂の設計図 <span class="text-xs font-sans text-[#d4af37] border border-[#d4af37] px-1 ml-1 rounded-sm opacity-80">OS</span></p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-[#c8b9a6] text-lg"></i>
+                                    </div>
+                                </a>
+                            </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            
+                            <!-- <div id="completion-bar-container" class="hidden my-4 p-4 bg-brand-50 border border-brand-200 relative z-20">
                                 <div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-brand-500 tracking-widest">プロフィール充実度</span><span id="score-text" class="text-sm font-bold text-brand-600">0%</span></div>
                                 <div class="w-full bg-brand-200 h-1.5"><div id="score-bar" class="bg-brand-500 h-1.5 transition-all duration-1000 ease-out" style="width: 0%"></div></div>
                             </div>
@@ -353,8 +388,24 @@
                                         <i class="fa-solid fa-chevron-right text-[#2a1a17]/80 text-sm"></i>
                                     </div>
                                 </a>
-                            </div>
+                            </div> -->
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            
                             <!-- Debug: Rank Switcher (Admin Only) -->
                             <div id="debug-rank-switcher" class="hidden mt-6 pt-6 border-t border-dashed border-brand-200 relative z-20 pb-4">
                                 <p class="text-[10px] font-bold text-[#b8860b] mb-2 uppercase tracking-widest">【管理者用】役割変更</p>
@@ -1290,9 +1341,36 @@
             }
 
             if (isSelf) {
-                setElText('score-text', (data.profileScore || 0) + '%');
+                const score = data.profileScore || 0;
+                setElText('score-text', score + '%');
                 const scoreBar = document.getElementById('score-bar');
-                if(scoreBar) scoreBar.style.width = (data.profileScore || 0) + '%';
+                if(scoreBar) scoreBar.style.width = score + '%';
+
+                // ▼▼ プロフィール100%で診断ボタン表示 ▼▼
+                const diagnosticBtn = document.getElementById('diagnostic-btn-container');
+                if (diagnosticBtn) {
+                    if (score >= 100 || isAdminMock) {
+                        diagnosticBtn.classList.remove('hidden');
+                        // ユーザーのデータにosIdがあればリンク先URLにパラメータ付与
+                        const linkEl = diagnosticBtn.querySelector('a');
+                        if (linkEl && data.osId) {
+                            linkEl.href = `diagnostic.html?osId=${data.osId}`;
+                        }
+                    } else {
+                        diagnosticBtn.classList.add('hidden');
+                    }
+                }
+                // ▲▲ ここまで ▲▲
+
+
+
+
+
+
+                
+                // setElText('score-text', (data.profileScore || 0) + '%');
+                // const scoreBar = document.getElementById('score-bar');
+                // if(scoreBar) scoreBar.style.width = (data.profileScore || 0) + '%';
             }
         }
 
