@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE PERSONAL OS BLUEPRINT | 診断結果</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* デフォルトカラー（JSで十干のデータに合わせて一瞬で上書きされます） */
+        :root {
+            --bg-color: #060913; 
+            --surface-color: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --text-main: #E2E8F0;
+            --text-muted: #8BA2BC;
+            --accent-main: #c5a880; 
+            --accent-sub: #3b82f6;  
+            
+            --font-serif: 'Noto Serif JP', serif;
+            --font-sans: 'Zen Kaku Gothic New', sans-serif;
+            --font-eng: 'Cinzel', serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top center, rgba(255,255,255,0.05) 0%, var(--bg-color) 100%);
+            color: var(--text-main); font-family: var(--font-sans); line-height: 2.0; margin: 0; padding: 0; overflow-x: hidden; letter-spacing: 0.05em;
+            transition: background-color 0.8s ease;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px 120px; }
+        .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 1.2s, transform 1.2s; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+        section { margin-bottom: 110px; }
+        h1, h2, h3, h4, .serif { font-family: var(--font-serif); font-weight: 500; }
+        .pc-only { display: inline; }
+
+        .nav-back { color: var(--accent-sub); text-decoration: none; font-size: 0.85rem; letter-spacing: 0.1em; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 30px; transition: opacity 0.3s; }
+        .nav-back:hover { opacity: 0.7; }
+
+        .chapter-heading { text-align: center; margin-bottom: 50px; }
+        .chapter-eng { font-family: var(--font-eng); color: var(--accent-sub); font-size: clamp(0.8rem, 2vw, 1rem); letter-spacing: 0.3em; display: block; margin-bottom: 5px; }
+        .chapter-jp { font-size: clamp(1.2rem, 4vw, 1.8rem); color: #fff; margin: 0; display: inline-block; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; word-break: keep-all; }
+
+        /* THE CORE */
+        .core-section { text-align: center; padding-top: 20px; padding-bottom: 60px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 80px; }
+        .badge { display: inline-block; border: 1px solid var(--accent-sub); color: var(--accent-sub); padding: 8px 24px; font-size: clamp(0.7rem, 2vw, 0.85rem); letter-spacing: 0.2em; border-radius: 30px; margin-bottom: 30px; white-space: nowrap; }
+        .ruby { font-family: var(--font-eng); color: var(--accent-main); letter-spacing: 0.6em; font-size: clamp(0.8rem, 2.5vw, 1rem); margin-bottom: -10px; }
+        .title-kanji { font-size: clamp(3.5rem, 15vw, 6.5rem); color: #ffffff; letter-spacing: 0.15em; margin: 15px 0; text-shadow: 0 0 40px var(--accent-main); white-space: nowrap; }
+        .catchcopy { font-size: clamp(1rem, 3.5vw, 1.6rem); color: var(--text-main); margin-bottom: 40px; font-style: italic; overflow-wrap: break-word; }
+        .keywords { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        .kw-tag { background: var(--surface-color); border: 1px solid var(--border-subtle); color: var(--accent-sub); padding: 6px 16px; border-radius: 4px; font-size: 0.85rem; letter-spacing: 0.1em; white-space: nowrap;}
+
+        .glass-box { background: linear-gradient(135deg, var(--surface-color) 0%, rgba(0,0,0,0) 100%); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 40px; margin-bottom: 50px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px); text-align: center; }
+        .metaphor-text { font-size: clamp(1rem, 3.5vw, 1.3rem); font-style: italic; color: #fff; line-height: 2.2; }
+        .metaphor-text p { margin: 0; }
+        
+        .body-text p { font-size: 1.05rem; color: #C9D1D9; text-align: justify; margin-bottom: 1.8em; line-height: 2.2; }
+        .highlight-text { color: var(--accent-main); font-weight: bold; }
+
+        /* インフォグラフィック */
+        .structure-diagram { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px; margin: 60px 0; padding: 50px 20px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--border-subtle); }
+        .node { text-align: center; width: 140px; }
+        .node-circle { width: 90px; height: 90px; border-radius: 50%; border: 1px solid var(--accent-sub); display: flex; align-items: center; justify-content: center; font-size: 1rem; margin: 0 auto 15px; background: rgba(0,0,0,0.5); color: #fff; line-height: 1.4; box-shadow: inset 0 0 20px rgba(255,255,255,0.05); }
+        .node-circle.highlight { border-color: var(--accent-main); color: var(--accent-main); text-shadow: 0 0 10px var(--accent-main); }
+        .node-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+        .arrow { font-size: 1.5rem; color: var(--accent-sub); opacity: 0.5; }
+
+        /* THE RESONANCE */
+        .synergy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .syn-card { background: rgba(255, 255, 255, 0.01); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 35px 30px; display: flex; flex-direction: column; transition: transform 0.3s; }
+        .syn-card:hover { border-color: var(--accent-sub); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .syn-icon { width: 32px; height: 32px; stroke: var(--accent-sub); fill: none; stroke-width: 1.5; margin-bottom: 20px; opacity: 0.9; }
+        .syn-title { font-size: clamp(1.1rem, 3.5vw, 1.25rem); color: #fff; margin-bottom: 25px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; word-break: keep-all; }
+        .syn-section { margin-bottom: 25px; }
+        .syn-label { font-size: 0.8rem; color: var(--accent-sub); display: block; margin-bottom: 8px; letter-spacing: 0.1em; font-weight: bold; }
+        .syn-text { font-size: 0.95rem; color: #C9D1D9; line-height: 1.8; }
+        
+        .premium-container { position: relative; margin-top: auto; padding: 25px 20px; border-radius: 8px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-subtle); overflow: hidden; }
+        .premium-content { transition: filter 0.4s ease, opacity 0.4s ease; margin-top: 15px; }
+        .syn-match-item { font-size: 0.95rem; color: #fff; margin-bottom: 10px; line-height: 1.6; }
+        .syn-match-item span { color: var(--accent-main); font-weight: bold; margin-right: 8px; font-family: var(--font-serif); letter-spacing: 0.05em;}
+        .syn-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; border-top: 1px dashed var(--border-subtle); padding-top: 12px; }
+
+        .premium-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); z-index: 10; text-align: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; cursor: pointer; }
+        .premium-overlay svg { width: 26px; height: 26px; stroke: var(--accent-sub); fill: none; stroke-width: 1.5; margin-bottom: 10px; transition: 0.3s; }
+        .premium-overlay:hover svg { stroke: var(--accent-main); transform: scale(1.1); }
+        
+        /* ランク制御ロック機能 (bodyタグの属性で一括制御) */
+        body[data-tier="ARRIVAL"] .premium-content { filter: blur(6px); opacity: 0.3; user-select: none; pointer-events: none; }
+        body[data-tier="ARRIVAL"] .premium-overlay { opacity: 1; pointer-events: auto; }
+
+        /* THE STRATEGY */
+        .chart-wrapper { max-width: 600px; margin: 0 auto 60px; }
+        .matrix-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 50px; }
+        .matrix-card { padding: 40px 30px; border-radius: 16px; position: relative; overflow: hidden; background: var(--surface-color); border: 1px solid var(--border-subtle); }
+        .card-good::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%; background: radial-gradient(circle at top right, rgba(16,185,129,0.05) 0%, transparent 70%); pointer-events: none; }
+        .card-bad::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%; background: radial-gradient(circle at top right, rgba(239,68,68,0.05) 0%, transparent 70%); pointer-events: none; }
+        .matrix-title { font-size: clamp(1.1rem, 3vw, 1.4rem); margin-top: 0; margin-bottom: 25px; word-break: keep-all; position: relative; z-index: 1;}
+        .card-good .matrix-title { color: #10B981; }
+        .card-bad .matrix-title { color: #EF4444; }
+        .matrix-list { padding-left: 20px; margin: 0; color: #E2E8F0; font-size: 0.95rem; position: relative; z-index: 1;}
+        .matrix-list li { margin-bottom: 15px; line-height: 1.8; }
+
+        .message-box { text-align: center; padding: 60px 40px; background: radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, transparent 70%); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); }
+        .message-body { font-size: clamp(1.05rem, 3.5vw, 1.25rem); line-height: 2.2; color: #fff; }
+        .message-body p { margin-top: 0; margin-bottom: 1.8em; }
+        .message-body p:last-child { margin-bottom: 0; }
+        .signature { margin-top: 60px; font-family: var(--font-eng); color: var(--accent-sub); letter-spacing: 0.2em; font-size: 0.9rem; text-align: center; }
+
+        /* Loading */
+        #loader { position: fixed; inset: 0; background: #060913; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #C5A880; transition: opacity 0.8s; }
+        .spinner { width: 40px; height: 40px; border: 2px solid rgba(197, 168, 128, 0.2); border-top: 2px solid #C5A880; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .synergy-grid, .matrix-container { grid-template-columns: 1fr; }
+            .structure-diagram { flex-direction: column; }
+            .arrow { transform: rotate(90deg); margin: 10px 0; }
+            .pc-only { display: none !important; }
+            .metaphor-text, .message-box { text-align: left; }
+            .message-box { padding: 40px 20px; }
+        }
+    </style>
+</head>
+
+<body data-tier="ARRIVAL" style="overflow: hidden;">
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <div style="font-family: var(--font-eng); letter-spacing: 0.3em; font-size: 0.8rem;">ANALYZING SOUL OS...</div>
+    </div>
+
+    <div class="container" id="main-content" style="opacity: 0; transition: opacity 1s ease;">
+        
+        <a href="user.html" class="nav-back"><i class="fa-solid fa-arrow-left"></i> マイページに戻る</a>
+
+        <section class="core-section fade-in">
+            <div class="badge" id="dom-badge">PERSONAL BEHAVIORAL OS | No.-- ----</div>
+            <div class="ruby" id="dom-ruby">LOADING</div>
+            <h1 class="title-kanji serif" id="dom-title">解析中</h1>
+            <div class="catchcopy serif" id="dom-catchcopy">...</div>
+            <div class="keywords" id="dom-keywords"></div>
+        </section>
+
+        <section class="fade-in">
+            <div class="chapter-heading">
+                <span class="chapter-eng">CHAPTER I : THE ORIGIN</span>
+                <h2 class="chapter-jp serif">魂の基本設計図（OS）と情景</h2>
+            </div>
+            <div class="glass-box"><div class="metaphor-text serif" id="dom-metaphor"></div></div>
+            <div class="body-text" id="dom-origin-text"></div>
+            <div class="structure-diagram" id="dom-nodes"></div>
+        </section>
+
+        <section class="fade-in">
+            <div class="chapter-heading">
+                <span class="chapter-eng">CHAPTER II : THE RESONANCE</span>
+                <h2 class="chapter-jp serif">人間関係における役割と魂の共鳴</h2>
+            </div>
+            <div class="body-text" style="text-align: center; margin-bottom: 40px;">
+                <p>あなたの才能は他者と交わることで真の価値を発揮します。<br class="pc-only">
+                <strong>「誰と組めば運命が劇的に加速するのか」</strong>を解き明かします。</p>
+            </div>
+            <div class="synergy-grid" id="dom-resonance"></div>
+        </section>
+
+        <section class="fade-in">
+            <div class="chapter-heading">
+                <span class="chapter-eng">CHAPTER III : THE PARAMETER</span>
+                <h2 class="chapter-jp serif">才能の五次元解析と美しき偏り</h2>
+            </div>
+            <div class="chart-wrapper"><canvas id="radarChart"></canvas></div>
+            <div class="glass-box" style="margin-bottom:0; text-align: justify;">
+                <div class="body-text" style="margin-bottom:0;" id="dom-param-text"></div>
+            </div>
+        </section>
+
+        <section class="fade-in">
+            <div class="chapter-heading">
+                <span class="chapter-eng">CHAPTER IV : THE STRATEGY</span>
+                <h2 class="chapter-jp serif">現実世界でのサバイバル戦略</h2>
+            </div>
+            <div class="matrix-container">
+                <div class="matrix-card card-good">
+                    <h3 class="matrix-title serif">⭕️ 才能が覚醒する絶対領域</h3>
+                    <ul class="matrix-list" id="dom-strat-good"></ul>
+                </div>
+                <div class="matrix-card card-bad">
+                    <h3 class="matrix-title serif">❌ 才能が枯渇する禁忌</h3>
+                    <ul class="matrix-list" id="dom-strat-bad"></ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="fade-in" style="margin-bottom: 0;">
+            <div class="chapter-heading">
+                <span class="chapter-eng">CHAPTER V : THE MESSAGE</span>
+                <h2 class="chapter-jp serif">プロファイラーからの最終宣告</h2>
+            </div>
+            <div class="message-box">
+                <div class="message-body serif" id="dom-message"></div>
+                <div class="signature">THE HUMAN BEHAVIORAL OS PROFILER</div>
+            </div>
+        </section>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+        // ▼ 本番環境のFirebase Configを設定してください ▼
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0",
+            authDomain: "brainbridge-4b8ac.firebaseapp.com",
+            projectId: "brainbridge-4b8ac",
+            storageBucket: "brainbridge-4b8ac.firebasestorage.app",
+            messagingSenderId: "803209683213",
+            appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        // 10パターンのプレミアム・カラーパレット（背景・メイン・サブ）
+        const THEME_COLORS = {
+            '甲': { bg: '#041208', main: '#10B981', sub: '#34D399' }, // 木・陽
+            '乙': { bg: '#08140B', main: '#34D399', sub: '#6EE7B7' }, // 木・陰
+            '丙': { bg: '#1A0808', main: '#EF4444', sub: '#FCA5A5' }, // 火・陽
+            '丁': { bg: '#180B05', main: '#F97316', sub: '#FDBA74' }, // 火・陰
+            '戊': { bg: '#171105', main: '#D97706', sub: '#FCD34D' }, // 土・陽
+            '己': { bg: '#141208', main: '#B45309', sub: '#FDE047' }, // 土・陰
+            '庚': { bg: '#080A0F', main: '#94A3B8', sub: '#CBD5E1' }, // 金・陽
+            '辛': { bg: '#0B0D14', main: '#CBD5E1', sub: '#F1F5F9' }, // 金・陰
+            '壬': { bg: '#050A14', main: '#3B82F6', sub: '#93C5FD' }, // 水・陽
+            '癸': { bg: '#060913', main: '#C5A880', sub: '#3B82F6' }  // 水・陰
+        };
+
+        const ICONS = [
+            '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>',
+            '<circle cx="8" cy="12" r="6"/><circle cx="16" cy="12" r="6"/>',
+            '<circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>',
+            '<circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>'
+        ];
+
+        // HexをRGBAに変換（レーダーチャートの透過用）
+        function hexToRgba(hex, alpha) {
+            hex = hex.replace('#', '');
+            if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        let chartInstance = null;
+
+        // メイン処理
+        onAuthStateChanged(auth, async (user) => {
+            let userRank = 'arrival';
+            let targetOsId = new URLSearchParams(window.location.search).get('osId');
+
+            if (localStorage.getItem('isAdminMock') === 'true') {
+                userRank = 'covenant'; // 管理者は全解禁
+                if (!targetOsId) targetOsId = "50";
+            } else if (user) {
+                try {
+                    // ログインユーザーのランクをFirestoreから取得
+                    const profileRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+                    const snap = await getDoc(profileRef);
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        userRank = data.membershipRank || 'arrival';
+                        if (!targetOsId) targetOsId = data.osId || "50"; // 指定がなければ自身のID
+                    }
+                } catch(e) { console.error(e); }
+            } else {
+                // 未ログインはログイン画面へ
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // ランク判定 (ARRIVAL以外ならCSSのロックを解除)
+            document.body.setAttribute('data-tier', userRank === 'arrival' ? 'ARRIVAL' : 'SETTLER');
+
+            // Firestoreから診断データをロードして描画
+            await fetchBlueprint(targetOsId);
+        });
+
+        async function fetchBlueprint(id) {
+            try {
+                // ★ Firestoreから取得（設計したコレクションパス）
+                const docRef = doc(db, 'artifacts', appId, 'os_blueprints', String(id));
+                const docSnap = await getDoc(docRef);
+                
+                let data;
+                if (docSnap.exists()) {
+                    data = docSnap.data();
+                } else {
+                    console.warn("Firestoreにデータがありません。モックを使用します。");
+                    data = getFallbackData();
+                }
+
+                // 1. カラーテーマの適用
+                applyTheme(data.jukkan || '癸');
+
+                // 2. DOMへの流し込み
+                renderDOM(data);
+
+                // 3. ローディング解除
+                setTimeout(() => {
+                    document.getElementById('loader').style.opacity = '0';
+                    document.body.style.overflow = 'auto';
+                    setTimeout(() => {
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('main-content').style.opacity = '1';
+                        initAnimations();
+                        renderChart(data.parameter);
+                    }, 500);
+                }, 500);
+
+            } catch (e) {
+                console.error(e);
+                alert("データの読み込みに失敗しました。");
+            }
+        }
+
+        function applyTheme(jukkan) {
+            const theme = THEME_COLORS[jukkan] || THEME_COLORS["癸"];
+            const root = document.documentElement;
+            root.style.setProperty('--bg-color', theme.bg);
+            root.style.setProperty('--accent-main', theme.main);
+            root.style.setProperty('--accent-sub', theme.sub);
+            document.querySelector('.spinner').style.borderTopColor = theme.main;
+        }
+
+        function renderDOM(d) {
+            document.getElementById('dom-badge').textContent = `PERSONAL BEHAVIORAL OS | No.${d.id} ${d.kanji}`;
+            document.getElementById('dom-ruby').textContent = d.ruby;
+            document.getElementById('dom-title').textContent = d.kanji;
+            document.getElementById('dom-catchcopy').textContent = d.catchcopy;
+            document.getElementById('dom-keywords').innerHTML = d.keywords.map(k => `<span class="kw-tag">#${k}</span>`).join('');
+
+            // ORIGIN
+            document.getElementById('dom-metaphor').innerHTML = `<p>${d.origin.metaphor.replace(/\n/g, '<br class="pc-only">')}</p>`;
+            document.getElementById('dom-origin-text').innerHTML = `
+                <p>${d.origin.p1.replace(/「(.*?)」/g, '<span class="highlight-text">「$1」</span>')}</p>
+                <p>${d.origin.p2.replace(/「(.*?)」/g, '<span class="highlight-text">「$1」</span>')}</p>
+                <p>${d.origin.p3.replace(/「(.*?)」/g, '<span class="highlight-text">「$1」</span>')}</p>
+            `;
+
+            document.getElementById('dom-nodes').innerHTML = `
+                <div class="node"><div class="node-circle serif" style="border-color: var(--accent-sub);">${d.origin.nodes[0].word.replace(/\n/g, '<br>')}</div><div class="node-desc">${d.origin.nodes[0].desc.replace(/\n/g, '<br>')}</div></div>
+                <div class="arrow">▶︎</div>
+                <div class="node"><div class="node-circle serif" style="border-color: #fff;">${d.origin.nodes[1].word.replace(/\n/g, '<br>')}</div><div class="node-desc">${d.origin.nodes[1].desc.replace(/\n/g, '<br>')}</div></div>
+                <div class="arrow">▶︎</div>
+                <div class="node"><div class="node-circle serif highlight">${d.origin.nodes[2].word.replace(/\n/g, '<br>')}</div><div class="node-desc">${d.origin.nodes[2].desc.replace(/\n/g, '<br>')}</div></div>
+            `;
+
+            // RESONANCE
+            document.getElementById('dom-resonance').innerHTML = d.resonance.map((res, i) => `
+                <div class="syn-card">
+                    <svg class="syn-icon" viewBox="0 0 24 24">${ICONS[i % 4]}</svg>
+                    <h3 class="syn-title serif">${res.title}</h3>
+                    <div class="syn-section"><span class="syn-label">【あなたの役割 (GIVE)】</span><div class="syn-text">${res.give}</div></div>
+                    <div class="syn-section"><span class="syn-label">【相手に求めるもの (TAKE)】</span><div class="syn-text">${res.take}</div></div>
+                    
+                    <div class="premium-container">
+                        <span class="syn-label" style="color: var(--accent-main);">▶︎ 最高の化学反応を起こす相手</span>
+                        <div class="premium-content">
+                            ${res.matches.map(m => `<div class="syn-match-item"><span>${m.name}</span>${m.desc}</div>`).join('')}
+                            <div class="syn-note">${res.note}</div>
+                        </div>
+                        <div class="premium-overlay" onclick="location.href='upgrade.html'">
+                            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            <div style="font-size: 0.85rem; color: #fff; letter-spacing: 0.1em; font-weight: bold;">SETTLER以上で解放</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; text-decoration:underline;">契約を変更して確認する</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // PARAMETER
+            document.getElementById('dom-param-p1').innerHTML = `<p>${d.parameter.p1}</p>`;
+            document.getElementById('dom-param-p2').innerHTML = `<p style="margin-bottom:0;">${d.parameter.p2.replace(/「(.*?)」/g, '<span class="highlight-text">「$1」</span>')}</p>`;
+
+            // STRATEGY
+            document.getElementById('dom-strat-good').innerHTML = d.strategy.good.map(s => `<li>${s}</li>`).join('');
+            document.getElementById('dom-strat-bad').innerHTML = d.strategy.bad.map(s => `<li>${s}</li>`).join('');
+
+            // MESSAGE
+            document.getElementById('dom-message').innerHTML = d.message.map(m => `<p>${m.replace(/\n/g, '<br class="pc-only">')}</p>`).join('');
+        }
+
+        function renderChart(param) {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            const mainColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-main').trim();
+            const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
+
+            Chart.defaults.color = '#8BA2BC';
+            Chart.defaults.font.family = "'Zen Kaku Gothic New', sans-serif";
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['推進・行動力', '表現・発信力', '構築・管理力', '知略・分析力', '共感・調和力'],
+                    datasets: [{
+                        data: param.stats,
+                        backgroundColor: hexToRgba(mainColor, 0.15),
+                        borderColor: mainColor,
+                        pointBackgroundColor: mainColor,
+                        pointBorderColor: bgColor,
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: mainColor,
+                        borderWidth: 2, pointRadius: 4, pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.05)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { font: { size: window.innerWidth < 768 ? 11 : 14, weight: '500' }, color: '#E2E8F0' },
+                            ticks: { display: false, min: 0, max: 100 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(13, 19, 38, 0.95)', titleFont: { size: 14, family: "'Noto Serif JP', serif" },
+                            bodyFont: { size: 13 }, borderColor: mainColor, borderWidth: 1, padding: 15,
+                            callbacks: { label: (ctx) => " " + param.tooltips[ctx.dataIndex] }
+                        }
+                    },
+                    animation: { duration: 2500, easing: 'easeOutQuart' }
+                }
+            });
+        }
+
+        function initAnimations() {
+            const faders = document.querySelectorAll('.fade-in');
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }});
+            }, { threshold: 0.15, rootMargin: "0px 0px -50px 0px" });
+            faders.forEach(f => observer.observe(f));
+        }
+
+        // DB未登録時のフォールバックデータ
+        function getFallbackData() {
+            return {
+                id: 50, jukkan: "癸", kanji: "玄盤", ruby: "GENBAN", catchcopy: "静水深流で基盤を支える蓄積型構築者",
+                keywords: ["究極の蓄積", "基盤整備", "長期計画", "裏方統括の極致"],
+                origin: {
+                    metaphor: "「凍てつく冬の大地。\n表層は分厚い泥と氷に閉ざされ、一切の動きがないように見える。\nしかし、その強固な岩盤のさらに奥深くでは、\n長い年月をかけて濾過された『清らかで巨大な地下水脈』が、\n轟音を立てて脈々と流れている。」",
+                    p1: "なぜあなたの行動設計図（OS）に「玄盤」という名が冠されたのか。それはあなたが、一過性の流行や軽薄なスポットライトが当たる表層の世界には一切の興味を持たず、「何十年先も決して崩壊しない社会のインフラ」を、地下深くで設計していく使命を帯びているからです。",
+                    p2: "自然界の物理法則と深層心理の力学を統合した本プロファイリングにおいて、あなたのパーソナリティは<strong>「強烈な重圧を内側に溜め込み、純化させる」</strong>という極めて特殊な構造を持っています。周りが浮き足立っている時、あなた一人だけが「3年後、このシステムが破綻しないか」を静かに計算しています。",
+                    p3: "あなたはプレッシャーに潰されているのではありません。外からの不条理な圧力や混沌とした状況を真っ向から受け止め、それを内なる「冷徹な知性と美学のフィルター」に通すことで不純物を極限まで削ぎ落とします。そして純度100%の真理とデータだけを蓄積していく、「究極の自己濾過システム」を内蔵しているのです。",
+                    nodes: [ { word: "現実の\n重圧", desc: "社会の枠組みや\n強烈なプレッシャー" }, { word: "知性の\n濾過器", desc: "感情を排した\n精密な分析と純化" }, { word: "極限の\n蓄積", desc: "岩盤を砕くほどの\n圧倒的なポテンシャル" } ]
+                },
+                resonance: [
+                    { title: "ビジネスパートナーなら", give: "絶対に崩壊しない実務基盤と冷徹なリスク管理を提供。相手の暴走を受け止める安全な着陸地点となります。", take: "あなたに欠けている「自己アピール」や「ゼロから熱狂を生む力」を持ち、堂々と旗を振る突破力が必要です。", matches: [ { name: "No.43 赫陽", desc: "光の中心で旗を掲げ続ける理念先導者" }, { name: "No.51 蒼槍", desc: "信念を最前線で貫く直進型開拓旗手" } ], note: "※あなたが表に出る必要はありません。彼らを泳がせることで無敵の帝国が完成します。" },
+                    { title: "恋愛・人生のパートナーなら", give: "一時的な感情の波に左右されない、何十年も続く静かで揺るぎない「生活の絶対的な安定と深い庇護」を与えます。", take: "重圧を抱え込みがちなあなたの心の氷をゆっくりと溶かす、急かさない温かさと持続的な愛情を持つ人が最適です。", matches: [ { name: "No.14 紅穏", desc: "慎重に温度を保つ内省型持続者" }, { name: "No.20 玄育", desc: "静かに縁を育てる循環型支援者" } ], note: "※言葉にしなくてもあなたの重い鎧を静かに外し、深い安心感を与えてくれる存在です。" },
+                    { title: "友人・交友関係なら", give: "無駄な馴れ合いを省いた、極めて客観的で本質を突くアドバイスにより、友人の真の危機を救う「最後の砦」となります。", take: "浅い世間話ではなく、哲学や美意識、未来予測について、沈黙すら心地よいレベルで深く語り合える知性や柔軟性。", matches: [ { name: "No.10 玄審", desc: "本質を見抜き純度を高める静謐な鑑定士" }, { name: "No.16 柔整", desc: "柔軟に場を整える調整型実務者" } ], note: "※お互いに干渉しすぎず、大人の知的なキャッチボールができる関係性を築けます。" },
+                    { title: "人生の師匠（メンター）なら", give: "師匠が描く壮大で抽象的なビジョンを、実務レベルで寸分の狂いもなく完璧に組み上げる「最強の実行部隊」となります。", take: "あなたが陥りやすい「狭く深すぎる視野」を広げ、あなたが構築した基盤を社会規模にスケールアップさせる「大局観」。", matches: [ { name: "No.29 蒼嶺", desc: "水脈を束ね大局を描く統合型構想者" }, { name: "No.49 蒼海", desc: "流れを制して時代を動かす知略統率者" } ], note: "※彼らの高い視座を取り入れることで、あなたが作るシステムは一気に巨大な帝国へと成長します。" }
+                ],
+                parameter: {
+                    stats: [30, 15, 100, 90, 65],
+                    tooltips: [ "[30] 軽薄に動かない重厚なポテンシャル", "[LOW 15] 自己アピールは他者に任せるのが大正解", "[MAX 100] 誰も真似できない絶対的基盤構築", "[EXCELLENT 90] 長期を見通す深い洞察と濾過力", "[65] 必要な縁だけを静かに守り抜く力" ],
+                    p1: "データが明確に示している通り、あなたの才能は<strong>「構築・管理力」</strong>と<strong>「知略・分析力」</strong>に極端に振り切れています。日常や仕事のシーンで言えば、「誰もやりたがらない煩雑なルールの整備」「属人化している業務のシステム化」「数年先の資産運用計画」などにおいて、あなたは感情に流されることなく、狂いのない精度で完遂します。",
+                    p2: "一方で、「表現・発信力」や瞬間的な「推進・行動力」は意図的に低く出ています。アイデアを即座に形にしてSNS等で派手にアピールする人々を見て、焦燥感を抱くこともあるでしょう。<br>しかし、今日からその自己否定は完全に捨ててください。「軽薄に動かないこと、安易に喋らないこと」こそが、あなたの最大の武器なのです。自己アピールにエネルギーを浪費しないからこそ、実務とインフラ構築の極致に到達できる。あなたの沈黙は無知ではなく、深い思考と計算の証です。"
+                },
+                strategy: {
+                    good: [ "数年〜数十年単位の「長期的なビジョンと蓄積」が求められるプロジェクト。", "誰もやりたがらないが、組織にとって「絶対に崩れてはならない」基盤整備や根幹の制度設計。" ],
+                    bad: [ "「とりあえず今すぐやって」といった、行き当たりばったりで即効性のみを求められるアジャイル型の現場。", "中身や実態のない「過剰な自己アピール」や「ノリの良さ」ばかりが評価される軽薄な組織。" ]
+                },
+                message: [
+                    "「静かであることは、決して弱いということではない。」",
+                    "世の中は常に、声の大きい者や動きの速い者を評価しがちです。\n社会のスピードが異常に加速する現代において、\n時間をかけて「本物」を構築しようとするあなたの歩みは、時にひどく孤独に感じられることでしょう。",
+                    "しかし、忘れないでください。\nハリボテの城は、嵐が来れば一瞬で崩れ去ります。\nそのとき、吹き荒れる風の中で人々が最後にすがりつくのは、あなたが静かに、しかし執念深く築き上げてきた「揺るぎない基盤」なのです。",
+                    "あなたの人生は「大器晩成」であり、データを蓄積するごとに圧倒的な価値と権力を帯びていきます。",
+                    "誇り高く、自分の思考の重さを信じ抜き、あなただけの「盤石なる帝国」を築き上げてください。"
+                ]
+            };
+        }
+    </script>
+</body>
+</html>
