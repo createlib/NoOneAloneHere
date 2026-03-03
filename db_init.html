@@ -2619,7 +2619,7 @@
             let successCount = 0;
 
             try {
-                for (let i = 1; i <= 60; i++) {
+                for (let i = 1; i <= 61; i++) {
                     const docRef = doc(db, "artifacts", appId, "os_blueprints", String(i));
                     
                     const snap = await getDoc(docRef);
