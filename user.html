@@ -332,9 +332,31 @@
                                 </div>
                             </div>
 
+                            <!-- 充実度バー (条件によって非表示になる) -->
                             <div id="completion-bar-container" class="hidden my-4 p-4 bg-brand-50 border border-brand-200 relative z-20">
                                 <div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-brand-500 tracking-widest">プロフィール充実度</span><span id="score-text" class="text-sm font-bold text-brand-600">0%</span></div>
                                 <div class="w-full bg-brand-200 h-1.5"><div id="score-bar" class="bg-brand-500 h-1.5 transition-all duration-1000 ease-out" style="width: 0%"></div></div>
+                            </div>
+
+                            <!-- 魂の設計図ボタン (100%達成時のみ表示) -->
+                            <div id="diagnostic-btn-container" class="hidden mt-4 relative z-20">
+                                <a href="diagnostic.html" class="block w-full bg-gradient-to-r from-[#2a1a17] to-[#3e2723] border border-[#b8860b] text-[#f7f5f0] rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group relative overflow-hidden">
+                                    <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=%2220%22 height=%2220%22 viewBox=%220 0 20 20%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ccircle cx=%222%22 cy=%222%22 r=%221%22 fill=%22%23ffffff%22 fill-opacity=%220.05%22/%3E%3C/svg%3E')"></div>
+                                    <div class="px-4 py-4 flex items-center justify-between relative z-10">
+                                        <div class="flex items-center gap-4">
+                                            <div class="bg-[#d4af37]/20 rounded-full p-3 group-hover:scale-110 transition-transform border border-[#d4af37]/30">
+                                                <i class="fa-solid fa-dna text-xl text-[#d4af37]"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <p class="text-[10px] font-bold text-[#c8b9a6] tracking-widest mb-1 flex items-center gap-1">
+                                                    <i class="fa-solid fa-unlock-keyhole text-[#d4af37]"></i> PROFILE 100%
+                                                </p>
+                                                <p class="text-sm sm:text-base font-black tracking-widest leading-tight font-serif">魂の設計図 <span class="text-xs font-sans text-[#d4af37] border border-[#d4af37] px-1 ml-1 rounded-sm opacity-80">OS</span></p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-[#c8b9a6] text-lg"></i>
+                                    </div>
+                                </a>
                             </div>
 
                             <!-- Upgrade CTA -->
@@ -1259,6 +1281,35 @@
                                         <span class="text-[10px] font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded-sm tracking-widest border border-brand-200">${c.role || '役割'}</span>
                                         <span class="text-xs text-brand-400 font-medium tracking-widest">${c.start || '?'} 〜 ${c.end || '現在'}</span>
                                     </div>
+                                    <div class="prose prose-sm max-w-none prose-stone text-brand-700 bg-brand-50 p-4 rounded-sm border border-brand-100 shadow-sm">${formattedDesc}</div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        careerContainer.innerHTML = '<div class="text-brand-300 text-sm italic pl-6">経歴情報はありません</div>';
+                    }
+                }
+                
+                const snsContainer = document.getElementById('profile-sns-links');
+                if (snsContainer) {
+                    snsContainer.innerHTML = '';
+                    if (data.websiteUrl) snsContainer.innerHTML += `<a href="${data.websiteUrl}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors shadow-sm"><i class="fa-solid fa-globe"></i></a>`;
+                    if (data.snsInstagram) snsContainer.innerHTML += `<a href="${data.snsInstagram.startsWith('http') ? data.snsInstagram : 'https://instagram.com/'+data.snsInstagram}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors shadow-sm"><i class="fa-brands fa-instagram"></i></a>`;
+                    if (data.snsX) snsContainer.innerHTML += `<a href="${data.snsX.startsWith('http') ? data.snsX : 'https://twitter.com/'+data.snsX}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-brand-50 flex items-center justify-center text-brand-500 hover:bg-brand-100 hover:text-brand-800 transition-colors shadow-sm"><i class="fa-brands fa-x-twitter"></i></a>`;
+                }
+
+                const messageEl = document.getElementById('profile-message');
+                if (messageEl) {
+                    if (data.message) {
+                        setElHtml('profile-message', formatText(data.message));
+                        messageEl.classList.remove('text-brand-300');
+                    } else {
+                        setElText('profile-message', 'まだメッセージがありません。');
+                        messageEl.classList.add('text-brand-300');
+                    }
+                }
+            }
+
             // ★ ここから下が自分専用の画面での処理（充実度バー＆診断ボタン制御）
             if (isSelf) {
                 const score = data.profileScore || 0;
