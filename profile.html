@@ -91,7 +91,6 @@
 
     <main class="max-w-3xl mx-auto pt-24 px-4 sm:px-6">
         
-        <!-- ★フォーム全体で入力変更を検知してリアルタイムスコア更新を行う -->
         <form id="profile-form" onsubmit="saveProfile(event)" oninput="updateLiveScore()" onchange="updateLiveScore()" class="space-y-8">
             
             <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200">
@@ -100,7 +99,8 @@
                     <div class="relative w-32 h-32 bg-brand-50 rounded-full border-2 border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner mb-4">
                         <input type="file" id="photo-upload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10">
                         <img id="profile-image-preview" class="absolute inset-0 w-full h-full object-cover hidden">
-                        <div class="group-hover:scale-110 transition-transform flex flex-col items-center">
+                        <!-- ★修正: id="edit-icon-placeholder" を追加 -->
+                        <div id="edit-icon-placeholder" class="group-hover:scale-110 transition-transform flex flex-col items-center">
                             <i class="fa-solid fa-image text-3xl mb-1"></i>
                             <span class="text-[10px] tracking-widest font-bold">画像を選択</span>
                         </div>
@@ -285,7 +285,6 @@
                 </select>
             </div>
 
-            <!-- ★追加: 100%達成までのサマリー表示領域 -->
             <div id="score-summary" class="hidden bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-300 relative overflow-hidden mb-6">
                 <div class="absolute top-0 left-0 w-1.5 h-full bg-[#b8860b]"></div>
                 <h3 class="text-base font-bold text-brand-900 tracking-widest mb-3 flex items-center">
@@ -444,15 +443,15 @@
                             const img = document.getElementById('profile-image-preview');
                             img.src = ev.target.result;
                             img.classList.remove('hidden');
-                            document.getElementById('edit-icon-placeholder').classList.add('hidden');
+                            const placeholder = document.getElementById('edit-icon-placeholder');
+                            if (placeholder) placeholder.classList.add('hidden');
                         };
                         reader.readAsDataURL(file);
-                        window.updateLiveScore(); // 画像変更時にスコア更新
+                        window.updateLiveScore(); 
                     }
                 });
             }
             
-            // 初期のスコア表示用
             setTimeout(window.updateLiveScore, 500);
         });
 
@@ -465,7 +464,7 @@
                 return;
             }
 
-            if (user) {
+            if (user && !user.isAnonymous) {
                 currentUser = user;
                 let editUid = user.uid; 
                 
@@ -621,7 +620,8 @@
             if(data.photoURL) {
                 document.getElementById('profile-image-preview').src = data.photoURL;
                 document.getElementById('profile-image-preview').classList.remove('hidden');
-                document.getElementById('edit-icon-placeholder').classList.add('hidden');
+                const placeholder = document.getElementById('edit-icon-placeholder');
+                if (placeholder) placeholder.classList.add('hidden');
             }
 
             const selectedSkills = data.skills || [];
@@ -678,12 +678,10 @@
             window.updateLiveScore();
         };
         
-        // 元のaddCareer (ボタンクリック用)
         window.addCareer = () => {
             window.addCareerField();
         };
 
-        // ★ 充実度の計算ロジック (合計100点)
         function calculateProfileScore(data) {
             let score = 0;
             
@@ -714,9 +712,6 @@
             return Math.min(score, 100);
         }
 
-        // ==========================================
-        // ★ リアルタイムスコア・カウント表示処理
-        // ==========================================
         window.updateLiveScore = () => {
             const previewEl = document.getElementById('profile-image-preview');
             const currentPhotoUrl = previewEl && !previewEl.classList.contains('hidden') ? true : false;
@@ -858,6 +853,32 @@
             document.getElementById('score-summary-missing').innerHTML = missing.map(m => `<li>・${m}</li>`).join('');
         }
 
+        // ==========================================
+        // ★ THE PERSONAL OS / Core Logic Engine
+        // 誕生日から1〜60の運命数(OSナンバー：日干支)を算出する完全版関数
+        // ==========================================
+        function calculateOsNumber(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split(/[-/]/);
+            if (parts.length < 3) return null;
+            const y = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            const d = parseInt(parts[2], 10);
+            if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+
+            const targetDate = new Date(0);
+            targetDate.setUTCFullYear(y, m, d);
+            targetDate.setUTCHours(0, 0, 0, 0);
+            
+            const baseDate = new Date(0);
+            baseDate.setUTCFullYear(1900, 1, 20);
+            baseDate.setUTCHours(0, 0, 0, 0);
+
+            const diffDays = Math.floor((targetDate.getTime() - baseDate.getTime()) / (1000 * 60 * 60 * 24));
+            const day_idx = ((diffDays % 60) + 60) % 60;
+            return day_idx + 1;
+        }
+
         const safeStr = (val) => {
             if (val === undefined || val === null) return '';
             return String(val).trim();
@@ -877,7 +898,6 @@
                 let currentPhotoUrl = currentUserData.photoURL || null;
                 const finalUserId = currentUserData.userId || uid; 
 
-                // Photo Upload
                 const fileEl = document.getElementById('photo-upload');
                 if (fileEl && fileEl.files[0] && !isAdminMock) {
                     try {
@@ -889,7 +909,6 @@
                     }
                 }
 
-                // Gather Tags
                 const checkedSkills = Array.from(document.querySelectorAll('input[name="skill-tag"]:checked')).map(cb => cb.value);
                 const customSkillsStr = getVal('custom-skills');
                 const customSkills = customSkillsStr ? customSkillsStr.split(',').map(s=>s.trim()).filter(s=>s) : [];
@@ -911,13 +930,15 @@
                     });
                 });
 
-                // Gather Final Data
+                const birthDateVal = getVal('birthDate');
+                const osNumberVal = calculateOsNumber(birthDateVal);
+
                 const finalData = {
-                    ...currentUserData, // ★追加: 既存のデータ(osNumberなど)を保持して消えないようにする
+                    ...currentUserData, 
                     userId: safeStr(finalUserId),
                     referrerId: currentUserData.referrerId || null,
                     membershipRank: safeStr(currentUserData.membershipRank || 'arrival'),
-                    email: window._originalEmail || currentUser.email || null,
+                    email: window._originalEmail || currentUser.email || null, 
                     name: safeStr(getVal('name')),
                     realName: safeStr(getVal('realName')), 
                     furigana: safeStr(getVal('furigana')),
@@ -925,7 +946,8 @@
                     prefecture: safeStr(getVal('prefecture')),
                     birthplace: safeStr(getVal('birthplace')),
                     gender: safeStr(getVal('gender')),
-                    birthDate: safeStr(getVal('birthDate')),
+                    birthDate: safeStr(birthDateVal),
+                    osNumber: osNumberVal, 
                     birthVisibility: safeStr(getVal('birthVisibility', 'full')),
                     bio: safeStr(getVal('bio')),
                     message: safeStr(getVal('message')),
@@ -952,10 +974,8 @@
                     return;
                 }
 
-                // 1. Private Save
-                await setDoc(privateRef, finalData, { merge: true }); // ★修正: merge: true を追加して安全に上書き
+                await setDoc(privateRef, finalData, { merge: true }); 
 
-                // 2. Public Save
                 const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', uid);
                 const isPaidMember = (finalData.membershipRank !== 'arrival');
                 const isPublicSetting = (finalData.profilePublic === 'true');
@@ -967,7 +987,7 @@
                         isHidden: false
                     };
                     delete publicData.realName;
-                    await setDoc(publicRef, publicData, { merge: true }); // ★修正: merge: true を追加
+                    await setDoc(publicRef, publicData, { merge: true }); 
                 } else {
                     const minimalData = {
                         userId: finalData.userId,
@@ -977,9 +997,9 @@
                         isHidden: true,
                         referrerId: finalData.referrerId || null,
                         profileScore: finalData.profileScore || 0,
-                        osNumber: finalData.osNumber || null // ★追加: 非公開時でもスコア表示等のために保持
+                        osNumber: finalData.osNumber || null 
                     };
-                    await setDoc(publicRef, minimalData, { merge: true }); // ★修正: merge: true を追加
+                    await setDoc(publicRef, minimalData, { merge: true }); 
                 }
 
                 if (isPublicSetting && !canPublish) {
@@ -989,7 +1009,7 @@
                 }
                 
                 setTimeout(() => { 
-                    window.location.href = `user.html?uid=${targetUid}`; 
+                    window.location.href = targetUid ? `user.html?uid=${targetUid}` : 'user.html'; 
                 }, 1500);
 
             } catch (e) {
