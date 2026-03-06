@@ -394,7 +394,15 @@
                     <div class="premium-container">
                         <span class="syn-label" style="color: var(--accent-main);">▶︎ 最高の化学反応を起こす相手</span>
                         <div class="premium-content">
-                            ${res.matches.map(m => `<div class="syn-match-item"><span>${m.name}</span>${m.desc}</div>`).join('')}
+                            ${res.matches.map(m => {
+                                // ★修正: 名前から「No.○○」の数値を抽出して検索ページへのリンクを生成
+                                const match = m.name.match(/No\.(\d+)/);
+                                const osNum = match ? match[1] : '';
+                                if(osNum) {
+                                    return '<div class="syn-match-item"><a href="search.html?osNumber=' + osNum + '" style="color: var(--accent-main); font-weight: bold; margin-right: 8px; font-family: var(--font-serif); letter-spacing: 0.05em; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;" class="hover:opacity-80 transition-opacity" title="このOSの乗客を探す">' + m.name + '</a>' + m.desc + '</div>';
+                                }
+                                return '<div class="syn-match-item"><span>' + m.name + '</span>' + m.desc + '</div>';
+                            }).join('')}
                             <div class="syn-note">${res.note}</div>
                         </div>
                         <div class="premium-overlay" onclick="location.href='upgrade.html'">
