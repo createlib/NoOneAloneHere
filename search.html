@@ -82,6 +82,16 @@
             background-position: right 0.5rem center;
             background-size: 1em;
         }
+
+        /* 数値入力用のスピンボタンを非表示にする */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 <body class="antialiased overflow-x-hidden body-pb-nav lg:pb-0 bg-texture">
@@ -102,7 +112,6 @@
                     <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
                     <a href="search.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
                     
-                    <!-- ★追加・変更: メディア ドロップダウン (PC) -->
                     <div class="relative group h-full flex items-center">
                         <button class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
                             <i class="fa-solid fa-photo-film"></i> メディア
@@ -126,7 +135,6 @@
     <!-- Bottom Navigation -->
     <nav class="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="bottom-nav-content">
-            <!-- ★追加・変更: 左から「航海、イベント、さがす、メディア、マイページ」の順 -->
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-ship text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">航海</span>
@@ -180,44 +188,60 @@
     <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto pt-20 px-4 sm:px-6 lg:px-8 pb-10">
         
-        <!-- Search & Filter Header -->
-        <div class="mb-8 bg-[#fffdf9] p-4 sm:p-6 rounded-sm shadow-md border border-brand-200 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
-            
-            <div class="flex flex-col lg:flex-row gap-4 relative z-10">
-                <!-- Free Word Search -->
-                <div class="flex-1 relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
-                    <input type="text" id="search-input" placeholder="名前、職業、スキルで検索..." class="w-full pl-10 pr-4 py-3 rounded-sm border border-brand-200 shadow-sm text-sm focus:ring-brand-500 focus:border-brand-500 bg-[#f7f5f0]" oninput="filterUsers()">
-                </div>
-                
-                <!-- Filters -->
-                <div class="flex flex-wrap sm:flex-nowrap gap-2">
-                    <select id="filter-rank" class="filter-select flex-1 sm:w-40 border border-brand-200 rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-brand-700 shadow-sm focus:ring-brand-500 font-medium tracking-widest" onchange="filterUsers()">
-                        <option value="">全ての役割</option>
-                        <option value="arrival">ARRIVAL</option>
-                        <option value="settler">SETTLER</option>
-                        <option value="builder">BUILDER</option>
-                        <option value="guardian">GUARDIAN</option>
-                        <option value="covenant">COVENANT</option>
-                    </select>
-                    
-                    <select id="filter-area" class="filter-select flex-1 sm:w-40 border border-brand-200 rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-brand-700 shadow-sm focus:ring-brand-500 font-medium tracking-widest" onchange="filterUsers()">
-                        <option value="">全てのエリア</option>
-                        <!-- JSで挿入 -->
-                    </select>
-                </div>
+        <!-- ★追加: 権限不足時のロック画面 -->
+        <div id="locked-view" class="hidden text-center py-24 px-6 bg-[#fffdf9] rounded-sm border border-brand-200 shadow-md mb-12 max-w-2xl mx-auto relative overflow-hidden">
+            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-1 bg-[#8b6a4f]"></div>
+            <div class="w-20 h-20 bg-brand-50 rounded-full border border-brand-200 flex items-center justify-center mx-auto mb-6 text-brand-300 shadow-inner">
+                <i class="fa-solid fa-lock text-3xl"></i>
             </div>
-            
-            <div class="mt-4 pt-4 border-t border-brand-100 flex justify-between items-center text-xs text-brand-500">
-                <span class="tracking-widest"><i class="fa-solid fa-users mr-1"></i> <span id="result-count">0</span> 名の乗客</span>
-                <span class="tracking-widest">※非公開設定のユーザーは表示されません</span>
-            </div>
+            <h2 class="text-2xl font-bold text-brand-900 mb-4 font-serif tracking-widest">検索機能の利用制限</h2>
+            <p class="text-sm text-brand-600 mb-8 tracking-widest leading-relaxed">
+                他の乗客を探す機能は、<br class="sm:hidden"><span class="font-bold text-[#8b6a4f]">SETTLER（またはそれ以上）</span>の会員限定です。<br>
+                コミュニティの仲間を探すには、契約のアップグレードをご検討ください。
+            </p>
+            <a href="upgrade.html" class="inline-flex items-center justify-center px-8 py-4 bg-[#3e2723] text-[#d4af37] font-bold rounded-sm shadow-md hover:bg-[#2a1a17] transition-colors border border-[#b8860b] tracking-widest text-sm transform hover:-translate-y-0.5">
+                <i class="fa-solid fa-shield-halved mr-2"></i> 契約を確認・変更する
+            </a>
         </div>
 
-        <!-- Users Grid -->
-        <div id="users-grid" class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
-            <div class="col-span-full text-center py-10 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>探索中...</div>
+        <!-- 検索コンテンツ (権限がある場合のみ表示) -->
+        <div id="search-content" class="hidden">
+            <!-- Search & Filter Header -->
+            <div class="mb-8 bg-[#fffdf9] p-4 sm:p-6 rounded-sm shadow-md border border-brand-200 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+                
+                <div class="flex flex-col lg:flex-row gap-4 relative z-10">
+                    <!-- Free Word Search -->
+                    <div class="flex-1 relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
+                        <input type="text" id="search-input" placeholder="名前、職業、スキルで検索..." class="w-full pl-10 pr-4 py-3 rounded-sm border border-brand-200 shadow-sm text-sm focus:ring-brand-500 focus:border-brand-500 bg-[#f7f5f0]" oninput="filterUsers()">
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="flex flex-wrap sm:flex-nowrap gap-2">
+                        <!-- ★変更: OSナンバー用の数値入力フィールド -->
+                        <div class="relative flex-1 sm:w-36">
+                            <i class="fa-solid fa-dna absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-400 text-xs"></i>
+                            <input type="number" id="filter-os-number" placeholder="OS No." min="1" max="60" class="w-full border border-brand-200 rounded-sm py-3 pl-8 pr-3 text-sm bg-[#f7f5f0] text-brand-700 shadow-sm focus:ring-brand-500 focus:border-brand-500 font-medium tracking-widest" oninput="filterUsers()">
+                        </div>
+                        
+                        <select id="filter-area" class="filter-select flex-1 sm:w-40 border border-brand-200 rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-brand-700 shadow-sm focus:ring-brand-500 font-medium tracking-widest" onchange="filterUsers()">
+                            <option value="">全てのエリア</option>
+                            <!-- JSで挿入 -->
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-brand-100 flex justify-between items-center text-xs text-brand-500">
+                    <span class="tracking-widest"><i class="fa-solid fa-users mr-1"></i> <span id="result-count">0</span> 名の乗客</span>
+                    <span class="tracking-widest">※非公開設定のユーザーは表示されません</span>
+                </div>
+            </div>
+
+            <!-- Users Grid -->
+            <div id="users-grid" class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+                <div class="col-span-full text-center py-10 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>探索中...</div>
+            </div>
         </div>
 
     </main>
@@ -244,8 +268,13 @@
         let currentUser = null;
         let allUsers = [];
         let isAdmin = false;
+        let myRank = 'arrival';
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
+
+        // 権限レベルの定義
+        const rankLevels = { 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 };
+        function getRankLevel(rank) { return rankLevels[rank] || 0; }
 
         // Areas setup
         const prefectures = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県","海外","その他"];
@@ -260,7 +289,6 @@
             });
         }
 
-        // ★追加: SP Menu Toggle ---
         window.toggleTheaterMenu = () => {
             const menu = document.getElementById('sp-theater-menu');
             const content = document.getElementById('sp-theater-menu-content');
@@ -273,20 +301,40 @@
             }
         };
 
+        // ★変更: 権限チェックを追加
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // 管理者チェック
-                if (localStorage.getItem('isAdminMock') === 'true') { isAdmin = true; }
-                else {
+                currentUser = user;
+                
+                if (isAdminMock) { 
+                    isAdmin = true; 
+                    myRank = 'covenant';
+                } else {
                     try {
                         const mySnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
                         if (mySnap.exists()) {
-                            if (mySnap.data().userId === 'admin') isAdmin = true;
+                            myRank = mySnap.data().membershipRank || 'arrival';
+                            if (mySnap.data().userId === 'admin') {
+                                isAdmin = true;
+                                myRank = 'admin';
+                            }
                         }
                     } catch(e){}
                 }
-                initFilterOptions();
-                fetchUsers();
+
+                // 権限判定: SETTLER (1) 以上、または管理者
+                const rLevel = getRankLevel((myRank || 'arrival').toLowerCase());
+                
+                if (rLevel >= 1 || isAdmin || isAdminMock) {
+                    // アクセス許可
+                    document.getElementById('search-content').classList.remove('hidden');
+                    initFilterOptions();
+                    fetchUsers();
+                } else {
+                    // アクセス拒否 (ロック画面表示)
+                    document.getElementById('search-content').classList.add('hidden');
+                    document.getElementById('locked-view').classList.remove('hidden');
+                }
             } else {
                 window.location.href = 'login.html';
             }
@@ -296,9 +344,9 @@
             try {
                 if (isAdminMock) {
                     allUsers = [
-                        { userId: 'test1', name: 'Alice', jobTitle: 'Designer', prefecture: '東京都', profileScore: 80, isHidden: false },
-                        { userId: 'test2', name: 'Bob', jobTitle: 'Engineer', prefecture: '大阪府', profileScore: 60, isHidden: false },
-                        { userId: 'test3', name: 'Charlie', isHidden: true } // Hidden
+                        { userId: 'test1', name: 'Alice', jobTitle: 'Designer', prefecture: '東京都', profileScore: 80, isHidden: false, osNumber: "50" },
+                        { userId: 'test2', name: 'Bob', jobTitle: 'Engineer', prefecture: '大阪府', profileScore: 60, isHidden: false, osNumber: "12" },
+                        { userId: 'test3', name: 'Charlie', isHidden: true, osNumber: "33" } 
                     ];
                 } else {
                     const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
@@ -333,7 +381,8 @@
         window.filterUsers = () => {
             const searchQ = document.getElementById('search-input').value.toLowerCase();
             const areaQ = document.getElementById('filter-area').value;
-            const rankQ = document.getElementById('filter-rank').value;
+            // ★変更: OSナンバーの値を取得
+            const osQ = document.getElementById('filter-os-number').value.trim();
 
             const filtered = allUsers.filter(u => {
                 let matchSearch = true;
@@ -351,17 +400,13 @@
                     matchArea = u.prefecture === areaQ || u.birthplace === areaQ;
                 }
 
-                let matchRank = true;
-                if (rankQ) {
-                    const uRank = u.membershipRank || 'arrival';
-                    if (rankQ === 'covenant') {
-                        matchRank = (uRank === 'covenant' || uRank === 'admin');
-                    } else {
-                        matchRank = (uRank === rankQ);
-                    }
+                // ★変更: OSナンバーでのマッチング判定
+                let matchOs = true;
+                if (osQ) {
+                    matchOs = String(u.osNumber) === String(osQ);
                 }
                 
-                return matchSearch && matchArea && matchRank;
+                return matchSearch && matchArea && matchOs;
             });
 
             renderGrid(filtered);
@@ -386,7 +431,6 @@
                 const hiddenBadge = u.isHidden ? '<div class="absolute top-1 sm:top-2 right-1 sm:right-2 bg-red-600 text-white text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-sm font-bold z-10"><i class="fa-solid fa-eye-slash sm:mr-1"></i><span class="hidden sm:inline">非公開</span></div>' : '';
                 const rankBadge = getRankBadge(u.membershipRank);
 
-                // ★変更: アイコン画像の読み込みに失敗した際や未設定の場合、外部画像ではなくCSSで作ったイカリマークのアイコンを瞬時に表示する
                 let iconHtml = '';
                 if (u.photoURL) {
                     iconHtml = `
@@ -412,10 +456,7 @@
                         
                         <!-- アイコンとバッジの行 -->
                         <div class="-mt-8 mb-2 sm:mb-3 flex flex-col sm:flex-row justify-between items-center sm:items-end relative">
-                            <!-- ★変更: 生成したアイコンHTMLを挿入 -->
                             ${iconHtml}
-                            
-                            <!-- ランクバッジ -->
                             <div class="absolute -bottom-2 sm:relative sm:bottom-0 z-20">
                                 ${rankBadge}
                             </div>
