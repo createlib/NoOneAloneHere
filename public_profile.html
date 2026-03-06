@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロフィール | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    
+    <!-- Marked.js & DOMPurify -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { serif: ['Noto Serif JP', 'serif'] },
+                    colors: { 
+                        brand: { 
+                            50: '#f7f5f0',   
+                            100: '#e8dfd1',  
+                            200: '#dcd4c6',  
+                            300: '#c8b9a6',  
+                            400: '#a09080',  
+                            500: '#8b6a4f',  
+                            600: '#725b3f',  
+                            700: '#5c4a3d',  
+                            800: '#4a3b32',  
+                            900: '#3e2723'   
+                        } 
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            font-family: 'Noto Serif JP', serif;
+            background-color: #f7f5f0; 
+            color: #4a3b32;
+        }
+        
+        .bg-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+
+        .cover-gradient { 
+            background: linear-gradient(120deg, #dcd4c6 0%, #eae5d8 100%); 
+            position: relative;
+        }
+        .cover-gradient::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+
+        /* ランクバッジ */
+        .badge-arrival { background-color: #f7f5f0; color: #5c4a3d; border: 1px solid #c8b9a6; }
+        .badge-settler { background: linear-gradient(135deg, #e8dfd1 0%, #dcd4c6 100%); color: #4a3b32; border: 1px solid #8b6a4f; }
+        .badge-builder { background: linear-gradient(135deg, #dcd4c6 0%, #c8b9a6 100%); color: #3e2723; border: 1px solid #725b3f; }
+        .badge-guardian { background: linear-gradient(135deg, #c8b9a6 0%, #a09080 100%); color: #f7f5f0; border: 1px solid #5c4a3d; }
+        .badge-covenant { background: linear-gradient(135deg, #fef9c3 0%, #d4af37 100%); color: #3e2723; border: 1px solid #b8860b; }
+
+        .prose h1, .prose h2, .prose h3 { color: #3e2723; font-family: 'Noto Serif JP', serif; letter-spacing: 0.05em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: 700; }
+        .prose h1 { font-size: 1.25rem; border-bottom: 1px solid #e8dfd1; padding-bottom: 0.3em; }
+        .prose h2 { font-size: 1.1rem; }
+        .prose p { margin-top: 0.5em; margin-bottom: 0.5em; line-height: 1.8; }
+        .prose a { color: #8b6a4f; text-decoration: underline; }
+        .prose ul { list-style-type: disc; padding-left: 1.25em; }
+        .prose blockquote { border-left: 3px solid #c8b9a6; padding-left: 1em; color: #725b3f; font-style: italic; }
+    </style>
+</head>
+<body class="antialiased pb-20 bg-texture">
+
+    <!-- シンプルなヘッダー（リンクやメニューはなし） -->
+    <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 h-full flex justify-center items-center">
+            <div class="text-xl font-black text-brand-900 tracking-[0.3em] font-serif flex items-center gap-2">
+                <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-anchor"></i></span>
+                <span>NOAH</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <div class="max-w-3xl mx-auto pt-24 px-4 sm:px-6">
+        
+        <div id="loading-container" class="text-center py-20 text-brand-400">
+            <i class="fa-solid fa-compass fa-spin text-4xl mb-4 opacity-50"></i>
+            <p class="text-sm font-bold tracking-widest">プロフィールを読み込み中...</p>
+        </div>
+
+        <div id="error-container" class="hidden text-center py-20 bg-[#fffdf9] rounded-sm border border-brand-200 shadow-sm mt-4">
+            <i class="fa-solid fa-user-slash text-4xl text-brand-300 mb-4"></i>
+            <h3 class="text-lg font-bold text-brand-900 mb-2 font-serif">ユーザーが見つかりません</h3>
+            <p class="text-brand-500 text-sm">IDが間違っているか、データが存在しません。</p>
+        </div>
+
+        <div id="profile-content" class="hidden space-y-6">
+            
+            <!-- プロフィールヘッダー -->
+            <div class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 overflow-hidden relative">
+                <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-brand-500 z-10 m-2"></div>
+                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+
+                <div class="h-32 sm:h-40 cover-gradient w-full border-b border-brand-200"></div>
+                <div class="px-6 pb-8 relative">
+                    <div class="-mt-12 flex justify-between items-end mb-4">
+                        <div class="relative">
+                            <div class="h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20">
+                                <i id="header-icon-placeholder" class="fa-solid fa-anchor text-4xl text-brand-200 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+                                <img id="header-icon-img" src="" class="hidden w-full h-full object-cover" alt="Profile">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6 relative z-20">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-brand-900 leading-tight font-serif mb-1" id="profile-name">名称未設定</h1>
+                        <div class="flex flex-wrap items-center gap-2 mt-2">
+                            <p class="text-sm text-brand-500 font-medium tracking-wide font-mono" id="profile-id">@...</p>
+                            <span id="rank-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 relative z-20 bg-brand-50 p-4 rounded-sm border border-brand-100 shadow-inner">
+                        <div class="flex items-center gap-3 text-sm text-brand-700">
+                            <div class="w-8 h-8 rounded-full bg-[#fffdf9] flex items-center justify-center text-brand-400 border border-brand-200 flex-shrink-0 shadow-sm"><i class="fa-solid fa-feather"></i></div>
+                            <span id="profile-job" class="font-medium">-</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-brand-700">
+                            <div class="w-8 h-8 rounded-full bg-[#fffdf9] flex items-center justify-center text-brand-400 border border-brand-200 flex-shrink-0 shadow-sm"><i class="fa-solid fa-map-location-dot"></i></div>
+                            <span id="profile-location" class="font-medium">-</span>
+                        </div>
+                        <div id="profile-sns-links" class="flex gap-3 pt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 自己紹介 (Bio) -->
+            <div id="section-bio" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">自己紹介</h2>
+                <div id="profile-bio" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
+            </div>
+
+            <!-- 想い・メッセージ -->
+            <div id="section-message" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">想い・メッセージ</h2>
+                <div class="relative mt-4">
+                    <i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-4 -left-2 z-0"></i>
+                    <div id="profile-message" class="relative z-10 prose prose-sm max-w-none prose-stone text-brand-700 pl-6"></div>
+                </div>
+            </div>
+
+            <!-- 目標・ビジョン -->
+            <div id="section-goals" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">目標・ビジョン</h2>
+                <div id="profile-goals" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
+            </div>
+
+            <!-- マッチング情報 -->
+            <div id="section-matching" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-[#f7f5f0] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-100"></div>
+                    <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">提供できること</h3>
+                    <ul id="list-can-offer" class="space-y-3 relative z-10"></ul>
+                </div>
+                <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-[#eae5d8] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-200"></div>
+                    <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">求めていること</h3>
+                    <ul id="list-looking-for" class="space-y-3 relative z-10"></ul>
+                </div>
+            </div>
+
+            <!-- タグ (スキル・趣味) -->
+            <div id="section-tags" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md">
+                    <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif border-b border-brand-100 pb-2">スキル</h3>
+                    <div id="skills-container" class="flex flex-wrap gap-2"></div>
+                </div>
+                <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md">
+                    <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif border-b border-brand-100 pb-2">趣味</h3>
+                    <div id="hobbies-container" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <!-- 経歴 -->
+            <div id="section-career" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                <div class="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-brand-300 m-4 pointer-events-none opacity-50"></div>
+                <h2 class="text-lg font-bold text-brand-900 mb-6 pb-2 border-b border-brand-200 font-serif tracking-widest">経歴</h2>
+                <div id="career-container" class="space-y-8 mt-4 relative">
+                    <div class="absolute left-[7px] top-2 bottom-2 w-px bg-brand-200"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ▼ Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVDZJhL9sMzVknD5tNomLWF-0z0jPU3i0",
+            authDomain: "brainbridge-4b8ac.firebaseapp.com",
+            projectId: "brainbridge-4b8ac",
+            storageBucket: "brainbridge-4b8ac.firebasestorage.app",
+            messagingSenderId: "803209683213",
+            appId: "1:803209683213:web:b62d13784fa2bbbb9f5044"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const appId = 'default-app-id';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUid = urlParams.get('uid');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!targetUid) {
+                showError();
+                return;
+            }
+
+            try {
+                // Publicデータのみを取得 (ログイン・認証不要)
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', targetUid);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // 非公開設定(isHidden: true) の場合、または無料会員の場合はミニマルデータしかないのでエラー扱いにするか、限定表示にする
+                    // ※設定画面で「公開」にしてもARRIVALはisHidden=trueになる仕組みになっている
+                    if (data.isHidden) {
+                        showError("このプロフィールは非公開に設定されています。");
+                        return;
+                    }
+
+                    renderProfile(data);
+                } else {
+                    showError();
+                }
+            } catch (error) {
+                console.error(error);
+                showError("データの取得に失敗しました。");
+            }
+        });
+
+        function showError(msg) {
+            document.getElementById('loading-container').classList.add('hidden');
+            const errEl = document.getElementById('error-container');
+            errEl.classList.remove('hidden');
+            if (msg) errEl.querySelector('p').textContent = msg;
+        }
+
+        function formatText(text) {
+            if (!text) return '';
+            const textStr = String(text).replace(/__(.*?)__/g, '<u>$1</u>');
+            let rawHtml = '';
+            try {
+                if (window.marked) rawHtml = window.marked.parse(textStr, { breaks: true, gfm: true });
+                else rawHtml = textStr.replace(/\n/g, '<br>');
+            } catch (e) { rawHtml = textStr.replace(/\n/g, '<br>'); }
+            return window.DOMPurify.sanitize(rawHtml, { 
+                ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote', 'code', 'pre'],
+                ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+            });
+        }
+
+        function setElText(id, text) { const el = document.getElementById(id); if(el) el.textContent = text || '-'; }
+        function setElHtml(id, html) { const el = document.getElementById(id); if(el) el.innerHTML = html || ''; }
+
+        function renderProfile(data) {
+            document.getElementById('loading-container').classList.add('hidden');
+            document.getElementById('profile-content').classList.remove('hidden');
+
+            setElText('profile-name', data.name || data.userId || '名称未設定');
+            setElText('profile-id', '@' + (data.userId || '-'));
+            setElText('profile-job', data.jobTitle || '職業未設定');
+            
+            let locStr = '-';
+            if(data.prefecture && data.birthplace) locStr = `${data.prefecture} (出身: ${data.birthplace})`;
+            else if (data.prefecture) locStr = data.prefecture;
+            else if (data.birthplace) locStr = `出身: ${data.birthplace}`;
+            setElText('profile-location', locStr);
+
+            if (data.photoURL) {
+                const img = document.getElementById('header-icon-img');
+                img.src = data.photoURL;
+                img.classList.remove('hidden');
+                document.getElementById('header-icon-placeholder').classList.add('hidden');
+            }
+
+            // ランクバッジ
+            const rank = data.membershipRank || 'arrival';
+            const badgeEl = document.getElementById('rank-badge');
+            if (badgeEl) {
+                badgeEl.classList.remove('hidden');
+                if (rank === 'covenant') { badgeEl.classList.add('badge-covenant'); badgeEl.innerHTML = '<i class="fa-solid fa-shield-halved mr-1"></i>COVENANT'; } 
+                else if (rank === 'guardian') { badgeEl.classList.add('badge-guardian'); badgeEl.innerHTML = '<i class="fa-solid fa-gavel mr-1"></i>GUARDIAN'; } 
+                else if (rank === 'builder') { badgeEl.classList.add('badge-builder'); badgeEl.innerHTML = '<i class="fa-solid fa-hammer mr-1"></i>BUILDER'; } 
+                else if (rank === 'settler') { badgeEl.classList.add('badge-settler'); badgeEl.innerHTML = '<i class="fa-solid fa-house mr-1"></i>SETTLER'; } 
+                else { badgeEl.classList.add('badge-arrival'); badgeEl.innerHTML = '<i class="fa-solid fa-anchor mr-1"></i>ARRIVAL'; }
+            }
+
+            // SNS Links
+            const snsContainer = document.getElementById('profile-sns-links');
+            if (snsContainer && (data.websiteUrl || data.snsInstagram || data.snsX)) {
+                if (data.websiteUrl) snsContainer.innerHTML += `<a href="${data.websiteUrl}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-[#fffdf9] flex items-center justify-center text-brand-500 hover:bg-brand-100 transition-colors shadow-sm"><i class="fa-solid fa-globe"></i></a>`;
+                if (data.snsInstagram) snsContainer.innerHTML += `<a href="${data.snsInstagram.startsWith('http') ? data.snsInstagram : 'https://instagram.com/'+data.snsInstagram}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-[#fffdf9] flex items-center justify-center text-brand-500 hover:bg-brand-100 transition-colors shadow-sm"><i class="fa-brands fa-instagram"></i></a>`;
+                if (data.snsX) snsContainer.innerHTML += `<a href="${data.snsX.startsWith('http') ? data.snsX : 'https://twitter.com/'+data.snsX}" target="_blank" class="w-8 h-8 rounded-full border border-brand-200 bg-[#fffdf9] flex items-center justify-center text-brand-500 hover:bg-brand-100 transition-colors shadow-sm"><i class="fa-brands fa-x-twitter"></i></a>`;
+            }
+
+            // Bio
+            if (data.bio) {
+                document.getElementById('section-bio').classList.remove('hidden');
+                setElHtml('profile-bio', formatText(data.bio));
+            }
+
+            // Message
+            if (data.message) {
+                document.getElementById('section-message').classList.remove('hidden');
+                setElHtml('profile-message', formatText(data.message));
+            }
+
+            // Goals
+            if (data.goals) {
+                document.getElementById('section-goals').classList.remove('hidden');
+                setElHtml('profile-goals', formatText(data.goals));
+            }
+
+            // Matching
+            const canOfferArray = Array.isArray(data.canOffer) ? data.canOffer : [];
+            const lookingForArray = Array.isArray(data.lookingFor) ? data.lookingFor : [];
+            
+            if (canOfferArray.length > 0 || lookingForArray.length > 0) {
+                document.getElementById('section-matching').classList.remove('hidden');
+                
+                const canOfferList = document.getElementById('list-can-offer');
+                if (canOfferArray.length > 0) {
+                    canOfferList.innerHTML = canOfferArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-check text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('');
+                } else {
+                    canOfferList.innerHTML = '<li class="text-brand-300 italic text-sm">未設定</li>';
+                }
+
+                const lookingForList = document.getElementById('list-looking-for');
+                if (lookingForArray.length > 0) {
+                    lookingForList.innerHTML = lookingForArray.map(item => `<li class="flex items-start text-sm text-brand-700"><i class="fa-solid fa-magnifying-glass text-[#8b6a4f] mr-2 mt-1"></i><span>${item}</span></li>`).join('');
+                } else {
+                    lookingForList.innerHTML = '<li class="text-brand-300 italic text-sm">未設定</li>';
+                }
+            }
+
+            // Tags (Skills / Hobbies)
+            const skillsArray = Array.isArray(data.skills) ? data.skills : [];
+            const hobbiesArray = Array.isArray(data.hobbies) ? data.hobbies : [];
+            
+            if (skillsArray.length > 0 || hobbiesArray.length > 0) {
+                document.getElementById('section-tags').classList.remove('hidden');
+                
+                const skillsContainer = document.getElementById('skills-container');
+                if (skillsArray.length > 0) {
+                    skillsContainer.innerHTML = skillsArray.map(tag => `<span class="bg-brand-50 border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`).join('');
+                } else {
+                    skillsContainer.innerHTML = '<span class="text-sm text-brand-300 italic">未設定</span>';
+                }
+
+                const hobbiesContainer = document.getElementById('hobbies-container');
+                if (hobbiesArray.length > 0) {
+                    hobbiesContainer.innerHTML = hobbiesArray.map(tag => `<span class="bg-brand-50 border border-brand-200 text-brand-600 px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#${tag}</span>`).join('');
+                } else {
+                    hobbiesContainer.innerHTML = '<span class="text-sm text-brand-300 italic">未設定</span>';
+                }
+            }
+
+            // Career
+            const careerArray = Array.isArray(data.career) ? data.career : [];
+            if (careerArray.length > 0) {
+                document.getElementById('section-career').classList.remove('hidden');
+                const careerContainer = document.getElementById('career-container');
+                
+                careerArray.forEach(c => {
+                    const formattedDesc = formatText(c.description || '');
+                    careerContainer.innerHTML += `
+                        <div class="relative pl-6 pb-2">
+                            <div class="absolute left-[-5px] top-1.5 h-3 w-3 rounded-full bg-brand-500 ring-4 ring-[#fffdf9] z-10 shadow-sm border border-brand-300"></div>
+                            <h4 class="font-bold text-brand-900 text-base font-serif tracking-widest">${c.company || '会社名不明'}</h4>
+                            <div class="flex items-center gap-2 mb-3 mt-1">
+                                <span class="text-[10px] font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded-sm tracking-widest border border-brand-200">${c.role || '役割'}</span>
+                                <span class="text-xs text-brand-400 font-medium tracking-widest">${c.start || '?'} 〜 ${c.end || '現在'}</span>
+                            </div>
+                            <div class="prose prose-sm max-w-none prose-stone text-brand-700 bg-brand-50 p-4 rounded-sm border border-brand-100 shadow-sm">${formattedDesc}</div>
+                        </div>
+                    `;
+                });
+            }
+        }
+    </script>
+</body>
+</html>
