@@ -287,6 +287,14 @@
                 opt.textContent = p;
                 areaSelect.appendChild(opt);
             });
+
+            // ★追加: URLからOSナンバーの指定があれば検索フィールドに初期セットする
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetOs = urlParams.get('osNumber');
+            if (targetOs) {
+                const osInput = document.getElementById('filter-os-number');
+                if (osInput) osInput.value = targetOs;
+            }
         }
 
         window.toggleTheaterMenu = () => {
