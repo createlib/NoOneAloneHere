@@ -6,8 +6,8 @@
     <title>プロフィール | NOAH</title>
     <link rel="icon" href="img/icon.png">
     
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- ★修正: Google Fonts に Cinzel を追加 -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
@@ -48,6 +48,9 @@
             background-color: #f7f5f0; 
             color: #4a3b32;
         }
+        
+        /* ★追加: 英語フォント用クラス */
+        .font-eng { font-family: 'Cinzel', serif; }
         
         .bg-texture {
             background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
@@ -242,6 +245,88 @@
         const urlParams = new URLSearchParams(window.location.search);
         const targetUid = urlParams.get('uid');
 
+        // ★追加: OSテーマカラーの定義
+        const THEME_COLORS = {
+            '甲': { bg: '#041208', main: '#10B981', sub: '#34D399' },
+            '乙': { bg: '#08140B', main: '#34D399', sub: '#6EE7B7' },
+            '丙': { bg: '#1A0808', main: '#EF4444', sub: '#FCA5A5' },
+            '丁': { bg: '#180B05', main: '#F97316', sub: '#FDBA74' },
+            '戊': { bg: '#171105', main: '#D97706', sub: '#FCD34D' },
+            '己': { bg: '#141208', main: '#B45309', sub: '#FDE047' },
+            '庚': { bg: '#080A0F', main: '#94A3B8', sub: '#CBD5E1' },
+            '辛': { bg: '#0B0D14', main: '#CBD5E1', sub: '#F1F5F9' },
+            '壬': { bg: '#050A14', main: '#3B82F6', sub: '#93C5FD' },
+            '癸': { bg: '#060913', main: '#C5A880', sub: '#3B82F6' }
+        };
+
+        // ★追加: OSカバーの読み込みと描画
+        async function loadAndRenderOSCover(osNumber) {
+            if (!osNumber) return;
+            
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'os_blueprints', String(osNumber));
+                const docSnap = await getDoc(docRef);
+                
+                let osData;
+                if (docSnap.exists()) {
+                    osData = docSnap.data();
+                } else if (osNumber === '50') {
+                    osData = { jukkan: "癸", kanji: "玄盤", ruby: "GENBAN" }; // フォールバック
+                } else {
+                    return;
+                }
+                
+                applyOSCover(osData);
+            } catch (e) {
+                console.error("OS Data load error:", e);
+            }
+        }
+
+        function applyOSCover(osData) {
+            const cover = document.getElementById('profile-cover');
+            const bgLayer = document.getElementById('os-cover-bg-layer');
+            const content = document.getElementById('os-cover-content');
+            const rubyEl = document.getElementById('os-ruby');
+            const kanjiEl = document.getElementById('os-kanji');
+            
+            if (!cover || !bgLayer || !content || !rubyEl || !kanjiEl) return;
+            
+            const theme = THEME_COLORS[osData.jukkan] || THEME_COLORS['癸'];
+            
+            cover.classList.remove('cover-gradient');
+            cover.style.borderColor = theme.main;
+            
+            bgLayer.style.backgroundColor = theme.bg;
+            bgLayer.style.backgroundImage = `radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, ${theme.bg} 100%)`;
+            
+            rubyEl.textContent = osData.ruby;
+            rubyEl.style.color = theme.sub;
+            
+            kanjiEl.textContent = osData.kanji;
+            kanjiEl.style.color = '#ffffff';
+            kanjiEl.style.textShadow = `0 0 15px ${theme.main}`;
+            
+            content.classList.remove('hidden');
+        }
+
+        function resetOSCover() {
+            const cover = document.getElementById('profile-cover');
+            const bgLayer = document.getElementById('os-cover-bg-layer');
+            const content = document.getElementById('os-cover-content');
+            
+            if (cover) {
+                cover.classList.add('cover-gradient');
+                cover.style.borderColor = '';
+            }
+            if (bgLayer) {
+                bgLayer.style.backgroundColor = '';
+                bgLayer.style.backgroundImage = '';
+            }
+            if (content) {
+                content.classList.add('hidden');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (!targetUid) {
                 showError();
@@ -298,7 +383,6 @@
 
         function renderProfile(data) {
             document.getElementById('loading-container').classList.add('hidden');
-            // ★変更: flex を追加してレイアウトを適用
             document.getElementById('profile-content').classList.remove('hidden');
 
             setElText('profile-name', data.name || data.userId || '名称未設定');
@@ -316,6 +400,14 @@
                 img.src = data.photoURL;
                 img.classList.remove('hidden');
                 document.getElementById('header-icon-placeholder').classList.add('hidden');
+            }
+
+            // ★追加: OSカバーの表示判定 (充実度100%以上のときのみ)
+            const score = data.profileScore || 0;
+            if (score >= 100 && data.osNumber) {
+                loadAndRenderOSCover(data.osNumber);
+            } else {
+                resetOSCover();
             }
 
             // ランクバッジ
