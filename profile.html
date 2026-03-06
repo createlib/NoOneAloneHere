@@ -466,7 +466,8 @@
 
             if (user && !user.isAnonymous) {
                 currentUser = user;
-                let editUid = user.uid; 
+                // ★修正: let を外して、グローバル変数に正しくIDをセットする
+                editUid = user.uid; 
                 
                 try {
                     const myDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
