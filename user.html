@@ -1367,24 +1367,25 @@
             }
         }
         // ========================================================
-        // ★修正: 公開用プロフィールリンクのコピー機能（モダンなクリップボード対応）
+        // ★修正: 公開用プロフィールリンクのコピー機能（URL生成ロジックの修正）
         window.copyPublicProfileLink = async () => {
             if (!currentUser) return;
             
-            let currentPath = window.location.pathname;
-            if (!currentPath.includes('.html')) {
-                // パスが '/' などで終わっている場合への対応
-                currentPath += 'public_profile.html';
+            // 現在のURLから正確に public_profile.html のパスを生成する
+            let currentUrl = window.location.href.split('?')[0]; // クエリパラメータを除去
+            if (currentUrl.endsWith('/')) {
+                currentUrl += 'public_profile.html';
             } else {
-                currentPath = currentPath.replace('user.html', 'public_profile.html');
+                const lastSlash = currentUrl.lastIndexOf('/');
+                currentUrl = currentUrl.substring(0, lastSlash + 1) + 'public_profile.html';
             }
             
-            const url = `${window.location.origin}${currentPath}?uid=${currentUser.uid}`;
+            const finalUrl = `${currentUrl}?uid=${currentUser.uid}`;
             
             // 古いブラウザ向けのフォールバック
             const fallbackCopy = () => {
                 const textArea = document.createElement("textarea");
-                textArea.value = url;
+                textArea.value = finalUrl;
                 textArea.style.position = "fixed"; 
                 textArea.style.left = "-999999px"; // 画面外に配置
                 document.body.appendChild(textArea);
@@ -1395,7 +1396,7 @@
                     showNotification('自己紹介用リンクをコピーしました！');
                 } catch (err) {
                     console.error("Fallback copy failed", err);
-                    prompt('コピーに失敗しました。以下のURLを手動でコピーしてください：', url);
+                    prompt('コピーに失敗しました。以下のURLを手動でコピーしてください：', finalUrl);
                 }
                 document.body.removeChild(textArea);
             };
@@ -1403,7 +1404,7 @@
             // 最新のクリップボードAPIがあればそちらを優先
             if (navigator.clipboard && window.isSecureContext) {
                 try {
-                    await navigator.clipboard.writeText(url);
+                    await navigator.clipboard.writeText(finalUrl);
                     showNotification('自己紹介用リンクをコピーしました！');
                 } catch (err) {
                     console.error("Clipboard API failed", err);
