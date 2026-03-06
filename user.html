@@ -584,22 +584,19 @@
 
         function formatText(text) {
             if (!text) return '';
-            
-            const textStr = String(text);
-            let processedText = textStr.replace(/__(.*?)__/g, '<u>$1</u>');
-
+            const textStr = String(text).replace(/__(.*?)__/g, '<u>$1</u>');
             let rawHtml = '';
             try {
                 if (window.marked && typeof window.marked.parse === 'function') {
-                    rawHtml = window.marked.parse(processedText, { breaks: true, gfm: true });
+                    rawHtml = window.marked.parse(textStr, { breaks: true, gfm: true });
                 } else if (typeof window.marked === 'function') {
-                    rawHtml = window.marked(processedText, { breaks: true, gfm: true });
+                    rawHtml = window.marked(textStr, { breaks: true, gfm: true });
                 } else {
-                    rawHtml = processedText.replace(/\n/g, '<br>');
+                    rawHtml = textStr.replace(/\n/g, '<br>');
                 }
             } catch (e) {
                 console.error("Markdown Parse Error:", e);
-                rawHtml = processedText.replace(/\n/g, '<br>'); 
+                rawHtml = textStr.replace(/\n/g, '<br>'); 
             }
             
             return window.DOMPurify.sanitize(rawHtml, { 
@@ -610,6 +607,20 @@
 
         function setElText(id, text) { const el = document.getElementById(id); if(el) el.textContent = text || '-'; }
         function setElHtml(id, html) { const el = document.getElementById(id); if(el) el.innerHTML = html || ''; }
+
+        // ★追加: コピー成功時などの通知トーストを表示する関数
+        window.showNotification = (msg) => {
+            const notif = document.getElementById('notification');
+            const msgEl = document.getElementById('notif-message');
+            if (notif && msgEl) {
+                msgEl.textContent = msg;
+                notif.classList.remove('hidden', 'translate-y-20');
+                setTimeout(() => notif.classList.add('translate-y-20'), 3000);
+                setTimeout(() => notif.classList.add('hidden'), 3300);
+            } else {
+                alert(msg);
+            }
+        };
 
         window.toggleTheaterMenu = () => {
             const menu = document.getElementById('sp-theater-menu');
@@ -1356,8 +1367,8 @@
             }
         }
         // ========================================================
-        // ★追加: 公開用プロフィールリンクのコピー機能
-        window.copyPublicProfileLink = () => {
+        // ★修正: 公開用プロフィールリンクのコピー機能（モダンなクリップボード対応）
+        window.copyPublicProfileLink = async () => {
             if (!currentUser) return;
             
             let currentPath = window.location.pathname;
@@ -1369,19 +1380,38 @@
             }
             
             const url = `${window.location.origin}${currentPath}?uid=${currentUser.uid}`;
-            const textArea = document.createElement("textarea");
-            textArea.value = url;
-            textArea.style.position = "fixed"; 
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showNotification('自己紹介用リンクをコピーしました！');
-            } catch (err) {
-                alert('URLのコピーに失敗しました。\n' + url);
+            
+            // 古いブラウザ向けのフォールバック
+            const fallbackCopy = () => {
+                const textArea = document.createElement("textarea");
+                textArea.value = url;
+                textArea.style.position = "fixed"; 
+                textArea.style.left = "-999999px"; // 画面外に配置
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showNotification('自己紹介用リンクをコピーしました！');
+                } catch (err) {
+                    console.error("Fallback copy failed", err);
+                    prompt('コピーに失敗しました。以下のURLを手動でコピーしてください：', url);
+                }
+                document.body.removeChild(textArea);
+            };
+
+            // 最新のクリップボードAPIがあればそちらを優先
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(url);
+                    showNotification('自己紹介用リンクをコピーしました！');
+                } catch (err) {
+                    console.error("Clipboard API failed", err);
+                    fallbackCopy();
+                }
+            } else {
+                fallbackCopy();
             }
-            document.body.removeChild(textArea);
         };
         // ========================================================
 
