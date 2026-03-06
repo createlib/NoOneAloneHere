@@ -53,6 +53,12 @@
             background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
         }
 
+        /* ★追加: PC表示時のサイドバー固定用スタイル */
+        @media (min-width: 1024px) {
+            .profile-sidebar { position: sticky; top: 5rem; height: calc(100vh - 6rem); overflow-y: auto; scrollbar-width: none; }
+            .profile-sidebar::-webkit-scrollbar { display: none; }
+        }
+
         .cover-gradient { 
             background: linear-gradient(120deg, #dcd4c6 0%, #eae5d8 100%); 
             position: relative;
@@ -84,7 +90,7 @@
 
     <!-- シンプルなヘッダー（リンクやメニューはなし） -->
     <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
-        <div class="max-w-4xl mx-auto px-4 h-full flex justify-center items-center">
+        <div class="max-w-7xl mx-auto px-4 h-full flex justify-center items-center">
             <div class="text-xl font-black text-brand-900 tracking-[0.3em] font-serif flex items-center gap-2">
                 <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-anchor"></i></span>
                 <span>NOAH</span>
@@ -93,113 +99,123 @@
     </nav>
 
     <!-- メインコンテンツ -->
-    <div class="max-w-3xl mx-auto pt-24 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto pt-24 px-0 sm:px-6 lg:px-8">
         
         <div id="loading-container" class="text-center py-20 text-brand-400">
             <i class="fa-solid fa-compass fa-spin text-4xl mb-4 opacity-50"></i>
             <p class="text-sm font-bold tracking-widest">プロフィールを読み込み中...</p>
         </div>
 
-        <div id="error-container" class="hidden text-center py-20 bg-[#fffdf9] rounded-sm border border-brand-200 shadow-sm mt-4">
+        <div id="error-container" class="hidden text-center py-20 bg-[#fffdf9] rounded-sm border border-brand-200 shadow-sm mt-4 mx-4 sm:mx-0">
             <i class="fa-solid fa-user-slash text-4xl text-brand-300 mb-4"></i>
             <h3 class="text-lg font-bold text-brand-900 mb-2 font-serif">ユーザーが見つかりません</h3>
             <p class="text-brand-500 text-sm">IDが間違っているか、データが存在しません。</p>
         </div>
 
-        <div id="profile-content" class="hidden space-y-6">
+        <!-- ★修正: PCで2カラムになるようにレイアウト構造を変更 -->
+        <div id="profile-content" class="hidden flex flex-col lg:flex-row gap-6 lg:gap-8 lg:py-8 px-4 sm:px-0">
             
-            <!-- プロフィールヘッダー -->
-            <div class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 overflow-hidden relative">
-                <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-brand-500 z-10 m-2"></div>
-                <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+            <!-- サイドバー (基本情報) -->
+            <aside class="w-full lg:w-[360px] flex-shrink-0">
+                <div class="profile-sidebar">
+                    <div class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 overflow-hidden relative">
+                        <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-brand-500 z-10 m-2"></div>
+                        <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
 
-                <div class="h-32 sm:h-40 cover-gradient w-full border-b border-brand-200"></div>
-                <div class="px-6 pb-8 relative">
-                    <div class="-mt-12 flex justify-between items-end mb-4">
-                        <div class="relative">
-                            <div class="h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20">
-                                <i id="header-icon-placeholder" class="fa-solid fa-anchor text-4xl text-brand-200 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
-                                <img id="header-icon-img" src="" class="hidden w-full h-full object-cover" alt="Profile">
+                        <div class="h-32 sm:h-40 cover-gradient w-full border-b border-brand-200"></div>
+                        <div class="px-6 pb-8 relative">
+                            <div class="-mt-12 flex justify-between items-end mb-4">
+                                <div class="relative">
+                                    <div class="h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20">
+                                        <i id="header-icon-placeholder" class="fa-solid fa-anchor text-4xl text-brand-200 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+                                        <img id="header-icon-img" src="" class="hidden w-full h-full object-cover" alt="Profile">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-6 relative z-20">
+                                <h1 class="text-2xl sm:text-3xl font-bold text-brand-900 leading-tight font-serif mb-1" id="profile-name">名称未設定</h1>
+                                <div class="flex flex-wrap items-center gap-2 mt-2">
+                                    <p class="text-sm text-brand-500 font-medium tracking-wide font-mono" id="profile-id">@...</p>
+                                    <span id="rank-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest"></span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 relative z-20 bg-brand-50 p-4 rounded-sm border border-brand-100 shadow-inner">
+                                <div class="flex items-center gap-3 text-sm text-brand-700">
+                                    <div class="w-8 h-8 rounded-full bg-[#fffdf9] flex items-center justify-center text-brand-400 border border-brand-200 flex-shrink-0 shadow-sm"><i class="fa-solid fa-feather"></i></div>
+                                    <span id="profile-job" class="font-medium">-</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm text-brand-700">
+                                    <div class="w-8 h-8 rounded-full bg-[#fffdf9] flex items-center justify-center text-brand-400 border border-brand-200 flex-shrink-0 shadow-sm"><i class="fa-solid fa-map-location-dot"></i></div>
+                                    <span id="profile-location" class="font-medium">-</span>
+                                </div>
+                                <div id="profile-sns-links" class="flex gap-3 pt-2"></div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </aside>
 
-                    <div class="mb-6 relative z-20">
-                        <h1 class="text-2xl sm:text-3xl font-bold text-brand-900 leading-tight font-serif mb-1" id="profile-name">名称未設定</h1>
-                        <div class="flex flex-wrap items-center gap-2 mt-2">
-                            <p class="text-sm text-brand-500 font-medium tracking-wide font-mono" id="profile-id">@...</p>
-                            <span id="rank-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest"></span>
-                        </div>
+            <!-- メインコンテンツ -->
+            <div class="flex-1 min-w-0 space-y-6">
+                
+                <!-- 自己紹介 (Bio) -->
+                <div id="section-bio" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                    <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">自己紹介</h2>
+                    <div id="profile-bio" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
+                </div>
+
+                <!-- 想い・メッセージ -->
+                <div id="section-message" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                    <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">想い・メッセージ</h2>
+                    <div class="relative mt-4">
+                        <i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-4 -left-2 z-0"></i>
+                        <div id="profile-message" class="relative z-10 prose prose-sm max-w-none prose-stone text-brand-700 pl-6"></div>
                     </div>
+                </div>
 
-                    <div class="space-y-3 relative z-20 bg-brand-50 p-4 rounded-sm border border-brand-100 shadow-inner">
-                        <div class="flex items-center gap-3 text-sm text-brand-700">
-                            <div class="w-8 h-8 rounded-full bg-[#fffdf9] flex items-center justify-center text-brand-400 border border-brand-200 flex-shrink-0 shadow-sm"><i class="fa-solid fa-feather"></i></div>
-                            <span id="profile-job" class="font-medium">-</span>
-                        </div>
-                        <div class="flex items-center gap-3 text-sm text-brand-700">
-                            <div class="w-8 h-8 rounded-full bg-[#fffdf9] flex items-center justify-center text-brand-400 border border-brand-200 flex-shrink-0 shadow-sm"><i class="fa-solid fa-map-location-dot"></i></div>
-                            <span id="profile-location" class="font-medium">-</span>
-                        </div>
-                        <div id="profile-sns-links" class="flex gap-3 pt-2"></div>
+                <!-- 目標・ビジョン -->
+                <div id="section-goals" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                    <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">目標・ビジョン</h2>
+                    <div id="profile-goals" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
+                </div>
+
+                <!-- マッチング情報 -->
+                <div id="section-matching" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-[#f7f5f0] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-100"></div>
+                        <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">提供できること</h3>
+                        <ul id="list-can-offer" class="space-y-3 relative z-10"></ul>
+                    </div>
+                    <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-[#eae5d8] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-200"></div>
+                        <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">求めていること</h3>
+                        <ul id="list-looking-for" class="space-y-3 relative z-10"></ul>
                     </div>
                 </div>
-            </div>
 
-            <!-- 自己紹介 (Bio) -->
-            <div id="section-bio" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
-                <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">自己紹介</h2>
-                <div id="profile-bio" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
-            </div>
+                <!-- タグ (スキル・趣味) -->
+                <div id="section-tags" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md">
+                        <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif border-b border-brand-100 pb-2">スキル</h3>
+                        <div id="skills-container" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md">
+                        <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif border-b border-brand-100 pb-2">趣味</h3>
+                        <div id="hobbies-container" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
 
-            <!-- 想い・メッセージ -->
-            <div id="section-message" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
-                <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">想い・メッセージ</h2>
-                <div class="relative mt-4">
-                    <i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-4 -left-2 z-0"></i>
-                    <div id="profile-message" class="relative z-10 prose prose-sm max-w-none prose-stone text-brand-700 pl-6"></div>
+                <!-- 経歴 -->
+                <div id="section-career" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                    <div class="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-brand-300 m-4 pointer-events-none opacity-50"></div>
+                    <h2 class="text-lg font-bold text-brand-900 mb-6 pb-2 border-b border-brand-200 font-serif tracking-widest">経歴</h2>
+                    <div id="career-container" class="space-y-8 mt-4 relative">
+                        <div class="absolute left-[7px] top-2 bottom-2 w-px bg-brand-200"></div>
+                    </div>
                 </div>
-            </div>
 
-            <!-- 目標・ビジョン -->
-            <div id="section-goals" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
-                <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">目標・ビジョン</h2>
-                <div id="profile-goals" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
-            </div>
-
-            <!-- マッチング情報 -->
-            <div id="section-matching" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-[#f7f5f0] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-100"></div>
-                    <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">提供できること</h3>
-                    <ul id="list-can-offer" class="space-y-3 relative z-10"></ul>
-                </div>
-                <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-[#eae5d8] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-200"></div>
-                    <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">求めていること</h3>
-                    <ul id="list-looking-for" class="space-y-3 relative z-10"></ul>
-                </div>
-            </div>
-
-            <!-- タグ (スキル・趣味) -->
-            <div id="section-tags" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md">
-                    <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif border-b border-brand-100 pb-2">スキル</h3>
-                    <div id="skills-container" class="flex flex-wrap gap-2"></div>
-                </div>
-                <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md">
-                    <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif border-b border-brand-100 pb-2">趣味</h3>
-                    <div id="hobbies-container" class="flex flex-wrap gap-2"></div>
-                </div>
-            </div>
-
-            <!-- 経歴 -->
-            <div id="section-career" class="hidden bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
-                <div class="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-brand-300 m-4 pointer-events-none opacity-50"></div>
-                <h2 class="text-lg font-bold text-brand-900 mb-6 pb-2 border-b border-brand-200 font-serif tracking-widest">経歴</h2>
-                <div id="career-container" class="space-y-8 mt-4 relative">
-                    <div class="absolute left-[7px] top-2 bottom-2 w-px bg-brand-200"></div>
-                </div>
             </div>
 
         </div>
@@ -240,8 +256,7 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // 非公開設定(isHidden: true) の場合、または無料会員の場合はミニマルデータしかないのでエラー扱いにするか、限定表示にする
-                    // ※設定画面で「公開」にしてもARRIVALはisHidden=trueになる仕組みになっている
+                    // 非公開設定(isHidden: true) の場合、または無料会員の場合はミニマルデータしかないのでエラー扱いにする
                     if (data.isHidden) {
                         showError("このプロフィールは非公開に設定されています。");
                         return;
@@ -283,6 +298,7 @@
 
         function renderProfile(data) {
             document.getElementById('loading-container').classList.add('hidden');
+            // ★変更: flex を追加してレイアウトを適用
             document.getElementById('profile-content').classList.remove('hidden');
 
             setElText('profile-name', data.name || data.userId || '名称未設定');
