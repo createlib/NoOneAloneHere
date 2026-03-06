@@ -287,6 +287,13 @@
                                     <span id="mutual-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7f5f0] text-brand-600 border border-brand-200 tracking-widest"><i class="fa-solid fa-handshake mr-1"></i>相互フォロー</span>
                                     <span id="admin-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#3e2723] text-[#d4af37] border border-[#b8860b] tracking-widest"><i class="fa-solid fa-crown mr-1"></i>管理者</span>
                                 </div>
+                                
+                                <!-- ★追加: 外部公開用プロフィールリンクの発行ボタン -->
+                                <div id="public-link-container" class="hidden mt-4">
+                                    <button onclick="copyPublicProfileLink()" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-50 border border-brand-200 text-brand-700 rounded-sm text-xs font-bold hover:bg-[#fffdf9] hover:border-[#b8860b] hover:text-[#b8860b] transition-all shadow-sm tracking-widest">
+                                        <i class="fa-solid fa-link"></i> 自己紹介リンクをコピー
+                                    </button>
+                                </div>
                             </div>
                             
                             <!-- フォロー・フォロワー・共通の航海士エリア -->
@@ -803,6 +810,10 @@
                 </div>`;
             }
             
+            // ★追加: 外部公開用リンクボタンを表示
+            const pubLinkContainer = document.getElementById('public-link-container');
+            if (pubLinkContainer) pubLinkContainer.classList.remove('hidden');
+
             if (isAdmin) {
                 document.getElementById('debug-rank-switcher').classList.remove('hidden');
             }
@@ -1344,6 +1355,34 @@
                 }
             }
         }
+        // ========================================================
+        // ★追加: 公開用プロフィールリンクのコピー機能
+        window.copyPublicProfileLink = () => {
+            if (!currentUser) return;
+            
+            let currentPath = window.location.pathname;
+            if (!currentPath.includes('.html')) {
+                // パスが '/' などで終わっている場合への対応
+                currentPath += 'public_profile.html';
+            } else {
+                currentPath = currentPath.replace('user.html', 'public_profile.html');
+            }
+            
+            const url = `${window.location.origin}${currentPath}?uid=${currentUser.uid}`;
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            textArea.style.position = "fixed"; 
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showNotification('自己紹介用リンクをコピーしました！');
+            } catch (err) {
+                alert('URLのコピーに失敗しました。\n' + url);
+            }
+            document.body.removeChild(textArea);
+        };
         // ========================================================
 
         window.openMemoModal = () => {
