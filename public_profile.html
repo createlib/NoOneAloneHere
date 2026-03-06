@@ -6,7 +6,7 @@
     <title>プロフィール | NOAH</title>
     <link rel="icon" href="img/icon.png">
     
-    <!-- ★修正: Google Fonts に Cinzel を追加 -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
@@ -49,14 +49,12 @@
             color: #4a3b32;
         }
         
-        /* ★追加: 英語フォント用クラス */
         .font-eng { font-family: 'Cinzel', serif; }
         
         .bg-texture {
             background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
         }
 
-        /* ★追加: PC表示時のサイドバー固定用スタイル */
         @media (min-width: 1024px) {
             .profile-sidebar { position: sticky; top: 5rem; height: calc(100vh - 6rem); overflow-y: auto; scrollbar-width: none; }
             .profile-sidebar::-webkit-scrollbar { display: none; }
@@ -115,7 +113,6 @@
             <p class="text-brand-500 text-sm">IDが間違っているか、データが存在しません。</p>
         </div>
 
-        <!-- ★修正: PCで2カラムになるようにレイアウト構造を変更 -->
         <div id="profile-content" class="hidden flex flex-col lg:flex-row gap-6 lg:gap-8 lg:py-8 px-4 sm:px-0">
             
             <!-- サイドバー (基本情報) -->
@@ -125,7 +122,16 @@
                         <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-brand-500 z-10 m-2"></div>
                         <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
 
-                        <div class="h-32 sm:h-40 cover-gradient w-full border-b border-brand-200"></div>
+                        <!-- ★修正: OSカバー用の要素構造を追加 -->
+                        <div id="profile-cover" class="h-32 sm:h-40 cover-gradient w-full border-b border-brand-200 relative flex items-center justify-center overflow-hidden transition-all duration-500">
+                            <div id="os-cover-bg-layer" class="absolute inset-0 transition-all duration-500 z-0"></div>
+                            <div class="absolute inset-0 bg-texture opacity-50 pointer-events-none z-0"></div>
+                            <div id="os-cover-content" class="hidden z-10 flex flex-col items-center justify-center pt-2 sm:pt-4">
+                                <div id="os-ruby" class="text-[10px] sm:text-xs tracking-[0.4em] font-eng font-bold mb-0.5 drop-shadow-md"></div>
+                                <div id="os-kanji" class="text-3xl sm:text-4xl font-bold tracking-[0.15em] font-serif pl-2"></div>
+                            </div>
+                        </div>
+
                         <div class="px-6 pb-8 relative">
                             <div class="-mt-12 flex justify-between items-end mb-4">
                                 <div class="relative">
@@ -245,7 +251,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const targetUid = urlParams.get('uid');
 
-        // ★追加: OSテーマカラーの定義
+        // OSテーマカラーの定義
         const THEME_COLORS = {
             '甲': { bg: '#041208', main: '#10B981', sub: '#34D399' },
             '乙': { bg: '#08140B', main: '#34D399', sub: '#6EE7B7' },
@@ -259,7 +265,7 @@
             '癸': { bg: '#060913', main: '#C5A880', sub: '#3B82F6' }
         };
 
-        // ★追加: OSカバーの読み込みと描画
+        // OSカバーの読み込みと描画
         async function loadAndRenderOSCover(osNumber) {
             if (!osNumber) return;
             
@@ -270,8 +276,8 @@
                 let osData;
                 if (docSnap.exists()) {
                     osData = docSnap.data();
-                } else if (osNumber === '50') {
-                    osData = { jukkan: "癸", kanji: "玄盤", ruby: "GENBAN" }; // フォールバック
+                } else if (String(osNumber) === '50') {
+                    osData = { jukkan: "癸", kanji: "黒雨", ruby: "KOKUU" }; // フォールバック
                 } else {
                     return;
                 }
@@ -341,7 +347,6 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     
-                    // 非公開設定(isHidden: true) の場合、または無料会員の場合はミニマルデータしかないのでエラー扱いにする
                     if (data.isHidden) {
                         showError("このプロフィールは非公開に設定されています。");
                         return;
@@ -402,7 +407,7 @@
                 document.getElementById('header-icon-placeholder').classList.add('hidden');
             }
 
-            // ★追加: OSカバーの表示判定 (充実度100%以上のときのみ)
+            // ★ OSカバーの表示判定 (充実度100%以上のときのみ)
             const score = data.profileScore || 0;
             if (score >= 100 && data.osNumber) {
                 loadAndRenderOSCover(data.osNumber);
