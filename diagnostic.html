@@ -7,6 +7,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -172,6 +173,10 @@
             </div>
             <div class="glass-box"><div class="metaphor-text serif" id="dom-metaphor"></div></div>
             <div class="body-text" id="dom-origin-text"></div>
+            
+            <!-- ★追加: p4データの性格・強み表示セクション -->
+            <div id="dom-origin-traits"></div>
+
             <div class="structure-diagram" id="dom-nodes"></div>
         </section>
 
@@ -375,6 +380,37 @@
                 <p>${d.origin.p3.replace(/「(.*?)」/g, '<span class="highlight-text">「$1」</span>')}</p>
             `;
 
+            // ★追加: p4 (性格・強み・注意点) のパースと表示
+            const traitsContainer = document.getElementById('dom-origin-traits');
+            if (d.origin.p4) {
+                const formattedP4 = d.origin.p4.split('\n').map(line => {
+                    const match = line.match(/^【(.*?)】\s*(.*)$/);
+                    if (match) {
+                        return `<div class="mb-6 last:mb-0">
+                                    <h4 class="inline-flex items-center px-3 py-1 bg-[rgba(0,0,0,0.5)] border border-[var(--accent-sub)] text-[var(--accent-sub)] text-xs font-bold tracking-widest rounded-sm mb-3 shadow-md">
+                                        <i class="fa-regular fa-gem mr-2 text-[var(--accent-main)]"></i>${match[1]}
+                                    </h4>
+                                    <p class="text-[1.05rem] text-[#C9D1D9] leading-[2.0] m-0 text-justify">${match[2]}</p>
+                                </div>`;
+                    } else {
+                        return `<p class="text-[1.05rem] text-[#C9D1D9] leading-[2.0] mb-4 text-justify">${line}</p>`;
+                    }
+                }).join('');
+                
+                traitsContainer.innerHTML = `
+                    <div class="mt-12 mb-12 p-6 sm:p-8 bg-[var(--surface-color)] border border-[var(--border-subtle)] rounded-lg relative overflow-hidden shadow-xl">
+                        <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-[var(--accent-main)] to-[var(--accent-sub)]"></div>
+                        <div class="absolute -right-6 -bottom-6 text-[var(--accent-main)] opacity-10 text-8xl pointer-events-none"><i class="fa-solid fa-fingerprint"></i></div>
+                        <div class="relative z-10">
+                            ${formattedP4}
+                        </div>
+                    </div>
+                `;
+                traitsContainer.style.display = 'block';
+            } else {
+                traitsContainer.style.display = 'none';
+            }
+
             document.getElementById('dom-nodes').innerHTML = `
                 <div class="node"><div class="node-circle serif" style="border-color: var(--accent-sub);">${d.origin.nodes[0].word.replace(/\n/g, '<br>')}</div><div class="node-desc">${d.origin.nodes[0].desc.replace(/\n/g, '<br>')}</div></div>
                 <div class="arrow">▶︎</div>
@@ -395,7 +431,6 @@
                         <span class="syn-label" style="color: var(--accent-main);">▶︎ 最高の化学反応を起こす相手</span>
                         <div class="premium-content">
                             ${res.matches.map(m => {
-                                // ★修正: 名前から「No.○○」の数値を抽出して検索ページへのリンクを生成
                                 const match = m.name.match(/No\.(\d+)/);
                                 const osNum = match ? match[1] : '';
                                 if(osNum) {
@@ -428,7 +463,6 @@
             document.getElementById('dom-message').innerHTML = d.message.map(m => `<p>${m.replace(/\n/g, '<br class="pc-only">')}</p>`).join('');
         }
 
-        // ★修正: グラフのツールチップ見切れ対応＆パディングの確保
         function renderChart(param) {
             const ctx = document.getElementById('radarChart').getContext('2d');
             const mainColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-main').trim();
@@ -458,7 +492,6 @@
                 },
                 options: {
                     layout: {
-                        // ★追加: グラフ全体に左右の余白を持たせ、はみ出しを防ぐ
                         padding: isMobile ? { left: 15, right: 15, top: 10, bottom: 10 } : 0
                     },
                     scales: {
@@ -477,14 +510,13 @@
                         tooltip: {
                             backgroundColor: 'rgba(13, 19, 38, 0.95)', 
                             titleFont: { size: isMobile ? 13 : 14, family: "'Noto Serif JP', serif" },
-                            bodyFont: { size: isMobile ? 12 : 13 }, // ★変更: スマホ時は少し小さく
+                            bodyFont: { size: isMobile ? 12 : 13 }, 
                             borderColor: mainColor, 
                             borderWidth: 1, 
-                            padding: isMobile ? 10 : 15, // ★変更: スマホ時はパディングも小さく
+                            padding: isMobile ? 10 : 15, 
                             callbacks: { 
                                 label: (ctx) => {
                                     const text = param.tooltips[ctx.dataIndex];
-                                    // ★追加: スマホの時は文字列を2行に分けて幅を狭くする
                                     if (isMobile) {
                                         const splitIdx = text.indexOf('] ');
                                         if (splitIdx !== -1) {
@@ -522,6 +554,7 @@
                     p1: "なぜあなたの行動設計図（OS）に「玄盤」という名が冠されたのか。それはあなたが、一過性の流行や軽薄なスポットライトが当たる表層の世界には一切の興味を持たず、「何十年先も決して崩壊しない社会のインフラ」を、地下深くで設計していく使命を帯びているからです。",
                     p2: "自然界の物理法則と深層心理の力学を統合した本プロファイリングにおいて、あなたのパーソナリティは<strong>「強烈な重圧を内側に溜め込み、純化させる」</strong>という極めて特殊な構造を持っています。周りが浮き足立っている時、あなた一人だけが「3年後、このシステムが破綻しないか」を静かに計算しています。",
                     p3: "あなたはプレッシャーに潰されているのではありません。外からの不条理な圧力や混沌とした状況を真っ向から受け止め、それを内なる「冷徹な知性と美学のフィルター」に通すことで不純物を極限まで削ぎ落とします。そして純度100%の真理とデータだけを蓄積していく、「究極の自己濾過システム」を内蔵しているのです。",
+                    p4: "【性格】 非常にさっぱりとした気質で、迷いなく行動を起こす力強さを持っています。正義感が強く、自分が信じた道であればどんな障害があっても突き進む、確固たる信念と精神的なタフさを備えています。\n【強み】 卓越した決断力と実行力を持ち合わせており、ゼロから新しいプロジェクトを立ち上げる指導者や経営者として、組織を牽引するカリスマ性を発揮します。困難な状況でも決して逃げ出さない責任感が周囲の信頼を集めます。\n【注意点】 目標達成に向けた推進力が強すぎるあまり、率直すぎる言動が意図せず他者との摩擦を生み、敵を作ってしまうことがあります。自分のペースを他者にも求めてしまう傾向があるため、あえて一歩引いて周囲の意見に耳を傾け、調和や協調性を意識してコミュニケーションをとることで、あなたの築く基盤はより盤石になり、運気も大きく安定していくでしょう。",
                     nodes: [ { word: "現実の\n重圧", desc: "社会の枠組みや\n強烈なプレッシャー" }, { word: "知性の\n濾過器", desc: "感情を排した\n精密な分析と純化" }, { word: "極限の\n蓄積", desc: "岩盤を砕くほどの\n圧倒的なポテンシャル" } ]
                 },
                 resonance: [
