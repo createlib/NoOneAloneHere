@@ -173,7 +173,7 @@
                         </div>
                     </div>
 
-                    <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                    <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
                 <!-- PC用 UPGRADEボタン -->
@@ -188,11 +188,7 @@
                 
                 <button onclick="location.reload()" class="p-2 text-brand-300 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
 
-                <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
-                <button onclick="handleAuthAction()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-brand-800 transition-colors flex items-center gap-2">
-                    <span class="hidden sm:inline tracking-widest" id="nav-auth-text">下船する</span>
-                    <i class="fa-solid fa-right-from-bracket text-lg" id="nav-auth-icon"></i>
-                </button>
+                <!-- ログアウト(下船)ボタンは非表示化 -->
             </div>
         </div>
     </nav>
@@ -760,13 +756,13 @@
     <!-- Bottom Navigation (Mobile Only) -->
     <nav class="fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="flex justify-around items-center h-16">
-            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px] transition-colors">
                 <i class="fa-solid fa-ship text-xl mb-1"></i>
-                <span class="text-[10px] font-medium tracking-widest">航海</span>
+                <span class="text-[10px] font-bold tracking-widest">航海</span>
             </a>
-            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px] transition-colors">
+            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-hourglass-half text-xl mb-1"></i>
-                <span class="text-[10px] font-bold tracking-widest">イベント</span>
+                <span class="text-[10px] font-medium tracking-widest">イベント</span>
             </a>
             <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-compass text-xl mb-1"></i>
@@ -813,6 +809,14 @@
     <!-- Notification Toast -->
     <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
         <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#c8b9a6] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
+    </div>
+
+    <!-- ★追加: 画像フルスクリーン表示用のモーダル -->
+    <div id="fullscreen-image-modal" class="hidden fixed inset-0 z-[7000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer" onclick="closeFullscreenImage()">
+        <img id="fullscreen-image" src="" class="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-none">
+        <button type="button" class="absolute top-4 right-4 sm:top-8 sm:right-8 text-white hover:text-gray-300 w-10 h-10 flex items-center justify-center bg-black/50 rounded-full transition-colors z-50">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
     </div>
 
     <script type="module">
@@ -952,7 +956,7 @@
                 return;
             }
 
-            if (user) {
+            if (user && !user.isAnonymous) {
                 currentUser = user;
                 try {
                     const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
@@ -1364,34 +1368,46 @@
                 if(statusEl) statusEl.textContent = '新着順';
             }
 
-            container.innerHTML = displayEvents.map(evt => {
-                const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/150?text=NOAH';
-                const distStr = evt._distance !== undefined && evt._distance < 99999 ? `<span class="bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-sm ml-2 text-[10px] font-bold"><i class="fa-solid fa-location-arrow mr-1"></i>${evt._distance.toFixed(1)}km</span>` : '';
-                
-                const dateStr = (evt.startDate === evt.endDate) 
-                    ? `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endTime || ''}`
-                    : `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
+            container.innerHTML = '';
+            displayEvents.forEach(evt => renderEventItem(container, evt));
+        }
 
-                const tags = evt.tags ? evt.tags.slice(0,2).map(t => `<span class="text-[10px] bg-[#f7f5f0] border border-brand-200 text-brand-600 px-1 rounded-sm">#${t}</span>`).join('') : '';
+        function renderEventItem(container, evt) {
+            const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/150?text=NOAH';
+            // ★追加: 複数画像がある場合はバッジを表示
+            const imageCountBadge = (evt.imageUrls && evt.imageUrls.length > 1) 
+                ? `<div class="absolute top-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-sm flex items-center gap-1 z-10"><i class="fa-regular fa-images"></i>${evt.imageUrls.length}</div>` 
+                : '';
 
-                return `
-                <div class="flex bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm hover:shadow-md cursor-pointer transition-shadow h-28" onclick="showEventSheetById('${evt.id}')">
-                    <div class="w-28 h-full flex-shrink-0 relative">
-                        <img src="${thumb}" class="w-full h-full object-cover">
+            const distStr = evt._distance !== undefined && evt._distance < 99999 ? `<span class="bg-brand-100 text-brand-700 px-1.5 py-0.5 rounded-sm ml-2 text-[10px] font-bold"><i class="fa-solid fa-location-arrow mr-1"></i>${evt._distance.toFixed(1)}km</span>` : '';
+            
+            const dateStr = (evt.startDate === evt.endDate) 
+                ? `${evt.startDate || ''} ${evt.startTime || ''}`
+                : `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
+
+            const tags = evt.tags ? evt.tags.slice(0,2).map(t => `<span class="text-[10px] bg-[#f7f5f0] border border-brand-200 text-brand-600 px-1 rounded-sm">#${t}</span>`).join('') : '';
+
+            const el = document.createElement('div');
+            el.className = 'flex bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm hover:shadow-md cursor-pointer transition-shadow h-28';
+            el.onclick = () => showEventSheetById(evt.id);
+
+            el.innerHTML = `
+                <div class="w-28 h-full flex-shrink-0 relative border-r border-brand-100">
+                    <img src="${thumb}" class="w-full h-full object-cover">
+                    ${imageCountBadge}
+                </div>
+                <div class="p-3 flex flex-col justify-between flex-1 min-w-0">
+                    <div>
+                        <h3 class="font-bold text-sm text-brand-900 truncate font-serif tracking-widest">${evt.title || '名称未設定'}</h3>
+                        <p class="text-[10px] text-brand-500 mt-1 flex items-center truncate"><i class="fa-regular fa-clock mr-1"></i>${dateStr} ${distStr}</p>
                     </div>
-                    <div class="p-3 flex flex-col justify-between flex-1 min-w-0">
-                        <div>
-                            <h3 class="font-bold text-sm text-brand-900 truncate font-serif tracking-widest">${evt.title || '名称未設定'}</h3>
-                            <p class="text-[10px] text-brand-500 mt-1 flex items-center truncate"><i class="fa-regular fa-clock mr-1"></i>${dateStr} ${distStr}</p>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex gap-1 overflow-hidden">${tags}</div>
-                            <span class="text-[10px] font-bold ${evt.price > 0 ? 'text-[#b8860b]' : 'text-brand-600'}">${evt.price > 0 ? '¥'+Number(evt.price).toLocaleString() : '無料'}</span>
-                        </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex gap-1 overflow-hidden">${tags}</div>
+                        <span class="text-[10px] font-bold ${evt.price > 0 ? 'text-[#b8860b]' : 'text-brand-600'}">${evt.price > 0 ? '¥'+Number(evt.price).toLocaleString() : '無料'}</span>
                     </div>
                 </div>
-                `;
-            }).join('');
+            `;
+            container.appendChild(el);
         }
 
         function renderMarkers(eventsToRender = [], jobsToRender = []) {
@@ -1891,7 +1907,6 @@
         };
 
         window.removeEventImageFile = (idx) => {
-            // メモリ解放はすぐにせず、配列から削除するのみとする（プレビュー消去バグ防止のため）
             currentEventImageFiles.splice(idx, 1);
             renderEventImagePreviews();
         };
@@ -1919,7 +1934,6 @@
 
                 let finalImageUrls = [...currentEventImageUrls];
                 
-                // ★修正: 画像アップロード中のエラーを防ぐためファイル名を安全な文字に変換して直列処理
                 if (currentEventImageFiles.length > 0 && !isAdminMock) {
                     try {
                         for (let i = 0; i < currentEventImageFiles.length; i++) {
@@ -2214,6 +2228,21 @@
             }
         };
 
+        // ★追加: フルスクリーン画像表示関数
+        window.openFullscreenImage = (url) => {
+            const modal = document.getElementById('fullscreen-image-modal');
+            const img = document.getElementById('fullscreen-image');
+            if(modal && img) {
+                img.src = url;
+                modal.classList.remove('hidden');
+            }
+        };
+
+        window.closeFullscreenImage = () => {
+            const modal = document.getElementById('fullscreen-image-modal');
+            if(modal) modal.classList.add('hidden');
+        };
+
         window.showEventSheet = async (evt) => {
             const sheet = document.getElementById('event-sheet');
             const content = document.getElementById('event-sheet-content');
@@ -2227,13 +2256,16 @@
             if (images.length <= 1) {
                 sliderHtml = `
                 <div class="relative h-48 sm:h-64 w-full rounded-sm overflow-hidden mb-4 shadow-sm border border-brand-200">
-                    <img src="${images[0]}" class="w-full h-full object-cover">
-                    <div class="absolute top-2 right-2 bg-[#3e2723]/80 backdrop-blur text-[#d4af37] px-3 py-1 rounded-sm text-xs font-bold tracking-widest border border-[#b8860b] shadow-sm z-10">${priceText}</div>
+                    <img src="${images[0]}" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" onclick="openFullscreenImage('${images[0]}')">
+                    <div class="absolute top-2 right-2 bg-[#3e2723]/80 backdrop-blur text-[#d4af37] px-3 py-1 rounded-sm text-xs font-bold tracking-widest border border-[#b8860b] shadow-sm z-10 pointer-events-none">${priceText}</div>
                 </div>`;
             } else {
                 let slides = images.map((url, i) => `
-                    <div class="w-full h-full flex-shrink-0 snap-center relative">
-                        <img src="${url}" class="w-full h-full object-cover">
+                    <div class="w-full h-full flex-shrink-0 snap-center relative cursor-pointer group" onclick="openFullscreenImage('${url}')">
+                        <img src="${url}" class="w-full h-full object-cover group-hover:opacity-90 transition-opacity">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <div class="bg-black/50 text-white rounded-full p-3"><i class="fa-solid fa-expand"></i></div>
+                        </div>
                     </div>
                 `).join('');
                 
@@ -2248,10 +2280,10 @@
                     <button onclick="moveEventSlide('${evt.id}', -1)" class="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-left text-sm ml-[-2px]"></i></button>
                     <button onclick="moveEventSlide('${evt.id}', 1)" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-right text-sm ml-[2px]"></i></button>
                     <!-- ドットインジケーター -->
-                    <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-10" id="event-slider-dots-${evt.id}">
+                    <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none" id="event-slider-dots-${evt.id}">
                         ${dots}
                     </div>
-                    <div class="absolute top-2 right-2 bg-[#3e2723]/80 backdrop-blur text-[#d4af37] px-3 py-1 rounded-sm text-xs font-bold tracking-widest border border-[#b8860b] shadow-sm z-10">${priceText}</div>
+                    <div class="absolute top-2 right-2 bg-[#3e2723]/80 backdrop-blur text-[#d4af37] px-3 py-1 rounded-sm text-xs font-bold tracking-widest border border-[#b8860b] shadow-sm z-10 pointer-events-none">${priceText}</div>
                 </div>`;
             }
 
