@@ -335,11 +335,6 @@
                                 <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-feather"></i></div><span id="profile-job" class="font-medium">-</span></div>
                                 <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div><span id="profile-location" class="font-medium">-</span></div>
                                 
-                                <a id="profile-video-link" href="#" class="hidden items-center gap-3 text-sm font-bold text-brand-600 hover:text-brand-800 transition-colors group w-fit">
-                                    <div class="w-8 h-8 rounded-full bg-[#3e2723] flex items-center justify-center text-[#d4af37] border border-[#b8860b] flex-shrink-0 group-hover:scale-110 transition-transform shadow-sm"><i class="fa-solid fa-photo-film text-xs"></i></div>
-                                    <span class="border-b border-transparent group-hover:border-[#b8860b] tracking-widest">MEDIA LOG (発信記録)</span>
-                                </a>
-                                
                                 <div class="mutual-only hidden space-y-3 pt-1">
                                     <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-venus-mars"></i></div><span id="data-gender" class="font-medium">-</span></div>
                                     <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-hourglass"></i></div><span id="data-birth" class="font-medium">-</span></div>
@@ -886,7 +881,6 @@
         // ★修正: 連携Xの投稿などを加味してMEDIAタブの表示を制御する (X関連の処理を削除)
         async function checkUserContents(uid, dataToUse = null) {
             const mediaTabBtn = document.getElementById('tab-main-media');
-            const mediaLink = document.getElementById('profile-video-link');
             
             let hasContent = false;
             
@@ -922,18 +916,8 @@
 
             if (hasContent) {
                 if (mediaTabBtn) mediaTabBtn.classList.remove('hidden');
-                if (mediaLink) {
-                    mediaLink.href = "#";
-                    mediaLink.onclick = (e) => { e.preventDefault(); switchMainTab('media'); window.scrollTo(0,0); };
-                    mediaLink.classList.remove('hidden');
-                    mediaLink.classList.add('flex');
-                }
             } else {
                 if (mediaTabBtn) mediaTabBtn.classList.add('hidden');
-                if (mediaLink) {
-                    mediaLink.classList.add('hidden');
-                    mediaLink.classList.remove('flex');
-                }
             }
         }
 
