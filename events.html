@@ -173,19 +173,11 @@
                         </div>
                     </div>
 
+                    <!-- ★修正: auth-required クラスを外して常にマイページボタンを表示 -->
                     <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
-                <!-- PC用 UPGRADEボタン -->
-                <a href="upgrade.html" class="auth-required hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] text-xs font-bold rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border border-[#996515]">
-                    <i class="fa-solid fa-shield-halved mr-1"></i> 契約変更
-                </a>
-
-                <a href="notifications.html" class="auth-required p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
-                    <i class="fa-regular fa-bell text-xl"></i>
-                    <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]" id="nav-badge"></span>
-                </a>
-                
+                <!-- 契約変更ボタンと通知ボタンは非表示化 -->
             </div>
         </div>
     </nav>
