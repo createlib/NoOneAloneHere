@@ -152,13 +152,6 @@
                 </div>
 
                 <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
-                
-                <div class="h-6 w-px bg-brand-200 mx-1"></div>
-                
-                <button onclick="handleLogout()" class="text-sm font-bold text-brand-400 hover:text-red-800 transition-colors flex items-center gap-2">
-                    <span class="tracking-widest">下船する</span>
-                    <i class="fa-solid fa-right-from-bracket text-lg"></i>
-                </button>
             </div>
             
             <!-- Mobile Header Action (Optional) -->
@@ -427,6 +420,14 @@
     <!-- Notification Toast -->
     <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
         <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#c8b9a6] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
+    </div>
+
+    <!-- ★追加: 画像フルスクリーン表示用のモーダル -->
+    <div id="fullscreen-image-modal" class="hidden fixed inset-0 z-[7000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer" onclick="closeFullscreenImage()">
+        <img id="fullscreen-image" src="" class="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-none">
+        <button type="button" class="absolute top-4 right-4 sm:top-8 sm:right-8 text-white hover:text-gray-300 w-10 h-10 flex items-center justify-center bg-black/50 rounded-full transition-colors z-50">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
     </div>
 
     <script type="module">
@@ -726,6 +727,11 @@ https://line.me/ti/g2/yo2C_bp7U7agH9Rz--E2YhZ4Sc4Yy1ybqhQQZw?utm_source=invitati
 
         function renderEventItem(container, evt) {
             const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/150?text=NOAH';
+            // ★追加: 複数画像がある場合はバッジを表示
+            const imageCountBadge = (evt.imageUrls && evt.imageUrls.length > 1) 
+                ? `<div class="absolute top-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-sm flex items-center gap-1 z-10"><i class="fa-regular fa-images"></i>${evt.imageUrls.length}</div>` 
+                : '';
+
             const el = document.createElement('div');
             el.className = 'event-card flex items-center gap-4 p-4 bg-[#fffdf9] rounded-sm border border-brand-200 cursor-pointer';
             el.onclick = () => openEventDetail(evt);
@@ -737,6 +743,7 @@ https://line.me/ti/g2/yo2C_bp7U7agH9Rz--E2YhZ4Sc4Yy1ybqhQQZw?utm_source=invitati
             el.innerHTML = `
                 <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-sm overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-sm">
                     <img src="${thumb}" class="w-full h-full object-cover">
+                    ${imageCountBadge}
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex flex-wrap gap-1 mb-1.5">
@@ -860,21 +867,39 @@ https://line.me/ti/g2/yo2C_bp7U7agH9Rz--E2YhZ4Sc4Yy1ybqhQQZw?utm_source=invitati
             }
         };
 
+        // ★追加: フルスクリーン画像表示関数
+        window.openFullscreenImage = (url) => {
+            const modal = document.getElementById('fullscreen-image-modal');
+            const img = document.getElementById('fullscreen-image');
+            if(modal && img) {
+                img.src = url;
+                modal.classList.remove('hidden');
+            }
+        };
+
+        window.closeFullscreenImage = () => {
+            const modal = document.getElementById('fullscreen-image-modal');
+            if(modal) modal.classList.add('hidden');
+        };
+
         // --- Detail Modal (Home画面用) ---
         window.openEventDetail = async (evt) => {
             const modal = document.getElementById('event-detail-modal');
             
-            // ★修正: スライダーHTMLの生成処理
+            // ★修正: クリック時に全画面表示になるように処理を追加
             const sliderContainer = document.getElementById('modal-event-slider-container');
             let images = evt.imageUrls || (evt.thumbnailUrl ? [evt.thumbnailUrl] : ['https://via.placeholder.com/400x200?text=NOAH+Event']);
             
             let sliderHtml = '';
             if (images.length <= 1) {
-                sliderHtml = `<img src="${images[0]}" class="w-full h-full object-cover">`;
+                sliderHtml = `<img src="${images[0]}" class="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" onclick="openFullscreenImage('${images[0]}')">`;
             } else {
                 let slides = images.map((url) => `
-                    <div class="w-full h-full flex-shrink-0 snap-center relative">
-                        <img src="${url}" class="w-full h-full object-cover">
+                    <div class="w-full h-full flex-shrink-0 snap-center relative cursor-pointer group" onclick="openFullscreenImage('${url}')">
+                        <img src="${url}" class="w-full h-full object-cover group-hover:opacity-90 transition-opacity">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            <div class="bg-black/50 text-white rounded-full p-3"><i class="fa-solid fa-expand"></i></div>
+                        </div>
                     </div>
                 `).join('');
                 
@@ -889,7 +914,7 @@ https://line.me/ti/g2/yo2C_bp7U7agH9Rz--E2YhZ4Sc4Yy1ybqhQQZw?utm_source=invitati
                     <button onclick="moveEventSlide('${evt.id}', -1)" class="absolute left-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-left text-sm ml-[-2px]"></i></button>
                     <button onclick="moveEventSlide('${evt.id}', 1)" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 z-10"><i class="fa-solid fa-chevron-right text-sm ml-[2px]"></i></button>
                     <!-- ドットインジケーター -->
-                    <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-10" id="event-slider-dots-${evt.id}">
+                    <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none" id="event-slider-dots-${evt.id}">
                         ${dots}
                     </div>
                 </div>`;
