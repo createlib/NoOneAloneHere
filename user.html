@@ -137,6 +137,10 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f7f5f0; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #c8b9a6; border-radius: 10px; }
+
+        /* ★追加: メディアタブ用のスタイル */
+        .media-tab-btn { transition: all 0.2s; }
+        .media-tab-btn.active { border-bottom-color: #b8860b; color: #b8860b; }
     </style>
 </head>
 <body class="antialiased body-pb-nav lg:pb-0 bg-texture">
@@ -411,7 +415,17 @@
             </aside>
 
             <div class="flex-1 min-w-0">
-                <div class="space-y-6">
+                
+                <!-- ★追加: メインタブ (航海録 / MEDIA LOG) -->
+                <div class="mb-6 border-b border-brand-200">
+                    <div class="flex gap-6">
+                        <button onclick="switchMainTab('profile')" id="tab-main-profile" class="pb-3 border-b-[3px] border-[#b8860b] text-[#b8860b] font-bold tracking-widest text-sm transition-colors">航海録 (プロフィール)</button>
+                        <button onclick="switchMainTab('media')" id="tab-main-media" class="pb-3 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 font-bold tracking-widest text-sm transition-colors hidden">MEDIA LOG</button>
+                    </div>
+                </div>
+
+                <!-- ★変更: 既存のプロフィールコンテンツをエリアで囲む -->
+                <div id="area-main-profile" class="space-y-6">
                     
                     <!-- Message Section -->
                     <div id="section-message" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative overflow-hidden">
@@ -489,6 +503,41 @@
                             <p class="text-sm font-bold text-brand-500 tracking-widest">相互フォローで経歴を表示</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- ★追加: MEDIA LOG エリア -->
+                <div id="area-main-media" class="hidden space-y-6">
+                    <!-- Content Tabs -->
+                    <div class="mb-4 border-b border-brand-200">
+                        <div class="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-1">
+                            <button onclick="switchMediaTab('videos')" id="tab-media-videos" class="media-tab-btn active pb-2 border-b-[3px] border-[#b8860b] text-[#b8860b] text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap">
+                                <i class="fa-solid fa-film mr-1"></i> 動画
+                            </button>
+                            <button onclick="switchMediaTab('podcasts')" id="tab-media-podcasts" class="media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap">
+                                <i class="fa-solid fa-podcast mr-1"></i> 音声
+                            </button>
+                            <button onclick="switchMediaTab('playlists')" id="tab-media-playlists" class="media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap">
+                                <i class="fa-solid fa-list mr-1"></i> プレイリスト
+                            </button>
+                            <button onclick="switchMediaTab('twitter')" id="tab-media-twitter" class="hidden media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap">
+                                <i class="fa-brands fa-x-twitter mr-1"></i> 投稿(X)
+                            </button>
+                            <button onclick="switchMediaTab('liked-videos')" id="tab-media-liked-videos" class="hidden media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap relative">
+                                <i class="fa-regular fa-heart mr-1"></i> お気に入り(動画) <i class="fa-solid fa-lock text-[8px] absolute top-0 -right-2 text-brand-300"></i>
+                            </button>
+                            <button onclick="switchMediaTab('liked-podcasts')" id="tab-media-liked-podcasts" class="hidden media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap relative">
+                                <i class="fa-regular fa-heart mr-1"></i> お気に入り(音声) <i class="fa-solid fa-lock text-[8px] absolute top-0 -right-2 text-brand-300"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Content Grid -->
+                    <div id="media-content-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pb-12">
+                        <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>コンテンツを読み込み中...</div>
+                    </div>
+                    
+                    <!-- Twitter Container -->
+                    <div id="twitter-container" class="hidden w-full max-w-lg mx-auto bg-[#fffdf9] p-4 rounded-sm border border-brand-200 shadow-sm min-h-[400px]"></div>
                 </div>
             </div>
         </div>
@@ -579,6 +628,16 @@
         
         let privateMemos = []; 
         let commonMutualIds = []; 
+
+        // ★追加: メディアログ用データ
+        let myVideos = [];
+        let myPodcasts = [];
+        let likedVideos = [];
+        let likedPodcasts = [];
+        let isLikedVideosLoaded = false;
+        let isLikedPodcastsLoaded = false;
+        let isMyContentsLoaded = false;
+        let currentMediaTab = 'videos';
 
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const urlParams = new URLSearchParams(window.location.search);
@@ -776,9 +835,10 @@
                 } else {
                     isSelf = true;
                     targetUid = 'test_admin_uid';
-                    updateDashboardUI(getAdminMockData());
+                    const adminData = getAdminMockData();
+                    updateDashboardUI(adminData);
                     enableSelfMode(myRank);
-                    checkUserContents(targetUid);
+                    checkUserContents(targetUid, adminData);
                 }
                 return;
             }
@@ -802,10 +862,14 @@
                     isSelf = true;
                     targetUid = user.uid;
                     enableSelfMode(myRank); 
-                    if (myProfileSnap.exists()) updateDashboardUI(myProfileSnap.data());
-                    else updateDashboardUI({ userId: user.uid, name: '（未設定）' });
-                    
-                    checkUserContents(user.uid); 
+                    if (myProfileSnap.exists()) {
+                        const myDataToUse = myProfileSnap.data();
+                        updateDashboardUI(myDataToUse);
+                        checkUserContents(user.uid, myDataToUse);
+                    } else {
+                        updateDashboardUI({ userId: user.uid, name: '（未設定）' });
+                        checkUserContents(user.uid, null);
+                    }
                 } else {
                     isSelf = false;
                     await checkFollowStatus(user.uid, targetUid); 
@@ -817,8 +881,6 @@
                         memoBtn.classList.remove('hidden');
                         memoBtn.classList.add('inline-flex');
                     }
-                    
-                    checkUserContents(targetUid); 
                 }
                 updateFollowCounts(targetUid);
             } else {
@@ -826,42 +888,85 @@
             }
         });
 
-        async function checkUserContents(uid) {
+        // ★修正: 連携Xの投稿などを加味してMEDIAタブの表示を制御する
+        async function checkUserContents(uid, dataToUse = null) {
+            const mediaTabBtn = document.getElementById('tab-main-media');
             const mediaLink = document.getElementById('profile-video-link');
-            if (!mediaLink) return;
-
-            if (isAdminMock) {
-                mediaLink.href = `user_contents.html?uid=${uid}`;
-                mediaLink.classList.remove('hidden');
-                mediaLink.classList.add('flex');
-                return;
+            
+            let hasContent = false;
+            
+            // Xアカウントの処理
+            if (dataToUse && dataToUse.snsX) {
+                hasContent = true;
+                const twTab = document.getElementById('tab-media-twitter');
+                if(twTab) twTab.classList.remove('hidden');
+                
+                const twContainer = document.getElementById('twitter-container');
+                if (twContainer) {
+                    let screenName = dataToUse.snsX;
+                    if (screenName.includes('twitter.com/') || screenName.includes('x.com/')) {
+                        screenName = screenName.split('/').pop().split('?')[0];
+                    }
+                    twContainer.innerHTML = `<a class="twitter-timeline" href="https://twitter.com/${screenName}">Tweets by ${screenName}</a>`;
+                    if (window.twttr) {
+                        window.twttr.widgets.load();
+                    } else {
+                        const script = document.createElement('script');
+                        script.src = "https://platform.twitter.com/widgets.js";
+                        script.async = true;
+                        script.charset = "utf-8";
+                        document.head.appendChild(script);
+                    }
+                }
+            } else {
+                const twTab = document.getElementById('tab-media-twitter');
+                if(twTab) twTab.classList.add('hidden');
             }
 
-            try {
-                let hasContent = false;
-                
-                const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
-                const qV = query(videosRef, where("authorId", "==", uid));
-                const snapV = await getCountFromServer(qV);
-                if (snapV.data().count > 0) hasContent = true;
+            // 自分であれば「お気に入り」タブを表示
+            if (isSelf) {
+                hasContent = true; // 自分がアクセスした場合は必ずメディアログタブを見せる
+                document.getElementById('tab-media-liked-videos')?.classList.remove('hidden');
+                document.getElementById('tab-media-liked-podcasts')?.classList.remove('hidden');
+            } else {
+                document.getElementById('tab-media-liked-videos')?.classList.add('hidden');
+                document.getElementById('tab-media-liked-podcasts')?.classList.add('hidden');
+            }
 
-                if (!hasContent) {
-                    const podRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
-                    const qP = query(podRef, where("authorId", "==", uid));
-                    const snapP = await getCountFromServer(qP);
-                    if (snapP.data().count > 0) hasContent = true;
+            if (isAdminMock) {
+                hasContent = true;
+            } else {
+                try {
+                    const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
+                    const qV = query(videosRef, where("authorId", "==", uid));
+                    const snapV = await getCountFromServer(qV);
+                    if (snapV.data().count > 0) hasContent = true;
+
+                    if (!hasContent && !isSelf && !(dataToUse && dataToUse.snsX)) {
+                        const podRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
+                        const qP = query(podRef, where("authorId", "==", uid));
+                        const snapP = await getCountFromServer(qP);
+                        if (snapP.data().count > 0) hasContent = true;
+                    }
+                } catch (e) {
+                    console.error("Content check error:", e);
                 }
+            }
 
-                if (hasContent) {
-                    mediaLink.href = `user_contents.html?uid=${uid}`;
+            if (hasContent) {
+                if (mediaTabBtn) mediaTabBtn.classList.remove('hidden');
+                if (mediaLink) {
+                    mediaLink.href = "#";
+                    mediaLink.onclick = (e) => { e.preventDefault(); switchMainTab('media'); window.scrollTo(0,0); };
                     mediaLink.classList.remove('hidden');
                     mediaLink.classList.add('flex');
-                } else {
+                }
+            } else {
+                if (mediaTabBtn) mediaTabBtn.classList.add('hidden');
+                if (mediaLink) {
                     mediaLink.classList.add('hidden');
                     mediaLink.classList.remove('flex');
                 }
-            } catch (e) {
-                console.error("Content check error:", e);
             }
         }
 
@@ -1026,6 +1131,7 @@
 
                 if (dataToUse) {
                     updateDashboardUI(dataToUse);
+                    checkUserContents(uid, dataToUse); // ★追加
                 } else {
                     document.getElementById('error-container').classList.remove('hidden');
                 }
@@ -1502,6 +1608,255 @@
                     }
                 }
             }
+        }
+
+        // ★追加: メインタブ切り替えロジック
+        window.switchMainTab = (tab) => {
+            const btnProfile = document.getElementById('tab-main-profile');
+            const btnMedia = document.getElementById('tab-main-media');
+            const areaProfile = document.getElementById('area-main-profile');
+            const areaMedia = document.getElementById('area-main-media');
+
+            if (tab === 'profile') {
+                btnProfile.classList.add('border-[#b8860b]', 'text-[#b8860b]');
+                btnProfile.classList.remove('border-transparent', 'text-brand-400');
+                btnMedia.classList.remove('border-[#b8860b]', 'text-[#b8860b]');
+                btnMedia.classList.add('border-transparent', 'text-brand-400');
+                
+                areaProfile.classList.remove('hidden');
+                areaMedia.classList.add('hidden');
+            } else {
+                btnMedia.classList.add('border-[#b8860b]', 'text-[#b8860b]');
+                btnMedia.classList.remove('border-transparent', 'text-brand-400');
+                btnProfile.classList.remove('border-[#b8860b]', 'text-[#b8860b]');
+                btnProfile.classList.add('border-transparent', 'text-brand-400');
+                
+                areaProfile.classList.add('hidden');
+                areaMedia.classList.remove('hidden');
+
+                if (!isMyContentsLoaded && !isAdminMock) {
+                    loadMyContents();
+                } else if (isAdminMock) {
+                    renderMediaCurrentTab();
+                }
+            }
+        };
+
+        // ★追加: MEDIA LOG サブタブ切り替えロジック
+        window.switchMediaTab = async (tab) => {
+            currentMediaTab = tab;
+            
+            document.querySelectorAll('.media-tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-[#b8860b]', 'text-[#b8860b]');
+                btn.classList.add('border-transparent', 'text-brand-400');
+            });
+            const activeBtn = document.getElementById(`tab-media-${tab}`);
+            if(activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-brand-400');
+                activeBtn.classList.add('active', 'border-[#b8860b]', 'text-[#b8860b]');
+            }
+
+            const grid = document.getElementById('media-content-grid');
+            const twContainer = document.getElementById('twitter-container');
+
+            if (tab === 'twitter') {
+                grid.classList.add('hidden');
+                twContainer.classList.remove('hidden');
+            } else {
+                grid.classList.remove('hidden');
+                twContainer.classList.add('hidden');
+                
+                if (tab === 'liked-videos' && !isLikedVideosLoaded && !isAdminMock) {
+                    await loadLikedVideos();
+                } else if (tab === 'liked-podcasts' && !isLikedPodcastsLoaded && !isAdminMock) {
+                    await loadLikedPodcasts();
+                } else {
+                    renderMediaCurrentTab();
+                }
+            }
+        };
+
+        // ★追加: メディアデータの取得処理
+        async function loadMyContents() {
+            try {
+                const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
+                const qV = query(videosRef, where("authorId", "==", targetUid));
+                const snapV = await getDocs(qV);
+                myVideos = [];
+                snapV.forEach(doc => myVideos.push({ id: doc.id, ...doc.data() }));
+                myVideos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                const podRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
+                const qP = query(podRef, where("authorId", "==", targetUid));
+                const snapP = await getDocs(qP);
+                myPodcasts = [];
+                snapP.forEach(doc => myPodcasts.push({ id: doc.id, ...doc.data() }));
+                myPodcasts.sort((a, b) => new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt));
+
+                isMyContentsLoaded = true;
+                renderMediaCurrentTab();
+            } catch (error) {
+                console.error("Error fetching contents:", error);
+                document.getElementById('media-content-grid').innerHTML = '<div class="col-span-full text-center text-red-500 py-10">コンテンツの取得に失敗しました</div>';
+            }
+        }
+
+        async function loadLikedVideos() {
+            if (isLikedVideosLoaded || isAdminMock) return;
+            const grid = document.getElementById('media-content-grid');
+            grid.innerHTML = '<div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>お気に入りの動画を探しています...</div>';
+            
+            try {
+                const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'videos'));
+                const promises = snap.docs.map(async (d) => {
+                    const likeSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'videos', d.id, 'likes', currentUser.uid));
+                    if(likeSnap.exists()) return { id: d.id, ...d.data(), likedAt: likeSnap.data().timestamp };
+                    return null;
+                });
+                const results = await Promise.all(promises);
+                likedVideos = results.filter(v => v !== null).sort((a,b) => {
+                    const tA = a.likedAt?.toMillis ? a.likedAt.toMillis() : 0;
+                    const tB = b.likedAt?.toMillis ? b.likedAt.toMillis() : 0;
+                    return tB - tA;
+                });
+                isLikedVideosLoaded = true;
+                renderMediaCurrentTab();
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = '<div class="col-span-full text-center text-red-500 py-10">お気に入りの取得に失敗しました</div>';
+            }
+        }
+
+        async function loadLikedPodcasts() {
+            if (isLikedPodcastsLoaded || isAdminMock) return;
+            const grid = document.getElementById('media-content-grid');
+            grid.innerHTML = '<div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>お気に入りの音声を探しています...</div>';
+            
+            try {
+                const snap = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'podcasts'));
+                const promises = snap.docs.map(async (d) => {
+                    const likeSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'podcasts', d.id, 'likes', currentUser.uid));
+                    if(likeSnap.exists()) return { id: d.id, ...d.data(), likedAt: likeSnap.data().timestamp };
+                    return null;
+                });
+                const results = await Promise.all(promises);
+                likedPodcasts = results.filter(p => p !== null).sort((a,b) => {
+                    const tA = a.likedAt?.toMillis ? a.likedAt.toMillis() : 0;
+                    const tB = b.likedAt?.toMillis ? b.likedAt.toMillis() : 0;
+                    return tB - tA;
+                });
+                isLikedPodcastsLoaded = true;
+                renderMediaCurrentTab();
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = '<div class="col-span-full text-center text-red-500 py-10">お気に入りの取得に失敗しました</div>';
+            }
+        }
+
+        function renderMediaCurrentTab() {
+            const grid = document.getElementById('media-content-grid');
+            
+            if (currentMediaTab === 'videos') {
+                renderVideos(myVideos, grid, "投稿された動画はありません。");
+            } else if (currentMediaTab === 'podcasts') {
+                renderPodcasts(myPodcasts, grid, "投稿された音声はありません。");
+            } else if (currentMediaTab === 'liked-videos') {
+                renderVideos(likedVideos, grid, "お気に入りした動画はありません。");
+            } else if (currentMediaTab === 'liked-podcasts') {
+                renderPodcasts(likedPodcasts, grid, "お気に入りした音声はありません。");
+            } else if (currentMediaTab === 'playlists') {
+                grid.innerHTML = '<div class="col-span-full text-center py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-list text-4xl mb-3 text-brand-200"></i><p class="font-bold tracking-widest text-brand-400">プレイリスト機能は現在準備中です。</p></div>';
+            }
+        }
+
+        function renderVideos(videos, container, emptyMsg) {
+            if (videos.length === 0) {
+                container.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-film text-4xl mb-3 text-brand-200"></i><p class="font-bold tracking-widest text-sm">${emptyMsg}</p></div>`;
+                return;
+            }
+
+            let html = '';
+            videos.forEach(v => {
+                const date = new Date(v.createdAt);
+                const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+                
+                html += `
+                <a href="video_detail.html?vid=${v.id}" class="flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-brand-100 shadow-sm hover:shadow-md hover:border-brand-400 transition-all w-full h-full">
+                    <div class="relative w-full aspect-video bg-[#000] overflow-hidden border-b border-brand-100">
+                        <img src="${v.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Image'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://via.placeholder.com/640x360?text=NOAH'">
+                        <div class="absolute inset-0 bg-black/30 opacity-0 transition-all duration-300 flex items-center justify-center group-hover:opacity-100">
+                            <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-transform duration-300 group-hover:scale-110">
+                                <i class="fa-solid fa-play text-white text-lg ml-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 flex gap-3 flex-1">
+                        <div class="flex-1 min-w-0 flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-brand-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-brand-600 transition-colors font-serif tracking-wide">${v.title || 'タイトルなし'}</h3>
+                            </div>
+                            <p class="text-[9px] text-brand-400 font-mono tracking-widest">${dateStr}</p>
+                        </div>
+                    </div>
+                </a>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function formatDuration(sec) {
+            if(!sec || isNaN(sec) || !isFinite(sec)) return "";
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0'+s : s}`;
+        }
+
+        function renderPodcasts(podcasts, container, emptyMsg) {
+            if (podcasts.length === 0) {
+                container.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-podcast text-4xl mb-3 text-brand-200"></i><p class="font-bold tracking-widest text-sm">${emptyMsg}</p></div>`;
+                return;
+            }
+
+            let html = '';
+            podcasts.forEach(p => {
+                const date = new Date(p.createdAt || p.updatedAt || Date.now());
+                const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+                const thumbUrl = p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
+                
+                let plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
+                const tagsHtml = (p.tags || []).slice(0,2).map(t => `<span class="text-[8px] sm:text-[9px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#${t}</span>`).join('');
+                const durationStr = p.duration ? formatDuration(p.duration) : '';
+                const durationHtml = durationStr ? `<span class="text-[8px] sm:text-[9px] text-[#b8860b] font-mono tracking-wider ml-1 bg-brand-50 px-1 rounded-sm border border-brand-100"><i class="fa-regular fa-clock mr-0.5"></i>${durationStr}</span>` : '';
+
+                html += `
+                <a href="podcast_detail.html?pid=${p.id}" class="flex flex-col bg-[#fffdf9] p-4 rounded-md border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full h-full">
+                    <div class="flex gap-3 sm:gap-4 items-start mb-3">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-inner mt-0.5">
+                            <img src="${thumbUrl}" class="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500">
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
+                                <i class="fa-solid fa-play text-white/90 text-xl shadow-sm drop-shadow-md group-hover:scale-110 transition-transform"></i>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0 flex flex-col justify-center h-14 sm:h-16">
+                            <h3 class="text-sm sm:text-base font-bold text-brand-900 leading-snug line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors m-0 tracking-wide">${p.title || 'タイトルなし'}</h3>
+                        </div>
+                    </div>
+                    
+                    <p class="text-[11px] sm:text-xs text-brand-500 line-clamp-2 leading-relaxed mb-4 flex-1 tracking-wide">${plainDesc}</p>
+                    
+                    <div class="flex flex-wrap items-center justify-between gap-2 mt-auto pt-3 border-t border-brand-100/70">
+                        <div class="flex items-center gap-1.5 min-w-0 pr-2">
+                            ${durationHtml}
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <div class="flex gap-1">${tagsHtml}</div>
+                            <span class="text-[9px] text-brand-400 font-mono tracking-widest">${dateStr}</span>
+                        </div>
+                    </div>
+                </a>
+                `;
+            });
+            container.innerHTML = html;
         }
 
         window.openMemoModal = () => {
