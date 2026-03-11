@@ -1677,6 +1677,20 @@
                 canOffer: ['環境の提供', 'マッチングサポート'], lookingFor: ['共鳴できる仲間'], career: [], membershipRank: 'covenant'
             };
         }
+
+        // ★追加: ログアウト処理の関数
+        window.handleLogout = () => {
+            if (isAdminMock) {
+                localStorage.removeItem('isAdminMock');
+                window.location.href = 'login.html';
+            } else {
+                signOut(auth).then(() => {
+                    window.location.href = 'login.html';
+                }).catch((error) => {
+                    console.error('Logout error', error);
+                });
+            }
+        };
     </script>
 </body>
 </html>
