@@ -72,41 +72,28 @@
                         <button class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
                             <i class="fa-solid fa-photo-film"></i> メディア
                         </button>
-                        <div class="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-[#fffdf9] border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity">
-                            <a href="videos.html" class="block px-4 py-3 text-sm font-bold text-brand-700 bg-brand-50 border-b border-brand-100 tracking-widest"><i class="fa-solid fa-film mr-2 text-brand-500"></i>THEATER</a>
-                            <a href="podcasts.html" class="block px-4 py-3 text-sm font-bold text-brand-400 hover:bg-brand-50 hover:text-brand-700 transition-colors tracking-widest"><i class="fa-solid fa-podcast mr-2"></i>CAST</a>
+                        <div class="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-[#fffdf9] border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity overflow-hidden">
+                            <a href="videos.html" class="flex items-center px-4 py-3 text-sm font-bold text-brand-800 bg-brand-50 border-b border-brand-100 transition-colors tracking-widest group/item">
+                                <i class="fa-solid fa-film text-brand-500 mr-2 w-5 text-center transition-colors"></i> THEATER
+                            </a>
+                            <a href="podcasts.html" class="flex items-center px-4 py-3 text-sm font-bold text-brand-400 hover:bg-brand-50 hover:text-brand-700 transition-colors tracking-widest group/item">
+                                <i class="fa-solid fa-podcast text-[#b8860b] mr-2 w-5 text-center group-hover/item:scale-110 transition-transform"></i> CAST
+                            </a>
                         </div>
                     </div>
 
-                    <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                    <!-- ★修正: auth-required クラスを削除して常に表示 -->
+                    <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
                 <button id="btn-post" onclick="goToPost()" class="hidden items-center px-4 py-1.5 bg-[#8b6a4f] text-[#fffdf9] text-xs font-bold rounded-sm shadow-md hover:bg-[#725b3f] transition-colors border border-[#725b3f] tracking-widest">
                     <i class="fa-solid fa-plus mr-1"></i> 動画を投稿
                 </button>
-
-                <!-- PC用 UPGRADEボタン -->
-                <a href="upgrade.html" class="auth-required hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] text-xs font-bold rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border border-[#996515]">
-                    <i class="fa-solid fa-shield-halved mr-1"></i> 契約変更
-                </a>
-
-                <a href="notifications.html" class="auth-required p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
-                    <i class="fa-regular fa-bell text-xl"></i>
-                    <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]" id="nav-badge"></span>
-                </a>
-                
-                <button onclick="location.reload()" class="p-2 text-brand-300 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
-
-                <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
-                <button onclick="handleAuthAction()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-brand-800 transition-colors flex items-center gap-2">
-                    <span class="hidden sm:inline tracking-widest" id="nav-auth-text">下船する</span>
-                    <i class="fa-solid fa-right-from-bracket text-lg" id="nav-auth-icon"></i>
-                </button>
             </div>
         </div>
     </nav>
 
-    <!-- Bottom Nav (SP) -->
+    <!-- Bottom Navigation -->
     <nav class="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div class="bottom-nav-content">
             <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
@@ -125,7 +112,8 @@
                 <i class="fa-solid fa-photo-film text-xl mb-1"></i>
                 <span class="text-[10px] font-bold tracking-widest">メディア</span>
             </a>
-            <a href="user.html" class="auth-required flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+            <!-- ★修正: auth-required クラスを削除して常に表示 -->
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マイページ</span>
             </a>
