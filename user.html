@@ -140,7 +140,6 @@
 
         /* ★追加: メディアタブ用のスタイル */
         .media-tab-btn { transition: all 0.2s; }
-        .media-tab-btn.active { border-bottom-color: #b8860b; color: #b8860b; }
     </style>
 </head>
 <body class="antialiased body-pb-nav lg:pb-0 bg-texture">
@@ -416,9 +415,9 @@
 
             <div class="flex-1 min-w-0">
                 
-                <!-- ★追加: メインタブ (航海録 / MEDIA LOG) -->
+                <!-- ★追加: メインタブ (航海録 / MEDIA LOG) スマホ時は中央寄せ -->
                 <div class="mb-6 border-b border-brand-200">
-                    <div class="flex gap-6">
+                    <div class="flex justify-center sm:justify-start gap-6">
                         <button onclick="switchMainTab('profile')" id="tab-main-profile" class="pb-3 border-b-[3px] border-[#b8860b] text-[#b8860b] font-bold tracking-widest text-sm transition-colors">航海録 (プロフィール)</button>
                         <button onclick="switchMainTab('media')" id="tab-main-media" class="pb-3 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 font-bold tracking-widest text-sm transition-colors hidden">MEDIA LOG</button>
                     </div>
@@ -507,26 +506,24 @@
 
                 <!-- ★追加: MEDIA LOG エリア -->
                 <div id="area-main-media" class="hidden space-y-6">
-                    <!-- Content Tabs -->
-                    <div class="mb-4 border-b border-brand-200">
-                        <div class="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-1">
-                            <button onclick="switchMediaTab('videos')" id="tab-media-videos" class="media-tab-btn active pb-2 border-b-[3px] border-[#b8860b] text-[#b8860b] text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap">
+                    
+                    <!-- Content Tabs (横スクロールをやめ、Pill型ボタンの折り返しに変更) -->
+                    <div class="mb-6">
+                        <div class="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3">
+                            <button onclick="switchMediaTab('videos')" id="tab-media-videos" class="media-tab-btn active px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#b8860b] text-[#fffdf9] shadow-md border border-[#b8860b] whitespace-nowrap">
                                 <i class="fa-solid fa-film mr-1"></i> 動画
                             </button>
-                            <button onclick="switchMediaTab('podcasts')" id="tab-media-podcasts" class="media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap">
+                            <button onclick="switchMediaTab('podcasts')" id="tab-media-podcasts" class="media-tab-btn px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#fffdf9] text-brand-500 hover:bg-brand-50 border border-brand-200 whitespace-nowrap">
                                 <i class="fa-solid fa-podcast mr-1"></i> 音声
                             </button>
-                            <button onclick="switchMediaTab('playlists')" id="tab-media-playlists" class="media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap">
+                            <button onclick="switchMediaTab('playlists')" id="tab-media-playlists" class="media-tab-btn px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#fffdf9] text-brand-500 hover:bg-brand-50 border border-brand-200 whitespace-nowrap">
                                 <i class="fa-solid fa-list mr-1"></i> プレイリスト
                             </button>
-                            <button onclick="switchMediaTab('twitter')" id="tab-media-twitter" class="hidden media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap">
-                                <i class="fa-brands fa-x-twitter mr-1"></i> 投稿(X)
+                            <button onclick="switchMediaTab('liked-videos')" id="tab-media-liked-videos" class="hidden media-tab-btn px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#fffdf9] text-brand-500 hover:bg-brand-50 border border-brand-200 whitespace-nowrap relative">
+                                <i class="fa-regular fa-heart mr-1"></i> お気に入り(動画) <i class="fa-solid fa-lock text-[8px] absolute top-0 -right-1 text-brand-300"></i>
                             </button>
-                            <button onclick="switchMediaTab('liked-videos')" id="tab-media-liked-videos" class="hidden media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap relative">
-                                <i class="fa-regular fa-heart mr-1"></i> お気に入り(動画) <i class="fa-solid fa-lock text-[8px] absolute top-0 -right-2 text-brand-300"></i>
-                            </button>
-                            <button onclick="switchMediaTab('liked-podcasts')" id="tab-media-liked-podcasts" class="hidden media-tab-btn pb-2 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 text-xs sm:text-sm tracking-widest font-bold whitespace-nowrap relative">
-                                <i class="fa-regular fa-heart mr-1"></i> お気に入り(音声) <i class="fa-solid fa-lock text-[8px] absolute top-0 -right-2 text-brand-300"></i>
+                            <button onclick="switchMediaTab('liked-podcasts')" id="tab-media-liked-podcasts" class="hidden media-tab-btn px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#fffdf9] text-brand-500 hover:bg-brand-50 border border-brand-200 whitespace-nowrap relative">
+                                <i class="fa-regular fa-heart mr-1"></i> お気に入り(音声) <i class="fa-solid fa-lock text-[8px] absolute top-0 -right-1 text-brand-300"></i>
                             </button>
                         </div>
                     </div>
@@ -536,8 +533,6 @@
                         <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>コンテンツを読み込み中...</div>
                     </div>
                     
-                    <!-- Twitter Container -->
-                    <div id="twitter-container" class="hidden w-full max-w-lg mx-auto bg-[#fffdf9] p-4 rounded-sm border border-brand-200 shadow-sm min-h-[400px]"></div>
                 </div>
             </div>
         </div>
@@ -888,41 +883,13 @@
             }
         });
 
-        // ★修正: 連携Xの投稿などを加味してMEDIAタブの表示を制御する
+        // ★修正: 連携Xの投稿などを加味してMEDIAタブの表示を制御する (X関連の処理を削除)
         async function checkUserContents(uid, dataToUse = null) {
             const mediaTabBtn = document.getElementById('tab-main-media');
             const mediaLink = document.getElementById('profile-video-link');
             
             let hasContent = false;
             
-            // Xアカウントの処理
-            if (dataToUse && dataToUse.snsX) {
-                hasContent = true;
-                const twTab = document.getElementById('tab-media-twitter');
-                if(twTab) twTab.classList.remove('hidden');
-                
-                const twContainer = document.getElementById('twitter-container');
-                if (twContainer) {
-                    let screenName = dataToUse.snsX;
-                    if (screenName.includes('twitter.com/') || screenName.includes('x.com/')) {
-                        screenName = screenName.split('/').pop().split('?')[0];
-                    }
-                    twContainer.innerHTML = `<a class="twitter-timeline" href="https://twitter.com/${screenName}">Tweets by ${screenName}</a>`;
-                    if (window.twttr) {
-                        window.twttr.widgets.load();
-                    } else {
-                        const script = document.createElement('script');
-                        script.src = "https://platform.twitter.com/widgets.js";
-                        script.async = true;
-                        script.charset = "utf-8";
-                        document.head.appendChild(script);
-                    }
-                }
-            } else {
-                const twTab = document.getElementById('tab-media-twitter');
-                if(twTab) twTab.classList.add('hidden');
-            }
-
             // 自分であれば「お気に入り」タブを表示
             if (isSelf) {
                 hasContent = true; // 自分がアクセスした場合は必ずメディアログタブを見せる
@@ -942,7 +909,7 @@
                     const snapV = await getCountFromServer(qV);
                     if (snapV.data().count > 0) hasContent = true;
 
-                    if (!hasContent && !isSelf && !(dataToUse && dataToUse.snsX)) {
+                    if (!hasContent && !isSelf) {
                         const podRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
                         const qP = query(podRef, where("authorId", "==", uid));
                         const snapP = await getCountFromServer(qP);
@@ -1647,32 +1614,24 @@
             currentMediaTab = tab;
             
             document.querySelectorAll('.media-tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'border-[#b8860b]', 'text-[#b8860b]');
-                btn.classList.add('border-transparent', 'text-brand-400');
+                btn.classList.remove('active', 'bg-[#b8860b]', 'text-[#fffdf9]', 'shadow-md', 'border-[#b8860b]');
+                btn.classList.add('bg-[#fffdf9]', 'text-brand-500', 'hover:bg-brand-50', 'border-brand-200');
             });
             const activeBtn = document.getElementById(`tab-media-${tab}`);
             if(activeBtn) {
-                activeBtn.classList.remove('border-transparent', 'text-brand-400');
-                activeBtn.classList.add('active', 'border-[#b8860b]', 'text-[#b8860b]');
+                activeBtn.classList.remove('bg-[#fffdf9]', 'text-brand-500', 'hover:bg-brand-50', 'border-brand-200');
+                activeBtn.classList.add('active', 'bg-[#b8860b]', 'text-[#fffdf9]', 'shadow-md', 'border-[#b8860b]');
             }
 
             const grid = document.getElementById('media-content-grid');
-            const twContainer = document.getElementById('twitter-container');
-
-            if (tab === 'twitter') {
-                grid.classList.add('hidden');
-                twContainer.classList.remove('hidden');
+            grid.classList.remove('hidden');
+            
+            if (tab === 'liked-videos' && !isLikedVideosLoaded && !isAdminMock) {
+                await loadLikedVideos();
+            } else if (tab === 'liked-podcasts' && !isLikedPodcastsLoaded && !isAdminMock) {
+                await loadLikedPodcasts();
             } else {
-                grid.classList.remove('hidden');
-                twContainer.classList.add('hidden');
-                
-                if (tab === 'liked-videos' && !isLikedVideosLoaded && !isAdminMock) {
-                    await loadLikedVideos();
-                } else if (tab === 'liked-podcasts' && !isLikedPodcastsLoaded && !isAdminMock) {
-                    await loadLikedPodcasts();
-                } else {
-                    renderMediaCurrentTab();
-                }
+                renderMediaCurrentTab();
             }
         };
 
