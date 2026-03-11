@@ -173,7 +173,7 @@
                         </div>
                     </div>
 
-                    <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                    <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
                 <!-- PC用 UPGRADEボタン -->
@@ -186,9 +186,6 @@
                     <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]" id="nav-badge"></span>
                 </a>
                 
-                <button onclick="location.reload()" class="p-2 text-brand-300 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
-
-                <!-- ログアウト(下船)ボタンは非表示化 -->
             </div>
         </div>
     </nav>
@@ -746,7 +743,7 @@
             </div>
 
             <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
-                <button onclick="submitJob()" id="job-submit-btn" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b]">
+                <button onclick="submitJob()" id="job-submit-btn" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723]">
                     募集を掲載する
                 </button>
             </div>
@@ -1009,7 +1006,7 @@
             }
         };
 
-        window.copyToClipboard = (text) => {
+        window.copyToClipboard = (text, msg = 'URLをコピーしました！') => {
             const textArea = document.createElement("textarea");
             textArea.value = text;
             textArea.style.position = "fixed"; 
@@ -1020,18 +1017,43 @@
                 document.execCommand('copy');
                 const notif = document.getElementById('notification');
                 if(notif) {
-                    document.getElementById('notif-message').textContent = 'URLをコピーしました！';
+                    document.getElementById('notif-message').textContent = msg;
                     notif.classList.remove('hidden', 'translate-y-20');
                     setTimeout(() => notif.classList.add('translate-y-20'), 3000);
                     setTimeout(() => notif.classList.add('hidden'), 3300);
                 } else {
-                    alert('URLをコピーしました！');
+                    alert(msg);
                 }
             } catch (err) {
                 console.error('Fallback: Oops, unable to copy', err);
-                alert('URLのコピーに失敗しました。');
+                alert('コピーに失敗しました。');
             }
             document.body.removeChild(textArea);
+        };
+
+        // イベント共有用の関数を追加
+        window.shareEvent = (eventId) => {
+            const evt = allEvents.find(e => e.id === eventId);
+            if(!evt) return;
+            
+            const shareUrl = `${window.location.origin}${window.location.pathname}?eventId=${evt.id}`;
+            const inviterName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
+            const inviterId = myProfile ? myProfile.userId : '';
+            
+            const title = evt.title || '名称未設定';
+            const loc = evt.isOnline ? (evt.locationName || 'オンライン') : (evt.locationName || '未設定');
+            const price = Number(evt.price || 0) > 0 ? `¥${Number(evt.price).toLocaleString()}` : '無料';
+            
+            let desc = evt.description || '';
+            if (desc.length > 80) {
+                desc = desc.substring(0, 80) + '...以降は詳細へ';
+            }
+            
+            const registerUrl = `https://noonealonehere.pages.dev/register.html?ref=${inviterId}`;
+            
+            const text = `${inviterName}さんにイベント招待されました。\n■${title}\n■${loc}\n■${price}\n■${desc}\n${shareUrl}\n\n―――\n\nNOAHに参加していない方は以下のリンクからユーザー登録をしてから参加ボタンを押してください。\n${registerUrl}`;
+            
+            copyToClipboard(text, 'イベントの招待文をコピーしました！');
         };
 
         // ==========================================
@@ -1374,7 +1396,6 @@
 
         function renderEventItem(container, evt) {
             const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/150?text=NOAH';
-            // ★追加: 複数画像がある場合はバッジを表示
             const imageCountBadge = (evt.imageUrls && evt.imageUrls.length > 1) 
                 ? `<div class="absolute top-1.5 right-1.5 bg-black/60 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-sm flex items-center gap-1 z-10"><i class="fa-regular fa-images"></i>${evt.imageUrls.length}</div>` 
                 : '';
@@ -1844,7 +1865,6 @@
             }
         }
 
-        // ★修正: onClick で value を null にして同じファイルを連続で選択可能にする
         window.handleEventImageSelect = (e) => {
             const files = Array.from(e.target.files);
             if(files.length === 0) return;
@@ -2228,7 +2248,7 @@
             }
         };
 
-        // ★追加: フルスクリーン画像表示関数
+        // フルスクリーン画像表示関数
         window.openFullscreenImage = (url) => {
             const modal = document.getElementById('fullscreen-image-modal');
             const img = document.getElementById('fullscreen-image');
@@ -2298,11 +2318,11 @@
                    ${evt.onlineUrl ? `<div class="flex items-center gap-3 mt-2"><i class="fa-solid fa-link text-brand-400 w-4 text-center"></i><a href="${evt.onlineUrl}" target="_blank" class="text-blue-600 underline truncate tracking-widest text-xs">${evt.onlineUrl}</a></div>` : ''}`
                 : `<div class="flex items-center gap-3"><i class="fa-solid fa-location-dot text-brand-400 w-4 text-center"></i><span class="tracking-widest">${evt.locationName || '未設定'}</span></div>`;
 
-            const shareUrl = `${window.location.origin}${window.location.pathname}?eventId=${evt.id}`;
+            // イベント共有ボタン
             const shareBtn = `
                 <div class="flex gap-2 mb-4">
-                    <button onclick="copyToClipboard('${shareUrl}')" class="flex-1 py-2 bg-brand-50 text-brand-600 border border-brand-200 rounded-sm font-bold text-xs tracking-widest hover:bg-brand-100 transition-colors shadow-sm">
-                        <i class="fa-solid fa-share-nodes mr-1"></i> URLをコピー
+                    <button onclick="shareEvent('${evt.id}')" class="flex-1 py-2 bg-brand-50 text-brand-600 border border-brand-200 rounded-sm font-bold text-xs tracking-widest hover:bg-brand-100 transition-colors shadow-sm">
+                        <i class="fa-solid fa-share-nodes mr-1"></i> イベント招待文をコピー
                     </button>
                 </div>
             `;
