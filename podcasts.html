@@ -77,29 +77,12 @@
                         </div>
                     </div>
 
-                    <a href="user.html" class="auth-required text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                    <!-- ★修正: auth-required クラスを削除して常に表示 -->
+                    <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
                 <button id="btn-post" onclick="window.location.href='podcast_post.html'" class="hidden items-center px-4 py-1.5 bg-[#b8860b] text-[#fffdf9] text-xs font-bold rounded-sm shadow-md hover:bg-[#996515] transition-colors tracking-widest">
                     <i class="fa-solid fa-microphone mr-1"></i> 音声を配信
-                </button>
-
-                <!-- PC用 UPGRADEボタン -->
-                <a href="upgrade.html" class="auth-required hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] text-xs font-bold rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border border-[#996515]">
-                    <i class="fa-solid fa-shield-halved mr-1"></i> 契約変更
-                </a>
-
-                <a href="notifications.html" class="auth-required p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
-                    <i class="fa-regular fa-bell text-xl"></i>
-                    <span class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]" id="nav-badge"></span>
-                </a>
-                
-                <button onclick="location.reload()" class="p-2 text-brand-300 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
-
-                <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
-                <button onclick="handleAuthAction()" class="hidden lg:flex text-sm font-bold text-brand-400 hover:text-brand-800 transition-colors flex items-center gap-2">
-                    <span class="hidden sm:inline tracking-widest" id="nav-auth-text">下船する</span>
-                    <i class="fa-solid fa-right-from-bracket text-lg" id="nav-auth-icon"></i>
                 </button>
             </div>
         </div>
@@ -124,7 +107,8 @@
                 <i class="fa-solid fa-photo-film text-xl mb-1"></i>
                 <span class="text-[10px] font-bold tracking-widest">メディア</span>
             </a>
-            <a href="user.html" class="auth-required flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+            <!-- ★修正: auth-required クラスを削除して常に表示 -->
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
                 <i class="fa-solid fa-user text-xl mb-1"></i>
                 <span class="text-[10px] font-medium tracking-widest">マイページ</span>
             </a>
