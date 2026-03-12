@@ -344,7 +344,7 @@
                     podcastData = snap.data();
                     
                     document.getElementById('podcast-title').textContent = podcastData.title || 'タイトルなし';
-                    document.getElementById('author-link').href = `user_contents.html?uid=${podcastData.authorId}`;
+                    document.getElementById('author-link').href="user.html?uid=${authorId}&tab=media";
                     document.getElementById('author-name').innerHTML = `${podcastData.authorName || '名無し'} <i class="fa-solid fa-circle-check text-[10px] sm:text-xs text-[#d4af37]"></i>`;
                     document.getElementById('author-icon').src = podcastData.authorIcon || DEFAULT_ICON;
 
