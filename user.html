@@ -724,6 +724,7 @@
         const isAdminMock = localStorage.getItem('isAdminMock') === 'true';
         const urlParams = new URLSearchParams(window.location.search);
         targetUid = urlParams.get('uid');
+        const initialTab = urlParams.get('tab'); // ★追加: 初期タブのパラメータ取得
 
         // OSテーマカラーの定義
         const THEME_COLORS = {
@@ -904,6 +905,15 @@
                 content.classList.add('hidden');
             }
         }
+
+        // ★追加: ページ読み込み時にパラメータがあればタブを切り替える
+        document.addEventListener('DOMContentLoaded', () => {
+            if (initialTab === 'media') {
+                setTimeout(() => {
+                    switchMainTab('media');
+                }, 50);
+            }
+        });
 
         onAuthStateChanged(auth, async (user) => {
             if (isAdminMock) {
