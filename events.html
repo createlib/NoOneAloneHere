@@ -21,6 +21,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
+    <!-- Marked.js & DOMPurify (Markdown対応用) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -137,6 +141,14 @@
         .menu-open { opacity: 1; transform: scale(1); pointer-events: auto; }
         .menu-closed { opacity: 0; transform: scale(0.9); pointer-events: none; }
 
+        /* マークダウン表示（.prose）のリンクやテキストはみ出し防止スタイル */
+        .prose p { margin-top: 0.5em; margin-bottom: 1em; line-height: 1.8; word-break: break-word; overflow-wrap: anywhere; }
+        .prose a { color: #8b6a4f; text-decoration: underline; transition: color 0.2s; word-break: break-all; }
+        .prose h1, .prose h2, .prose h3 { color: #3e2723; font-weight: 700; margin-top: 1.5em; margin-bottom: 0.5em; border-bottom: 1px solid #e8dfd1; padding-bottom: 0.3em; font-family: 'Noto Serif JP', serif; letter-spacing: 0.05em; }
+        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
+        .prose ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1em; }
+        .prose li { margin-bottom: 0.5em; }
+        .prose blockquote { border-left: 3px solid #c8b9a6; padding-left: 1em; color: #725b3f; font-style: italic; margin-top: 1em; margin-bottom: 1em; }
     </style>
 </head>
 <body class="antialiased h-screen w-screen relative flex flex-col bg-texture">
@@ -173,11 +185,9 @@
                         </div>
                     </div>
 
-                    <!-- ★修正: auth-required クラスを外して常にマイページボタンを表示 -->
                     <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
                 </div>
 
-                <!-- 契約変更ボタンと通知ボタンは非表示化 -->
             </div>
         </div>
     </nav>
@@ -531,7 +541,7 @@
                 <!-- Description -->
                 <div>
                     <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">詳細・内容</label>
-                    <textarea id="event-desc" rows="5" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#fffdf9] leading-relaxed" placeholder="イベントの魅力や詳細を書きましょう"></textarea>
+                    <textarea id="event-desc" rows="5" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#fffdf9] leading-relaxed" placeholder="イベントの魅力や詳細を書きましょう（マークダウン記法で装飾・リンク化が可能です）"></textarea>
                 </div>
 
                 <!-- Settings -->
@@ -800,7 +810,7 @@
         <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#c8b9a6] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
     </div>
 
-    <!-- ★追加: 画像フルスクリーン表示用のモーダル -->
+    <!-- 画像フルスクリーン表示用のモーダル -->
     <div id="fullscreen-image-modal" class="hidden fixed inset-0 z-[7000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer" onclick="closeFullscreenImage()">
         <img id="fullscreen-image" src="" class="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-none">
         <button type="button" class="absolute top-4 right-4 sm:top-8 sm:right-8 text-white hover:text-gray-300 w-10 h-10 flex items-center justify-center bg-black/50 rounded-full transition-colors z-50">
@@ -857,7 +867,7 @@
         
         let redIcon, blueIcon;
 
-        // ★修正: 複数画像管理用の配列 (プレビューURLを安全に保持)
+        // 複数画像管理用の配列 (プレビューURLを安全に保持)
         let currentEventImageUrls = [];
         let currentEventImageFiles = []; // 構造を { file: File, preview: String } に変更
 
@@ -902,6 +912,55 @@
             const el = document.getElementById(id);
             if (el) el.value = val;
         };
+
+        // --- ★修正: マークダウン対応フォーマット関数（エラー回避・堅牢化） ---
+        function formatText(text) {
+            if (!text) return '';
+            const textStr = String(text);
+            let processedText = textStr.replace(/__(.*?)__/g, '<u>$1</u>');
+
+            let rawHtml = '';
+            try {
+                if (window.marked && typeof window.marked.parse === 'function') {
+                    // URL自動リンク化(gfm: true)と改行反映(breaks: true)を有効化
+                    rawHtml = window.marked.parse(processedText, { breaks: true, gfm: true });
+                } else if (typeof window.marked === 'function') {
+                    rawHtml = window.marked(processedText, { breaks: true, gfm: true });
+                } else {
+                    rawHtml = processedText.replace(/\n/g, '<br>');
+                }
+            } catch (e) {
+                console.error("Markdown Parse Error:", e);
+                rawHtml = processedText.replace(/\n/g, '<br>'); 
+            }
+            
+            let sanitizedHtml = rawHtml;
+            try {
+                if (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function') {
+                    sanitizedHtml = window.DOMPurify.sanitize(rawHtml, { 
+                        ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote', 'code', 'pre', 'hr'],
+                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+                    });
+                }
+            } catch (e) {
+                console.error("DOMPurify Error:", e);
+            }
+
+            try {
+                // 生成されたリンク(aタグ)にtarget="_blank"とrel="noopener noreferrer"を付与して安全性を確保し、はみ出し防止クラスを付与
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = sanitizedHtml;
+                tempDiv.querySelectorAll('a').forEach(a => {
+                    a.setAttribute('target', '_blank');
+                    a.setAttribute('rel', 'noopener noreferrer');
+                    a.classList.add('break-all', 'text-brand-500', 'underline', 'hover:text-brand-700');
+                });
+                return tempDiv.innerHTML;
+            } catch (e) {
+                console.error("Link Formatting Error:", e);
+                return sanitizedHtml;
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             initLeafletIcons();
@@ -1587,7 +1646,7 @@
                     setVal('event-end-date', existingData?.endDate || todayStr);
                     setVal('event-start-time', existingData?.startTime || "");
                     setVal('event-end-time', existingData?.endTime || "");
-                    setVal('event-desc', existingData?.description || "");
+                    setVal('event-desc', existingData?.description || existingData?.desc || "");
                     
                     const pubPart = document.getElementById('event-public-participants');
                     if(pubPart) pubPart.checked = existingData ? (existingData.isParticipantsPublic !== false) : true;
@@ -2324,7 +2383,7 @@
                 ? `window.location.href='user.html?uid=${evt.organizerId}'` 
                 : `if(confirm('プロフィールを見るにはログインが必要です。ログイン画面へ移動しますか？')) window.location.href='login.html'`;
 
-            // Basic UI Loading State
+            // ★修正: マークダウン対応フォーマット関数を使用して詳細を表示
             content.innerHTML = `
                 ${sliderHtml}
                 ${shareBtn}
@@ -2339,7 +2398,12 @@
                         <span class="tracking-widest text-brand-600 font-bold group-hover:underline">主催: ${evt.organizerName || '不明'}</span>
                     </div>
                 </div>
-                <div class="mb-6"><h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">詳細</h3><p class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap tracking-wide">${evt.description || '詳細はありません'}</p></div>
+                <div class="mb-6">
+                    <h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">詳細</h3>
+                    <div class="prose prose-sm max-w-none text-brand-700 leading-relaxed text-xs break-words overflow-wrap-anywhere">
+                        ${formatText(evt.description || evt.desc || '詳細はありません')}
+                    </div>
+                </div>
                 <div id="event-dynamic-area"><div class="text-center text-brand-400 py-4"><i class="fa-solid fa-spinner fa-spin mr-2"></i> 情報を読み込み中...</div></div>
             `;
             sheet.classList.remove('hidden', 'sheet-closed');
@@ -2576,13 +2640,17 @@
 
                 <div class="mb-6">
                     <h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">業務内容詳細</h3>
-                    <p class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap tracking-wide bg-[#fffdf9] p-3 border border-brand-100 rounded-sm">${job.desc || '詳細はありません'}</p>
+                    <div class="prose prose-sm max-w-none text-brand-700 leading-relaxed text-xs break-words overflow-wrap-anywhere bg-[#fffdf9] p-3 border border-brand-100 rounded-sm">
+                        ${formatText(job.desc || '詳細はありません')}
+                    </div>
                 </div>
                 
                 ${job.skills ? `
                 <div class="mb-6">
                     <h3 class="font-bold text-brand-900 mb-2 text-xs font-serif tracking-widest border-b border-brand-200 pb-1">必須・歓迎条件</h3>
-                    <p class="text-xs text-brand-700 leading-relaxed whitespace-pre-wrap tracking-wide bg-[#fffdf9] p-3 border border-brand-100 rounded-sm">${job.skills}</p>
+                    <div class="prose prose-sm max-w-none text-brand-700 leading-relaxed text-xs break-words overflow-wrap-anywhere bg-[#fffdf9] p-3 border border-brand-100 rounded-sm">
+                        ${formatText(job.skills)}
+                    </div>
                 </div>` : ''}
 
                 <div class="bg-brand-50 border border-brand-200 p-3 rounded-sm text-center mb-6">
