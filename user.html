@@ -138,7 +138,7 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f7f5f0; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #c8b9a6; border-radius: 10px; }
 
-        /* 追加: メディアタブ用のスタイル */
+        /* メディアタブ用のスタイル */
         .media-tab-btn { transition: all 0.2s; }
     </style>
 </head>
@@ -410,14 +410,14 @@
             <div class="flex-1 min-w-0">
                 
                 <!-- メインタブ (航海録 / MEDIA LOG) スマホ時は中央寄せ -->
-                <div class="mb-6 border-b border-brand-200">
+                <div class="mb-6 border-b border-brand-200 px-4 sm:px-0">
                     <div class="flex justify-center sm:justify-start gap-6">
                         <button onclick="switchMainTab('profile')" id="tab-main-profile" class="pb-3 border-b-[3px] border-[#b8860b] text-[#b8860b] font-bold tracking-widest text-sm transition-colors">航海録 (プロフィール)</button>
                         <button onclick="switchMainTab('media')" id="tab-main-media" class="pb-3 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 font-bold tracking-widest text-sm transition-colors hidden">MEDIA LOG</button>
                     </div>
                 </div>
 
-                <div id="area-main-profile" class="space-y-6">
+                <div id="area-main-profile" class="space-y-6 px-4 sm:px-0">
                     
                     <!-- Message Section -->
                     <div id="section-message" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative overflow-hidden">
@@ -498,7 +498,7 @@
                 </div>
 
                 <!-- MEDIA LOG エリア -->
-                <div id="area-main-media" class="hidden space-y-6">
+                <div id="area-main-media" class="hidden space-y-6 px-4 sm:px-0">
                     
                     <!-- Content Tabs (横スクロールをやめ、Pill型ボタンの折り返しに変更) -->
                     <div class="mb-6">
@@ -592,9 +592,13 @@
             </div>
             
             <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar bg-[#fffdf9] flex flex-col">
-                <div class="mb-5">
+                <div class="mb-4">
                     <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">フォルダ名</label>
                     <input type="text" id="playlist-name-input" placeholder="例: お気に入りまとめ、資料集" class="w-full border-brand-300 rounded-sm text-sm p-3 bg-white leading-relaxed focus:ring-[#b8860b] shadow-sm placeholder-brand-300">
+                </div>
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">カバー画像URL (任意)</label>
+                    <input type="text" id="playlist-cover-input" placeholder="https://..." class="w-full border-brand-300 rounded-sm text-sm p-3 bg-white leading-relaxed focus:ring-[#b8860b] shadow-sm placeholder-brand-300">
                 </div>
 
                 <div class="flex flex-col md:flex-row gap-4 flex-1 min-h-[300px]">
@@ -1810,52 +1814,64 @@
             myPlaylists.forEach(playlist => {
                 let itemsHtml = '';
                 if (playlist.items && playlist.items.length > 0) {
-                    playlist.items.slice(0, 3).forEach((item, idx) => {
+                    itemsHtml = playlist.items.map((item, idx) => {
                         const icon = item.type === 'video' ? '<i class="fa-solid fa-film text-brand-300"></i>' : '<i class="fa-solid fa-podcast text-[#b8860b]/60"></i>';
-                        itemsHtml += `
-                            <div class="flex items-center gap-2 text-xs text-brand-700 py-1.5 border-b border-brand-100 last:border-0 truncate">
-                                <span class="text-brand-400 font-mono text-[9px] w-3 text-right shrink-0">${idx + 1}.</span>
+                        const linkUrl = item.type === 'video' ? `video_detail.html?vid=${item.id}` : `podcast_detail.html?pid=${item.id}`;
+                        return `
+                            <a href="${linkUrl}" class="flex items-center gap-3 text-xs sm:text-sm text-brand-700 py-2.5 sm:py-3 border-b border-brand-100 last:border-0 hover:bg-brand-100/50 transition-colors px-3 group/item truncate">
+                                <span class="text-brand-400 font-mono text-[10px] w-4 text-right shrink-0 group-hover/item:text-brand-600 transition-colors">${idx + 1}.</span>
                                 ${icon}
-                                <span class="truncate font-medium">${item.title}</span>
-                            </div>
+                                <span class="truncate font-medium group-hover/item:text-brand-900 transition-colors">${item.title}</span>
+                            </a>
                         `;
-                    });
-                    if (playlist.items.length > 3) {
-                        itemsHtml += `<div class="text-[10px] text-brand-400 text-center mt-2 tracking-widest">他 ${playlist.items.length - 3} 件...</div>`;
-                    }
+                    }).join('');
                 } else {
-                    itemsHtml = '<div class="text-center py-4 text-brand-300 text-xs italic">コンテンツがありません</div>';
+                    itemsHtml = '<div class="text-center py-8 text-brand-300 text-xs italic">コンテンツがありません</div>';
                 }
 
+                const coverImage = playlist.coverImageUrl || 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=640&auto=format&fit=crop';
+                
                 let actionHtml = '';
                 if (hasPlaylistPermission()) {
                     actionHtml = `
-                        <div class="flex gap-2">
-                            <button onclick="openPlaylistModal('${playlist.id}')" class="w-7 h-7 flex items-center justify-center rounded-sm bg-brand-50 text-brand-600 border border-brand-200 hover:bg-brand-100 transition-colors" title="編集">
-                                <i class="fa-solid fa-pen text-[10px]"></i>
+                        <div class="flex gap-2 relative z-10" onclick="event.stopPropagation()">
+                            <button onclick="openPlaylistModal('${playlist.id}')" class="w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 text-brand-600 border border-brand-200 hover:bg-brand-100 hover:text-brand-900 transition-colors shadow-sm" title="編集">
+                                <i class="fa-solid fa-pen text-xs"></i>
                             </button>
-                            <button onclick="deletePlaylist('${playlist.id}')" class="w-7 h-7 flex items-center justify-center rounded-sm bg-brand-50 text-brand-600 border border-brand-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors" title="削除">
-                                <i class="fa-solid fa-trash text-[10px]"></i>
+                            <button onclick="deletePlaylist('${playlist.id}')" class="w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 text-brand-600 border border-brand-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors shadow-sm" title="削除">
+                                <i class="fa-solid fa-trash text-xs"></i>
                             </button>
                         </div>
                     `;
                 }
 
                 listHtml += `
-                    <div class="bg-[#fffdf9] rounded-sm p-4 border border-brand-200 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group">
-                        <div class="flex justify-between items-start mb-3 pb-2 border-b border-brand-200">
-                            <h3 class="font-bold text-brand-900 tracking-widest font-serif flex items-center gap-2">
-                                <i class="fa-solid fa-folder text-[#b8860b]"></i>
-                                ${playlist.name}
-                            </h3>
-                            ${actionHtml}
+                    <div class="bg-[#fffdf9] rounded-sm border border-brand-200 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group overflow-hidden">
+                        <div class="cursor-pointer relative" onclick="togglePlaylistExpand('${playlist.id}')">
+                            <div class="w-full aspect-[21/9] sm:aspect-[16/9] bg-brand-100 overflow-hidden relative border-b border-brand-200">
+                                <img src="${coverImage}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.src='https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=640&auto=format&fit=crop'">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent group-hover:via-black/10 transition-colors"></div>
+                                <div class="absolute bottom-3 right-3 bg-black/60 text-white text-[10px] px-2.5 py-1 rounded-sm backdrop-blur-md font-mono tracking-widest flex items-center gap-1.5 border border-white/20 shadow-sm">
+                                    <i class="fa-solid fa-list"></i> ${playlist.items?.length || 0}
+                                </div>
+                            </div>
+                            <div class="p-4 sm:p-5 relative">
+                                <div class="flex justify-between items-start gap-4">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-brand-900 tracking-widest font-serif text-base sm:text-lg leading-tight mb-1.5 truncate group-hover:text-brand-700 transition-colors">${playlist.name}</h3>
+                                        <p class="text-[10px] font-bold text-brand-400 tracking-widest flex items-center gap-1">
+                                            <i class="fa-regular fa-clock"></i> 更新: ${new Date(playlist.updatedAt || playlist.createdAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                    ${actionHtml}
+                                </div>
+                                <div class="absolute -bottom-3 left-1/2 transform -translate-x-1/2 text-brand-300 group-hover:text-[#b8860b] transition-colors bg-[#fffdf9] px-4 pt-1 rounded-t-full border-t border-brand-100">
+                                    <i class="fa-solid fa-chevron-down text-sm" id="playlist-icon-${playlist.id}"></i>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex-1 bg-brand-50/50 rounded-sm p-2 border border-brand-100">
+                        <div id="playlist-content-${playlist.id}" class="hidden bg-brand-50/50 border-t border-brand-200 mt-2">
                             ${itemsHtml}
-                        </div>
-                        <div class="mt-3 flex justify-between items-center text-[9px] font-bold text-brand-400 tracking-widest">
-                            <span>${playlist.items?.length || 0} ITEMS</span>
-                            <span>${new Date(playlist.updatedAt || playlist.createdAt).toLocaleDateString()}更新</span>
                         </div>
                     </div>
                 `;
@@ -1863,21 +1879,43 @@
             grid.innerHTML += listHtml;
         }
 
+        // プレイリストの展開/折りたたみ
+        window.togglePlaylistExpand = (id) => {
+            const content = document.getElementById(`playlist-content-${id}`);
+            const icon = document.getElementById(`playlist-icon-${id}`);
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-down');
+                    icon.classList.add('fa-chevron-up');
+                }
+            } else {
+                content.classList.add('hidden');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-up');
+                    icon.classList.add('fa-chevron-down');
+                }
+            }
+        };
+
         // プレイリストモーダル関連の処理
         window.openPlaylistModal = (playlistId = null) => {
             editingPlaylistId = playlistId;
             const modal = document.getElementById('playlist-modal');
             const title = document.getElementById('playlist-modal-title');
             const nameInput = document.getElementById('playlist-name-input');
+            const coverInput = document.getElementById('playlist-cover-input');
             
             if (playlistId) {
                 const pl = myPlaylists.find(p => p.id === playlistId);
                 title.innerHTML = '<i class="fa-solid fa-folder-open text-[#b8860b] mr-2"></i>プレイリスト編集';
                 nameInput.value = pl.name || '';
+                if(coverInput) coverInput.value = pl.coverImageUrl || '';
                 currentPlaylistItems = [...(pl.items || [])];
             } else {
                 title.innerHTML = '<i class="fa-solid fa-folder-plus text-[#b8860b] mr-2"></i>プレイリスト作成';
                 nameInput.value = '';
+                if(coverInput) coverInput.value = '';
                 currentPlaylistItems = [];
             }
             
@@ -1998,7 +2036,10 @@
 
         window.savePlaylist = async () => {
             const nameInput = document.getElementById('playlist-name-input');
+            const coverInput = document.getElementById('playlist-cover-input');
             const name = nameInput.value.trim();
+            const coverImageUrl = coverInput ? coverInput.value.trim() : '';
+
             if (!name) {
                 nameInput.classList.add('border-red-500', 'bg-red-50');
                 setTimeout(() => nameInput.classList.remove('border-red-500', 'bg-red-50'), 1500);
@@ -2014,6 +2055,7 @@
             try {
                 const payload = {
                     name,
+                    coverImageUrl,
                     items: currentPlaylistItems,
                     updatedAt: Date.now()
                 };
