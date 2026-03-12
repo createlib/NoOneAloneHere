@@ -367,7 +367,7 @@
                     videoData = snap.data();
                     
                     document.getElementById('video-title').textContent = videoData.title || 'タイトルなし';
-                    document.getElementById('author-link').href = `user_contents.html?uid=${videoData.authorId}`;
+                    document.getElementById('author-link').href="user.html?uid=${authorId}&tab=media";
                     document.getElementById('author-name').innerHTML = `${videoData.authorName || '名無し'} <i class="fa-solid fa-circle-check text-[10px] sm:text-xs text-[#d4af37]"></i>`;
                     if (videoData.authorIcon) document.getElementById('author-icon').src = videoData.authorIcon;
 
