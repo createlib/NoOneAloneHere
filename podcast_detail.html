@@ -66,11 +66,11 @@
         <nav class="bg-[rgba(255,253,249,0.95)] backdrop-blur border-b border-brand-200 fixed w-full z-40 top-0 h-16 shadow-sm">
             <div class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <a href="podcasts.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest group">
+                    <a href="javascript:void(0)" onclick="history.back();" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest group">
                         <div class="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center group-hover:bg-brand-100 transition-colors">
                             <i class="fa-solid fa-arrow-left"></i>
                         </div>
-                        <span class="hidden sm:inline">一覧へ戻る</span>
+                        <span class="hidden sm:inline">戻る</span>
                     </a>
                 </div>
 
@@ -118,7 +118,7 @@
                     
                     <h1 id="podcast-title" class="text-2xl sm:text-3xl font-bold text-brand-900 leading-tight mb-5 font-serif tracking-wide">読み込み中...</h1>
                     
-                    <!-- ★修正: 投稿者と、再生時間等のメタ情報を完全に分離したデザイン -->
+                    <!-- 投稿者と、再生時間等のメタ情報を完全に分離したデザイン -->
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-brand-200">
                         
                         <!-- 投稿者リンクボックス (アイコン＋名前のみ) -->
@@ -197,20 +197,19 @@
         </main>
     </div> <!-- end full-screen-ui -->
 
-    <!-- ★修正: ミニプレーヤー UI -->
+    <!-- ミニプレーヤー UI -->
     <!-- 縮小時は画面右下に固定。クリックで元のフルスクリーンに戻る -->
     <div id="mini-player-ui" class="hidden fixed bottom-4 right-4 sm:bottom-8 sm:right-8 w-[calc(100%-2rem)] sm:w-80 bg-[#1a110f] rounded-md shadow-2xl border border-[#5c4a3d] z-[8000] p-3 cursor-pointer mini-player-hover transition-all duration-300" onclick="toggleMiniPlayer()">
         <div class="flex items-center gap-3 sm:gap-4 relative z-10">
             <img id="mini-thumb" src="https://via.placeholder.com/150" class="w-14 h-14 rounded-sm object-cover border border-[#3e2723] shadow-md flex-shrink-0">
             <div class="flex-1 min-w-0">
                 <p class="text-[9px] text-[#d4af37] font-bold tracking-widest mb-0.5 flex items-center gap-1"><i class="fa-solid fa-podcast"></i> 再生中</p>
-                <!-- ★修正: タイトルと名前のみ。日付・時間は非表示 -->
                 <p id="mini-title" class="text-sm font-bold text-[#f7f5f0] truncate font-serif tracking-wide leading-snug">タイトル</p>
                 <p id="mini-author" class="text-[10px] text-[#a09080] truncate mt-1 tracking-widest font-bold">名無し</p>
             </div>
             
             <!-- 再生画面を閉じる（一覧へ戻る）ボタン -->
-            <button onclick="event.stopPropagation(); window.location.href='podcasts.html';" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 text-white transition-colors flex items-center justify-center border border-[#5c4a3d] shrink-0 shadow-md" title="再生を終了して閉じる">
+            <button onclick="event.stopPropagation(); history.back();" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 text-white transition-colors flex items-center justify-center border border-[#5c4a3d] shrink-0 shadow-md" title="再生を終了して閉じる">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -344,7 +343,9 @@
                     podcastData = snap.data();
                     
                     document.getElementById('podcast-title').textContent = podcastData.title || 'タイトルなし';
-                    document.getElementById('author-link').href=`user.html?uid=${authorId}&tab=media`;
+                    
+                    // ★ 投稿者リンクを MEDIA LOG タブへ飛ぶように修正
+                    document.getElementById('author-link').href = `user.html?uid=${podcastData.authorId}&tab=media`;
                     document.getElementById('author-name').innerHTML = `${podcastData.authorName || '名無し'} <i class="fa-solid fa-circle-check text-[10px] sm:text-xs text-[#d4af37]"></i>`;
                     document.getElementById('author-icon').src = podcastData.authorIcon || DEFAULT_ICON;
 
@@ -381,7 +382,7 @@
                     const descContainer = document.getElementById('podcast-desc');
                     descContainer.innerHTML = formatText(podcastData.description || '概要はありません。');
 
-                    // ★修正: 関連記事 (Note等) の表示処理を複数対応＆余白調整
+                    // 関連記事 (Note等) の表示処理を複数対応＆余白調整
                     const existingRelated = document.getElementById('rendered-related-article');
                     if (existingRelated) existingRelated.remove();
 
@@ -409,7 +410,7 @@
                             const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
                             
                             if (noteMatch && noteMatch[1]) {
-                                // ★修正: iframeの高さを固定しすぎず、note側の推奨に近いコンパクトなサイズに
+                                // iframeの高さを固定しすぎず、note側の推奨に近いコンパクトなサイズに
                                 articleHtml += `
                                     <iframe class="w-full max-w-full rounded-sm border border-brand-200 shadow-sm" src="https://note.com/embed/notes/${noteMatch[1]}" style="border: 0; display: block; padding: 0px; margin: 0px; width: 100%; height: 260px;"></iframe>
                                 `;
