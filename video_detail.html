@@ -67,11 +67,11 @@
         <div class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
             
             <div class="flex items-center gap-4">
-                <a href="videos.html" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest group">
+                <a href="javascript:void(0)" onclick="history.back();" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest group">
                     <div class="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center group-hover:bg-brand-100 transition-colors">
                         <i class="fa-solid fa-arrow-left"></i>
                     </div>
-                    <span class="hidden sm:inline">一覧へ戻る</span>
+                    <span class="hidden sm:inline">戻る</span>
                 </a>
             </div>
 
@@ -367,7 +367,9 @@
                     videoData = snap.data();
                     
                     document.getElementById('video-title').textContent = videoData.title || 'タイトルなし';
-                    document.getElementById('author-link').href="user.html?uid=${authorId}&tab=media";
+                    
+                    // ★ 投稿者リンクを MEDIA LOG タブへ飛ぶように修正
+                    document.getElementById('author-link').href = `user.html?uid=${videoData.authorId}&tab=media`;
                     document.getElementById('author-name').innerHTML = `${videoData.authorName || '名無し'} <i class="fa-solid fa-circle-check text-[10px] sm:text-xs text-[#d4af37]"></i>`;
                     if (videoData.authorIcon) document.getElementById('author-icon').src = videoData.authorIcon;
 
