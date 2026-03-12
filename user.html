@@ -138,7 +138,7 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f7f5f0; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #c8b9a6; border-radius: 10px; }
 
-        /* ★追加: メディアタブ用のスタイル */
+        /* 追加: メディアタブ用のスタイル */
         .media-tab-btn { transition: all 0.2s; }
     </style>
 </head>
@@ -266,7 +266,6 @@
                         <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-brand-500 z-10 m-2"></div>
                         <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
 
-                        <!-- ★修正: カバーの表示を診断結果のテーマに合わせるための構造に変更 -->
                         <div id="profile-cover" class="h-32 sm:h-40 cover-gradient w-full border-b border-brand-200 relative flex items-center justify-center overflow-hidden transition-all duration-500">
                             <div id="os-cover-bg-layer" class="absolute inset-0 transition-all duration-500 z-0"></div>
                             <div class="absolute inset-0 bg-texture opacity-50 pointer-events-none z-0"></div>
@@ -410,7 +409,7 @@
 
             <div class="flex-1 min-w-0">
                 
-                <!-- ★追加: メインタブ (航海録 / MEDIA LOG) スマホ時は中央寄せ -->
+                <!-- メインタブ (航海録 / MEDIA LOG) スマホ時は中央寄せ -->
                 <div class="mb-6 border-b border-brand-200">
                     <div class="flex justify-center sm:justify-start gap-6">
                         <button onclick="switchMainTab('profile')" id="tab-main-profile" class="pb-3 border-b-[3px] border-[#b8860b] text-[#b8860b] font-bold tracking-widest text-sm transition-colors">航海録 (プロフィール)</button>
@@ -418,7 +417,6 @@
                     </div>
                 </div>
 
-                <!-- ★変更: 既存のプロフィールコンテンツをエリアで囲む -->
                 <div id="area-main-profile" class="space-y-6">
                     
                     <!-- Message Section -->
@@ -499,7 +497,7 @@
                     </div>
                 </div>
 
-                <!-- ★追加: MEDIA LOG エリア -->
+                <!-- MEDIA LOG エリア -->
                 <div id="area-main-media" class="hidden space-y-6">
                     
                     <!-- Content Tabs (横スクロールをやめ、Pill型ボタンの折り返しに変更) -->
@@ -583,8 +581,61 @@
         </div>
     </div>
 
+    <!-- プレイリスト作成・編集モーダル -->
+    <div id="playlist-modal" class="hidden fixed inset-0 z-[4000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#fffdf9] bg-texture w-full max-w-4xl h-[85vh] rounded-sm shadow-2xl flex flex-col border border-[#b8860b] transform transition-all">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9]">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center" id="playlist-modal-title">
+                    <i class="fa-solid fa-folder-plus text-[#b8860b] mr-2"></i>プレイリスト作成
+                </h3>
+                <button onclick="closePlaylistModal()" type="button" class="text-brand-400 hover:text-brand-700 transition-colors w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 border border-brand-100"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar bg-[#fffdf9] flex flex-col">
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">フォルダ名</label>
+                    <input type="text" id="playlist-name-input" placeholder="例: お気に入りまとめ、資料集" class="w-full border-brand-300 rounded-sm text-sm p-3 bg-white leading-relaxed focus:ring-[#b8860b] shadow-sm placeholder-brand-300">
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 flex-1 min-h-[300px]">
+                    <!-- 左カラム: 選択可能な自分のコンテンツ -->
+                    <div class="flex-1 flex flex-col border border-brand-200 rounded-sm overflow-hidden bg-brand-50">
+                        <div class="bg-brand-100 px-3 py-2 border-b border-brand-200 font-bold text-xs text-brand-800 tracking-widest flex items-center">
+                            <i class="fa-solid fa-list mr-2 text-brand-500"></i>自分のコンテンツ
+                        </div>
+                        <div class="p-2 flex gap-2 border-b border-brand-200 bg-[#fffdf9]">
+                            <!-- 動画か音声かの絞り込みタブ -->
+                            <button onclick="filterPlaylistAvailable('video')" id="pl-filter-video" class="flex-1 text-[10px] py-1 border border-[#b8860b] bg-[#b8860b] text-white font-bold rounded-sm tracking-widest transition-colors">動画</button>
+                            <button onclick="filterPlaylistAvailable('podcast')" id="pl-filter-podcast" class="flex-1 text-[10px] py-1 border border-brand-300 bg-white text-brand-500 font-bold rounded-sm tracking-widest hover:bg-brand-50 transition-colors">音声</button>
+                        </div>
+                        <div id="available-items-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 max-h-[400px]">
+                            <!-- JS -->
+                        </div>
+                    </div>
+
+                    <!-- 右カラム: プレイリストに入れるコンテンツ -->
+                    <div class="flex-1 flex flex-col border border-[#b8860b]/50 rounded-sm overflow-hidden bg-[#fffdf9] shadow-sm relative mt-4 md:mt-0">
+                        <div class="bg-gradient-to-r from-[#d4af37]/20 to-[#b8860b]/10 px-3 py-2 border-b border-[#b8860b]/30 font-bold text-xs text-brand-900 tracking-widest flex items-center">
+                            <i class="fa-solid fa-folder-open mr-2 text-[#b8860b]"></i>このフォルダに入れるコンテンツ
+                        </div>
+                        <div id="selected-items-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 max-h-[400px]">
+                            <!-- JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-brand-200 bg-[#fffdf9] flex justify-end gap-3">
+                <button onclick="closePlaylistModal()" class="px-5 py-2 text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-sm text-xs font-bold tracking-widest transition-colors">キャンセル</button>
+                <button onclick="savePlaylist()" class="bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] px-6 py-2 rounded-sm text-xs font-bold shadow-md transition-colors tracking-widest border border-[#b8860b] flex items-center gap-2">
+                    <i class="fa-solid fa-save"></i> 保存する
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
-    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[5000] hidden transition-all duration-300 translate-y-20">
         <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#d4af37] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
     </div>
 
@@ -619,11 +670,18 @@
         let privateMemos = []; 
         let commonMutualIds = []; 
 
-        // ★追加: メディアログ用データ
+        // メディアログ用データ
         let myVideos = [];
         let myPodcasts = [];
         let likedVideos = [];
         let likedPodcasts = [];
+        
+        // プレイリスト用データ
+        let myPlaylists = [];
+        let currentPlaylistItems = [];
+        let editingPlaylistId = null;
+        let playlistFilterType = 'video';
+
         let isLikedVideosLoaded = false;
         let isLikedPodcastsLoaded = false;
         let isMyContentsLoaded = false;
@@ -633,7 +691,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         targetUid = urlParams.get('uid');
 
-        // ★ OSテーマカラーの定義を追加
+        // OSテーマカラーの定義
         const THEME_COLORS = {
             '甲': { bg: '#041208', main: '#10B981', sub: '#34D399' },
             '乙': { bg: '#08140B', main: '#34D399', sub: '#6EE7B7' },
@@ -745,7 +803,7 @@
             }
         };
 
-        // ★追加: OSカバーの読み込みと描画
+        // OSカバーの読み込みと描画
         async function loadAndRenderOSCover(osNumber) {
             if (!osNumber) return;
             
@@ -878,7 +936,7 @@
             }
         });
 
-        // ★修正: 連携Xの投稿などを加味してMEDIAタブの表示を制御する (X関連の処理を削除)
+        // MEDIAタブの表示を制御する
         async function checkUserContents(uid, dataToUse = null) {
             const mediaTabBtn = document.getElementById('tab-main-media');
             
@@ -1082,7 +1140,7 @@
 
                 if (dataToUse) {
                     updateDashboardUI(dataToUse);
-                    checkUserContents(uid, dataToUse); // ★追加
+                    checkUserContents(uid, dataToUse);
                 } else {
                     document.getElementById('error-container').classList.remove('hidden');
                 }
@@ -1381,7 +1439,7 @@
             const score = data.profileScore || 0;
             const isCompleted = score >= 100 || isAdminMock;
             
-            // ★ 修正: OSカバー（診断結果）の表示処理 (充実度100%を満たしている人のみ)
+            // OSカバー（診断結果）の表示処理 (充実度100%を満たしている人のみ)
             if (showRestricted && data.osNumber && isCompleted) {
                 loadAndRenderOSCover(data.osNumber);
             } else {
@@ -1529,10 +1587,8 @@
                 }
             }
 
-            // ★ ここから下が自分専用の画面での処理（充実度バー＆診断ボタン制御）
+            // 自分専用の画面での処理（充実度バー＆診断ボタン制御）
             if (isSelf) {
-                // 上部で計算済みの isCompleted を再利用します
-                
                 const compBar = document.getElementById('completion-bar-container');
                 const diagBtn = document.getElementById('diagnostic-btn-container');
 
@@ -1561,7 +1617,7 @@
             }
         }
 
-        // ★追加: メインタブ切り替えロジック
+        // メインタブ切り替えロジック
         window.switchMainTab = (tab) => {
             const btnProfile = document.getElementById('tab-main-profile');
             const btnMedia = document.getElementById('tab-main-media');
@@ -1593,7 +1649,7 @@
             }
         };
 
-        // ★追加: MEDIA LOG サブタブ切り替えロジック
+        // MEDIA LOG サブタブ切り替えロジック
         window.switchMediaTab = async (tab) => {
             currentMediaTab = tab;
             
@@ -1619,7 +1675,7 @@
             }
         };
 
-        // ★追加: メディアデータの取得処理
+        // メディアデータの取得処理
         async function loadMyContents() {
             try {
                 const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
@@ -1635,6 +1691,13 @@
                 myPodcasts = [];
                 snapP.forEach(doc => myPodcasts.push({ id: doc.id, ...doc.data() }));
                 myPodcasts.sort((a, b) => new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt));
+
+                // プレイリストの取得
+                const plRef = collection(db, 'artifacts', appId, 'users', targetUid, 'playlists');
+                const snapPL = await getDocs(plRef);
+                myPlaylists = [];
+                snapPL.forEach(doc => myPlaylists.push({ id: doc.id, ...doc.data() }));
+                myPlaylists.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
                 isMyContentsLoaded = true;
                 renderMediaCurrentTab();
@@ -1696,6 +1759,11 @@
             }
         }
 
+        // プレイリスト作成権限（GUARDIAN以上かつ自分のページの場合のみ）
+        function hasPlaylistPermission() {
+            return isSelf && (myRank === 'guardian' || myRank === 'covenant' || isAdmin || isAdminMock);
+        }
+
         function renderMediaCurrentTab() {
             const grid = document.getElementById('media-content-grid');
             
@@ -1708,9 +1776,280 @@
             } else if (currentMediaTab === 'liked-podcasts') {
                 renderPodcasts(likedPodcasts, grid, "お気に入りした音声はありません。");
             } else if (currentMediaTab === 'playlists') {
-                grid.innerHTML = '<div class="col-span-full text-center py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-list text-4xl mb-3 text-brand-200"></i><p class="font-bold tracking-widest text-brand-400">プレイリスト機能は現在準備中です。</p></div>';
+                renderPlaylists();
             }
         }
+
+        // プレイリスト一覧の描画
+        function renderPlaylists() {
+            const grid = document.getElementById('media-content-grid');
+            grid.innerHTML = '';
+
+            // ヘッダー部分（作成ボタン）
+            if (hasPlaylistPermission()) {
+                const headerHtml = `
+                    <div class="col-span-full flex justify-between items-center mb-2">
+                        <p class="text-sm font-bold text-brand-700 tracking-widest"><i class="fa-solid fa-folder-open text-[#b8860b] mr-2"></i>プレイリスト</p>
+                        <button onclick="openPlaylistModal()" class="bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] px-4 py-2 rounded-sm text-xs font-bold shadow-md transition-colors tracking-widest border border-[#b8860b] flex items-center gap-1">
+                            <i class="fa-solid fa-folder-plus"></i> 新規作成
+                        </button>
+                    </div>
+                `;
+                grid.innerHTML += headerHtml;
+            } else if (myPlaylists.length === 0) {
+                grid.innerHTML = '<div class="col-span-full text-center py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200"><i class="fa-solid fa-folder-open text-4xl mb-3 text-brand-200"></i><p class="font-bold tracking-widest text-brand-400">プレイリストはまだありません。</p></div>';
+                return;
+            }
+
+            if (myPlaylists.length === 0 && hasPlaylistPermission()) {
+                grid.innerHTML += '<div class="col-span-full text-center py-10 text-brand-400 text-xs font-bold tracking-widest border border-dashed border-brand-200 bg-[#f7f5f0] mt-4">上の「新規作成」ボタンからプレイリストを作成できます。</div>';
+                return;
+            }
+
+            let listHtml = '';
+            myPlaylists.forEach(playlist => {
+                let itemsHtml = '';
+                if (playlist.items && playlist.items.length > 0) {
+                    playlist.items.slice(0, 3).forEach((item, idx) => {
+                        const icon = item.type === 'video' ? '<i class="fa-solid fa-film text-brand-300"></i>' : '<i class="fa-solid fa-podcast text-[#b8860b]/60"></i>';
+                        itemsHtml += `
+                            <div class="flex items-center gap-2 text-xs text-brand-700 py-1.5 border-b border-brand-100 last:border-0 truncate">
+                                <span class="text-brand-400 font-mono text-[9px] w-3 text-right shrink-0">${idx + 1}.</span>
+                                ${icon}
+                                <span class="truncate font-medium">${item.title}</span>
+                            </div>
+                        `;
+                    });
+                    if (playlist.items.length > 3) {
+                        itemsHtml += `<div class="text-[10px] text-brand-400 text-center mt-2 tracking-widest">他 ${playlist.items.length - 3} 件...</div>`;
+                    }
+                } else {
+                    itemsHtml = '<div class="text-center py-4 text-brand-300 text-xs italic">コンテンツがありません</div>';
+                }
+
+                let actionHtml = '';
+                if (hasPlaylistPermission()) {
+                    actionHtml = `
+                        <div class="flex gap-2">
+                            <button onclick="openPlaylistModal('${playlist.id}')" class="w-7 h-7 flex items-center justify-center rounded-sm bg-brand-50 text-brand-600 border border-brand-200 hover:bg-brand-100 transition-colors" title="編集">
+                                <i class="fa-solid fa-pen text-[10px]"></i>
+                            </button>
+                            <button onclick="deletePlaylist('${playlist.id}')" class="w-7 h-7 flex items-center justify-center rounded-sm bg-brand-50 text-brand-600 border border-brand-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors" title="削除">
+                                <i class="fa-solid fa-trash text-[10px]"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                listHtml += `
+                    <div class="bg-[#fffdf9] rounded-sm p-4 border border-brand-200 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full group">
+                        <div class="flex justify-between items-start mb-3 pb-2 border-b border-brand-200">
+                            <h3 class="font-bold text-brand-900 tracking-widest font-serif flex items-center gap-2">
+                                <i class="fa-solid fa-folder text-[#b8860b]"></i>
+                                ${playlist.name}
+                            </h3>
+                            ${actionHtml}
+                        </div>
+                        <div class="flex-1 bg-brand-50/50 rounded-sm p-2 border border-brand-100">
+                            ${itemsHtml}
+                        </div>
+                        <div class="mt-3 flex justify-between items-center text-[9px] font-bold text-brand-400 tracking-widest">
+                            <span>${playlist.items?.length || 0} ITEMS</span>
+                            <span>${new Date(playlist.updatedAt || playlist.createdAt).toLocaleDateString()}更新</span>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML += listHtml;
+        }
+
+        // プレイリストモーダル関連の処理
+        window.openPlaylistModal = (playlistId = null) => {
+            editingPlaylistId = playlistId;
+            const modal = document.getElementById('playlist-modal');
+            const title = document.getElementById('playlist-modal-title');
+            const nameInput = document.getElementById('playlist-name-input');
+            
+            if (playlistId) {
+                const pl = myPlaylists.find(p => p.id === playlistId);
+                title.innerHTML = '<i class="fa-solid fa-folder-open text-[#b8860b] mr-2"></i>プレイリスト編集';
+                nameInput.value = pl.name || '';
+                currentPlaylistItems = [...(pl.items || [])];
+            } else {
+                title.innerHTML = '<i class="fa-solid fa-folder-plus text-[#b8860b] mr-2"></i>プレイリスト作成';
+                nameInput.value = '';
+                currentPlaylistItems = [];
+            }
+            
+            playlistFilterType = 'video';
+            updatePlaylistFilterUI();
+            renderPlaylistEditor();
+            
+            modal.classList.remove('hidden');
+        };
+
+        window.closePlaylistModal = () => {
+            document.getElementById('playlist-modal').classList.add('hidden');
+        };
+
+        window.filterPlaylistAvailable = (type) => {
+            playlistFilterType = type;
+            updatePlaylistFilterUI();
+            renderPlaylistEditor();
+        };
+
+        function updatePlaylistFilterUI() {
+            const btnV = document.getElementById('pl-filter-video');
+            const btnP = document.getElementById('pl-filter-podcast');
+            if (playlistFilterType === 'video') {
+                btnV.className = 'flex-1 text-[10px] py-1 border border-[#b8860b] bg-[#b8860b] text-white font-bold rounded-sm tracking-widest transition-colors';
+                btnP.className = 'flex-1 text-[10px] py-1 border border-brand-300 bg-white text-brand-500 font-bold rounded-sm tracking-widest hover:bg-brand-50 transition-colors';
+            } else {
+                btnP.className = 'flex-1 text-[10px] py-1 border border-[#b8860b] bg-[#b8860b] text-white font-bold rounded-sm tracking-widest transition-colors';
+                btnV.className = 'flex-1 text-[10px] py-1 border border-brand-300 bg-white text-brand-500 font-bold rounded-sm tracking-widest hover:bg-brand-50 transition-colors';
+            }
+        }
+
+        window.renderPlaylistEditor = () => {
+            const availList = document.getElementById('available-items-list');
+            const selList = document.getElementById('selected-items-list');
+            
+            // 左側: 利用可能なコンテンツ
+            let availItems = playlistFilterType === 'video' ? myVideos : myPodcasts;
+            availList.innerHTML = '';
+            
+            if (availItems.length === 0) {
+                availList.innerHTML = '<div class="text-center py-10 text-brand-300 text-xs font-bold tracking-widest italic">コンテンツがありません</div>';
+            } else {
+                availItems.forEach(item => {
+                    const isAdded = currentPlaylistItems.some(i => i.id === item.id && i.type === playlistFilterType);
+                    const titleEscaped = (item.title || 'タイトルなし').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    
+                    availList.innerHTML += `
+                        <div class="bg-white border ${isAdded ? 'border-brand-100 opacity-60' : 'border-brand-200'} rounded-sm p-2 flex justify-between items-center gap-2 transition-all">
+                            <div class="flex-1 min-w-0 flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-sm bg-brand-50 border border-brand-100 flex-shrink-0 flex items-center justify-center text-brand-300">
+                                    <i class="fa-solid ${playlistFilterType === 'video' ? 'fa-film' : 'fa-podcast'}"></i>
+                                </div>
+                                <p class="text-[11px] font-bold text-brand-800 truncate">${titleEscaped}</p>
+                            </div>
+                            <button class="shrink-0 px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-widest transition-colors flex items-center gap-1 ${isAdded ? 'bg-brand-100 text-brand-400 cursor-not-allowed' : 'bg-brand-50 border border-brand-300 text-brand-600 hover:bg-[#b8860b] hover:border-[#b8860b] hover:text-white'}"
+                                    ${isAdded ? 'disabled' : `onclick="addPlaylistEditorItem('${item.id}', '${titleEscaped}', '${playlistFilterType}')"`}>
+                                ${isAdded ? '<i class="fa-solid fa-check"></i>' : '<i class="fa-solid fa-plus"></i> 追加'}
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+
+            // 右側: 選択されたコンテンツ
+            selList.innerHTML = '';
+            if (currentPlaylistItems.length === 0) {
+                selList.innerHTML = '<div class="text-center py-20 text-brand-300 text-xs font-bold tracking-widest flex flex-col items-center"><i class="fa-solid fa-folder-open text-3xl mb-2 text-brand-200"></i>左から追加してください</div>';
+            } else {
+                currentPlaylistItems.forEach((item, index) => {
+                    const iconCls = item.type === 'video' ? 'fa-film text-brand-400' : 'fa-podcast text-[#b8860b]';
+                    
+                    selList.innerHTML += `
+                        <div class="bg-white border border-brand-200 shadow-sm rounded-sm p-2 flex justify-between items-center group transition-colors hover:border-[#b8860b]/50">
+                            <div class="flex items-center gap-2 min-w-0 flex-1">
+                                <span class="text-xs font-mono font-bold text-brand-300 w-4 shrink-0 text-center">${index + 1}</span>
+                                <div class="w-6 h-6 rounded-sm bg-brand-50 border border-brand-100 flex-shrink-0 flex items-center justify-center">
+                                    <i class="fa-solid ${iconCls} text-[10px]"></i>
+                                </div>
+                                <p class="text-[11px] font-bold text-brand-800 truncate">${item.title}</p>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0 ml-2">
+                                <div class="flex flex-col gap-[2px]">
+                                    <button onclick="movePlaylistEditorItem(${index}, -1)" class="w-5 h-4 bg-brand-50 hover:bg-[#b8860b] hover:text-white text-brand-400 rounded-[2px] flex items-center justify-center transition-colors disabled:opacity-30 disabled:hover:bg-brand-50 disabled:hover:text-brand-400" ${index === 0 ? 'disabled' : ''}>
+                                        <i class="fa-solid fa-caret-up text-[10px]"></i>
+                                    </button>
+                                    <button onclick="movePlaylistEditorItem(${index}, 1)" class="w-5 h-4 bg-brand-50 hover:bg-[#b8860b] hover:text-white text-brand-400 rounded-[2px] flex items-center justify-center transition-colors disabled:opacity-30 disabled:hover:bg-brand-50 disabled:hover:text-brand-400" ${index === currentPlaylistItems.length - 1 ? 'disabled' : ''}>
+                                        <i class="fa-solid fa-caret-down text-[10px]"></i>
+                                    </button>
+                                </div>
+                                <button onclick="removePlaylistEditorItem(${index})" class="w-7 h-[34px] bg-red-50 hover:bg-red-500 hover:text-white text-red-400 border border-red-100 rounded-[2px] flex items-center justify-center transition-colors ml-1">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        };
+
+        window.addPlaylistEditorItem = (id, title, type) => {
+            currentPlaylistItems.push({ id, title, type });
+            renderPlaylistEditor();
+        };
+
+        window.removePlaylistEditorItem = (index) => {
+            currentPlaylistItems.splice(index, 1);
+            renderPlaylistEditor();
+        };
+
+        window.movePlaylistEditorItem = (index, direction) => {
+            if (index + direction < 0 || index + direction >= currentPlaylistItems.length) return;
+            const temp = currentPlaylistItems[index];
+            currentPlaylistItems[index] = currentPlaylistItems[index + direction];
+            currentPlaylistItems[index + direction] = temp;
+            renderPlaylistEditor();
+        };
+
+        window.savePlaylist = async () => {
+            const nameInput = document.getElementById('playlist-name-input');
+            const name = nameInput.value.trim();
+            if (!name) {
+                nameInput.classList.add('border-red-500', 'bg-red-50');
+                setTimeout(() => nameInput.classList.remove('border-red-500', 'bg-red-50'), 1500);
+                return;
+            }
+
+            if (isAdminMock) {
+                alert("モック環境では保存をスキップします");
+                closePlaylistModal();
+                return;
+            }
+
+            try {
+                const payload = {
+                    name,
+                    items: currentPlaylistItems,
+                    updatedAt: Date.now()
+                };
+
+                if (editingPlaylistId) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'playlists', editingPlaylistId), payload);
+                } else {
+                    payload.createdAt = Date.now();
+                    await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'playlists'), payload);
+                }
+                closePlaylistModal();
+                showNotification('プレイリストを保存しました');
+                await loadMyContents(); // 再読み込み
+            } catch (e) {
+                console.error(e);
+                alert('保存に失敗しました');
+            }
+        };
+
+        window.deletePlaylist = async (id) => {
+            if (!confirm('このプレイリストを削除しますか？\n（コンテンツ自体は削除されません）')) return;
+            
+            if (isAdminMock) {
+                alert("モック環境では削除をスキップします");
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'playlists', id));
+                showNotification('プレイリストを削除しました');
+                await loadMyContents();
+            } catch (e) {
+                console.error(e);
+                alert('削除に失敗しました');
+            }
+        };
 
         function renderVideos(videos, container, emptyMsg) {
             if (videos.length === 0) {
@@ -1976,7 +2315,6 @@
             };
         }
 
-        // ★追加: ログアウト処理の関数
         window.handleLogout = () => {
             if (isAdminMock) {
                 localStorage.removeItem('isAdminMock');
