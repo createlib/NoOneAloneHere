@@ -340,7 +340,7 @@ export default function PodcastDetailPage() {
                             <h1 className="text-2xl sm:text-3xl font-bold text-brand-900 leading-tight mb-5 font-serif tracking-wide">{podcastData.title || 'タイトルなし'}</h1>
                             
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-brand-200">
-                                <Link href={`/user/${podcastData.authorId}?tab=media`} className="flex items-center gap-3 sm:gap-4 group bg-[#fffdf9] pl-1 pr-4 sm:pl-2 sm:pr-6 py-1 sm:py-1.5 rounded-full border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b] min-w-0">
+                                <Link href={`/user?uid=${podcastData.authorId}&tab=media`} className="flex items-center gap-3 sm:gap-4 group bg-[#fffdf9] pl-1 pr-4 sm:pl-2 sm:pr-6 py-1 sm:py-1.5 rounded-full border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b] min-w-0">
                                     <img src={podcastData.authorIcon || 'https://via.placeholder.com/48?text=U'} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover group-hover:scale-105 transition-transform shrink-0 ml-0.5" alt={podcastData.authorName} />
                                     <p className="font-bold text-brand-900 group-hover:text-[#b8860b] transition-colors text-sm sm:text-base flex items-center gap-1.5 truncate tracking-widest font-serif">
                                         {podcastData.authorName || '名無し'} <CheckCircle2 size={12} className="text-[#d4af37]" />

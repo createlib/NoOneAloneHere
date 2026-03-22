@@ -292,7 +292,7 @@ export default function VideoDetailPage() {
                         </div>
 
                         <div className="flex flex-row justify-between items-center gap-2 sm:gap-6 pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-brand-200">
-                            <Link href={`/user/${videoData.authorId}?tab=media`} className="flex items-center gap-2 sm:gap-4 group cursor-pointer bg-[#fffdf9] pl-1 pr-3 sm:pl-2 sm:pr-6 py-1 sm:py-2 rounded-full border border-brand-100 shadow-sm hover:shadow-md transition-all hover:border-brand-300 min-w-0">
+                            <Link href={`/user?uid=${videoData.authorId}&tab=media`} className="flex items-center gap-2 sm:gap-4 group cursor-pointer bg-[#fffdf9] pl-1 pr-3 sm:pl-2 sm:pr-6 py-1 sm:py-2 rounded-full border border-brand-100 shadow-sm hover:shadow-md transition-all hover:border-brand-300 min-w-0">
                                 <img src={videoData.authorIcon || 'https://via.placeholder.com/48?text=U'} className="w-9 h-9 sm:w-12 sm:h-12 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover group-hover:scale-105 transition-transform flex-shrink-0 ml-0.5" alt={videoData.authorName} />
                                 <div className="min-w-0">
                                     <p className="font-bold text-brand-900 group-hover:text-brand-600 transition-colors text-xs sm:text-base flex items-center gap-1 truncate">
