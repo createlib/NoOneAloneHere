@@ -3,13 +3,11 @@
 import React, { useState, useEffect, FormEvent, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, storage } from '@/lib/firebase';
+import { db, storage, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Link from 'next/link';
 import { ArrowLeft, Camera, IdCard, Feather, Handshake, Tags, Briefcase, Link as LinkIcon, Eye, Save, Trash, Plus, CircleHelp, X, Check, AlertTriangle } from 'lucide-react';
-
-const appId = 'NOAH_APP_v1';
 
 const PREFECTURES = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県","海外","その他"];
 
@@ -122,7 +120,7 @@ function ProfileEditContent() {
 
         try {
             // Check Admin
-            const myDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data');
+            const myDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data');
             const mySnap = await getDoc(myDocRef);
             let myAdmin = false;
             if (mySnap.exists() && mySnap.data().userId === 'admin') myAdmin = true;
@@ -136,7 +134,7 @@ function ProfileEditContent() {
             }
 
             // Load Data
-            const docRef = doc(db, 'artifacts', appId, 'users', targetUid, 'profile', 'data');
+            const docRef = doc(db, 'artifacts', APP_ID, 'users', targetUid, 'profile', 'data');
             const docSnap = await getDoc(docRef);
             const data = docSnap.exists() ? docSnap.data() : { userId: targetUid };
             
@@ -305,10 +303,10 @@ function ProfileEditContent() {
               profileScore: score
           };
 
-          const privateRef = doc(db, 'artifacts', appId, 'users', targetUid, 'profile', 'data');
+          const privateRef = doc(db, 'artifacts', APP_ID, 'users', targetUid, 'profile', 'data');
           await setDoc(privateRef, finalData, { merge: true });
 
-          const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', targetUid);
+          const publicRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', targetUid);
           const isPaidMember = (finalData.membershipRank !== 'arrival');
           const isPublicSetting = (finalData.profilePublic === 'true');
           const canPublish = isPaidMember || isAdmin;

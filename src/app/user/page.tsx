@@ -16,13 +16,21 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
 function formatText(text: string) {
-  if (!text) return '';
-  const html = marked.parse(text) as string;
-  // Fallback if window is undefined (SSR)
-  if (typeof window === 'undefined') {
-      return html;
-  }
-  return DOMPurify.sanitize(html);
+    if (!text) return '';
+    try {
+        const textStr = String(text).replace(/__(.*?)__/g, '<u>$1</u>');
+        const rawHtml = marked.parse(textStr, { breaks: true, gfm: true }) as string;
+        if (typeof window === 'undefined') {
+            return rawHtml;
+        }
+        return DOMPurify.sanitize(rawHtml, { 
+            ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote', 'code', 'pre'],
+            ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+        });
+    } catch {
+        if (typeof window === 'undefined') return String(text).replace(/\n/g, '<br>');
+        return DOMPurify.sanitize(String(text).replace(/\n/g, '<br>'));
+    }
 }
 
 const OS_THEMES: Record<string, { bg: string, main: string, sub: string }> = {
@@ -101,7 +109,7 @@ function UserProfileContent() {
                mutuallyFollowing = currentlyFollowing && currentlyFollowedBack;
                setIsMutual(mutuallyFollowing);
            } else {
-               setIsMutual(true); // Self is always "mutual" in terms of permissions
+               setIsMutual(false); // Do not show mutual UI for self
                mutuallyFollowing = true;
            }
            
@@ -424,7 +432,7 @@ function UserProfileContent() {
                           </div>
                           {(isMutual || isSelf) ? (
                               <div className="relative mt-2">
-                                  <div className="prose prose-sm max-w-none text-[#5c4a3d]" dangerouslySetInnerHTML={{ __html: formatText(userData.goals) }}></div>
+                                  <div className="prose max-w-none text-[#5c4a3d]" dangerouslySetInnerHTML={{ __html: formatText(userData.goals) }}></div>
                               </div>
                           ) : (
                               <div className="py-8 bg-[#f7f5f0] border border-dashed border-[#e8dfd1] text-center mt-4 rounded-sm">
@@ -470,7 +478,7 @@ function UserProfileContent() {
                                               <span className="text-[10px] font-bold text-[#725b3f] bg-[#f7f5f0] px-2 py-0.5 rounded-sm tracking-widest border border-[#e8dfd1]">{c.role || '役割'}</span>
                                               <span className="text-xs text-[#8b6a4f] font-medium tracking-widest">{c.start || '?'} 〜 {c.end || '現在'}</span>
                                           </div>
-                                          <div className="prose prose-sm max-w-none prose-stone text-[#5c4a3d] bg-[#fdfaf5] p-4 rounded-sm border border-[#e8dfd1] shadow-sm" dangerouslySetInnerHTML={{ __html: formatText(c.description || '') }}></div>
+                                          <div className="prose max-w-none prose-stone text-[#5c4a3d] bg-[#fdfaf5] p-4 rounded-sm border border-[#e8dfd1] shadow-sm" dangerouslySetInnerHTML={{ __html: formatText(c.description || '') }}></div>
                                       </div>
                                   ))}
                               </div>

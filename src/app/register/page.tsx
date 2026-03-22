@@ -4,12 +4,11 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { ArrowLeft, Anchor, Compass, CheckCircle, XCircle, AlertCircle, Crown, Ban, Ship, Eye, EyeOff, LoaderCircle } from 'lucide-react';
 
-const APP_ID = '1:803209683213:web:b62d13784fa2bbbb9f5044';
 const ADMIN_SECRET = 'admin_start';
 
 function RegisterForm() {
