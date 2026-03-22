@@ -256,7 +256,7 @@ function SearchContent() {
                         </div>
 
                         {/* Users Grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-6">
                             {filteredUsers.length === 0 ? (
                                 <div className="col-span-full text-center text-[#a09080] py-12 bg-[#fffdf9] rounded-sm border border-[#e8dfd1] border-dashed">
                                     該当する乗客が見つかりません。条件を変えてみてください。
@@ -321,31 +321,6 @@ function SearchContent() {
                     </div>
             </main>
 
-            {/* Mobile Bottom Navigation Component */}
-            <nav className="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] bg-[#fffdf9] border-t border-[#e8dfd1] flex items-center">
-                <div className="bottom-nav-content w-full flex justify-between px-2 h-full">
-                    <Link href="/home" className="flex flex-col items-center justify-center w-full h-full text-[#a09080] hover:text-[#725b3f] transition-colors">
-                        <Ship className="w-5 h-5 mb-1" />
-                        <span className="text-[10px] font-medium tracking-widest">航海</span>
-                    </Link>
-                    <Link href="/events" className="flex flex-col items-center justify-center w-full h-full text-[#a09080] hover:text-[#725b3f] transition-colors">
-                        <Hourglass className="w-5 h-5 mb-1" />
-                        <span className="text-[10px] font-medium tracking-widest">イベント</span>
-                    </Link>
-                    <Link href="/search" className="flex flex-col items-center justify-center w-full h-full text-[#8b6a4f] border-t-2 border-[#8b6a4f] pt-[2px]">
-                        <Compass className="w-5 h-5 mb-1" />
-                        <span className="text-[10px] font-bold tracking-widest">さがす</span>
-                    </Link>
-                    <button className="flex flex-col items-center justify-center w-full h-full text-[#a09080] hover:text-[#725b3f] transition-colors">
-                        <Film className="w-5 h-5 mb-1" />
-                        <span className="text-[10px] font-medium tracking-widest">メディア</span>
-                    </button>
-                    <Link href="/user" className="flex flex-col items-center justify-center w-full h-full text-[#a09080] hover:text-[#725b3f] transition-colors">
-                        <User className="w-5 h-5 mb-1" />
-                        <span className="text-[10px] font-medium tracking-widest">マイページ</span>
-                    </Link>
-                </div>
-            </nav>
         </div>
     );
 }
