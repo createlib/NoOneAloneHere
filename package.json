@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "@types/dompurify": "^3.0.5",
     "@types/marked": "^5.0.2",
     "chart.js": "^4.5.1",

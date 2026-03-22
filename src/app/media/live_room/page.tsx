@@ -547,7 +547,7 @@ function LiveRoomClientPageInner() {
                                                 <span key={t} className="bg-[#d4af37]/20 border border-[#d4af37]/40 text-white px-2.5 py-1 rounded-sm text-[10px] font-bold tracking-widest">#{t}</span>
                                             ))}
                                         </div>
-                                        <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed bg-white/5 p-4 rounded-sm border border-white/10">{roomData.desc}</p>
+                                        <div className="text-xs text-white/90 leading-relaxed bg-white/5 p-4 rounded-sm border border-white/10 prose prose-invert prose-stone max-w-none prose-sm" dangerouslySetInnerHTML={{ __html: formatText(roomData.desc) }}></div>
                                         {roomData.relatedArticleUrls && roomData.relatedArticleUrls.length > 0 && (
                                             <div className="mt-6 border-t border-white/10 pt-4">
                                                 <h4 className="text-[10px] text-[#d4af37] font-bold tracking-widest mb-3 flex items-center gap-1.5"><LinkIcon size={12}/> 関連記事</h4>
