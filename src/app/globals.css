@@ -1,8 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap');
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
 
-@theme {
+.markdown-content h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--color-brand-900); }
+.markdown-content h2 { font-size: 1.25rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.75rem; color: var(--color-brand-800); }
+.markdown-content h3 { font-size: 1.125rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--color-brand-700); }
+.markdown-content p { margin-bottom: 1rem; line-height: 1.7; }
+.markdown-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+.markdown-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1rem; }
+.markdown-content li { margin-bottom: 0.25rem; }
+.markdown-content a { color: #2563eb; text-decoration: underline; }
+.markdown-content a:hover { color: #1d4ed8; }
+.markdown-content blockquote { border-left: 4px solid var(--color-brand-300); padding-left: 1rem; color: var(--color-brand-600); font-style: italic; margin-bottom: 1rem; }
+.markdown-content pre { background-color: #f3f4f6; padding: 1rem; border-radius: 0.25rem; overflow-x: auto; margin-bottom: 1rem; }
+.markdown-content code { font-family: monospace; background-color: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.125rem; font-size: 0.875em; }@theme {
   --color-brand-50: #f7f5f0;
   --color-brand-100: #e8dfd1;
   --color-brand-200: #dcd4c6;

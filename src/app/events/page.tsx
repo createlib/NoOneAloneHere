@@ -10,7 +10,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Navbar from '@/components/Navbar';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { Anchor, Compass, Hourglass, Ship, User, Image as ImageIcon, Check, MapPin, List, Briefcase, Sliders, X, CirclePlus, Tags, Lock, Building, DollarSign, Calendar, Search, Share2 } from 'lucide-react';
+import { Anchor, Compass, Hourglass, Ship, User, Image as ImageIcon, Check, MapPin, List, Briefcase, Sliders, X, CirclePlus, Tags, Lock, Building, DollarSign, Calendar, Search, Share2, Loader2 } from 'lucide-react';
 import Script from 'next/script';
 
 const PRESET_TAGS = ["交流会", "勉強会", "スポーツ", "音楽", "アート", "グルメ", "アウトドア", "ビジネス", "初心者歓迎", "オンライン"];
@@ -67,32 +67,54 @@ type JobData = {
     updatedAt?: any;
 };
 
-function EventParticipantsList({ uids }: { uids: string[] }) {
+function EventParticipantsList({ eventId, isPublic, isOrganizer, refreshKey }: { eventId: string, isPublic: boolean, isOrganizer: boolean, refreshKey?: number }) {
+    const [uids, setUids] = useState<string[]>([]);
     const [users, setUsers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     
     useEffect(() => {
-        if (!uids || uids.length === 0) return;
-        const fetchUsers = async () => {
-            const results = await Promise.all(uids.slice(0, 10).map(async (uid) => {
-                const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', uid));
-                if (snap.exists()) return { uid, ...snap.data() };
-                return null;
-            }));
-            setUsers(results.filter(Boolean));
-        };
-        fetchUsers();
-    }, [uids]);
+        if (!eventId) return;
+        const fetchParts = async () => {
+            try {
+                const partsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'events', eventId, 'participants');
+                const partsSnap = await getDocs(partsRef);
+                const fetchedUids = partsSnap.docs.map(d => d.id);
+                setUids(fetchedUids);
 
-    if (users.length === 0) return <span className="text-sm font-bold text-brand-900 ml-2">0 人</span>;
+                if ((isPublic || isOrganizer) && fetchedUids.length > 0) {
+                    const results = await Promise.all(fetchedUids.slice(0, 10).map(async (uid) => {
+                        const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', uid));
+                        if (snap.exists()) return { uid, ...snap.data() };
+                        return null;
+                    }));
+                    setUsers(results.filter(Boolean));
+                }
+            } catch(e) { console.error('fetch parts err', e); }
+            setLoading(false);
+        };
+        fetchParts();
+    }, [eventId, isPublic, isOrganizer, refreshKey]);
+
+    if (loading) return <span className="text-[10px] text-brand-500 ml-2 py-0.5 px-2 bg-brand-50 border border-brand-200 rounded-sm italic tracking-widest flex items-center shadow-sm"><Loader2 className="w-3 h-3 mr-1 animate-spin text-brand-400"/>読込中...</span>;
+    if (uids.length === 0) return <span className="text-[10px] bg-[#f7f5f0] border border-brand-200 px-2 py-0.5 rounded-sm font-bold text-brand-500 shadow-sm ml-2">まだ参加予定の人はいません</span>;
+
+    if (!isPublic && !isOrganizer) {
+        return <span className="text-sm font-bold text-brand-900 ml-2 bg-[#f7f5f0] border border-brand-200 px-3 py-0.5 rounded-sm shadow-sm">{uids.length} 人</span>;
+    }
 
     return (
-        <div className="flex flex-col items-end gap-1.5 ml-2">
-            <span className="text-sm font-bold text-brand-900">{uids.length} 人</span>
-            <div className="flex flex-wrap gap-1 justify-end max-w-[150px]">
+        <div className="flex flex-col items-end gap-1.5 ml-2 mt-1 w-full relative group">
+            <span className="text-xs font-bold text-brand-900 bg-[#f7f5f0] border border-brand-200 px-2 py-0.5 rounded-sm shadow-sm absolute right-0 -top-7 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">{uids.length} 名の参加予定</span>
+            <div className="flex flex-wrap gap-1.5 justify-end w-full pl-6">
                 {users.map((u: any) => (
-                    <img key={u.uid} src={u.photoURL || 'https://via.placeholder.com/40?text=NOAH'} alt={u.name || 'User'} title={u.name || 'User'} className="w-6 h-6 rounded-full border border-brand-200 object-cover shadow-sm" />
+                    <Link key={u.uid} href={`/user/${u.uid}`} title={u.name || 'User'} className="relative group/avatar cursor-pointer">
+                        <img src={u.photoURL || 'https://via.placeholder.com/40?text=U'} alt={u.name || 'User'} className="w-8 h-8 rounded-sm border border-brand-300 object-cover shadow-sm bg-white hover:border-[#b8860b] hover:shadow-md transition-all z-0" />
+                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-black/80 text-white text-[9px] font-bold rounded-sm whitespace-nowrap opacity-0 group-hover/avatar:opacity-100 transition-opacity z-20 shadow-md">
+                            {u.name || 'User'}
+                        </span>
+                    </Link>
                 ))}
-                {uids.length > 10 && <div className="w-6 h-6 rounded-full bg-brand-100 border border-brand-200 flex items-center justify-center text-[8px] font-bold text-brand-500 shadow-sm">+{uids.length - 10}</div>}
+                {uids.length > 10 && <div className="w-8 h-8 rounded-sm bg-brand-50 border border-brand-300 flex items-center justify-center text-[9px] font-bold text-brand-600 shadow-sm cursor-help hover:bg-brand-100 transition-colors tooltip" title={`他 ${uids.length - 10}名`}>+{uids.length - 10}</div>}
             </div>
         </div>
     );
@@ -115,7 +137,21 @@ function EventsContent() {
 
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+    const [refreshPartsKey, setRefreshPartsKey] = useState(0);
     const [theaterMenuOpen, setTheaterMenuOpen] = useState(false);
+    const [eventJoinStatusMap, setEventJoinStatusMap] = useState<Record<string, boolean>>({});
+
+    useEffect(() => {
+        if (!user || user.isAnonymous) return;
+        const checkJoins = async () => {
+            const myJoinColl = collection(db, 'artifacts', APP_ID, 'users', user.uid, 'participating_events');
+            const snapJoin = await getDocs(myJoinColl);
+            const statusMap: Record<string, boolean> = {};
+            snapJoin.forEach(d => { statusMap[d.id] = true; });
+            setEventJoinStatusMap(statusMap);
+        };
+        checkJoins();
+    }, [user]);
 
     // Filter states
     const [eventDateFilter, setEventDateFilter] = useState('all');
@@ -700,23 +736,38 @@ function EventsContent() {
 
     const toggleParticipate = async (evt: EventData) => {
         if (!user) return alert('ログインが必要です');
-        const isJoined = evt.participants?.includes(user.uid);
+        
         try {
-            const evtRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', evt.id);
-            const userJoinRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'participating_events', evt.id);
+            const myJoinRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'participating_events', evt.id);
+            const partRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', evt.id, 'participants', user.uid);
+            
+            const isJoined = eventJoinStatusMap[evt.id] || false;
+            
             if (isJoined) {
-                await updateDoc(evtRef, { participants: arrayRemove(user.uid), participantCount: (evt.participantCount || 1) - 1 });
-                await deleteDoc(userJoinRef);
-                setSelectedEvent({ ...evt, participants: evt.participants?.filter(u => u !== user.uid), participantCount: (evt.participantCount || 1) - 1 });
-                // Also update allEvents state so map/list knows
-                setAllEvents(prev => prev.map(e => e.id === evt.id ? { ...e, participants: e.participants?.filter(u => u !== user.uid) || [], participantCount: (e.participantCount || 1) - 1 } : e));
+                await deleteDoc(partRef);
+                await deleteDoc(myJoinRef);
+                
+                // Fallback sync for count
+                const evtRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', evt.id);
+                try {
+                    await updateDoc(evtRef, { participants: arrayRemove(user.uid), participantCount: Math.max(0, (evt.participantCount || 1) - 1) });
+                } catch(e) {}
+
+                setEventJoinStatusMap(prev => ({...prev, [evt.id]: false}));
+                setRefreshPartsKey(k => k + 1);
                 alert('参加をキャンセルしました。');
             } else {
-                await updateDoc(evtRef, { participants: arrayUnion(user.uid), participantCount: (evt.participantCount || 0) + 1 });
-                await setDoc(userJoinRef, { joinedAt: serverTimestamp() });
-                const newParts = [...(evt.participants || []), user.uid];
-                setSelectedEvent({ ...evt, participants: newParts, participantCount: (evt.participantCount || 0) + 1 });
-                setAllEvents(prev => prev.map(e => e.id === evt.id ? { ...e, participants: newParts, participantCount: (e.participantCount || 0) + 1 } : e));
+                const ts = serverTimestamp();
+                await setDoc(partRef, { joinedAt: ts, uid: user.uid });
+                await setDoc(myJoinRef, { joinedAt: ts, eventId: evt.id });
+
+                const evtRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', evt.id);
+                try {
+                    await updateDoc(evtRef, { participants: arrayUnion(user.uid), participantCount: (evt.participantCount || 0) + 1 });
+                } catch(e) {}
+
+                setEventJoinStatusMap(prev => ({...prev, [evt.id]: true}));
+                setRefreshPartsKey(k => k + 1);
                 alert('イベントの参加申し込みが完了しました！');
             }
         } catch (e: any) {
@@ -1095,13 +1146,9 @@ function EventsContent() {
                                     <span className="text-xs font-bold text-brand-500 tracking-widest"><User className="w-4 h-4 inline mr-1 text-brand-400"/>主催者</span>
                                     <Link href={`/user/${selectedEvent.organizerId}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">{selectedEvent.organizerName}</Link>
                                 </div>
-                                <div className="flex justify-between items-start border-t border-brand-200 pt-3">
-                                    <span className="text-xs font-bold text-brand-500 tracking-widest mt-0.5 opacity-80 flex items-center gap-1"><User className="w-3.5 h-3.5"/> 参加予定人数</span>
-                                    {selectedEvent.isParticipantsPublic ? (
-                                        <EventParticipantsList uids={selectedEvent.participants || []} />
-                                    ) : (
-                                        <span className="text-sm font-bold text-brand-900 ml-2">{selectedEvent.participantCount || 0} 人</span>
-                                    )}
+                                <div className="flex flex-col items-start border-t border-brand-200 pt-4 pb-1">
+                                    <span className="text-xs font-bold text-brand-500 tracking-widest mt-0.5 opacity-80 flex items-center gap-1 mb-2"><User className="w-3.5 h-3.5 text-brand-400"/> 参加予定の乗船者</span>
+                                    <EventParticipantsList eventId={selectedEvent.id} isPublic={selectedEvent.isParticipantsPublic} isOrganizer={userData?.userId === 'admin' || userData?.uid === selectedEvent.organizerId} refreshKey={refreshPartsKey} />
                                 </div>
                             </div>
                             
@@ -1118,8 +1165,8 @@ function EventsContent() {
 
                             <div className="mt-6 flex flex-col gap-3">
                                 {selectedEvent.organizerId !== user?.uid && (
-                                    <button onClick={() => toggleParticipate(selectedEvent)} className={`w-full py-3.5 rounded-sm text-sm font-bold tracking-widest transition-colors shadow-md border ${selectedEvent.participants?.includes(user?.uid || '') ? 'bg-[#fffdf9] text-brand-700 border-brand-300 hover:bg-brand-50 text-center' : 'bg-[#3e2723] text-[#d4af37] hover:bg-[#2a1a17] border-[#b8860b] text-center'}`}>
-                                        {selectedEvent.participants?.includes(user?.uid || '') ? '参加をキャンセル' : '参加を申し込む'}
+                                    <button onClick={() => toggleParticipate(selectedEvent)} className={`w-full py-3.5 rounded-sm text-sm font-bold tracking-widest transition-colors shadow-md border ${eventJoinStatusMap[selectedEvent.id] ? 'bg-[#fffdf9] text-brand-700 border-brand-300 hover:bg-brand-50 text-center hover:-translate-y-0.5' : 'bg-[#3e2723] text-[#f7f5f0] hover:bg-[#2a1a17] border-[#b8860b] text-center hover:-translate-y-0.5'}`}>
+                                        {eventJoinStatusMap[selectedEvent.id] ? '参加をキャンセル' : '参加を申し込む'}
                                     </button>
                                 )}
                                 {(userData?.userId === 'admin' || userData?.uid === selectedEvent.organizerId) && (

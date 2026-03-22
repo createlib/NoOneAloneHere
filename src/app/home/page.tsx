@@ -41,23 +41,17 @@ export default function Home() {
 
         const now = new Date().toISOString();
 
-        // Fetch All Events processing both Hosting and Participating
+        // Fetch Hosting Events
         const eventsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'events');
         const snapHost = await getDocs(eventsRef);
         let hostEvents: any[] = [];
-        let joinedEvents: any[] = [];
         
         snapHost.forEach(d => {
             const evt = d.data();
             if (!evt.endTimestamp || evt.endTimestamp >= now) {
                 const isHost = evt.organizerId === user.uid || evt.authorId === user.uid;
-                const isPart = evt.participants?.includes(user.uid);
-                
                 if (isHost) {
                     hostEvents.push({ id: d.id, ...evt });
-                }
-                if (isPart) {
-                    joinedEvents.push({ id: d.id, ...evt });
                 }
             }
         });
@@ -67,14 +61,33 @@ export default function Home() {
             const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
             return tB - tA;
         });
+        setHostingEvents(hostEvents);
 
-        joinedEvents.sort((a,b) => {
+        // Fetch Participating Events via legacy subcollection
+        const myJoinColl = collection(db, 'artifacts', APP_ID, 'users', user.uid, 'participating_events');
+        const snapJoin = await getDocs(myJoinColl);
+        
+        const eventPromises = snapJoin.docs.map(async (joinDoc) => {
+            const eventId = joinDoc.id; 
+            try {
+                const evtRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', eventId);
+                const evtSnap = await getDoc(evtRef);
+                if (evtSnap.exists()) {
+                    return { id: evtSnap.id, ...evtSnap.data() };
+                }
+            } catch (e) { }
+            return null; 
+        });
+
+        const allJoinedEvents = (await Promise.all(eventPromises)).filter(e => e !== null);
+        let joinedEvents = allJoinedEvents.filter((evt: any) => !evt.endTimestamp || evt.endTimestamp >= now);
+
+        joinedEvents.sort((a: any,b: any) => {
             const dateA = new Date(a.startDate).getTime() || 0;
             const dateB = new Date(b.startDate).getTime() || 0;
             return dateA - dateB;
         });
 
-        setHostingEvents(hostEvents);
         setParticipatingEvents(joinedEvents);
 
       } catch (err) {
@@ -277,7 +290,7 @@ function EventCard({ evt }: { evt: any }) {
             : `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
 
     return (
-        <div className="flex items-center gap-4 p-4 bg-[#fffdf9] rounded-sm border border-brand-200 cursor-pointer hover:bg-brand-50 transition-colors group">
+        <Link href={`/events?eventId=${evt.id}`} className="flex items-center gap-4 p-4 bg-[#fffdf9] rounded-sm border border-brand-200 cursor-pointer hover:bg-brand-50 transition-colors group">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-sm overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-sm">
                 <img src={thumb} alt={evt.title} className="w-full h-full object-cover" />
             </div>
@@ -296,6 +309,6 @@ function EventCard({ evt }: { evt: any }) {
             <div className="text-brand-300 pr-2 group-hover:text-brand-500 transition-colors">
                 <ChevronRight size={16} />
             </div>
-        </div>
+        </Link>
     );
 }
