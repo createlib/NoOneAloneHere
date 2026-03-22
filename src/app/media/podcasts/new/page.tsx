@@ -33,7 +33,13 @@ function PodcastPostInternalForm() {
     const [isAdmin, setIsAdmin] = useState(false);
 
     // Form states
-    const [audioType, setAudioType] = useState<'upload' | 'url' | 'live'>('upload');
+    const [audioType, setAudioType] = useState<'upload' | 'url' | 'live'>(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('type') === 'live' ? 'live' : 'upload';
+        }
+        return 'upload';
+    });
     const [audioFile, setAudioFile] = useState<File | null>(null);
     const [audioUrlInput, setAudioUrlInput] = useState('');
     const [duration, setDuration] = useState(0);

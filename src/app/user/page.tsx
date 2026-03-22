@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
-import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy, onSnapshot } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home } from 'lucide-react';
+import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home, SatelliteDish } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -63,11 +63,13 @@ function UserProfileContent() {
   const searchParams = useSearchParams();
   const uidParam = searchParams.get('uid');
   const { user } = useAuth();
+  const router = useRouter();
   
   const [targetUid, setTargetUid] = useState<string | null>(null);
-  const [isSelf, setIsSelf] = useState<boolean>(true);
+  const [isSelf, setIsSelf] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [osData, setOsData] = useState<any>(null);
+  const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
@@ -166,6 +168,19 @@ function UserProfileContent() {
         setLoading(false);
       }
     }
+
+    useEffect(() => {
+        if (!targetUid) return;
+        const roomRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetUid);
+        const unsub = onSnapshot(roomRef, (snap) => {
+            if (snap.exists() && snap.data().status === 'live') {
+                setIsLive(true);
+            } else {
+                setIsLive(false);
+            }
+        });
+        return () => unsub();
+    }, [targetUid]);
     
     async function loadUserMedia() {
       if (!targetUid) return;
@@ -314,14 +329,24 @@ function UserProfileContent() {
                   </div>
 
                   <div className="px-6 relative">
-                      <div className="-mt-12 flex justify-between items-end mb-4">
-                          <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20 flex items-center justify-center text-[#c8b9a6]">
+                      <div className="-mt-12 flex justify-between items-end mb-4 relative">
+                          <div className={`h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20 flex items-center justify-center text-[#c8b9a6] ${isLive ? 'ring-4 ring-red-500 animate-pulse cursor-pointer' : ''}`} onClick={() => isLive && router.push(`/media/live_room/${targetUid}`)}>
                               {userData.photoURL ? (
                                   <img src={userData.photoURL} alt="Profile" className="w-full h-full object-cover" />
                               ) : (
                                   <Anchor size={40} />
                               )}
+                              {isLive && (
+                                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center pointer-events-none">
+                                      <Headphones className="text-white w-8 h-8" />
+                                  </div>
+                              )}
                           </div>
+                          {isLive && (
+                              <div className="absolute -bottom-3 left-12 sm:left-14 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-3 py-1 rounded-sm text-[10px] font-bold tracking-widest border border-[#b8860b] shadow-md z-30 flex items-center gap-1 whitespace-nowrap cursor-pointer hover:bg-[#b8860b] transition-colors" onClick={() => router.push(`/media/live_room/${targetUid}`)}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span> LIVE配信中
+                              </div>
+                          )}
                           <div className="mb-1 relative z-20">
                               {isSelf ? (
                                   <div className="flex flex-col items-end gap-1 w-full lg:w-auto">
@@ -353,8 +378,19 @@ function UserProfileContent() {
                           </div>
 
                           {isSelf && (
-                              <div className="mt-4">
-                                  <button onClick={copyProfileLink} className="inline-flex items-center gap-2 px-4 py-2 bg-[#f7f5f0] border border-[#e8dfd1] text-[#725b3f] rounded-sm text-xs font-bold hover:bg-[#fffdf9] hover:border-[#b8860b] hover:text-[#b8860b] transition-all shadow-sm tracking-widest">
+                              <div className="mt-4 flex flex-col gap-2">
+                                  {['guardian', 'covenant', 'admin'].includes(rank) && (
+                                      isLive ? (
+                                          <Link href={`/media/live_room/${user?.uid || ''}`} className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 border border-red-200 rounded-sm text-xs font-bold hover:bg-red-100 transition-all shadow-sm tracking-widest w-full sm:w-auto mt-2">
+                                              <SatelliteDish size={16} className="animate-pulse" /> 配信ルームに戻る
+                                          </Link>
+                                      ) : (
+                                          <Link href="/media/podcasts/new?type=live" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] border border-[#996515] rounded-sm text-sm font-bold hover:shadow-lg transition-all tracking-widest w-full sm:w-auto transform hover:-translate-y-0.5 mt-2">
+                                              <SatelliteDish size={16} className="animate-pulse" /> SIGNAL CAST を配信する
+                                          </Link>
+                                      )
+                                  )}
+                                  <button onClick={copyProfileLink} className="inline-flex items-center justify-center gap-2 px-4 py-2 mt-2 bg-[#f7f5f0] border border-[#e8dfd1] text-[#725b3f] rounded-sm text-xs font-bold hover:bg-[#fffdf9] hover:border-[#b8860b] hover:text-[#b8860b] transition-all shadow-sm tracking-widest w-full sm:w-auto">
                                       <Share size={14} /> 自己紹介リンクをコピー
                                   </button>
                               </div>
