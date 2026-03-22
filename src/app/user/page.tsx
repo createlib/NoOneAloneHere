@@ -6,13 +6,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus } from 'lucide-react';
+import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FollowModal from '@/components/FollowModal';
 import KeyMemoModal from '@/components/KeyMemoModal';
 import PlaylistModal from '@/components/PlaylistModal';
+import PlaylistDetailModal from '@/components/PlaylistDetailModal';
 
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -61,6 +62,8 @@ function UserProfileContent() {
   const [loading, setLoading] = useState(true);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
+  const [isPlaylistDetailOpen, setIsPlaylistDetailOpen] = useState(false);
+  const [viewingPlaylist, setViewingPlaylist] = useState<any>(null);
   const [mediaRefreshKey, setMediaRefreshKey] = useState(0);
   const [isMemoOpen, setIsMemoOpen] = useState(false);
   
@@ -694,16 +697,30 @@ function UserProfileContent() {
                                               </div>
                                           ) : (
                                               userPlaylists.map(pl => (
-                                                  <div key={pl.id} onClick={() => { if(hasPlaylistPermission){ setEditingPlaylistId(pl.id); setIsPlaylistModalOpen(true); } }} className={`bg-[#fffdf9] p-4 rounded-sm border border-[#e8dfd1] shadow-sm hover:border-[#b8860b]/50 transition-colors group ${hasPlaylistPermission ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                                                      {pl.coverImageUrl ? (
-                                                          <img src={pl.coverImageUrl} className="w-full aspect-video object-cover rounded-sm mb-3 group-hover:opacity-90 transition-opacity" />
-                                                      ) : (
-                                                          <div className="w-full aspect-video bg-[#f0ebdd] flex items-center justify-center rounded-sm mb-3 border border-[#e8dfd1]/50 group-hover:bg-[#e8dfd1] transition-colors">
-                                                              <FileText className="text-[#c8b9a6] w-8 h-8" />
+                                                  <div key={pl.id} onClick={() => { setViewingPlaylist(pl); setIsPlaylistDetailOpen(true); }} className="bg-[#fffdf9] p-3 sm:p-4 rounded-sm border border-[#e8dfd1] shadow-sm hover:border-[#b8860b]/50 hover:shadow-md transition-all group cursor-pointer flex flex-col h-full">
+                                                      <div className="w-full aspect-video bg-[#f0ebdd] relative overflow-hidden rounded-sm mb-3 border border-[#e8dfd1]/50 group-hover:border-[#b8860b]/30">
+                                                          {pl.coverImageUrl ? (
+                                                              <img src={pl.coverImageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                          ) : (
+                                                              <div className="absolute inset-0 flex items-center justify-center group-hover:bg-[#e8dfd1] transition-colors">
+                                                                  <FileText className="text-[#c8b9a6] w-8 h-8" />
+                                                              </div>
+                                                          )}
+                                                          
+                                                          {/* YouTube style right overlay */}
+                                                          <div className="absolute top-0 right-0 bottom-0 w-1/3 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white transition-all group-hover:bg-black/70">
+                                                              <span className="font-bold font-mono text-sm sm:text-base">{pl.items?.length || 0}</span>
+                                                              <List size={16} className="mt-1 opacity-80" />
                                                           </div>
-                                                      )}
-                                                      <h3 className="font-bold text-[#3e2723] truncate group-hover:text-[#b8860b] transition-colors">{pl.name}</h3>
-                                                      <p className="text-xs text-[#a09080] mt-1 font-mono">{pl.items?.length || 0} ITEMS</p>
+                                                          
+                                                          {/* Play all overlay on hover */}
+                                                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                              <div className="w-10 h-10 bg-[#b8860b] rounded-full flex items-center justify-center text-white shadow-lg transform scale-90 group-hover:scale-100 transition-all">
+                                                                  <Play size={18} className="ml-1" fill="white" />
+                                                              </div>
+                                                          </div>
+                                                      </div>
+                                                      <h3 className="font-bold text-[#3e2723] text-sm line-clamp-2 leading-snug group-hover:text-[#b8860b] transition-colors">{pl.name}</h3>
                                                   </div>
                                               ))
                                           )}
@@ -746,6 +763,18 @@ function UserProfileContent() {
               }}
           />
       )}
+
+      <PlaylistDetailModal
+          isOpen={isPlaylistDetailOpen}
+          onClose={() => setIsPlaylistDetailOpen(false)}
+          playlist={viewingPlaylist}
+          canEdit={hasPlaylistPermission && viewingPlaylist?.authorId === user?.uid}
+          onEdit={() => {
+              setEditingPlaylistId(viewingPlaylist?.id || null);
+              setIsPlaylistDetailOpen(false);
+              setIsPlaylistModalOpen(true);
+          }}
+      />
     </div>
   );
 }
