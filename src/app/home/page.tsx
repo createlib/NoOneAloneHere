@@ -9,7 +9,7 @@ import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 
 // Use a hardcoded appId or fetch from environment/config
-const APP_ID = '1:803209683213:web:b62d13784fa2bbbb9f5044';
+const APP_ID = '3Q113i1Uu472zY2iO2uH';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -33,9 +33,11 @@ export default function Home() {
       setDataLoading(true);
       try {
         // Fetch Profile
+        let profileUserId = user.uid;
         const docSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data'));
         if (docSnap.exists()) {
           const profileData = docSnap.data();
+          profileUserId = profileData.userId;
           setMyProfile(profileData);
           if (profileData.userId === 'admin') setIsAdmin(true);
         } else {
@@ -51,7 +53,7 @@ export default function Home() {
             snapHost.forEach(d => {
                 const evt = d.data();
                 if (!evt.endTimestamp || evt.endTimestamp >= now) {
-                    const isHost = evt.organizerId === user.uid || evt.authorId === user.uid;
+                    const isHost = evt.organizerId === user.uid || evt.organizerId === profileUserId || evt.authorId === user.uid;
                     if (isHost) {
                         hostEvents.push({ id: d.id, ...evt });
                     }
