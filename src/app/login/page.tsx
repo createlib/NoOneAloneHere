@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { ArrowLeft, Anchor, Ship, Eye, EyeOff, LoaderCircle } from 'lucide-react';
 
-const APP_ID = '1:803209683213:web:b62d13784fa2bbbb9f5044';
+const APP_ID = 'NOAH_APP_v1';
 
 export default function Login() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function Login() {
 
   useEffect(() => {
     if (user && !user.isAnonymous && !loading) {
-      router.push('/home'); // Redirect to dashboard if already logged in properly
+      router.push('/user'); // Redirect to My Page if already logged in properly
     }
   }, [user, loading, router]);
 
@@ -40,7 +40,7 @@ export default function Login() {
 
     if (userid === 'admin' && password === 'admin') {
         localStorage.setItem('isAdminMock', 'true');
-        router.push('/home');
+        router.push('/user');
         return;
     }
 
@@ -66,7 +66,7 @@ export default function Login() {
         }
 
         await signInWithEmailAndPassword(auth, email, password);
-        showNotif('乗船しました。ホームへ移動します', 'success');
+        showNotif('乗船しました。マイページへ移動します', 'success');
         // Redirection happens automatically via useEffect
     } catch (error: any) {
         console.error(error);
