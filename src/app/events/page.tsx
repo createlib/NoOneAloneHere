@@ -1270,7 +1270,7 @@ function EventsContent() {
                                         </div>
                                         <button onClick={() => searchLocation('event')} type="button" className="bg-[#3e2723] text-[#d4af37] px-4 rounded-sm text-sm font-bold whitespace-nowrap hover:bg-[#2a1a17] tracking-widest border border-[#b8860b]">検索</button>
                                     </div>
-                                    <button onClick={() => { setEventModalOpen(false); setAdjustMode('event'); }} type="button" className="w-full py-2 bg-white border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors flex items-center justify-center gap-1 tracking-widest shadow-sm mb-3">
+                                    <button onClick={() => { setEventModalOpen(false); setAdjustMode('event'); setViewMode('map'); }} type="button" className="w-full py-2 bg-white border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors flex items-center justify-center gap-1 tracking-widest shadow-sm mb-3">
                                         <MapPin className="w-4 h-4 text-brand-500"/> (微調整) 現在のピンを地図で動かす
                                     </button>
                                     {adjustCoords && <p className="text-[10px] text-brand-500 mb-3 text-center">緯度: {adjustCoords.lat.toFixed(4)}, 経度: {adjustCoords.lng.toFixed(4)}</p>}
@@ -1340,7 +1340,7 @@ function EventsContent() {
                             </div>
                             {jobFormData.workStyle !== 'フルリモート' && (
                                 <div className="p-3 border border-brand-200 rounded-sm bg-brand-50 mt-2">
-                                    <button onClick={() => { setJobModalOpen(false); setAdjustMode('job'); }} type="button" className="w-full py-2 bg-white border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors flex items-center justify-center gap-1 mb-2 shadow-sm tracking-widest">
+                                    <button onClick={() => { setJobModalOpen(false); setAdjustMode('job'); setViewMode('map'); }} type="button" className="w-full py-2 bg-white border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors flex items-center justify-center gap-1 mb-2 shadow-sm tracking-widest">
                                         <MapPin className="w-4 h-4 text-brand-500" /> 地図で微調整する
                                     </button>
                                     {adjustCoords && <p className="text-[10px] text-brand-500 mb-3 text-center">緯度: {adjustCoords.lat.toFixed(4)}, 経度: {adjustCoords.lng.toFixed(4)}</p>}
