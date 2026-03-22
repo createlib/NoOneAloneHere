@@ -6,14 +6,23 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, Ship, Hourglass, Compass, User as UserIcon, Bell, Settings, Lock, Share, Image as ImageIcon, ChevronRight, Dna, FileText, Check, ShieldHalf, Key, Play, CheckCircle2 } from 'lucide-react';
+import { Anchor, Ship, Hourglass, Compass, User as UserIcon, Bell, Settings, Lock, Share, Image as ImageIcon, ChevronRight, Dna, FileText, Check, ShieldHalf, Key, Play, CheckCircle2, MapPin } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import FollowModal from '@/components/FollowModal';
+
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 function formatText(text: string) {
   if (!text) return '';
-  return text.replace(/\n/g, '<br />'); // Simple format for now
+  const html = marked.parse(text) as string;
+  // Fallback if window is undefined (SSR)
+  if (typeof window === 'undefined') {
+      return html;
+  }
+  return DOMPurify.sanitize(html);
 }
 
 const OS_THEMES: Record<string, { bg: string, main: string, sub: string }> = {
@@ -46,12 +55,16 @@ function UserProfileContent() {
   const [followingCount, setFollowingCount] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [mutualCount, setMutualCount] = useState(0);
+  const [followModalType, setFollowModalType] = useState<'following'|'followers'|'mutual'|null>(null);
   
   const [activeTab, setActiveTab] = useState<'profile' | 'media'>('profile');
-  const [mediaTab, setMediaTab] = useState<'videos' | 'podcasts' | 'playlists'>('videos');
+  const [mediaTab, setMediaTab] = useState<'videos' | 'podcasts' | 'playlists' | 'liked-videos' | 'liked-podcasts'>('videos');
 
   const [userVideos, setUserVideos] = useState<any[]>([]);
   const [userPodcasts, setUserPodcasts] = useState<any[]>([]);
+  const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
+  const [likedVideos, setLikedVideos] = useState<any[]>([]);
+  const [likedPodcasts, setLikedPodcasts] = useState<any[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
 
   useEffect(() => {
@@ -136,6 +149,33 @@ function UserProfileContent() {
         const pods = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         pods.sort((a: any, b: any) => new Date(b.createdAt || b.updatedAt || 0).getTime() - new Date(a.createdAt || a.updatedAt || 0).getTime());
         setUserPodcasts(pods);
+
+        const playRef = collection(db, 'artifacts', APP_ID, 'users', targetUid, 'playlists');
+        const playSnap = await getDocs(playRef);
+        const lists = playSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        lists.sort((a: any, b: any) => (b.updatedAt || b.createdAt || 0) - (a.createdAt || a.updatedAt || 0));
+        setUserPlaylists(lists);
+
+        if (user && targetUid === user.uid) {
+            const allVidSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos'));
+            const lvPromises = allVidSnap.docs.map(async (d) => {
+                const lSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'videos', d.id, 'likes', user.uid));
+                if (lSnap.exists()) return { id: d.id, ...d.data() };
+                return null;
+            });
+            const lvResults = await Promise.all(lvPromises);
+            setLikedVideos(lvResults.filter(v => v !== null));
+
+            const allPodSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts'));
+            const lpPromises = allPodSnap.docs.map(async (d) => {
+                const lSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', d.id, 'likes', user.uid));
+                if (lSnap.exists()) return { id: d.id, ...d.data() };
+                return null;
+            });
+            const lpResults = await Promise.all(lpPromises);
+            setLikedPodcasts(lpResults.filter(p => p !== null));
+        }
+
       } catch (e) {
         console.error("Error loading user media:", e);
       } finally {
@@ -280,15 +320,21 @@ function UserProfileContent() {
                           )}
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-2 py-4 border-t border-[#e8dfd1] relative z-20">
-                          <div className="text-center">
+                      <div className={`grid ${isMutual || isSelf ? 'grid-cols-3' : 'grid-cols-2'} gap-2 py-4 border-t border-[#e8dfd1] relative z-20`}>
+                          <button onClick={() => setFollowModalType('following')} className="text-center hover:bg-[#f7f5f0] transition-colors rounded-sm py-1">
                               <span className="block font-bold text-[#3e2723] text-lg font-serif">{followingCount}</span>
                               <span className="text-xs text-[#8b6a4f] font-medium tracking-widest">フォロー中</span>
-                          </div>
-                          <div className="text-center border-l border-[#e8dfd1]">
+                          </button>
+                          <button onClick={() => setFollowModalType('followers')} className="text-center border-l border-[#e8dfd1] hover:bg-[#f7f5f0] transition-colors rounded-sm py-1">
                               <span className="block font-bold text-[#3e2723] text-lg font-serif">{followersCount}</span>
                               <span className="text-xs text-[#8b6a4f] font-medium tracking-widest">フォロワー</span>
-                          </div>
+                          </button>
+                          {(isMutual || isSelf) && (
+                              <button onClick={() => setFollowModalType('mutual')} className="text-center border-l border-[#e8dfd1] hover:bg-[#f7f5f0] transition-colors rounded-sm py-1">
+                                  <span className="block font-bold text-[#b8860b] text-lg font-serif">-</span>
+                                  <span className="text-xs text-[#b8860b] font-medium tracking-widest">共通の航海士</span>
+                              </button>
+                          )}
                       </div>
 
                       <div className="py-4 border-t border-[#e8dfd1] relative z-20">
@@ -329,7 +375,7 @@ function UserProfileContent() {
                           </div>
                           {(isMutual || isSelf) ? (
                               <div className="relative mt-6">
-                                  <div className="relative z-10 prose prose-sm max-w-none text-[#5c4a3d] pl-6 border-l-2 border-[#d4af37]/30" dangerouslySetInnerHTML={{ __html: formatText(userData.message) }}></div>
+                                  <div className="relative z-10 prose prose-sm max-w-none text-[#5c4a3d]" dangerouslySetInnerHTML={{ __html: formatText(userData.message) }}></div>
                               </div>
                           ) : (
                               <div className="py-8 bg-[#f7f5f0] border border-dashed border-[#e8dfd1] text-center mt-4 rounded-sm">
@@ -392,96 +438,149 @@ function UserProfileContent() {
                               <button onClick={() => setMediaTab('podcasts')} className={`px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all ${mediaTab === 'podcasts' ? 'bg-[#b8860b] text-[#fffdf9] shadow-md border border-[#b8860b]' : 'bg-[#fffdf9] text-[#725b3f] hover:bg-[#f7f5f0] border border-[#e8dfd1]'}`}>
                                   音声 ({userPodcasts.length})
                               </button>
+                              <button onClick={() => setMediaTab('playlists')} className={`px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all ${mediaTab === 'playlists' ? 'bg-[#b8860b] text-[#fffdf9] shadow-md border border-[#b8860b]' : 'bg-[#fffdf9] text-[#725b3f] hover:bg-[#f7f5f0] border border-[#e8dfd1]'}`}>
+                                  プレイリスト ({userPlaylists.length})
+                              </button>
+                              {isSelf && (
+                                  <>
+                                      <button onClick={() => setMediaTab('liked-videos')} className={`px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all flex items-center gap-1 ${mediaTab === 'liked-videos' ? 'bg-[#b8860b] text-[#fffdf9] shadow-md border border-[#b8860b]' : 'bg-[#fffdf9] text-[#725b3f] hover:bg-[#f7f5f0] border border-[#e8dfd1]'}`}>
+                                          お気に入り(動画) <Lock size={12} className="opacity-70" />
+                                      </button>
+                                      <button onClick={() => setMediaTab('liked-podcasts')} className={`px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all flex items-center gap-1 ${mediaTab === 'liked-podcasts' ? 'bg-[#b8860b] text-[#fffdf9] shadow-md border border-[#b8860b]' : 'bg-[#fffdf9] text-[#725b3f] hover:bg-[#f7f5f0] border border-[#e8dfd1]'}`}>
+                                          お気に入り(音声) <Lock size={12} className="opacity-70" />
+                                      </button>
+                                  </>
+                              )}
                           </div>
                       </div>
 
                       {mediaLoading ? (
-                          <div className="text-center py-20 text-[#a09080] font-bold tracking-widest text-sm">読み込み中...</div>
-                      ) : mediaTab === 'videos' ? (
-                          userVideos.length === 0 ? (
-                              <div className="bg-[#fffdf9] p-10 text-center rounded-sm border border-[#e8dfd1] shadow-sm">
-                                  <p className="text-[#a09080] font-bold tracking-widest text-sm">投稿された動画がありません</p>
-                              </div>
-                          ) : (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                  {userVideos.map(v => {
-                                      const date = new Date(v.createdAt || 0);
-                                      const dateStr = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
-                                      return (
-                                          <Link key={v.id} href={`/media/videos/${v.id}`} className="video-card flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-[#e8dfd1] shadow-sm hover:shadow-xl w-full h-full">
-                                              <div className="relative w-full aspect-video bg-[#000] overflow-hidden">
-                                                  <img src={v.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Image'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={v.title} />
-                                                  <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 flex items-center justify-center group-hover:opacity-100">
-                                                      <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-transform duration-300">
-                                                          <Play className="text-white text-xl ml-1 fill-white" />
+                          <div className="col-span-full text-center py-20 text-[#a09080] font-bold tracking-widest text-sm">読み込み中...</div>
+                      ) : (
+                          <>
+                              {(mediaTab === 'videos' || mediaTab === 'liked-videos') && (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 pb-12">
+                                      {mediaTab === 'videos' && userVideos.length === 0 && (
+                                          <div className="col-span-full flex flex-col items-center justify-center text-[#a09080] py-20 bg-[#fffdf9] rounded-sm border border-dashed border-[#e8dfd1]">
+                                              <Play className="text-4xl mb-3 text-[#e8dfd1]" size={40} />
+                                              <p className="font-bold tracking-widest text-sm">投稿された動画はありません。</p>
+                                          </div>
+                                      )}
+                                      {mediaTab === 'liked-videos' && likedVideos.length === 0 && (
+                                          <div className="col-span-full flex flex-col items-center justify-center text-[#a09080] py-20 bg-[#fffdf9] rounded-sm border border-dashed border-[#e8dfd1]">
+                                              <Play className="text-4xl mb-3 text-[#e8dfd1]" size={40} />
+                                              <p className="font-bold tracking-widest text-sm">お気に入りした動画はありません。</p>
+                                          </div>
+                                      )}
+                                      {(mediaTab === 'videos' ? userVideos : likedVideos).map((v: any) => (
+                                          <Link href={`/media/videos/${v.id}`} key={v.id} className="flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-[#e8dfd1] shadow-sm hover:shadow-md hover:border-[#b8860b] transition-all w-full h-full">
+                                              <div className="relative w-full aspect-video bg-[#000] overflow-hidden border-b border-[#e8dfd1]">
+                                                  <img src={v.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Image'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                  <div className="absolute inset-0 bg-black/30 opacity-0 transition-all duration-300 flex items-center justify-center group-hover:opacity-100">
+                                                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-transform duration-300 group-hover:scale-110">
+                                                          <Play className="text-white text-lg ml-1 border-white" fill="white" />
                                                       </div>
                                                   </div>
                                               </div>
                                               <div className="p-4 flex gap-3 flex-1">
-                                                  <img src={v.authorIcon || 'https://via.placeholder.com/40?text=U'} className="w-10 h-10 rounded-full border border-[#e8dfd1] object-cover flex-shrink-0 shadow-sm" alt={v.authorName} />
                                                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                                                       <div>
-                                                          <h3 className="text-sm font-bold text-[#3e2723] leading-snug line-clamp-2 mb-1.5 group-hover:text-[#b8860b] transition-colors font-serif tracking-wide">{v.title}</h3>
-                                                          <div className="flex items-center text-xs text-[#8b6a4f] mb-1">
-                                                              <span className="truncate hover:text-[#5c4a3d] transition-colors">{v.authorName || '名無し'}</span>
-                                                              <CheckCircle2 size={10} className="ml-1 text-[#d4af37]" />
+                                                          <h3 className="text-sm font-bold text-[#3e2723] leading-snug line-clamp-2 mb-1.5 group-hover:text-[#b8860b] transition-colors font-serif tracking-wide">{v.title || 'タイトルなし'}</h3>
+                                                      </div>
+                                                      <p className="text-[9px] text-[#a09080] font-mono tracking-widest">{new Date(v.createdAt).toLocaleDateString()}</p>
+                                                  </div>
+                                              </div>
+                                          </Link>
+                                      ))}
+                                  </div>
+                              )}
+
+                              {(mediaTab === 'podcasts' || mediaTab === 'liked-podcasts') && (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 pb-12">
+                                      {mediaTab === 'podcasts' && userPodcasts.length === 0 && (
+                                          <div className="col-span-full flex flex-col items-center justify-center text-[#a09080] py-20 bg-[#fffdf9] rounded-sm border border-dashed border-[#e8dfd1]">
+                                              <Play className="text-4xl mb-3 text-[#e8dfd1]" size={40} />
+                                              <p className="font-bold tracking-widest text-sm">投稿された音声はありません。</p>
+                                          </div>
+                                      )}
+                                      {mediaTab === 'liked-podcasts' && likedPodcasts.length === 0 && (
+                                          <div className="col-span-full flex flex-col items-center justify-center text-[#a09080] py-20 bg-[#fffdf9] rounded-sm border border-dashed border-[#e8dfd1]">
+                                              <Play className="text-4xl mb-3 text-[#e8dfd1]" size={40} />
+                                              <p className="font-bold tracking-widest text-sm">お気に入りした音声はありません。</p>
+                                          </div>
+                                      )}
+                                      {(mediaTab === 'podcasts' ? userPodcasts : likedPodcasts).map((p: any) => {
+                                          const plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
+                                          const dateStr = new Date(p.createdAt || p.updatedAt || Date.now()).toLocaleDateString();
+                                          return (
+                                              <Link href={`/media/podcasts/${p.id}`} key={p.id} className="flex flex-col bg-[#fffdf9] p-4 rounded-md border border-[#e8dfd1] shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full h-full">
+                                                  <div className="flex gap-3 sm:gap-4 items-start mb-3">
+                                                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-[#e8dfd1] relative shadow-inner mt-0.5">
+                                                          <img src={p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop'} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" />
+                                                          <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
+                                                              <Play className="text-white/90 text-xl shadow-sm drop-shadow-md group-hover:scale-110 transition-transform" fill="white" />
                                                           </div>
                                                       </div>
-                                                      <p className="text-[10px] text-[#a09080] font-mono">{dateStr}</p>
-                                                  </div>
-                                              </div>
-                                          </Link>
-                                      );
-                                  })}
-                              </div>
-                          )
-                      ) : (
-                          userPodcasts.length === 0 ? (
-                              <div className="bg-[#fffdf9] p-10 text-center rounded-sm border border-[#e8dfd1] shadow-sm">
-                                  <p className="text-[#a09080] font-bold tracking-widest text-sm">投稿された音声がありません</p>
-                              </div>
-                          ) : (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                  {userPodcasts.map(p => {
-                                      const date = new Date(p.createdAt || p.updatedAt || Date.now());
-                                      const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
-                                      const plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
-                                      
-                                      return (
-                                          <Link key={p.id} href={`/media/podcasts/${p.id}`} className="flex flex-col bg-[#fffdf9] p-4 rounded-md border border-[#e8dfd1] shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full h-full">
-                                              <div className="flex gap-3 sm:gap-4 items-start mb-3">
-                                                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-[#e8dfd1] relative shadow-inner mt-0.5">
-                                                      <img src={p.thumbnailUrl || 'https://via.placeholder.com/300x300?text=CAST'} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" alt={p.title} />
-                                                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
-                                                          <Play className="text-white/90 w-6 h-6 fill-white shadow-sm drop-shadow-md" />
+                                                      <div className="flex-1 min-w-0 flex flex-col justify-center h-14 sm:h-16">
+                                                          <h3 className="text-sm sm:text-base font-bold text-[#3e2723] leading-snug line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors m-0 tracking-wide">{p.title || 'タイトルなし'}</h3>
                                                       </div>
                                                   </div>
-                                                  <div className="flex-1 min-w-0 flex flex-col justify-center h-14 sm:h-16">
-                                                      <h3 className="text-sm sm:text-base font-bold text-[#3e2723] leading-snug line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors m-0 tracking-wide">{p.title || 'タイトルなし'}</h3>
+                                                  
+                                                  <p className="text-[11px] sm:text-xs text-[#8b6a4f] line-clamp-2 leading-relaxed mb-4 flex-1 tracking-wide">{plainDesc}</p>
+                                                  
+                                                  <div className="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-[#e8dfd1]/70">
+                                                      <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                                                          <img src={p.authorIcon || 'https://via.placeholder.com/24?text=U'} className="w-5 h-5 rounded-full border border-[#e8dfd1] object-cover flex-shrink-0 shadow-sm" alt={p.authorName} />
+                                                          <span className="text-[10px] text-[#725b3f] truncate font-bold tracking-widest">{p.authorName || '名無し'}</span>
+                                                      </div>
+                                                      <div className="flex items-center gap-2 shrink-0">
+                                                          <span className="text-[9px] text-[#a09080] font-mono">{dateStr}</span>
+                                                      </div>
                                                   </div>
+                                              </Link>
+                                          );
+                                      })}
+                                  </div>
+                              )}
+
+                              {mediaTab === 'playlists' && (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
+                                      {userPlaylists.length === 0 ? (
+                                          <div className="col-span-full py-20 bg-[#fffdf9] rounded-sm border border-dashed border-[#e8dfd1] flex flex-col items-center justify-center">
+                                              <FileText className="text-[#e8dfd1] w-12 h-12 mb-3" />
+                                              <p className="text-[#a09080] text-sm font-bold tracking-widest">プレイリストはまだありません</p>
+                                          </div>
+                                      ) : (
+                                          userPlaylists.map(pl => (
+                                              <div key={pl.id} className="bg-[#fffdf9] p-4 rounded-sm border border-[#e8dfd1] shadow-sm hover:border-[#b8860b]/50 transition-colors group cursor-not-allowed">
+                                                  {pl.coverImageUrl ? (
+                                                      <img src={pl.coverImageUrl} className="w-full aspect-video object-cover rounded-sm mb-3 group-hover:opacity-90 transition-opacity" />
+                                                  ) : (
+                                                      <div className="w-full aspect-video bg-[#f0ebdd] flex items-center justify-center rounded-sm mb-3 border border-[#e8dfd1]/50 group-hover:bg-[#e8dfd1] transition-colors">
+                                                          <FileText className="text-[#c8b9a6] w-8 h-8" />
+                                                      </div>
+                                                  )}
+                                                  <h3 className="font-bold text-[#3e2723] truncate group-hover:text-[#b8860b] transition-colors">{pl.name}</h3>
+                                                  <p className="text-xs text-[#a09080] mt-1 font-mono">{pl.items?.length || 0} ITEMS</p>
                                               </div>
-                                              
-                                              <p className="text-[11px] sm:text-xs text-[#8b6a4f] line-clamp-2 leading-relaxed mb-4 flex-1 tracking-wide">{plainDesc}</p>
-                                              
-                                              <div className="flex flex-wrap items-center justify-between gap-2 mt-auto pt-3 border-t border-[#e8dfd1]/70">
-                                                  <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                                                      <img src={p.authorIcon || 'https://via.placeholder.com/24?text=U'} className="w-5 h-5 rounded-full border border-[#e8dfd1] object-cover flex-shrink-0 shadow-sm" alt={p.authorName} />
-                                                      <span className="text-[10px] text-[#725b3f] truncate font-bold tracking-widest">{p.authorName || '名無し'}</span>
-                                                  </div>
-                                                  <div className="flex items-center gap-2 shrink-0">
-                                                      <span className="text-[9px] text-[#a09080] font-mono">{dateStr}</span>
-                                                  </div>
-                                              </div>
-                                          </Link>
-                                      );
-                                  })}
-                              </div>
-                          )
+                                          ))
+                                      )}
+                                  </div>
+                              )}
+                          </>
                       )}
                   </div>
               )}
           </div>
       </div>
+
+      <FollowModal 
+          isOpen={followModalType !== null} 
+          onClose={() => setFollowModalType(null)} 
+          type={followModalType} 
+          targetUid={targetUid || user?.uid || ''} 
+          myUid={user?.uid} 
+      />
     </div>
   );
 }

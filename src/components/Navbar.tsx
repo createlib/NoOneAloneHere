@@ -2,12 +2,24 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Anchor, Ship, Hourglass, Compass, Film, Podcast, User, Bell, X } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Anchor, Ship, Hourglass, Compass, Film, Podcast, User, Bell, X, LogOut } from 'lucide-react'
+import { auth } from '@/lib/firebase'
+import { signOut } from 'firebase/auth'
 
 export default function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [isTheaterOpen, setIsTheaterOpen] = useState(false)
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   return (
     <>
@@ -51,14 +63,28 @@ export default function Navbar() {
             <Link href="/user" className={`transition-colors flex items-center gap-2 font-bold text-sm tracking-wide ${pathname === '/user' ? 'text-brand-600 border-b-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
               <User size={16} /> マイページ
             </Link>
+            {pathname === '/user' && (
+              <>
+                <div className="h-6 w-px bg-brand-200 mx-1"></div>
+                <button onClick={handleLogout} className="text-sm font-bold text-brand-400 hover:text-brand-800 transition-colors flex items-center gap-2">
+                    <span className="tracking-widest">下船する</span>
+                    <LogOut size={16} />
+                </button>
+              </>
+            )}
           </div>
           
           {/* Mobile Header Action */}
-          <div className="lg:hidden flex items-center">
+          <div className="lg:hidden flex items-center gap-1">
             <Link href="/notifications" className="p-2 text-brand-400 hover:text-brand-600 transition-colors relative" title="通知">
               <Bell size={20} />
               <span className="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-brand-500 rounded-full border-2 border-brand-50"></span>
             </Link>
+            {pathname === '/user' && (
+              <button onClick={handleLogout} className="p-2 text-brand-400 hover:text-brand-600 transition-colors" title="下船する">
+                <LogOut size={20} />
+              </button>
+            )}
           </div>
         </div>
       </nav>

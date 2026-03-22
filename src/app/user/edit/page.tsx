@@ -62,7 +62,7 @@ type CareerItem = { company: string, role: string, start: string, end: string, d
 function ProfileEditContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const targetUid = searchParams.get('uid') || (user ? user.uid : null);
   
   const [loading, setLoading] = useState(true);
@@ -114,6 +114,7 @@ function ProfileEditContent() {
 
   useEffect(() => {
     async function init() {
+        if (authLoading) return;
         if (!user || !targetUid) {
             if (!user) router.push('/login');
             return;
@@ -185,7 +186,7 @@ function ProfileEditContent() {
         }
     }
     init();
-  }, [user, targetUid, router]);
+  }, [user, authLoading, targetUid, router]);
 
   useEffect(() => {
      // Calculate Live Score
