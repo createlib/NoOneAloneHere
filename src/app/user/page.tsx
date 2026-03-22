@@ -330,7 +330,7 @@ function UserProfileContent() {
 
                   <div className="px-6 relative">
                       <div className="-mt-12 flex justify-between items-end mb-4 relative">
-                          <div className={`h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20 flex items-center justify-center text-[#c8b9a6] ${isLive ? 'ring-4 ring-red-500 animate-pulse cursor-pointer' : ''}`} onClick={() => isLive && router.push(`/media/live_room/${targetUid}`)}>
+                          <div className={`h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20 flex items-center justify-center text-[#c8b9a6] ${isLive ? 'ring-4 ring-red-500 animate-pulse cursor-pointer' : ''}`} onClick={() => isLive && router.push(`/media/live_room?roomId=${targetUid}`)}>
                               {userData.photoURL ? (
                                   <img src={userData.photoURL} alt="Profile" className="w-full h-full object-cover" />
                               ) : (
@@ -343,7 +343,7 @@ function UserProfileContent() {
                               )}
                           </div>
                           {isLive && (
-                              <div className="absolute -bottom-3 left-12 sm:left-14 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-3 py-1 rounded-sm text-[10px] font-bold tracking-widest border border-[#b8860b] shadow-md z-30 flex items-center gap-1 whitespace-nowrap cursor-pointer hover:bg-[#b8860b] transition-colors" onClick={() => router.push(`/media/live_room/${targetUid}`)}>
+                              <div className="absolute -bottom-3 left-12 sm:left-14 transform -translate-x-1/2 bg-[#d4af37] text-[#2a1a17] px-3 py-1 rounded-sm text-[10px] font-bold tracking-widest border border-[#b8860b] shadow-md z-30 flex items-center gap-1 whitespace-nowrap cursor-pointer hover:bg-[#b8860b] transition-colors" onClick={() => router.push(`/media/live_room?roomId=${targetUid}`)}>
                                   <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span> LIVE配信中
                               </div>
                           )}
@@ -381,7 +381,7 @@ function UserProfileContent() {
                               <div className="mt-4 flex flex-col gap-2">
                                   {['guardian', 'covenant', 'admin'].includes(rank) && (
                                       isLive ? (
-                                          <Link href={`/media/live_room/${user?.uid || ''}`} className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 border border-red-200 rounded-sm text-xs font-bold hover:bg-red-100 transition-all shadow-sm tracking-widest w-full sm:w-auto mt-2">
+                                          <Link href={`/media/live_room?roomId=${user?.uid || ''}`} className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-50 text-red-600 border border-red-200 rounded-sm text-xs font-bold hover:bg-red-100 transition-all shadow-sm tracking-widest w-full sm:w-auto mt-2">
                                               <SatelliteDish size={16} className="animate-pulse" /> 配信ルームに戻る
                                           </Link>
                                       ) : (

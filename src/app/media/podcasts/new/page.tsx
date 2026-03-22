@@ -331,7 +331,7 @@ function PodcastPostInternalForm() {
                     await Promise.all(notifyPromises);
                 } catch (e) { console.error(e); }
 
-                router.push(`/media/live_room/${finalAuthorId}`);
+                router.push(`/media/live_room?roomId=${finalAuthorId}`);
                 return;
             }
 

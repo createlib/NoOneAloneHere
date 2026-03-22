@@ -248,7 +248,7 @@ export default function PodcastsPage() {
                         </h2>
                         <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-4 pt-1 no-scrollbar snap-x px-1 sm:px-0">
                             {liveRooms.map(r => (
-                                <Link key={r.id} href={`/media/live_room/${r.id}`} className="flex flex-col items-center gap-2 group w-[72px] sm:w-[88px] shrink-0 snap-start">
+                                <Link key={r.id} href={`/media/live_room?roomId=${r.id}`} className="flex flex-col items-center gap-2 group w-[72px] sm:w-[88px] shrink-0 snap-start">
                                     <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full p-[2px] bg-gradient-to-tr from-red-500 via-orange-400 to-[#b8860b] shadow-md group-hover:scale-105 transition-transform">
                                         <div className="w-full h-full bg-[#fffdf9] rounded-full p-[2px]">
                                             <img src={r.hostIcon || 'https://via.placeholder.com/150?text=U'} className="w-full h-full rounded-full object-cover" alt={r.hostName} />

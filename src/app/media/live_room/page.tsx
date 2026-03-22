@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, limit, getDocs, collection, addDoc } from 'firebase/firestore';
 import { db, APP_ID, storage } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,10 +19,18 @@ const LIVEKIT_API_SECRET = "IvJ9RG8pdaey7sKqJ8Hh9qFZxvYINz776eT6zStiLuL";
 const DEFAULT_ICON = 'https://via.placeholder.com/150/f7f5f0/c8b9a6?text=U';
 
 export default function LiveRoomClientPage() {
+    return (
+        <React.Suspense fallback={<div className="min-h-[100dvh] bg-[#1a110f] bg-texture flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#b8860b] border-t-transparent rounded-full animate-spin"></div></div>}>
+            <LiveRoomClientPageInner />
+        </React.Suspense>
+    );
+}
+
+function LiveRoomClientPageInner() {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const params = useParams();
-    const targetRoomId = params.id as string;
+    const searchParams = useSearchParams();
+    const targetRoomId = searchParams.get('roomId') as string;
 
     const [myProfile, setMyProfile] = useState<any>(null);
     const [myRank, setMyRank] = useState('arrival');
@@ -223,7 +231,7 @@ export default function LiveRoomClientPage() {
 
     // Actions
     const handleShare = () => {
-        const url = `${window.location.origin}/media/live_room/${targetRoomId}`;
+        const url = `${window.location.origin}/media/live_room?roomId=${targetRoomId}`;
         navigator.clipboard.writeText(url).then(() => showNotif('ライブ配信のURLをコピーしました！'));
     };
 
