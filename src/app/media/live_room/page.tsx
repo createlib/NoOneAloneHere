@@ -375,6 +375,17 @@ function LiveRoomClientPageInner() {
         }
     };
 
+    const formatText = (text: string) => {
+        if (!text) return '';
+        let rawHtml = '';
+        try {
+            rawHtml = marked.parse(text, { breaks: true }) as string;
+        } catch (e) {
+            rawHtml = text.replace(/\n/g, '<br>');
+        }
+        return DOMPurify.sanitize(rawHtml);
+    };
+
     if (!roomData) return null; // Avoid flicker
 
     const speakers = participants.filter(p => p.role === 'host' || p.role === 'speaker');

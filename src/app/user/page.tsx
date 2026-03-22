@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
-import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy, onSnapshot, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home, SatelliteDish } from 'lucide-react';
 
@@ -77,6 +77,7 @@ function UserProfileContent() {
   const [viewingPlaylist, setViewingPlaylist] = useState<any>(null);
   const [mediaRefreshKey, setMediaRefreshKey] = useState(0);
   const [isMemoOpen, setIsMemoOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   const [isFollowing, setIsFollowing] = useState(false);
   const [isMutual, setIsMutual] = useState(false);
@@ -134,8 +135,26 @@ function UserProfileContent() {
                mutuallyFollowing = true;
            }
            
-           // Load private data if mutual, self, or covenant
-           if (mutuallyFollowing || loadedData?.membershipRank === 'covenant' || selfViewing) {
+           // Load private data if mutual, self, covenant, or admin
+           let loadPrivData = mutuallyFollowing || loadedData?.membershipRank === 'covenant' || selfViewing;
+
+           // Check Admin Hook
+           let myAdmin = false;
+           if (selfViewing && loadedData?.membershipRank === 'admin') {
+               myAdmin = true;
+           } else if (!selfViewing && user) {
+               if (user.uid === "Zm7FWRopJKVfyzbp8KXXokMFjNC3") {
+                   myAdmin = true;
+               } else {
+                   const myRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', user.uid);
+                   const mySnap = await getDoc(myRef);
+                   if (mySnap.exists() && mySnap.data().membershipRank === 'admin') myAdmin = true;
+               }
+           }
+           setIsAdmin(myAdmin);
+           if (myAdmin) loadPrivData = true;
+
+           if (loadPrivData) {
              const privateRef = doc(db, 'artifacts', APP_ID, 'users', targetId, 'profile', 'data');
              const privateSnap = await getDoc(privateRef);
              if (privateSnap.exists()) {
@@ -239,6 +258,20 @@ function UserProfileContent() {
       });
       return () => unsub();
   }, [targetUid]);
+
+  const handleRankChange = async (newRank: string) => {
+      if (!isAdmin || !targetUid) return;
+      if (!confirm(`ユーザーのランクを「${newRank.toUpperCase()}」に変更しますか？`)) return;
+      try {
+          await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', targetUid), { membershipRank: newRank });
+          await setDoc(doc(db, 'artifacts', APP_ID, 'users', targetUid, 'profile', 'data'), { membershipRank: newRank }, { merge: true });
+          setUserData({ ...userData, membershipRank: newRank });
+          alert('ランクの変更が完了しました');
+      } catch (e) {
+          console.error(e);
+          alert('ランク変更時にエラーが発生しました。');
+      }
+  };
 
   const toggleFollow = async () => {
       if (!user || !targetUid || targetUid === user.uid) return;
@@ -347,14 +380,13 @@ function UserProfileContent() {
                                   <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span> LIVE配信中
                               </div>
                           )}
-                          <div className="mb-1 relative z-20">
-                              {isSelf ? (
-                                  <div className="flex flex-col items-end gap-1 w-full lg:w-auto">
-                                      <Link href="/user/edit" className="inline-flex items-center justify-center px-4 py-2 border border-[#b8860b] shadow-sm text-xs font-bold rounded-sm text-[#3e2723] bg-[#fffdf9] hover:bg-[#f7f5f0] transition-colors tracking-widest font-serif">
-                                          航海録を編集
-                                      </Link>
-                                  </div>
-                              ) : (
+                          <div className="mb-1 relative z-20 flex flex-wrap gap-2 justify-end">
+                              {(isSelf || isAdmin) && (
+                                  <Link href={`/user/edit${!isSelf ? '?uid='+targetUid : ''}`} className="inline-flex items-center justify-center px-4 py-2 border border-[#b8860b] shadow-sm text-xs font-bold rounded-sm text-[#3e2723] bg-[#fffdf9] hover:bg-[#f7f5f0] transition-colors tracking-widest font-serif">
+                                      {isSelf ? '航海録を編集' : '代理編集(Admin)'}
+                                  </Link>
+                              )}
+                              {!isSelf && (
                                   <button onClick={toggleFollow} className={`inline-flex items-center px-4 py-2 ${isFollowing ? 'border border-[#b8860b] text-[#3e2723] bg-[#fffdf9]' : 'border border-transparent bg-[#3e2723] text-[#f7f5f0] hover:bg-[#2a1a17]'} shadow-sm text-xs font-bold rounded-sm transition-colors tracking-widest font-serif`}>
                                       {isFollowing ? 'フォロー中' : 'フォロー'}
                                   </button>
@@ -374,6 +406,16 @@ function UserProfileContent() {
                           <div className="flex flex-wrap items-center gap-2 mt-1">
                               <p className="text-sm text-[#8b6a4f] font-mono font-medium tracking-wide">@{userData.userId || 'unknown'}</p>
                               {getRankBadge(rank)}
+                              {isAdmin && !isSelf && (
+                                  <select value={rank} onChange={(e) => handleRankChange(e.target.value)} className="text-[10px] sm:text-xs border border-[#e8dfd1] bg-[#fffdf9] text-[#3e2723] rounded-sm ml-1 px-1 py-0.5 outline-none font-bold">
+                                      <option value="arrival">ARRIVAL</option>
+                                      <option value="settler">SETTLER</option>
+                                      <option value="builder">BUILDER</option>
+                                      <option value="guardian">GUARDIAN</option>
+                                      <option value="covenant">COVENANT</option>
+                                      <option value="admin">ADMIN</option>
+                                  </select>
+                              )}
                               {isMutual && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7f5f0] text-[#725b3f] border border-[#e8dfd1] tracking-widest flex items-center"><Check size={10} className="mr-1"/>相互フォロー</span>}
                           </div>
 

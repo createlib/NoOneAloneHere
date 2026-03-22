@@ -41,48 +41,41 @@ export default function Home() {
 
         const now = new Date().toISOString();
 
-        // Fetch Hosting Events
+        // Fetch All Events processing both Hosting and Participating
         const eventsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'events');
         const snapHost = await getDocs(eventsRef);
         let hostEvents: any[] = [];
+        let joinedEvents: any[] = [];
+        
         snapHost.forEach(d => {
             const evt = d.data();
-            if (evt.organizerId === user.uid && (!evt.endTimestamp || evt.endTimestamp >= now)) {
-                hostEvents.push({ id: d.id, ...evt });
+            if (!evt.endTimestamp || evt.endTimestamp >= now) {
+                const isHost = evt.organizerId === user.uid || evt.authorId === user.uid;
+                const isPart = evt.participants?.includes(user.uid);
+                
+                if (isHost) {
+                    hostEvents.push({ id: d.id, ...evt });
+                }
+                if (isPart) {
+                    joinedEvents.push({ id: d.id, ...evt });
+                }
             }
         });
+
         hostEvents.sort((a,b) => {
             const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
             const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
             return tB - tA;
         });
-        setHostingEvents(hostEvents);
 
-        // Fetch Participating Events
-        const myJoinColl = collection(db, 'artifacts', APP_ID, 'users', user.uid, 'participating_events');
-        const snapJoin = await getDocs(myJoinColl);
-        
-        const eventPromises = snapJoin.docs.map(async (joinDoc) => {
-            const eventId = joinDoc.id; 
-            try {
-                const evtRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', eventId);
-                const evtSnap = await getDoc(evtRef);
-                if (evtSnap.exists()) {
-                    return { id: evtSnap.id, ...evtSnap.data() };
-                }
-            } catch (e) { }
-            return null; 
-        });
-
-        const allJoinedEvents = (await Promise.all(eventPromises)).filter(e => e !== null);
-        let joined = allJoinedEvents.filter((evt: any) => !evt.endTimestamp || evt.endTimestamp >= now);
-        joined.sort((a: any, b: any) => {
+        joinedEvents.sort((a,b) => {
             const dateA = new Date(a.startDate).getTime() || 0;
             const dateB = new Date(b.startDate).getTime() || 0;
             return dateA - dateB;
         });
-        
-        setParticipatingEvents(joined);
+
+        setHostingEvents(hostEvents);
+        setParticipatingEvents(joinedEvents);
 
       } catch (err) {
         console.error("Home Data Fetch Error:", err);

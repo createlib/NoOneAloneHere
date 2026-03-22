@@ -67,6 +67,37 @@ type JobData = {
     updatedAt?: any;
 };
 
+function EventParticipantsList({ uids }: { uids: string[] }) {
+    const [users, setUsers] = useState<any[]>([]);
+    
+    useEffect(() => {
+        if (!uids || uids.length === 0) return;
+        const fetchUsers = async () => {
+            const results = await Promise.all(uids.slice(0, 10).map(async (uid) => {
+                const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', uid));
+                if (snap.exists()) return { uid, ...snap.data() };
+                return null;
+            }));
+            setUsers(results.filter(Boolean));
+        };
+        fetchUsers();
+    }, [uids]);
+
+    if (users.length === 0) return <span className="text-sm font-bold text-brand-900 ml-2">0 人</span>;
+
+    return (
+        <div className="flex flex-col items-end gap-1.5 ml-2">
+            <span className="text-sm font-bold text-brand-900">{uids.length} 人</span>
+            <div className="flex flex-wrap gap-1 justify-end max-w-[150px]">
+                {users.map((u: any) => (
+                    <img key={u.uid} src={u.photoURL || 'https://via.placeholder.com/40?text=NOAH'} alt={u.name || 'User'} title={u.name || 'User'} className="w-6 h-6 rounded-full border border-brand-200 object-cover shadow-sm" />
+                ))}
+                {uids.length > 10 && <div className="w-6 h-6 rounded-full bg-brand-100 border border-brand-200 flex items-center justify-center text-[8px] font-bold text-brand-500 shadow-sm">+{uids.length - 10}</div>}
+            </div>
+        </div>
+    );
+}
+
 function EventsContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -1064,9 +1095,13 @@ function EventsContent() {
                                     <span className="text-xs font-bold text-brand-500 tracking-widest"><User className="w-4 h-4 inline mr-1 text-brand-400"/>主催者</span>
                                     <Link href={`/user/${selectedEvent.organizerId}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">{selectedEvent.organizerName}</Link>
                                 </div>
-                                <div className="flex justify-between items-center border-t border-brand-200 pt-2">
-                                    <span className="text-xs font-bold text-brand-500 tracking-widest opacity-80">参加予定人数</span>
-                                    <span className="text-sm font-bold text-brand-900">{selectedEvent.participantCount || 0} 人</span>
+                                <div className="flex justify-between items-start border-t border-brand-200 pt-3">
+                                    <span className="text-xs font-bold text-brand-500 tracking-widest mt-0.5 opacity-80 flex items-center gap-1"><User className="w-3.5 h-3.5"/> 参加予定人数</span>
+                                    {selectedEvent.isParticipantsPublic ? (
+                                        <EventParticipantsList uids={selectedEvent.participants || []} />
+                                    ) : (
+                                        <span className="text-sm font-bold text-brand-900 ml-2">{selectedEvent.participantCount || 0} 人</span>
+                                    )}
                                 </div>
                             </div>
                             
