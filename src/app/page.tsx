@@ -18,6 +18,16 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(10,5,0,0.7)_100%)] pointer-events-none z-0"></div>
         <div className="absolute bottom-0 left-0 w-full h-32 md:h-48 bg-gradient-to-t from-brand-50 to-transparent z-10 pointer-events-none"></div>
         
+        {/* Login / Register Buttons */}
+        <div className="absolute top-4 right-4 sm:top-8 sm:right-8 z-30 flex items-center gap-4">
+            <Link href="/login" className="text-xs font-bold text-brand-200 hover:text-white transition-colors tracking-widest border border-brand-200/50 hover:border-brand-200 px-4 py-2 rounded-sm bg-black/20 backdrop-blur-sm">
+                ログイン
+            </Link>
+            <Link href="/register" className="hidden sm:inline-flex text-xs font-bold text-brand-900 bg-[#d4af37] border border-[#b8860b] hover:bg-[#b8860b] transition-colors tracking-widest px-4 py-2 rounded-sm shadow-md shadow-[#d4af37]/20">
+                乗船する
+            </Link>
+        </div>
+
         <div className="z-20 flex flex-col items-center w-full max-w-5xl mt-[-2rem] md:mt-0">
           <div className="mb-4 w-full flex justify-center relative">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,253,249,0.35)_0%,transparent_50%)] pointer-events-none blur-xl"></div>

@@ -1,5 +1,4 @@
 'use client';
-import { Suspense } from 'react';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,7 +11,15 @@ import { Podcast, ArrowLeft, CloudUpload, Image as ImageIcon, Music, SatelliteDi
 
 const PRESET_TAGS = ['対談・インタビュー', 'ひとり語り', 'ノウハウ共有', '活動報告', 'ビジネス', '恋愛'];
 
-function PodcastPostPageContent() {
+export default function PodcastPostPage() {
+    return (
+        <React.Suspense fallback={<div className="min-h-screen bg-texture flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#b8860b] border-t-transparent rounded-full animate-spin"></div></div>}>
+            <PodcastPostInternalForm />
+        </React.Suspense>
+    );
+}
+
+function PodcastPostInternalForm() {
     const { user, loading } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -205,7 +212,6 @@ function PodcastPostPageContent() {
 
         let finalAudioUrl = '';
         let finalThumbUrl = '';
-        let finalIsEmbedMode = isEmbedMode;
 
         if (audioType !== 'live' && !editPid) {
             if (audioType === 'upload' && !audioFile) return alert('音声ファイルを選択してください');
@@ -352,6 +358,7 @@ function PodcastPostPageContent() {
 
             await uploadThumb();
 
+            let finalIsEmbedMode = isEmbedMode;
             if (editPid) {
                 const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', editPid));
                 if (snap.exists()) {
@@ -653,13 +660,4 @@ function PodcastPostPageContent() {
             )}
         </div>
     );
-}
-
-
-export default function PodcastPostPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-texture flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#b8860b] border-t-transparent rounded-full animate-spin"></div></div>}>
-      <PodcastPostPageContent />
-    </Suspense>
-  );
 }
