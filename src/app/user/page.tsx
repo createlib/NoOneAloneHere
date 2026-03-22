@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, Ship, Hourglass, Compass, User as UserIcon, Bell, Settings, Lock, Share, Image as ImageIcon, ChevronRight, Dna, FileText, Check, ShieldHalf, Key, Play, CheckCircle2, MapPin, Globe, Instagram, Twitter } from 'lucide-react';
+import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -366,6 +366,61 @@ function UserProfileContent() {
                               </div>
                           )}
                       </div>
+
+                      {isSelf && (
+                          <div className="my-4 relative z-20 pb-4">
+                              {isProfileComplete ? (
+                                  <div className="mb-4">
+                                      <Link href="/diagnostic" className="block w-full bg-gradient-to-r from-[#2a1a17] to-[#3e2723] border border-[#b8860b] text-[#f7f5f0] rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group relative overflow-hidden">
+                                          <div className="absolute inset-0" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg width=%2220%22 height=%2220%22 viewBox=%220 0 20 20%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ccircle cx=%222%22 cy=%222%22 r=%221%22 fill=%22%23ffffff%22 fill-opacity=%220.05%22/%3E%3C/svg%3E')" }}></div>
+                                          <div className="px-4 py-4 flex items-center justify-between relative z-10">
+                                              <div className="flex items-center gap-4">
+                                                  <div className="bg-[#d4af37]/20 rounded-full p-3 group-hover:scale-110 transition-transform border border-[#d4af37]/30">
+                                                      <Dna className="text-[#d4af37]" size={20} />
+                                                  </div>
+                                                  <div className="text-left">
+                                                      <p className="text-[10px] font-bold text-[#c8b9a6] tracking-widest mb-1 flex items-center gap-1">
+                                                          <Unlock size={10} className="text-[#d4af37]" /> PROFILE 100%
+                                                      </p>
+                                                      <p className="text-sm sm:text-base font-black tracking-widest leading-tight font-serif">魂の設計図 <span className="text-[10px] font-sans text-[#d4af37] border border-[#d4af37] px-1 ml-1 rounded-sm opacity-80">OS</span></p>
+                                                  </div>
+                                              </div>
+                                              <ChevronRight className="text-[#c8b9a6]" size={18} />
+                                          </div>
+                                      </Link>
+                                  </div>
+                              ) : (
+                                  <div className="mb-4 p-4 bg-[#f7f5f0] border border-[#e8dfd1] rounded-sm relative z-20">
+                                      <div className="flex justify-between items-center mb-2">
+                                          <span className="text-xs font-bold text-[#8b6a4f] tracking-widest">プロフィール充実度</span>
+                                          <span className="text-sm font-bold text-[#725b3f]">{userData.profileScore || 0}%</span>
+                                      </div>
+                                      <div className="w-full bg-[#e8dfd1] h-1.5 rounded-full overflow-hidden">
+                                          <div className="bg-[#8b6a4f] h-1.5 transition-all duration-1000 ease-out" style={{ width: `${userData.profileScore || 0}%` }}></div>
+                                      </div>
+                                  </div>
+                              )}
+
+                              {rank !== 'covenant' && (
+                                  <div className="mt-4">
+                                      <Link href="/upgrade" className="block w-full bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] border border-[#996515] rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                                          <div className="px-3 py-2.5 flex items-center justify-between">
+                                              <div className="flex items-center gap-3">
+                                                  <div className="bg-[#fffdf9]/30 rounded-full p-1.5 group-hover:scale-110 transition-transform">
+                                                      <ShieldHalf size={16} className="text-[#2a1a17]" />
+                                                  </div>
+                                                  <div className="text-left">
+                                                      <p className="text-[9px] font-bold text-[#2a1a17]/80 leading-tight tracking-widest">機能制限を解除</p>
+                                                      <p className="text-xs font-black tracking-widest leading-tight mt-0.5 font-serif">契約をアップグレード</p>
+                                                  </div>
+                                              </div>
+                                              <ChevronRight size={14} className="text-[#2a1a17]/80" />
+                                          </div>
+                                      </Link>
+                                  </div>
+                              )}
+                          </div>
+                      )}
                   </div>
               </div>
           </aside>

@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`antialiased font-serif bg-texture min-h-screen text-brand-800`}>
+      <body className={`antialiased font-serif bg-texture min-h-screen text-brand-800 text-[14px] sm:text-[16px]`}>
         <AuthProvider>
           <PWASetup />
           {children}
