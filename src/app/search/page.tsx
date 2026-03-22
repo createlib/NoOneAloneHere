@@ -78,30 +78,29 @@ function SearchContent() {
                 setMyRank(currentRank);
                 
                 const rLevel = getRankLevel(currentRank.toLowerCase());
-                if (rLevel >= 1 || adminFlag) {
-                    // Fetch Users
-                    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
-                    const snap = await getDocs(usersRef);
-                    let usersList: UserData[] = [];
-                    snap.forEach(d => {
-                        const data = d.data() as UserData;
-                        if (data.isHidden !== true || adminFlag) {
-                            usersList.push({ ...data, id: d.id });
-                        }
-                    });
-                    
-                    // Sort by profileScore desc, then name
-                    usersList.sort((a, b) => {
-                        const scoreA = a.profileScore || 0;
-                        const scoreB = b.profileScore || 0;
-                        if (scoreB !== scoreA) return scoreB - scoreA;
-                        const nameA = a.name || a.userId || '';
-                        const nameB = b.name || b.userId || '';
-                        return nameA.localeCompare(nameB);
-                    });
-                    
-                    setAllUsers(usersList);
-                }
+                
+                // Fetch Users
+                const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                const snap = await getDocs(usersRef);
+                let usersList: UserData[] = [];
+                snap.forEach(d => {
+                    const data = d.data() as UserData;
+                    if (data.isHidden !== true || adminFlag) {
+                        usersList.push({ ...data, id: d.id });
+                    }
+                });
+                
+                // Sort by profileScore desc, then name
+                usersList.sort((a, b) => {
+                    const scoreA = a.profileScore || 0;
+                    const scoreB = b.profileScore || 0;
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+                    const nameA = a.name || a.userId || '';
+                    const nameB = b.name || b.userId || '';
+                    return nameA.localeCompare(nameB);
+                });
+                
+                setAllUsers(usersList);
             } catch (err) {
                 console.error("Failed to fetch users", err);
             } finally {

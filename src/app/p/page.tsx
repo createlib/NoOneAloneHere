@@ -4,7 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { Anchor, User as UserIcon, ShieldHalf, Globe, Instagram, Twitter, Check, ArrowLeft } from 'lucide-react';
+import { Anchor, User as UserIcon, ShieldHalf, Globe, Instagram, Twitter, Check, ArrowLeft, Gavel, Hammer, Home } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -33,6 +33,15 @@ function formatText(text: string | undefined | null) {
     } catch {
         return DOMPurify.sanitize(text.replace(/\n/g, '<br>'));
     }
+}
+
+function getRankBadge(rank: string) {
+    const r = rank?.toLowerCase() || 'arrival';
+    if (r === 'covenant') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#d4af37]/20 text-[#8b6508] border border-[#d4af37]/50 tracking-widest"><ShieldHalf size={10} className="mr-1"/>COVENANT</span>;
+    if (r === 'guardian') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#3e2723]/10 text-[#3e2723] border border-[#3e2723]/30 tracking-widest"><Gavel size={10} className="mr-1"/>GUARDIAN</span>;
+    if (r === 'builder') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#8b6a4f]/10 text-[#8b6a4f] border border-[#8b6a4f]/30 tracking-widest"><Hammer size={10} className="mr-1"/>BUILDER</span>;
+    if (r === 'settler') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c8b9a6]/20 text-[#725b3f] border border-[#c8b9a6]/50 tracking-widest"><Home size={10} className="mr-1"/>SETTLER</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7f5f0] text-[#a09080] border border-[#e8dfd1] tracking-widest"><Anchor size={10} className="mr-1"/>ARRIVAL</span>;
 }
 
 function PublicProfileContent() {
@@ -192,7 +201,7 @@ function PublicProfileContent() {
                                     </h1>
                                     <div className="flex flex-wrap items-center gap-2 mt-1">
                                         <p className="text-sm text-[#8b6a4f] font-mono font-medium tracking-wide">@{userData.userId || 'unknown'}</p>
-                                        {rank === 'covenant' && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#d4af37]/20 text-[#8b6508] border border-[#d4af37]/50 tracking-widest"><ShieldHalf size={10} className="mr-1"/>COVENANT</span>}
+                                        {getRankBadge(rank)}
                                     </div>
                                 </div>
                             </div>

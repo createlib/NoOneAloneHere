@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List } from 'lucide-react';
+import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -48,6 +48,15 @@ const OS_THEMES: Record<string, { bg: string, main: string, sub: string }> = {
   '壬': { bg: '#050A14', main: '#3B82F6', sub: '#93C5FD' },
   '癸': { bg: '#060913', main: '#C5A880', sub: '#3B82F6' }
 };
+
+function getRankBadge(rank: string) {
+    const r = rank?.toLowerCase() || 'arrival';
+    if (r === 'covenant') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#d4af37]/20 text-[#8b6508] border border-[#d4af37]/50 tracking-widest"><ShieldHalf size={10} className="mr-1"/>COVENANT</span>;
+    if (r === 'guardian') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#3e2723]/10 text-[#3e2723] border border-[#3e2723]/30 tracking-widest"><Gavel size={10} className="mr-1"/>GUARDIAN</span>;
+    if (r === 'builder') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#8b6a4f]/10 text-[#8b6a4f] border border-[#8b6a4f]/30 tracking-widest"><Hammer size={10} className="mr-1"/>BUILDER</span>;
+    if (r === 'settler') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c8b9a6]/20 text-[#725b3f] border border-[#c8b9a6]/50 tracking-widest"><Home size={10} className="mr-1"/>SETTLER</span>;
+    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7f5f0] text-[#a09080] border border-[#e8dfd1] tracking-widest"><Anchor size={10} className="mr-1"/>ARRIVAL</span>;
+}
 
 // Extracted Profile Content Component to use useSearchParams inside Suspense
 function UserProfileContent() {
@@ -339,7 +348,7 @@ function UserProfileContent() {
                           </h1>
                           <div className="flex flex-wrap items-center gap-2 mt-1">
                               <p className="text-sm text-[#8b6a4f] font-mono font-medium tracking-wide">@{userData.userId || 'unknown'}</p>
-                              {rank === 'covenant' && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#d4af37]/20 text-[#8b6508] border border-[#d4af37]/50 tracking-widest"><ShieldHalf size={10} className="mr-1"/>COVENANT</span>}
+                              {getRankBadge(rank)}
                               {isMutual && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7f5f0] text-[#725b3f] border border-[#e8dfd1] tracking-widest flex items-center"><Check size={10} className="mr-1"/>相互フォロー</span>}
                           </div>
 
