@@ -6,11 +6,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check } from 'lucide-react';
+import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FollowModal from '@/components/FollowModal';
+import KeyMemoModal from '@/components/KeyMemoModal';
 
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -57,6 +58,7 @@ function UserProfileContent() {
   const [userData, setUserData] = useState<any>(null);
   const [osData, setOsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isMemoOpen, setIsMemoOpen] = useState(false);
   
   const [isFollowing, setIsFollowing] = useState(false);
   const [isMutual, setIsMutual] = useState(false);
@@ -236,10 +238,10 @@ function UserProfileContent() {
 
   const copyProfileLink = async () => {
       if (!user) return;
-      const url = `${window.location.origin}/user?uid=${user.uid}`;
+      const url = `${window.location.origin}/p?uid=${user.uid}`;
       try {
           await navigator.clipboard.writeText(url);
-          alert('自己紹介用リンクをコピーしました！');
+          alert('独立した公開用プロフィールリンクをコピーしました！');
       } catch (e) {
           prompt('コピーに失敗しました。以下のURLを手動でコピーしてください：', url);
       }
@@ -321,6 +323,11 @@ function UserProfileContent() {
                       <div className="mb-4 relative z-20">
                           <h1 className="text-2xl font-bold text-[#3e2723] leading-tight font-serif flex items-center flex-wrap gap-3">
                               <span>{userData.name || userData.userId || '名無し'}</span>
+                              {!isSelf && (
+                                  <button onClick={() => setIsMemoOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#fffdf9] border border-[#e8dfd1] rounded-sm text-xs font-bold text-[#725b3f] hover:bg-[#f7f5f0] hover:text-[#3e2723] hover:border-[#b8860b] transition-all shadow-sm tracking-widest font-sans" title="自分だけが見られるメモ">
+                                      <Key className="text-[#8b6a4f]" size={14} />鍵メモ
+                                  </button>
+                              )}
                           </h1>
                           <div className="flex flex-wrap items-center gap-2 mt-1">
                               <p className="text-sm text-[#8b6a4f] font-mono font-medium tracking-wide">@{userData.userId || 'unknown'}</p>
@@ -703,6 +710,16 @@ function UserProfileContent() {
           targetUid={targetUid || user?.uid || ''} 
           myUid={user?.uid} 
       />
+
+      {isMemoOpen && !isSelf && targetUid && user && (
+          <KeyMemoModal 
+              isOpen={isMemoOpen}
+              onClose={() => setIsMemoOpen(false)}
+              currentUserId={user.uid}
+              targetUserId={targetUid}
+              targetUserName={userData.name || '名無し'}
+          />
+      )}
     </div>
   );
 }
