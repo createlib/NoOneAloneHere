@@ -3,13 +3,12 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/lib/firebase';
+import { db, APP_ID as appId } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import Link from 'next/link';
 import { Compass, Ship, Hourglass, User, Film, Podcast, Lock, ShieldHalf, Search as SearchIcon, Dna, Users, EyeOff, MapPin, Anchor, House, Hammer, Gavel, Loader2, Menu, X } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
-const appId = 'NOAH_APP_v1';
 const PREFECTURES = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県","海外","その他"];
 
 const rankLevels: Record<string, number> = { 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 };
@@ -41,6 +40,7 @@ function SearchContent() {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [myRank, setMyRank] = useState('arrival');
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [allUsers, setAllUsers] = useState<UserData[]>([]);
     
     const [searchQ, setSearchQ] = useState('');
@@ -95,17 +95,18 @@ function SearchContent() {
                 
                 // Sort by profileScore desc, then name
                 usersList.sort((a, b) => {
-                    const scoreA = a.profileScore || 0;
-                    const scoreB = b.profileScore || 0;
+                    const scoreA = Number(a.profileScore) || 0;
+                    const scoreB = Number(b.profileScore) || 0;
                     if (scoreB !== scoreA) return scoreB - scoreA;
-                    const nameA = a.name || a.userId || '';
-                    const nameB = b.name || b.userId || '';
+                    const nameA = String(a.name || a.userId || '');
+                    const nameB = String(b.name || b.userId || '');
                     return nameA.localeCompare(nameB);
                 });
                 
                 setAllUsers(usersList);
-            } catch (err) {
+            } catch (err: any) {
                 console.error("Failed to fetch users", err);
+                setFetchError(err.message || String(err));
             } finally {
                 setLoading(false);
             }
@@ -124,10 +125,11 @@ function SearchContent() {
         return allUsers.filter(u => {
             let matchSearch = true;
             if (query) {
+                const safeArray = (val: any) => Array.isArray(val) ? val : (typeof val === 'string' ? [val] : []);
                 const searchable = [
                     u.name, u.userId, u.jobTitle, 
-                    ...(u.skills || []), ...(u.hobbies || []),
-                    ...(u.canOffer || []), ...(u.lookingFor || [])
+                    ...safeArray(u.skills), ...safeArray(u.hobbies),
+                    ...safeArray(u.canOffer), ...safeArray(u.lookingFor)
                 ].join(' ').toLowerCase();
                 matchSearch = searchable.includes(query);
             }
@@ -179,6 +181,13 @@ function SearchContent() {
 
             {/* Main Content Area */}
             <main className="max-w-7xl mx-auto pt-24 lg:pt-20 px-4 sm:px-6 lg:px-8 pb-10">
+                {fetchError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 shadow-sm text-sm break-all font-mono">
+                        <strong className="font-bold">Error loading directory: </strong>
+                        <span className="block sm:inline">{fetchError}</span>
+                    </div>
+                )}
+                
                 {/* Always Show Content, but lock inputs if !hasAccess */}
                 <div id="search-content">
                     {!hasAccess && (
