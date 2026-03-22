@@ -50,8 +50,14 @@ function LiveRoomClientPageInner() {
     const [isPinChecked, setIsPinChecked] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
     const [activeSpeakers, setActiveSpeakers] = useState<string[]>([]);
+    const [profileLoaded, setProfileLoaded] = useState(false);
 
     const livekitRoomRef = useRef<Room | null>(null);
+    const roleRef = useRef(currentRole);
+    const leavingRef = useRef(isLeaving);
+
+    useEffect(() => { roleRef.current = currentRole; }, [currentRole]);
+    useEffect(() => { leavingRef.current = isLeaving; }, [isLeaving]);
 
     // Form inputs for Create (though normally created from podcast/new, but keeping full logic just in case)
     const [notificationMsg, setNotificationMsg] = useState('');
@@ -68,7 +74,7 @@ function LiveRoomClientPageInner() {
             return;
         }
 
-        const initUser = async () => {
+        const loadProfile = async () => {
             try {
                 const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data'));
                 if (snap.exists()) {
@@ -77,51 +83,59 @@ function LiveRoomClientPageInner() {
                     setMyRank(pd.membershipRank || 'arrival');
                     if (pd.userId === 'admin') setIsAdmin(true);
                 }
-
-                initRoom(targetRoomId);
-
             } catch (e) {
                 console.error(e);
+            } finally {
+                setProfileLoaded(true);
             }
         };
 
-        if (user) {
-            initUser();
+        if (user && !profileLoaded) {
+            loadProfile();
         }
-    }, [user, loading, targetRoomId]);
+    }, [user, loading, router, profileLoaded]);
 
     const showNotif = (msg: string) => {
         setNotificationMsg(msg);
         setTimeout(() => setNotificationMsg(''), 3000);
     };
 
-    const initRoom = async (roomId: string) => {
-        if (!roomId || !user) return;
+    useEffect(() => {
+        if (!profileLoaded || !user || !targetRoomId) return;
         
         let safeName = myProfile ? (myProfile.name || myProfile.userId) : '名無し';
         let safeIcon = myProfile ? myProfile.photoURL : DEFAULT_ICON;
-        let role: 'host' | 'listener' = user.uid === roomId ? 'host' : 'listener';
+        let role: 'host' | 'listener' = user.uid === targetRoomId ? 'host' : 'listener';
         setCurrentRole(role);
 
-        // Record Join
-        if (role !== 'host') {
-            await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', roomId, 'participants', user.uid), {
-                uid: user.uid,
-                name: safeName,
-                icon: safeIcon,
-                role: 'listener',
-                handRaised: false,
-                joinedAt: serverTimestamp()
-            }, { merge: true });
-        }
+        let cleanupFns: any[] = [];
+        let isCleaningUp = false;
 
-        connectLiveKit(roomId, role === 'host');
+        const connect = async () => {
+            // Record Join if not host
+            if (role !== 'host') {
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId, 'participants', user.uid), {
+                    uid: user.uid,
+                    name: safeName,
+                    icon: safeIcon,
+                    role: 'listener',
+                    handRaised: false,
+                    joinedAt: serverTimestamp()
+                }, { merge: true });
+            }
+
+            if (isCleaningUp) return;
+            connectLiveKit(targetRoomId, role === 'host');
+        };
+
+        connect();
 
         // Sub Room
-        const roomRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', roomId);
-        const unsubRoom = onSnapshot(roomRef, (snap) => {
+        const roomRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId);
+        cleanupFns.push(onSnapshot(roomRef, (snap) => {
             if (!snap.exists() || snap.data().status !== 'live') {
-                if (!isLeaving) {
+                if (!leavingRef.current) {
+                    leavingRef.current = true;
                     setIsLeaving(true);
                     alert("この配信は終了しました。");
                     router.push('/media/podcasts');
@@ -129,42 +143,41 @@ function LiveRoomClientPageInner() {
                 return;
             }
             setRoomData(snap.data());
-        });
+        }));
 
         // Sub Parts
-        const partsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', roomId, 'participants');
-        const unsubParts = onSnapshot(partsRef, (snap) => {
+        const partsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId, 'participants');
+        cleanupFns.push(onSnapshot(partsRef, (snap) => {
             const arr: any[] = [];
             snap.forEach(d => arr.push(d.data()));
             setParticipants(arr);
 
             const me = arr.find(p => p.uid === user.uid);
             if (me) {
-                if (me.role !== currentRole) {
+                if (me.role !== roleRef.current) {
                     setCurrentRole(me.role as any);
-                    reconnectLiveKit(roomId, me.role === 'host' || me.role === 'speaker');
+                    reconnectLiveKit(targetRoomId, me.role === 'host' || me.role === 'speaker');
                 }
                 setIsHandRaised(me.handRaised || false);
-                setIsMicMuted(me.isMuted || false); // Sync mute state
+                setIsMicMuted(me.isMuted || false); // Sync mute state accurately
             }
-        });
+        }));
 
         // Sub Comments
-        const commentsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', roomId, 'comments');
+        const commentsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId, 'comments');
         const qc = query(commentsRef, orderBy('timestamp', 'asc'), limit(80));
-        const unsubComments = onSnapshot(qc, (snap) => {
+        cleanupFns.push(onSnapshot(qc, (snap) => {
             const arr: any[] = [];
             snap.forEach(d => arr.push(d.data()));
             setComments(arr);
-        });
+        }));
 
         return () => {
-            unsubRoom();
-            unsubParts();
-            unsubComments();
+            isCleaningUp = true;
+            cleanupFns.forEach(fn => fn());
             disconnectLiveKit();
         };
-    };
+    }, [profileLoaded, user, targetRoomId]); // removed mutable dependencies that previously induced infinite execution loops
 
     const generateLiveKitToken = async (roomName: string, participantName: string, isPublisher: boolean) => {
         if (!user) return "";
@@ -192,8 +205,13 @@ function LiveRoomClientPageInner() {
             room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
                 if (track.kind === 'audio') {
                     const el = track.attach();
+                    el.className = 'livekit-audio-track';
                     document.body.appendChild(el);
                 }
+            });
+
+            room.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+                track.detach().forEach(el => el.remove());
             });
 
             room.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
@@ -224,9 +242,29 @@ function LiveRoomClientPageInner() {
 
     const disconnectLiveKit = async () => {
         if (livekitRoomRef.current) {
-            await livekitRoomRef.current.disconnect();
+            const room = livekitRoomRef.current;
+            try {
+                if (room.localParticipant) {
+                    await room.localParticipant.setMicrophoneEnabled(false);
+                    room.localParticipant.audioTrackPublications.forEach((pub: any) => {
+                        if (pub.track) pub.track.detach().forEach((el: any) => el.remove());
+                    });
+                }
+                if (room.remoteParticipants) {
+                    room.remoteParticipants.forEach((p: any) => {
+                        p.audioTrackPublications.forEach((pub: any) => {
+                            if (pub.track) pub.track.detach().forEach((el: any) => el.remove());
+                        });
+                    });
+                }
+            } catch (e) { console.warn("LiveKit cleanup warning:", e); }
+            
+            await room.disconnect();
             livekitRoomRef.current = null;
         }
+
+        // Failsafe garbage collection of any leftover audio elements
+        document.querySelectorAll('audio.livekit-audio-track').forEach(el => el.remove());
     };
 
     // Actions
