@@ -149,6 +149,7 @@ export default function VideosPage() {
 
     return (
         <div className="antialiased min-h-screen bg-texture body-pb-nav lg:pb-0">
+            <Navbar />
             <main className="w-full max-w-[1600px] mx-auto pt-24 px-4 sm:px-6 lg:px-8 pb-20">
                 <div className="flex justify-between items-center mb-8 relative z-10">
                     <h1 className="text-3xl font-bold font-serif text-brand-900 tracking-widest flex items-center gap-3">

@@ -55,6 +55,7 @@ function UserProfileContent() {
   const [targetUid, setTargetUid] = useState<string | null>(null);
   const [isSelf, setIsSelf] = useState<boolean>(true);
   const [userData, setUserData] = useState<any>(null);
+  const [osData, setOsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
   const [isFollowing, setIsFollowing] = useState(false);
@@ -123,6 +124,14 @@ function UserProfileContent() {
            }
            
            setUserData(loadedData);
+           
+           if (loadedData?.osNumber) {
+               const osRef = doc(db, 'artifacts', APP_ID, 'os_blueprints', String(loadedData.osNumber));
+               const osSnap = await getDoc(osRef);
+               if (osSnap.exists()) {
+                   setOsData(osSnap.data());
+               }
+           }
         
         // Load Counts
         const fowColl = collection(db, 'artifacts', APP_ID, 'users', targetId, 'following');
@@ -278,8 +287,8 @@ function UserProfileContent() {
                             <>
                                 <div className="absolute inset-0 z-0" style={{ backgroundColor: osTheme.bg, backgroundImage: `radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, ${osTheme.bg} 100%)` }}></div>
                                 <div className="z-10 flex flex-col items-center justify-center pt-2 sm:pt-4">
-                                    <div className="text-[10px] sm:text-xs tracking-[0.4em] font-bold mb-0.5 drop-shadow-md" style={{ color: osTheme.sub }}>{userData.osRuby || 'GENBAN'}</div>
-                                    <div className="text-3xl sm:text-4xl font-bold tracking-[0.15em] font-serif pl-2 text-white" style={{ textShadow: `0 0 15px ${osTheme.main}` }}>{userData.osKanji || '玄盤'}</div>
+                                    <div className="text-[10px] sm:text-xs tracking-[0.4em] font-eng font-bold mb-0.5 drop-shadow-md" style={{ color: osTheme.sub }}>{osData?.ruby || userData.osRuby || 'GENBAN'}</div>
+                                    <div className="text-3xl sm:text-4xl font-bold tracking-[0.15em] font-serif pl-2 text-white" style={{ textShadow: `0 0 15px ${osTheme.main}` }}>{osData?.kanji || userData.osKanji || '玄盤'}</div>
                                 </div>
                             </>
                         )}
@@ -460,8 +469,8 @@ function UserProfileContent() {
                           <div className="bg-[#fffdf9] rounded-sm p-6 border border-[#e8dfd1] shadow-md relative overflow-hidden group hover:border-[#b8860b]/50 transition-colors">
                               <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest font-serif relative z-10 border-b border-[#e8dfd1] pb-2">提供できること</h3>
                               <ul className="space-y-3 relative z-10">
-                                  {userData.offeringItems?.length > 0 ? (
-                                      userData.offeringItems.map((item: string, idx: number) => (
+                                  {userData.canOffer?.length > 0 ? (
+                                      userData.canOffer.map((item: string, idx: number) => (
                                           <li key={idx} className="text-[#5c4a3d] text-sm flex items-start gap-2"><Check className="w-4 h-4 text-[#d4af37] mt-0.5 shrink-0"/>{item}</li>
                                       ))
                                   ) : <li className="text-[#c8b9a6] italic text-sm">未設定</li>}
@@ -470,8 +479,8 @@ function UserProfileContent() {
                           <div className="bg-[#fffdf9] rounded-sm p-6 border border-[#e8dfd1] shadow-md relative overflow-hidden group hover:border-[#b8860b]/50 transition-colors">
                               <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest font-serif relative z-10 border-b border-[#e8dfd1] pb-2">求めていること</h3>
                               <ul className="space-y-3 relative z-10">
-                                  {userData.lookingForItems?.length > 0 ? (
-                                      userData.lookingForItems.map((item: string, idx: number) => (
+                                  {userData.lookingFor?.length > 0 ? (
+                                      userData.lookingFor.map((item: string, idx: number) => (
                                           <li key={idx} className="text-[#5c4a3d] text-sm flex items-start gap-2"><Check className="w-4 h-4 text-[#d4af37] mt-0.5 shrink-0"/>{item}</li>
                                       ))
                                   ) : <li className="text-[#c8b9a6] italic text-sm">未設定</li>}

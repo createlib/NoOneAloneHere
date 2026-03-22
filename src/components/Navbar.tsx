@@ -35,19 +35,19 @@ export default function Navbar() {
           </div>
 
           {/* PC Navigation Links */}
-          <div className="hidden lg:flex items-center gap-6">
-            <Link href="/home" className={`transition-colors flex items-center gap-2 font-bold text-sm tracking-wide ${pathname === '/home' ? 'text-brand-600 border-b-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
+          <div className="hidden lg:flex items-center gap-6 h-full">
+            <Link href="/home" className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/home' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
               <Ship size={16} /> 航海
             </Link>
-            <Link href="/events" className={`transition-colors flex items-center gap-2 font-bold text-sm tracking-wide ${pathname === '/events' ? 'text-brand-600 border-b-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
+            <Link href="/events" className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/events' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
               <Hourglass size={16} /> イベント
             </Link>
-            <Link href="/search" className={`transition-colors flex items-center gap-2 font-bold text-sm tracking-wide ${pathname === '/search' ? 'text-brand-600 border-b-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
+            <Link href="/search" className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/search' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
               <Compass size={16} /> さがす
             </Link>
             
             <div className="relative group h-full flex items-center">
-              <button className={`transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none py-5 ${pathname.includes('/media') ? 'text-brand-600 border-b-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
+              <button className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide focus:outline-none border-b-[3px] ${pathname.includes('/media') ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
                 <Film size={16} /> メディア
               </button>
               <div className="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-brand-50 border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity overflow-hidden">
@@ -60,7 +60,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            <Link href="/user" className={`transition-colors flex items-center gap-2 font-bold text-sm tracking-wide ${pathname === '/user' ? 'text-brand-600 border-b-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
+            <Link href="/user" className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/user' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
               <User size={16} /> マイページ
             </Link>
             {pathname === '/user' && (
