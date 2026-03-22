@@ -168,19 +168,6 @@ function UserProfileContent() {
         setLoading(false);
       }
     }
-
-    useEffect(() => {
-        if (!targetUid) return;
-        const roomRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetUid);
-        const unsub = onSnapshot(roomRef, (snap) => {
-            if (snap.exists() && snap.data().status === 'live') {
-                setIsLive(true);
-            } else {
-                setIsLive(false);
-            }
-        });
-        return () => unsub();
-    }, [targetUid]);
     
     async function loadUserMedia() {
       if (!targetUid) return;
@@ -239,6 +226,19 @@ function UserProfileContent() {
         });
     }
   }, [user, uidParam, targetUid, mediaRefreshKey]);
+
+  useEffect(() => {
+      if (!targetUid) return;
+      const roomRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetUid);
+      const unsub = onSnapshot(roomRef, (snap) => {
+          if (snap.exists() && snap.data().status === 'live') {
+              setIsLive(true);
+          } else {
+              setIsLive(false);
+          }
+      });
+      return () => unsub();
+  }, [targetUid]);
 
   const toggleFollow = async () => {
       if (!user || !targetUid || targetUid === user.uid) return;
