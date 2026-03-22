@@ -6,12 +6,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key } from 'lucide-react';
+import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FollowModal from '@/components/FollowModal';
 import KeyMemoModal from '@/components/KeyMemoModal';
+import PlaylistModal from '@/components/PlaylistModal';
 
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -58,6 +59,9 @@ function UserProfileContent() {
   const [userData, setUserData] = useState<any>(null);
   const [osData, setOsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [editingPlaylistId, setEditingPlaylistId] = useState<string | null>(null);
+  const [mediaRefreshKey, setMediaRefreshKey] = useState(0);
   const [isMemoOpen, setIsMemoOpen] = useState(false);
   
   const [isFollowing, setIsFollowing] = useState(false);
@@ -207,7 +211,7 @@ function UserProfileContent() {
             if (targetUid) loadUserMedia();
         });
     }
-  }, [user, uidParam, targetUid]);
+  }, [user, uidParam, targetUid, mediaRefreshKey]);
 
   const toggleFollow = async () => {
       if (!user || !targetUid || targetUid === user.uid) return;
@@ -270,6 +274,7 @@ function UserProfileContent() {
   const osTheme = showOSCover && userData.osJukkan ? OS_THEMES[userData.osJukkan] : OS_THEMES['癸'];
 
   const rank = userData.membershipRank || 'arrival';
+  const hasPlaylistPermission = isSelf && ['guardian', 'covenant', 'admin'].includes(rank);
 
   return (
     <div className="max-w-7xl mx-auto pt-8 px-0 sm:px-6 lg:px-8 pb-20">
@@ -602,7 +607,7 @@ function UserProfileContent() {
                                           </div>
                                       )}
                                       {(mediaTab === 'videos' ? userVideos : likedVideos).map((v: any) => (
-                                          <Link href={`/media/videos/${v.id}`} key={v.id} className="flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-[#e8dfd1] shadow-sm hover:shadow-md hover:border-[#b8860b] transition-all w-full h-full">
+                                          <Link href={`/media/videos/detail?id=${v.id}`} key={v.id} className="flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-[#e8dfd1] shadow-sm hover:shadow-md hover:border-[#b8860b] transition-all w-full h-full">
                                               <div className="relative w-full aspect-video bg-[#000] overflow-hidden border-b border-[#e8dfd1]">
                                                   <img src={v.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Image'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                                   <div className="absolute inset-0 bg-black/30 opacity-0 transition-all duration-300 flex items-center justify-center group-hover:opacity-100">
@@ -642,7 +647,7 @@ function UserProfileContent() {
                                           const plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
                                           const dateStr = new Date(p.createdAt || p.updatedAt || Date.now()).toLocaleDateString();
                                           return (
-                                              <Link href={`/media/podcasts/${p.id}`} key={p.id} className="flex flex-col bg-[#fffdf9] p-4 rounded-md border border-[#e8dfd1] shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full h-full">
+                                              <Link href={`/media/podcasts/detail?id=${p.id}`} key={p.id} className="flex flex-col bg-[#fffdf9] p-4 rounded-md border border-[#e8dfd1] shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full h-full">
                                                   <div className="flex gap-3 sm:gap-4 items-start mb-3">
                                                       <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-[#e8dfd1] relative shadow-inner mt-0.5">
                                                           <img src={p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop'} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" />
@@ -673,28 +678,37 @@ function UserProfileContent() {
                               )}
 
                               {mediaTab === 'playlists' && (
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
-                                      {userPlaylists.length === 0 ? (
-                                          <div className="col-span-full py-20 bg-[#fffdf9] rounded-sm border border-dashed border-[#e8dfd1] flex flex-col items-center justify-center">
-                                              <FileText className="text-[#e8dfd1] w-12 h-12 mb-3" />
-                                              <p className="text-[#a09080] text-sm font-bold tracking-widest">プレイリストはまだありません</p>
+                                  <>
+                                      {hasPlaylistPermission && (
+                                          <div className="flex justify-end mb-4 animate-fade-in-up">
+                                              <button onClick={() => { setEditingPlaylistId(null); setIsPlaylistModalOpen(true); }} className="px-4 py-2 bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] border border-[#b8860b] rounded-sm text-xs font-bold shadow-md tracking-widest transition-colors flex items-center gap-1.5">
+                                                  <Plus size={14} /> プレイリスト作成
+                                              </button>
                                           </div>
-                                      ) : (
-                                          userPlaylists.map(pl => (
-                                              <div key={pl.id} className="bg-[#fffdf9] p-4 rounded-sm border border-[#e8dfd1] shadow-sm hover:border-[#b8860b]/50 transition-colors group cursor-not-allowed">
-                                                  {pl.coverImageUrl ? (
-                                                      <img src={pl.coverImageUrl} className="w-full aspect-video object-cover rounded-sm mb-3 group-hover:opacity-90 transition-opacity" />
-                                                  ) : (
-                                                      <div className="w-full aspect-video bg-[#f0ebdd] flex items-center justify-center rounded-sm mb-3 border border-[#e8dfd1]/50 group-hover:bg-[#e8dfd1] transition-colors">
-                                                          <FileText className="text-[#c8b9a6] w-8 h-8" />
-                                                      </div>
-                                                  )}
-                                                  <h3 className="font-bold text-[#3e2723] truncate group-hover:text-[#b8860b] transition-colors">{pl.name}</h3>
-                                                  <p className="text-xs text-[#a09080] mt-1 font-mono">{pl.items?.length || 0} ITEMS</p>
-                                              </div>
-                                          ))
                                       )}
-                                  </div>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
+                                          {userPlaylists.length === 0 ? (
+                                              <div className="col-span-full py-20 bg-[#fffdf9] rounded-sm border border-dashed border-[#e8dfd1] flex flex-col items-center justify-center">
+                                                  <FileText className="text-[#e8dfd1] w-12 h-12 mb-3" />
+                                                  <p className="text-[#a09080] text-sm font-bold tracking-widest">プレイリストはまだありません</p>
+                                              </div>
+                                          ) : (
+                                              userPlaylists.map(pl => (
+                                                  <div key={pl.id} onClick={() => { if(hasPlaylistPermission){ setEditingPlaylistId(pl.id); setIsPlaylistModalOpen(true); } }} className={`bg-[#fffdf9] p-4 rounded-sm border border-[#e8dfd1] shadow-sm hover:border-[#b8860b]/50 transition-colors group ${hasPlaylistPermission ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                                                      {pl.coverImageUrl ? (
+                                                          <img src={pl.coverImageUrl} className="w-full aspect-video object-cover rounded-sm mb-3 group-hover:opacity-90 transition-opacity" />
+                                                      ) : (
+                                                          <div className="w-full aspect-video bg-[#f0ebdd] flex items-center justify-center rounded-sm mb-3 border border-[#e8dfd1]/50 group-hover:bg-[#e8dfd1] transition-colors">
+                                                              <FileText className="text-[#c8b9a6] w-8 h-8" />
+                                                          </div>
+                                                      )}
+                                                      <h3 className="font-bold text-[#3e2723] truncate group-hover:text-[#b8860b] transition-colors">{pl.name}</h3>
+                                                      <p className="text-xs text-[#a09080] mt-1 font-mono">{pl.items?.length || 0} ITEMS</p>
+                                                  </div>
+                                              ))
+                                          )}
+                                      </div>
+                                  </>
                               )}
                           </>
                       )}
@@ -718,6 +732,18 @@ function UserProfileContent() {
               currentUserId={user.uid}
               targetUserId={targetUid}
               targetUserName={userData.name || '名無し'}
+          />
+      )}
+
+      {isSelf && user && (
+          <PlaylistModal
+              isOpen={isPlaylistModalOpen}
+              onClose={() => setIsPlaylistModalOpen(false)}
+              userId={user.uid}
+              playlistId={editingPlaylistId}
+              onSaved={() => {
+                  setMediaRefreshKey(k => k + 1);
+              }}
           />
       )}
     </div>
