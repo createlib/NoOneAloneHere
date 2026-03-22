@@ -207,9 +207,7 @@ export default function PodcastsPage() {
                 
                 <div className="pb-8 md:pb-12 flex flex-col items-center text-center relative max-w-4xl mx-auto">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.05)_0%,transparent_70%)] pointer-events-none"></div>
-                    <p className="text-sm text-brand-500 tracking-widest max-w-2xl mx-auto leading-relaxed">
-                        声だからこそ伝わる温度、思考のプロセス。<br className="hidden sm:block" />対談やひとり語りを通して、メンバーの深い価値観に触れる場所。
-                    </p>
+
                 </div>
 
                 {/* Search & Tags */}

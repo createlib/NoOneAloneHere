@@ -327,7 +327,7 @@ function VideoPostContent() {
                 }
             }
 
-            router.push(`/media/videos/${docId}`);
+            router.replace(`/media/videos/detail?id=${docId}`);
 
         } catch (error: any) {
             console.error(error);

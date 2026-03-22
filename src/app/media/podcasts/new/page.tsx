@@ -413,7 +413,7 @@ function PodcastPostInternalForm() {
                 } catch (e) {}
             }
 
-            router.push(`/media/podcasts/${docId}`);
+            router.replace(`/media/podcasts/detail?id=${docId}`);
 
         } catch (e: any) {
             console.error(e);
