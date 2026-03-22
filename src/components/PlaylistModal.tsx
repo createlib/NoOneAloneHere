@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, APP_ID } from '@/lib/firebase';
-import { collection, query, orderBy, getDocs, doc, setDoc, deleteDoc, serverTimestamp, where } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, setDoc, deleteDoc, serverTimestamp, where, getDoc } from 'firebase/firestore';
 import { X, Search, Plus, Save, Trash2, Mic, Play, FolderOpen, Check } from 'lucide-react';
 
 interface MediaItem {
@@ -64,8 +64,14 @@ export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onS
                 setAvailableMedia(allItems);
 
                 if (playlistId) {
-                    // editing existing
-                    // Here we'd fetch the exact playlist and fill name, coverUrl, playlistItems...
+                    const plRef = doc(db, 'artifacts', APP_ID, 'users', userId, 'playlists', playlistId);
+                    const plSnap = await getDoc(plRef);
+                    if (plSnap.exists()) {
+                        const data = plSnap.data();
+                        setName(data.name || '');
+                        setCoverUrl(data.coverImageUrl || '');
+                        setPlaylistItems(data.items || []);
+                    }
                 }
 
             } catch (error) {
@@ -110,6 +116,22 @@ export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onS
         } catch (e) {
             console.error(e);
             alert("保存に失敗しました");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!playlistId) return;
+        if (!window.confirm("このプレイリストを削除します。よろしいですか？")) return;
+        setSaving(true);
+        try {
+            await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'playlists', playlistId));
+            if (onSaved) onSaved();
+            onClose();
+        } catch (e) {
+            console.error(e);
+            alert("削除に失敗しました");
         } finally {
             setSaving(false);
         }
@@ -227,6 +249,11 @@ export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onS
 
                 {/* Footer */}
                 <div className="h-16 border-t border-brand-200 bg-[#fdfaf5] flex justify-end items-center px-6 gap-3">
+                    {playlistId && (
+                        <button onClick={handleDelete} disabled={saving} className="mr-auto px-4 py-2 text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-sm text-sm font-bold tracking-widest transition-colors flex items-center gap-1.5 disabled:opacity-50">
+                            <Trash2 size={16} /> 削除
+                        </button>
+                    )}
                     <button onClick={onClose} disabled={saving} className="px-6 py-2 border border-brand-300 bg-[#fffdf9] text-brand-700 hover:bg-brand-50 rounded-sm text-sm font-bold shadow-sm tracking-widest disabled:opacity-50">キャンセル</button>
                     <button onClick={handleSave} disabled={saving || !name.trim()} className="px-6 py-2 bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] border border-[#b8860b] rounded-sm text-sm font-bold shadow-md tracking-widest transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         <Save size={16} /> {saving ? '保存中...' : '保存'}
