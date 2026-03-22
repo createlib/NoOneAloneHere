@@ -81,14 +81,13 @@ function SearchContent() {
                 setIsAdmin(adminFlag);
                 setMyRank(currentRank);
                 
-                const rLevel = getRankLevel(currentRank.toLowerCase());
-                
-                // Fetch Users
+                // Fetch Users (unconditionally for all visitors)
                 const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
                 const snap = await getDocs(usersRef);
                 let usersList: UserData[] = [];
                 snap.forEach(d => {
                     const data = d.data() as UserData;
+                    // Only exclude users explicitly marked as hidden, unless current user is admin
                     if (data.isHidden !== true || adminFlag) {
                         usersList.push({ ...data, id: d.id });
                     }
@@ -112,7 +111,8 @@ function SearchContent() {
             }
         }
         
-        if (user && !authLoading) {
+        // Fetch data regardless of user login status, but user-specific data (rank) depends on `user`
+        if (!authLoading) {
             fetchData();
         }
     }, [user, authLoading]);
@@ -168,8 +168,8 @@ function SearchContent() {
         );
     }
     
-    if (!user) return null; // Prevent showing anything while redirecting
-    
+    // If user is not logged in, myRank will be 'arrival' and hasAccess will be false.
+    // If user is logged in, myRank will be their actual rank.
     const rLevel = getRankLevel(myRank.toLowerCase());
     const hasAccess = rLevel >= 1 || isAdmin;
 
@@ -179,20 +179,22 @@ function SearchContent() {
 
             {/* Main Content Area */}
             <main className="max-w-7xl mx-auto pt-24 lg:pt-20 px-4 sm:px-6 lg:px-8 pb-10">
-                    <div>
-                        {!hasAccess && (
-                            <div className="mb-6 p-4 bg-[#fffdf9] rounded-sm border border-[#e8dfd1] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-[#8b6a4f]"></div>
-                                <div>
-                                    <h3 className="font-bold text-[#3e2723] text-sm tracking-widest mb-1 flex items-center gap-2"><Lock className="w-4 h-4 text-[#8b6a4f]"/> 検索機能の利用制限</h3>
-                                    <p className="text-[10px] sm:text-xs text-[#725b3f] tracking-widest leading-relaxed">絞り込み検索機能は、<span className="font-bold">SETTLER（またはそれ以上）</span>の会員限定です。</p>
-                                </div>
-                                <Link href={`/user/${user?.uid}?tab=billing`} className="shrink-0 px-4 py-2 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] font-bold rounded-sm shadow-sm hover:bg-[#2a1a17] transition-colors tracking-widest text-[10px] transform hover:-translate-y-0.5 whitespace-nowrap">
-                                    アップグレード
-                                </Link>
+                {/* Always Show Content, but lock inputs if !hasAccess */}
+                <div id="search-content">
+                    {!hasAccess && (
+                        <div className="mb-6 p-4 bg-[#fffdf9] rounded-sm border border-[#e8dfd1] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-[#8b6a4f]"></div>
+                            <div>
+                                <h3 className="font-bold text-[#3e2723] text-sm tracking-widest mb-1 flex items-center gap-2"><Lock className="w-4 h-4 text-[#8b6a4f]"/> 検索機能の利用制限</h3>
+                                <p className="text-[10px] sm:text-xs text-[#725b3f] tracking-widest leading-relaxed">絞り込み機能およびフリー検索は、<span className="font-bold">SETTLER（またはそれ以上）</span>の会員限定です。</p>
                             </div>
-                        )}
-                        {/* Search & Filter Header */}
+                            <Link href={`/user/${user?.uid}?tab=billing`} className="shrink-0 px-4 py-2 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] font-bold rounded-sm shadow-sm hover:bg-[#2a1a17] transition-colors tracking-widest text-[10px] transform hover:-translate-y-0.5 whitespace-nowrap">
+                                <ShieldHalf className="mr-2 w-4 h-4" /> アップグレード
+                            </Link>
+                        </div>
+                    )}
+                    
+                    {/* Search & Filter Header */}
                         <div className="mb-8 bg-[#fffdf9] p-4 sm:p-6 rounded-sm shadow-md border border-[#e8dfd1] relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-[#8b6a4f] z-10 m-2 opacity-50"></div>
                             
