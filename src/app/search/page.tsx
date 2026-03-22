@@ -66,11 +66,15 @@ function SearchContent() {
                     adminFlag = true;
                     currentRank = 'covenant';
                 } else {
-                    const mySnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid));
-                    if (mySnap.exists()) {
-                        const data = mySnap.data();
-                        currentRank = data.membershipRank || 'arrival';
-                        if (data.userId === 'admin') adminFlag = true;
+                    try {
+                        const mySnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid));
+                        if (mySnap.exists()) {
+                            const data = mySnap.data();
+                            currentRank = data.membershipRank || 'arrival';
+                            if (data.userId === 'admin') adminFlag = true;
+                        }
+                    } catch (e) {
+                        console.error("Rank fetch failed", e);
                     }
                 }
                 
