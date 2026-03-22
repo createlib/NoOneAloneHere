@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, storage, APP_ID } from '@/lib/firebase';
 import { collection, query, orderBy, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, where, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
@@ -143,7 +144,7 @@ function EventsContent() {
                     const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                     setUserLocation(loc);
                     if (leafletMap.current) {
-                        leafletMap.current.setView([loc.lat, loc.lng], 13);
+                        leafletMap.current.setView([loc.lat, loc.lng], 16);
                     }
                 },
                 (err) => console.log("Location access denied or error")
@@ -389,8 +390,8 @@ function EventsContent() {
             const L = (window as any).L;
             if (L) {
                 leafletMap.current = L.map(mapRef.current).setView([35.681236, 139.767125], 5);
-                L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>'
+                L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                    attribution: '&copy; Google'
                 }).addTo(leafletMap.current);
                 updateMapMarkers(filteredEvents, filteredJobs);
             }
@@ -1061,7 +1062,7 @@ function EventsContent() {
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs font-bold text-brand-500 tracking-widest"><User className="w-4 h-4 inline mr-1 text-brand-400"/>主催者</span>
-                                    <span className="text-sm font-bold text-brand-900">{selectedEvent.organizerName}</span>
+                                    <Link href={`/user/${selectedEvent.organizerId}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">{selectedEvent.organizerName}</Link>
                                 </div>
                                 <div className="flex justify-between items-center border-t border-brand-200 pt-2">
                                     <span className="text-xs font-bold text-brand-500 tracking-widest opacity-80">参加予定人数</span>
@@ -1130,7 +1131,7 @@ function EventsContent() {
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs font-bold text-brand-500 tracking-widest"><User className="w-4 h-4 inline mr-1 text-brand-400"/>投稿者</span>
-                                    <span className="text-sm font-bold text-brand-900">{selectedJob.organizerName}</span>
+                                    <Link href={`/user/${selectedJob.organizerId}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">{selectedJob.organizerName}</Link>
                                 </div>
                             </div>
 
@@ -1214,6 +1215,28 @@ function EventsContent() {
                             <div>
                                 <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">イベント名 <span className="text-red-500">*</span></label>
                                 <input type="text" value={eventFormData.title} onChange={e=>setEventFormData({...eventFormData, title: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white" placeholder="例: 週末朝活コーヒー会" required />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">参加費 (円)</label>
+                                    <input type="number" value={eventFormData.price} onChange={e=>setEventFormData({...eventFormData, price: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white" placeholder="0で無料" min="0" step="100" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">関連タグ</label>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {PRESET_TAGS.map(tag => (
+                                        <button key={tag} type="button" onClick={() => {
+                                            const newTags = new Set(eventSelectedTags);
+                                            if (newTags.has(tag)) newTags.delete(tag);
+                                            else newTags.add(tag);
+                                            setEventSelectedTags(newTags);
+                                        }} className={`px-3 py-1.5 rounded-sm text-xs border transition-colors shadow-sm ${eventSelectedTags.has(tag) ? 'bg-[#3e2723] text-[#d4af37] border-[#b8860b] font-bold' : 'bg-white text-brand-600 border-brand-200 hover:bg-brand-50'}`}>
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                                <input type="text" value={eventCustomTags} onChange={e=>setEventCustomTags(e.target.value)} className="w-full border border-brand-200 rounded-sm text-xs p-3 bg-white" placeholder="独自のカスタムタグ (カンマ区切り)" />
                             </div>
                             <div className="grid grid-cols-2 gap-4 bg-brand-50 p-4 rounded-sm border border-brand-200">
                                 <div>
