@@ -66,7 +66,7 @@ function SearchContent() {
                     adminFlag = true;
                     currentRank = 'covenant';
                 } else {
-                    const mySnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'data'));
+                    const mySnap = await getDoc(doc(db, 'artifacts', appId, 'users', user.uid));
                     if (mySnap.exists()) {
                         const data = mySnap.data();
                         currentRank = data.membershipRank || 'arrival';
@@ -175,7 +175,7 @@ function SearchContent() {
 
             {/* Main Content Area */}
             <main className="max-w-7xl mx-auto pt-24 lg:pt-20 px-4 sm:px-6 lg:px-8 pb-10">
-                    /* Search Content */
+                    {/* Search Content */}
                     <div>
                         {!hasAccess && (
                             <div className="mb-6 p-4 bg-[#fffdf9] rounded-sm border border-[#e8dfd1] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
