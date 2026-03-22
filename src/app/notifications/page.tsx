@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Bell, BellOff, CheckDouble, UserPlus, Radio, Film, Podcast, Clock } from 'lucide-react';
+import { ArrowLeft, Bell, BellOff, CheckCheck, UserPlus, Radio, Film, Podcast, Clock } from 'lucide-react';
 import Link from 'next/link';
 
 interface NotificationData {
@@ -162,7 +162,7 @@ export default function NotificationsPage() {
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-xl font-bold text-brand-900 font-serif tracking-widest">お知らせ・通知</h1>
                     <button onClick={markAllAsRead} className="text-xs text-brand-500 hover:text-brand-800 font-bold tracking-widest transition-colors flex items-center gap-1 bg-[#fffdf9] px-3 py-1.5 rounded-sm border border-brand-200 shadow-sm">
-                        <CheckDouble size={14} /> すべて既読にする
+                        <CheckCheck size={14} /> すべて既読にする
                     </button>
                 </div>
                 

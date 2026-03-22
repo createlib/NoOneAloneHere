@@ -193,7 +193,7 @@ export default function PublicProfilePage() {
                             </div>
                         </aside>
 
-                        <div className="flex-1 min-w-0 space-y-6 animate-fade-in-up"" style={{ animationDelay: '0.1s' }}>
+                        <div className="flex-1 min-w-0 space-y-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                             {profile.bio && (
                                 <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
                                     <h2 className="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest mb-4 border-b border-brand-200 pb-2">自己紹介</h2>

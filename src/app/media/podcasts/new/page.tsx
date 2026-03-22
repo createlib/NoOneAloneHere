@@ -204,6 +204,7 @@ export default function PodcastPostPage() {
 
         let finalAudioUrl = '';
         let finalThumbUrl = '';
+        let finalIsEmbedMode = isEmbedMode;
 
         if (audioType !== 'live' && !editPid) {
             if (audioType === 'upload' && !audioFile) return alert('音声ファイルを選択してください');
@@ -356,7 +357,7 @@ export default function PodcastPostPage() {
                     const oldData = snap.data();
                     if (!finalAudioUrl) {
                         finalAudioUrl = oldData.audioUrl;
-                        isEmbedMode = oldData.isEmbed || false;
+                        finalIsEmbedMode = oldData.isEmbed || false;
                     }
                     if (!finalThumbUrl) finalThumbUrl = oldData.thumbnailUrl;
                 }
@@ -372,7 +373,7 @@ export default function PodcastPostPage() {
                 authorIcon: finalAuthorIcon,
                 sourceType: audioType,
                 audioUrl: finalAudioUrl || '',
-                isEmbed: isEmbedMode,
+                isEmbed: finalIsEmbedMode,
                 thumbnailUrl: finalThumbUrl || null,
                 title,
                 description,

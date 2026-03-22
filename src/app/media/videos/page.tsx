@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Film, Search, ChevronRight, X, Play, CheckCircle2, UserGroup, Sparkles, Plus } from 'lucide-react';
+import { Film, Search, ChevronRight, X, Play, CheckCircle2, Users, Sparkles, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 interface VideoData {
@@ -125,7 +125,7 @@ export default function VideosPage() {
         if (type === 'following') {
             setModalData({
                 isOpen: true,
-                title: <><UserGroup className="text-brand-400 mr-2 w-5 text-center" /> フォロー中の新着</>,
+                title: <><Users className="text-brand-400 mr-2 w-5 text-center" /> フォロー中の新着</>,
                 videos: followingVideos
             });
         } else {
@@ -203,7 +203,7 @@ export default function VideosPage() {
                             <div className="relative">
                                 <div className="flex justify-between items-end mb-4 border-b border-brand-200 pb-2">
                                     <h2 className="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest flex items-center">
-                                        <UserGroup className="text-brand-400 mr-3 w-5" /> フォロー中の新着
+                                        <Users className="text-brand-400 mr-3 w-5" /> フォロー中の新着
                                     </h2>
                                     <button onClick={() => openModal('following')} className="text-[10px] sm:text-xs font-bold text-brand-500 hover:text-brand-800 transition-colors tracking-widest flex items-center bg-brand-50 px-3 py-1.5 rounded-sm border border-brand-200 shadow-sm">
                                         すべて見る <ChevronRight size={14} className="ml-1" />
