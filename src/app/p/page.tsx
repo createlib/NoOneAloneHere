@@ -46,20 +46,32 @@ function PublicProfileContent() {
 
     useEffect(() => {
         if (!targetUid) {
-            setLoading(false);
-            return;
+            // During Next.js static export hydration, useSearchParams might be null initially.
+            // Wait a brief moment before assuming the URL is genuinely missing the uid param.
+            const hydrationTimer = setTimeout(() => {
+                setLoading(false);
+            }, 800);
+            return () => clearTimeout(hydrationTimer);
         }
 
         const loadData = async () => {
+            setLoading(true); // Re-assert loading state when targetUid resolves
             try {
-                // Fetch User Profile Source Truth
-                const userRef = doc(db, 'artifacts', APP_ID, 'users', targetUid);
-                const userSnap = await getDoc(userRef);
+                console.log("Loading public profile for UID:", targetUid);
+                // Fetch User Profile Source Truth from PUBLIC subcollection
+                const userRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', targetUid);
+                let userSnap = await getDoc(userRef);
 
                 if (!userSnap.exists()) {
-                    setUserData(null);
-                    setLoading(false);
-                    return;
+                    // Fallback to basic users collection
+                    console.log("Not found in public/data/users, falling back to users/");
+                    const fallbackRef = doc(db, 'artifacts', APP_ID, 'users', targetUid);
+                    userSnap = await getDoc(fallbackRef);
+                    if (!userSnap.exists()) {
+                        setUserData(null);
+                        setLoading(false);
+                        return;
+                    }
                 }
 
                 const loadedData = userSnap.data();
