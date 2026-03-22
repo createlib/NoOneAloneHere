@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, setDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,7 +40,8 @@ interface CommentData {
 }
 
 export default function PodcastDetailPage() {
-    const { id } = useParams() as { id: string };
+    const searchParams = useSearchParams();
+    const id = searchParams?.get('id') || '';
     const { user, loading } = useAuth();
     const router = useRouter();
 
@@ -66,6 +67,13 @@ export default function PodcastDetailPage() {
 
     useEffect(() => {
         if (loading) return;
+        if (!id) {
+            const timer = setTimeout(() => {
+                setIsLoading(false);
+                setNotFound(true);
+            }, 800);
+            return () => clearTimeout(timer);
+        }
 
         const init = async () => {
             if (user && !user.isAnonymous) {

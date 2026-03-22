@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, onSnapshot, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
 import { db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { Podcast, Search, Users, Sparkles, X, ChevronRight, Radio, Mic, Play } from 'lucide-react';
+import { Podcast, Search, Users, Sparkles, X, ChevronRight, Radio, Mic, Play, Plus } from 'lucide-react';
 
 interface PodcastData {
     id: string;
@@ -52,6 +52,7 @@ export default function PodcastsPage() {
     const [showMoreModal, setShowMoreModal] = useState<{ isOpen: boolean; type: 'following' | 'recommended' | null }>({ isOpen: false, type: null });
 
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const [canPost, setCanPost] = useState(false);
 
     useEffect(() => {
         if (loading) return;
@@ -59,6 +60,14 @@ export default function PodcastsPage() {
         const fetchData = async () => {
             try {
                 if (user && !user.isAnonymous) {
+                    const mySnap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data'));
+                    if (mySnap.exists()) {
+                        const rank = mySnap.data().membershipRank || 'arrival';
+                        if (rank !== 'arrival' || mySnap.data().userId === 'admin') {
+                            setCanPost(true);
+                        }
+                    }
+
                     const followsSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'following'));
                     setFollowingIds(followsSnap.docs.map(d => d.id));
                 }
@@ -145,7 +154,7 @@ export default function PodcastsPage() {
         const durationStr = formatDuration(p.duration);
 
         return (
-            <Link href={`/media/podcasts/${p.id}`} className={`flex flex-col bg-[#fffdf9] p-4 rounded-md border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group ${isScrollMode ? 'w-full h-full snap-start' : 'w-full h-full'}`}>
+            <Link href={`/media/podcasts/detail?id=${p.id}`} className={`flex flex-col bg-[#fffdf9] p-4 rounded-md border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group ${isScrollMode ? 'w-full h-full snap-start' : 'w-full h-full'}`}>
                 <div className="flex gap-3 sm:gap-4 items-start mb-3">
                     <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-inner mt-0.5">
                         <img src={p.thumbnailUrl || 'https://via.placeholder.com/300x300?text=CAST'} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" alt={p.title} />
@@ -185,10 +194,19 @@ export default function PodcastsPage() {
             <main className="w-full max-w-[1600px] mx-auto pt-4 px-4 sm:px-6 lg:px-8">
                 
                 {/* Hero Header */}
-                <div className="py-8 md:py-12 flex flex-col items-center text-center relative max-w-4xl mx-auto">
+                <div className="flex justify-between items-center mb-8 relative z-10 pt-4">
+                    <h1 className="text-3xl font-bold font-serif text-brand-900 tracking-widest flex items-center gap-3">
+                        <Podcast className="text-brand-300" size={32} /> NOAH CAST
+                    </h1>
+                    {canPost && (
+                        <Link href="/media/podcasts/new" className="inline-flex items-center px-4 py-2 bg-[#8b6a4f] text-[#fffdf9] text-xs font-bold rounded-sm shadow-md hover:bg-[#725b3f] transition-colors border border-[#725b3f] tracking-widest">
+                            <Plus size={14} className="mr-1" /> 音声を投稿
+                        </Link>
+                    )}
+                </div>
+                
+                <div className="pb-8 md:pb-12 flex flex-col items-center text-center relative max-w-4xl mx-auto">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.05)_0%,transparent_70%)] pointer-events-none"></div>
-                    <Podcast className="w-10 h-10 text-[#d4af37] mb-3" />
-                    <h1 className="text-3xl md:text-5xl font-bold font-serif text-brand-900 tracking-widest mb-3">NOAH CAST</h1>
                     <p className="text-sm text-brand-500 tracking-widest max-w-2xl mx-auto leading-relaxed">
                         声だからこそ伝わる温度、思考のプロセス。<br className="hidden sm:block" />対談やひとり語りを通して、メンバーの深い価値観に触れる場所。
                     </p>

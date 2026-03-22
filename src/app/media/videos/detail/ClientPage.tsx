@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, deleteDoc, setDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,7 +36,8 @@ interface CommentData {
 }
 
 export default function VideoDetailPage() {
-    const { id } = useParams() as { id: string };
+    const searchParams = useSearchParams();
+    const id = searchParams?.get('id') || '';
     const { user, loading } = useAuth();
     const router = useRouter();
 
@@ -60,6 +61,13 @@ export default function VideoDetailPage() {
 
     useEffect(() => {
         if (loading) return;
+        if (!id) {
+            const timer = setTimeout(() => {
+                setIsLoading(false);
+                setNotFound(true);
+            }, 800);
+            return () => clearTimeout(timer);
+        }
 
         const init = async () => {
             if (user && !user.isAnonymous) {
@@ -413,7 +421,7 @@ export default function VideoDetailPage() {
                         {relatedVideos.map(v => {
                             const date = new Date(v.createdAt).toLocaleDateString();
                             return (
-                                <Link key={v.id} href={`/media/videos/${v.id}`} className="flex gap-3 group cursor-pointer bg-[#fffdf9] p-2 sm:p-3 rounded-sm border border-brand-100 hover:border-brand-300 hover:shadow-md transition-all">
+                                <Link key={v.id} href={`/media/videos/detail?id=${v.id}`} className="flex gap-3 group cursor-pointer bg-[#fffdf9] p-2 sm:p-3 rounded-sm border border-brand-100 hover:border-brand-300 hover:shadow-md transition-all">
                                     <div className="w-36 sm:w-40 aspect-video bg-black rounded-sm overflow-hidden flex-shrink-0 relative border border-brand-200">
                                         <img src={v.thumbnailUrl || 'https://via.placeholder.com/320x180?text=NOAH'} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" alt={v.title} />
                                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><Play className="text-white text-xl fill-white" /></div>

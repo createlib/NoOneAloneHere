@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { db, APP_ID } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { Anchor, User as UserIcon, ShieldHalf, Globe, Instagram, Twitter, Check, ArrowLeft } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -42,6 +42,8 @@ function PublicProfileContent() {
 
     const [userData, setUserData] = useState<any>(null);
     const [osData, setOsData] = useState<any>(null);
+    const [userVideos, setUserVideos] = useState<any[]>([]);
+    const [userPodcasts, setUserPodcasts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -85,6 +87,20 @@ function PublicProfileContent() {
                         setOsData(osSnap.data());
                     }
                 }
+
+                try {
+                    const vQ = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos'), where('authorId', '==', targetUid));
+                    const vSnap = await getDocs(vQ);
+                    const vMap = vSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                    vMap.sort((a:any,b:any) => new Date(b.createdAt||b.updatedAt||0).getTime() - new Date(a.createdAt||a.updatedAt||0).getTime());
+                    setUserVideos(vMap);
+
+                    const pQ = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts'), where('authorId', '==', targetUid));
+                    const pSnap = await getDocs(pQ);
+                    const pMap = pSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                    pMap.sort((a:any,b:any) => new Date(b.createdAt||b.updatedAt||0).getTime() - new Date(a.createdAt||a.updatedAt||0).getTime());
+                    setUserPodcasts(pMap);
+                } catch(e) { console.error("Media fetch error", e); }
             } catch (error) {
                 console.error("Error loading public profile:", error);
             } finally {
@@ -298,6 +314,51 @@ function PublicProfileContent() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Media Section */}
+                        {(userVideos.length > 0 || userPodcasts.length > 0) && (
+                            <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border border-[#e8dfd1] p-6 sm:p-8 relative mt-6 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                                <h2 className="text-lg font-bold text-[#3e2723] mb-6 pb-2 border-b border-[#e8dfd1] font-serif tracking-widest flex justify-between items-center">
+                                    <span>メディア・発信録</span>
+                                </h2>
+                                
+                                {userVideos.length > 0 && (
+                                    <div className="mb-6">
+                                        <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest border-b border-[#e8dfd1] pb-1">公開動画 ({userVideos.length})</h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {userVideos.map((v, i) => (
+                                                <a key={i} href={`/media/videos/detail?id=${v.id}`} target="_blank" rel="noreferrer" className="flex gap-3 bg-[#fdfaf5] p-2 border border-[#e8dfd1] rounded-sm hover:-translate-y-0.5 hover:shadow-md transition-all group">
+                                                    <div className="w-20 h-14 bg-black rounded-sm overflow-hidden relative flex-shrink-0 border border-[#e8dfd1]">
+                                                        <img src={v.thumbnailUrl || 'https://via.placeholder.com/120x80?text=VIDEO'} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform" alt=""/>
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                        <div className="text-xs font-bold text-[#3e2723] line-clamp-2 leading-tight group-hover:text-[#b8860b] transition-colors">{v.title}</div>
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {userPodcasts.length > 0 && (
+                                    <div>
+                                        <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest border-b border-[#e8dfd1] pb-1">公開ラジオ ({userPodcasts.length})</h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {userPodcasts.map((p, i) => (
+                                                <a key={i} href={`/media/podcasts/detail?id=${p.id}`} target="_blank" rel="noreferrer" className="flex gap-3 bg-[#fdfaf5] p-3 border border-[#e8dfd1] rounded-sm hover:-translate-y-0.5 hover:shadow-md transition-all group">
+                                                    <div className="w-10 h-10 bg-[#1a110f] rounded-sm flex items-center justify-center flex-shrink-0 border border-brand-100 shadow-inner">
+                                                        <img src={p.thumbnailUrl || 'https://via.placeholder.com/100x100?text=AUDIO'} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt="" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                        <div className="text-xs font-bold text-[#3e2723] line-clamp-2 leading-tight group-hover:text-[#b8860b] transition-colors">{p.title}</div>
+                                                    </div>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
