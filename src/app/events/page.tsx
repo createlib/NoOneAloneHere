@@ -36,6 +36,7 @@ type EventData = {
     lng?: number;
     participantCount: number;
     participants?: string[];
+    endTimestamp?: string;
     createdAt?: any;
     updatedAt?: any;
 };
@@ -71,8 +72,9 @@ function EventsContent() {
     const { user } = useAuth();
     const [userData, setUserData] = useState<any>(null);
 
-    const [viewMode, setViewMode] = useState<'map' | 'list-events' | 'list-jobs'>('map');
+    const [viewMode, setViewMode] = useState<'map' | 'list-events' | 'list-jobs'>('list-events');
     const [isLoading, setIsLoading] = useState(true);
+    const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
     
     const [allEvents, setAllEvents] = useState<EventData[]>([]);
     const [allJobs, setAllJobs] = useState<JobData[]>([]);
@@ -137,7 +139,13 @@ function EventsContent() {
     useEffect(() => {
         if (typeof navigator !== 'undefined' && navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                (pos) => {
+                    const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    setUserLocation(loc);
+                    if (leafletMap.current) {
+                        leafletMap.current.setView([loc.lat, loc.lng], 13);
+                    }
+                },
                 (err) => console.log("Location access denied or error")
             );
         }
@@ -284,6 +292,12 @@ function EventsContent() {
             if (eventFormatFilter === 'offline' && e.isOnline) return false;
             if (eventFormatFilter === 'online' && !e.isOnline) return false;
             
+            if (e.endTimestamp) {
+                if (new Date(e.endTimestamp) < new Date()) return false;
+            } else if (e.endDate && e.endTime) {
+                if (new Date(`${e.endDate}T${e.endTime}`) < new Date()) return false;
+            }
+
             if (eventTagsFilter.size > 0) {
                 const hasTag = e.tags?.some(t => eventTagsFilter.has(t));
                 if (!hasTag) return false;
@@ -375,8 +389,8 @@ function EventsContent() {
             const L = (window as any).L;
             if (L) {
                 leafletMap.current = L.map(mapRef.current).setView([35.681236, 139.767125], 5);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+                L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>'
                 }).addTo(leafletMap.current);
                 updateMapMarkers(filteredEvents, filteredJobs);
             }
@@ -861,34 +875,36 @@ function EventsContent() {
                         </div>
                     ) : (
                         filteredEvents.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {filteredEvents.map(ev => (
-                                    <div key={ev.id} className="bg-white border text-brand-800 border-brand-200 rounded-sm overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                                        <div className="h-32 bg-brand-100 relative overflow-hidden">
+                                    <div key={ev.id} onClick={() => setSelectedEvent(ev)} className="bg-white border text-brand-800 border-brand-200 rounded-sm overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer flex h-24">
+                                        <div className="w-24 shrink-0 bg-brand-100 relative overflow-hidden">
                                             {ev.thumbnailUrl ? (
                                                 <img src={ev.thumbnailUrl} className="w-full h-full object-cover" />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-10 h-10 text-brand-300 opacity-50" /></div>
+                                                <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6 text-brand-300 opacity-50" /></div>
                                             )}
-                                            <div className="absolute top-2 left-2 flex gap-1">
-                                                {ev.isOnline && <span className="bg-brand-800 text-white text-[10px] px-2 py-0.5 rounded-sm font-bold tracking-widest shadow-sm">オンライン</span>}
-                                                {Number(ev.price) === 0 ? <span className="bg-[#b8860b] text-[#fffdf9] text-[10px] px-2 py-0.5 rounded-sm font-bold tracking-widest shadow-sm">無料</span> : null}
+                                            <div className="absolute top-1 left-1 flex flex-col gap-1">
+                                                {ev.isOnline && <span className="bg-brand-800 text-white text-[8px] px-1.5 py-0.5 rounded-sm font-bold tracking-widest shadow-sm text-center">オンライン</span>}
+                                                {Number(ev.price) === 0 && <span className="bg-[#b8860b] text-[#fffdf9] text-[8px] px-1.5 py-0.5 rounded-sm font-bold tracking-widest shadow-sm text-center">無料</span>}
                                             </div>
                                         </div>
-                                        <div className="p-3">
-                                            <h3 className="font-bold text-brand-900 line-clamp-2 text-sm leading-tight mb-2 tracking-widest">{ev.title}</h3>
-                                            <div className="flex items-center text-[10px] text-brand-500 mb-1 gap-1">
-                                                <Calendar className="w-3 h-3"/> {ev.startDate} {ev.startTime} 〜
-                                            </div>
-                                            <div className="flex items-center justify-between mt-1">
-                                                <div className="flex items-center text-[10px] text-brand-500 gap-1 truncate max-w-[70%]">
-                                                    <MapPin className="w-3 h-3 shrink-0"/> {ev.isOnline ? ev.locationName : (ev.locationName || '場所未設定')}
+                                        <div className="p-2 flex-1 flex flex-col justify-between min-w-0">
+                                            <h3 className="font-bold text-brand-900 line-clamp-2 text-sm leading-tight tracking-widest">{ev.title}</h3>
+                                            <div>
+                                                <div className="flex items-center text-[10px] text-brand-500 gap-1 truncate">
+                                                    <Calendar className="w-3 h-3 shrink-0"/> {ev.startDate} <span className="hidden sm:inline">{ev.startTime} 〜</span>
                                                 </div>
-                                                {!ev.isOnline && ev.lat && ev.lng && userLocation && (
-                                                    <span className="bg-brand-50 text-brand-600 px-1.5 py-0.5 rounded-sm text-[9px] font-bold shadow-sm whitespace-nowrap">
-                                                        <Compass className="w-2.5 h-2.5 inline mr-0.5" />{calculateDistance(userLocation.lat, userLocation.lng, ev.lat, ev.lng).toFixed(1)}km
-                                                    </span>
-                                                )}
+                                                <div className="flex items-center justify-between mt-0.5">
+                                                    <div className="flex items-center text-[10px] text-brand-500 gap-1 truncate max-w-[70%]">
+                                                        <MapPin className="w-3 h-3 shrink-0"/> {ev.isOnline ? ev.locationName : (ev.locationName || '未設定')}
+                                                    </div>
+                                                    {!ev.isOnline && ev.lat && ev.lng && userLocation && (
+                                                        <span className="text-brand-600 px-1 py-0.5 rounded-sm text-[9px] font-bold shadow-sm whitespace-nowrap bg-brand-50">
+                                                            <Compass className="w-2.5 h-2.5 inline mr-0.5" />{calculateDistance(userLocation.lat, userLocation.lng, ev.lat, ev.lng).toFixed(1)}km
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -992,6 +1008,14 @@ function EventsContent() {
                     </a>
                 </div>
             </nav>
+            {/* Full Screen Image Viewer */}
+            {fullImageUrl && (
+                <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center backdrop-blur-sm transition-opacity" onClick={() => setFullImageUrl(null)}>
+                    <img src={fullImageUrl} className="max-w-[95vw] max-h-[95vh] object-contain shadow-2xl" />
+                    <button className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-colors"><X className="w-6 h-6" /></button>
+                </div>
+            )}
+
             {/* Event Detail Sheet (placeholder for full implementation) */}
             <div className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${selectedEvent && !adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}>
                 <div className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onClick={() => setSelectedEvent(null)}>
@@ -1004,7 +1028,15 @@ function EventsContent() {
                 <div className="px-5 pb-20 lg:pb-8 pt-4">
                     {selectedEvent && (
                         <div>
-                            {selectedEvent.thumbnailUrl && <img src={selectedEvent.thumbnailUrl} className="w-full h-48 sm:h-64 object-cover rounded-sm border border-brand-200 mb-5 shadow-sm" />}
+                            {selectedEvent.imageUrls && selectedEvent.imageUrls.length > 0 ? (
+                                <div className="flex gap-2 overflow-x-auto pb-2 mb-4 snap-x">
+                                    {selectedEvent.imageUrls.map((url, idx) => (
+                                        <img key={idx} src={url} onClick={() => setFullImageUrl(url)} className="w-48 h-32 sm:w-64 sm:h-40 object-cover rounded-sm border border-brand-200 shadow-sm shrink-0 snap-center cursor-pointer hover:opacity-90 transition-opacity" />
+                                    ))}
+                                </div>
+                            ) : selectedEvent.thumbnailUrl && (
+                                <img src={selectedEvent.thumbnailUrl} onClick={() => setFullImageUrl(selectedEvent.thumbnailUrl!)} className="w-full h-48 sm:h-64 object-cover rounded-sm border border-brand-200 mb-5 shadow-sm cursor-pointer hover:opacity-90 transition-opacity" />
+                            )}
                             
                             <div className="flex flex-wrap gap-2 mb-3">
                                 {selectedEvent.isOnline && <span className="bg-brand-800 text-white text-xs px-2.5 py-1 rounded-sm font-bold tracking-widest shadow-sm">オンライン</span>}
@@ -1155,6 +1187,30 @@ function EventsContent() {
                             <button onClick={() => setEventModalOpen(false)} className="p-2 text-brand-400 hover:text-brand-700"><X className="w-5 h-5" /></button>
                         </div>
                         <div className="p-5 overflow-y-auto flex-1 space-y-6">
+                            <div>
+                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">画像 (最大5枚)</label>
+                                <input type="file" multiple accept="image/*" onChange={(e) => {
+                                    if (e.target.files) {
+                                        const newFiles = Array.from(e.target.files).slice(0, 5 - eventFiles.length - eventOldImages.length);
+                                        const previewMapped = newFiles.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
+                                        setEventFiles(prev => [...prev, ...previewMapped]);
+                                    }
+                                }} className="mb-3 text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-[#3e2723] file:text-[#d4af37] hover:file:bg-[#2a1a17]" />
+                                <div className="flex gap-2 flex-wrap mb-2">
+                                    {eventOldImages.map((url, i) => (
+                                        <div key={`old-${i}`} className="relative w-16 h-16 border rounded-sm overflow-hidden shadow-sm">
+                                            <img src={url} className="w-full h-full object-cover" />
+                                            <button onClick={() => setEventOldImages(prev => prev.filter((_, idx) => idx !== i))} type="button" className="absolute top-0 right-0 bg-red-500/90 hover:bg-red-600 text-white rounded-bl-sm p-1 backdrop-blur-sm"><X className="w-3 h-3"/></button>
+                                        </div>
+                                    ))}
+                                    {eventFiles.map((item, i) => (
+                                        <div key={`new-${i}`} className="relative w-16 h-16 border rounded-sm overflow-hidden shadow-sm">
+                                            <img src={item.preview} className="w-full h-full object-cover" />
+                                            <button onClick={() => setEventFiles(prev => prev.filter((_, idx) => idx !== i))} type="button" className="absolute top-0 right-0 bg-red-500/90 hover:bg-red-600 text-white rounded-bl-sm p-1 backdrop-blur-sm"><X className="w-3 h-3"/></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                             <div>
                                 <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">イベント名 <span className="text-red-500">*</span></label>
                                 <input type="text" value={eventFormData.title} onChange={e=>setEventFormData({...eventFormData, title: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white" placeholder="例: 週末朝活コーヒー会" required />
