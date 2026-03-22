@@ -83,30 +83,28 @@ function SearchContent() {
                 
                 const rLevel = getRankLevel(currentRank.toLowerCase());
                 
-                if (rLevel >= 1 || adminFlag) {
-                    // Fetch Users
-                    const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
-                    const snap = await getDocs(usersRef);
-                    let usersList: UserData[] = [];
-                    snap.forEach(d => {
-                        const data = d.data() as UserData;
-                        if (data.isHidden !== true || adminFlag) {
-                            usersList.push({ ...data, id: d.id });
-                        }
-                    });
-                    
-                    // Sort by profileScore desc, then name
-                    usersList.sort((a, b) => {
-                        const scoreA = a.profileScore || 0;
-                        const scoreB = b.profileScore || 0;
-                        if (scoreB !== scoreA) return scoreB - scoreA;
-                        const nameA = a.name || a.userId || '';
-                        const nameB = b.name || b.userId || '';
-                        return nameA.localeCompare(nameB);
-                    });
-                    
-                    setAllUsers(usersList);
-                }
+                // Fetch Users
+                const usersRef = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+                const snap = await getDocs(usersRef);
+                let usersList: UserData[] = [];
+                snap.forEach(d => {
+                    const data = d.data() as UserData;
+                    if (data.isHidden !== true || adminFlag) {
+                        usersList.push({ ...data, id: d.id });
+                    }
+                });
+                
+                // Sort by profileScore desc, then name
+                usersList.sort((a, b) => {
+                    const scoreA = a.profileScore || 0;
+                    const scoreB = b.profileScore || 0;
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+                    const nameA = a.name || a.userId || '';
+                    const nameB = b.name || b.userId || '';
+                    return nameA.localeCompare(nameB);
+                });
+                
+                setAllUsers(usersList);
             } catch (err) {
                 console.error("Failed to fetch users", err);
             } finally {
@@ -181,23 +179,19 @@ function SearchContent() {
 
             {/* Main Content Area */}
             <main className="max-w-7xl mx-auto pt-24 lg:pt-20 px-4 sm:px-6 lg:px-8 pb-10">
-                {!hasAccess ? (
-                    <div id="locked-view" className="text-center py-24 px-6 bg-[#fffdf9] rounded-sm border border-[#e8dfd1] shadow-md mb-12 max-w-2xl mx-auto relative overflow-hidden">
-                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-full h-1 bg-[#8b6a4f]"></div>
-                        <div className="w-20 h-20 bg-[#f7f5f0] rounded-full border border-[#e8dfd1] flex items-center justify-center mx-auto mb-6 text-[#c8b9a6] shadow-inner">
-                            <Lock className="w-8 h-8" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-[#3e2723] mb-4 font-serif tracking-widest">検索機能の利用制限</h2>
-                        <p className="text-sm text-[#725b3f] mb-8 tracking-widest leading-relaxed">
-                            他の乗客を探す機能は、<br className="sm:hidden" /><span className="font-bold text-[#8b6a4f]">SETTLER（またはそれ以上）</span>の会員限定です。<br />
-                            コミュニティの仲間を探すには、契約のアップグレードをご検討ください。
-                        </p>
-                        <Link href={`/user/${user?.uid}?tab=billing`} className="inline-flex items-center justify-center px-8 py-4 bg-[#3e2723] text-[#d4af37] font-bold rounded-sm shadow-md hover:bg-[#2a1a17] transition-colors border border-[#b8860b] tracking-widest text-sm transform hover:-translate-y-0.5 whitespace-nowrap">
-                            <ShieldHalf className="mr-2 w-4 h-4" /> 契約を確認・変更する
-                        </Link>
-                    </div>
-                ) : (
-                    <div id="search-content">
+                    <div>
+                        {!hasAccess && (
+                            <div className="mb-6 p-4 bg-[#fffdf9] rounded-sm border border-[#e8dfd1] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-[#8b6a4f]"></div>
+                                <div>
+                                    <h3 className="font-bold text-[#3e2723] text-sm tracking-widest mb-1 flex items-center gap-2"><Lock className="w-4 h-4 text-[#8b6a4f]"/> 検索機能の利用制限</h3>
+                                    <p className="text-[10px] sm:text-xs text-[#725b3f] tracking-widest leading-relaxed">絞り込み検索機能は、<span className="font-bold">SETTLER（またはそれ以上）</span>の会員限定です。</p>
+                                </div>
+                                <Link href={`/user/${user?.uid}?tab=billing`} className="shrink-0 px-4 py-2 bg-[#3e2723] text-[#d4af37] border border-[#b8860b] font-bold rounded-sm shadow-sm hover:bg-[#2a1a17] transition-colors tracking-widest text-[10px] transform hover:-translate-y-0.5 whitespace-nowrap">
+                                    アップグレード
+                                </Link>
+                            </div>
+                        )}
                         {/* Search & Filter Header */}
                         <div className="mb-8 bg-[#fffdf9] p-4 sm:p-6 rounded-sm shadow-md border border-[#e8dfd1] relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-[#8b6a4f] z-10 m-2 opacity-50"></div>
@@ -211,7 +205,8 @@ function SearchContent() {
                                         placeholder="名前、職業、スキルで検索..." 
                                         value={searchQ}
                                         onChange={e => setSearchQ(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 rounded-sm border border-[#e8dfd1] shadow-sm text-sm focus:ring-[#8b6a4f] focus:border-[#8b6a4f] bg-[#f7f5f0]" 
+                                        disabled={!hasAccess}
+                                        className="w-full pl-10 pr-4 py-3 rounded-sm border border-[#e8dfd1] shadow-sm text-sm focus:ring-[#8b6a4f] focus:border-[#8b6a4f] bg-[#f7f5f0] disabled:opacity-50 disabled:cursor-not-allowed" 
                                     />
                                 </div>
                                 
@@ -226,14 +221,16 @@ function SearchContent() {
                                             min="1" max="60" 
                                             value={osQ}
                                             onChange={e => setOsQ(e.target.value)}
-                                            className="w-full border border-[#e8dfd1] rounded-sm py-3 pl-9 pr-3 text-sm bg-[#f7f5f0] text-[#5c4a3d] shadow-sm focus:ring-[#8b6a4f] focus:border-[#8b6a4f] font-medium tracking-widest" 
+                                            disabled={!hasAccess}
+                                            className="w-full border border-[#e8dfd1] rounded-sm py-3 pl-9 pr-3 text-sm bg-[#f7f5f0] text-[#5c4a3d] shadow-sm focus:ring-[#8b6a4f] focus:border-[#8b6a4f] font-medium tracking-widest disabled:opacity-50 disabled:cursor-not-allowed" 
                                         />
                                     </div>
                                     
                                     <select 
                                         value={areaQ}
                                         onChange={e => setAreaQ(e.target.value)}
-                                        className="flex-1 sm:w-40 border border-[#e8dfd1] rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-[#5c4a3d] shadow-sm focus:ring-[#8b6a4f] font-medium tracking-widest"
+                                        disabled={!hasAccess}
+                                        className="flex-1 sm:w-40 border border-[#e8dfd1] rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-[#5c4a3d] shadow-sm focus:ring-[#8b6a4f] font-medium tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <option value="">全てのエリア</option>
                                         {PREFECTURES.map(p => <option key={p} value={p}>{p}</option>)}
@@ -311,7 +308,6 @@ function SearchContent() {
                             )}
                         </div>
                     </div>
-                )}
             </main>
 
             {/* Mobile Bottom Navigation Component */}
