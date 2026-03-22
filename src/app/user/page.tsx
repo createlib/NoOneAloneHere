@@ -4,9 +4,10 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, Ship, Hourglass, Compass, User as UserIcon, Bell, Settings, Lock, Share, Image as ImageIcon, ChevronRight, Dna, FileText, Check, ShieldHalf, Key } from 'lucide-react';
+import { Anchor, Ship, Hourglass, Compass, User as UserIcon, Bell, Settings, Lock, Share, Image as ImageIcon, ChevronRight, Dna, FileText, Check, ShieldHalf, Key, Play, CheckCircle2 } from 'lucide-react';
+
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -48,6 +49,10 @@ function UserProfileContent() {
   
   const [activeTab, setActiveTab] = useState<'profile' | 'media'>('profile');
   const [mediaTab, setMediaTab] = useState<'videos' | 'podcasts' | 'playlists'>('videos');
+
+  const [userVideos, setUserVideos] = useState<any[]>([]);
+  const [userPodcasts, setUserPodcasts] = useState<any[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
 
   const appId = 'NOAH_APP_v1';
 
@@ -116,8 +121,36 @@ function UserProfileContent() {
       }
     }
     
-    loadData();
-  }, [user, uidParam]);
+    async function loadUserMedia() {
+      if (!targetUid) return;
+      setMediaLoading(true);
+      try {
+        const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
+        const vq = query(videosRef, where('authorId', '==', targetUid));
+        const vSnap = await getDocs(vq);
+        const videos = vSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        videos.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        setUserVideos(videos);
+
+        const podsRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
+        const pq = query(podsRef, where('authorId', '==', targetUid));
+        const pSnap = await getDocs(pq);
+        const pods = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        pods.sort((a: any, b: any) => new Date(b.createdAt || b.updatedAt || 0).getTime() - new Date(a.createdAt || a.updatedAt || 0).getTime());
+        setUserPodcasts(pods);
+      } catch (e) {
+        console.error("Error loading user media:", e);
+      } finally {
+        setMediaLoading(false);
+      }
+    }
+
+    if (user) {
+        loadData().then(() => {
+            if (targetUid) loadUserMedia();
+        });
+    }
+  }, [user, uidParam, targetUid]);
 
   const toggleFollow = async () => {
       if (!user || !targetUid || targetUid === user.uid) return;
@@ -356,17 +389,97 @@ function UserProfileContent() {
                       <div className="mb-6">
                           <div className="flex flex-wrap gap-2">
                               <button onClick={() => setMediaTab('videos')} className={`px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all ${mediaTab === 'videos' ? 'bg-[#b8860b] text-[#fffdf9] shadow-md border border-[#b8860b]' : 'bg-[#fffdf9] text-[#725b3f] hover:bg-[#f7f5f0] border border-[#e8dfd1]'}`}>
-                                  動画
+                                  動画 ({userVideos.length})
                               </button>
                               <button onClick={() => setMediaTab('podcasts')} className={`px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all ${mediaTab === 'podcasts' ? 'bg-[#b8860b] text-[#fffdf9] shadow-md border border-[#b8860b]' : 'bg-[#fffdf9] text-[#725b3f] hover:bg-[#f7f5f0] border border-[#e8dfd1]'}`}>
-                                  音声
+                                  音声 ({userPodcasts.length})
                               </button>
                           </div>
                       </div>
 
-                      <div className="bg-[#fffdf9] p-10 text-center rounded-sm border border-[#e8dfd1] shadow-sm">
-                          <p className="text-[#a09080] font-bold tracking-widest text-sm">コンテンツがありません</p>
-                      </div>
+                      {mediaLoading ? (
+                          <div className="text-center py-20 text-[#a09080] font-bold tracking-widest text-sm">読み込み中...</div>
+                      ) : mediaTab === 'videos' ? (
+                          userVideos.length === 0 ? (
+                              <div className="bg-[#fffdf9] p-10 text-center rounded-sm border border-[#e8dfd1] shadow-sm">
+                                  <p className="text-[#a09080] font-bold tracking-widest text-sm">投稿された動画がありません</p>
+                              </div>
+                          ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                  {userVideos.map(v => {
+                                      const date = new Date(v.createdAt || 0);
+                                      const dateStr = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+                                      return (
+                                          <Link key={v.id} href={`/media/videos/${v.id}`} className="video-card flex flex-col group cursor-pointer bg-[#fffdf9] rounded-sm overflow-hidden border border-[#e8dfd1] shadow-sm hover:shadow-xl w-full h-full">
+                                              <div className="relative w-full aspect-video bg-[#000] overflow-hidden">
+                                                  <img src={v.thumbnailUrl || 'https://via.placeholder.com/640x360?text=No+Image'} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={v.title} />
+                                                  <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 flex items-center justify-center group-hover:opacity-100">
+                                                      <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 transition-transform duration-300">
+                                                          <Play className="text-white text-xl ml-1 fill-white" />
+                                                      </div>
+                                                  </div>
+                                              </div>
+                                              <div className="p-4 flex gap-3 flex-1">
+                                                  <img src={v.authorIcon || 'https://via.placeholder.com/40?text=U'} className="w-10 h-10 rounded-full border border-[#e8dfd1] object-cover flex-shrink-0 shadow-sm" alt={v.authorName} />
+                                                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                                                      <div>
+                                                          <h3 className="text-sm font-bold text-[#3e2723] leading-snug line-clamp-2 mb-1.5 group-hover:text-[#b8860b] transition-colors font-serif tracking-wide">{v.title}</h3>
+                                                          <div className="flex items-center text-xs text-[#8b6a4f] mb-1">
+                                                              <span className="truncate hover:text-[#5c4a3d] transition-colors">{v.authorName || '名無し'}</span>
+                                                              <CheckCircle2 size={10} className="ml-1 text-[#d4af37]" />
+                                                          </div>
+                                                      </div>
+                                                      <p className="text-[10px] text-[#a09080] font-mono">{dateStr}</p>
+                                                  </div>
+                                              </div>
+                                          </Link>
+                                      );
+                                  })}
+                              </div>
+                          )
+                      ) : (
+                          userPodcasts.length === 0 ? (
+                              <div className="bg-[#fffdf9] p-10 text-center rounded-sm border border-[#e8dfd1] shadow-sm">
+                                  <p className="text-[#a09080] font-bold tracking-widest text-sm">投稿された音声がありません</p>
+                              </div>
+                          ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                  {userPodcasts.map(p => {
+                                      const date = new Date(p.createdAt || p.updatedAt || Date.now());
+                                      const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+                                      const plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
+                                      
+                                      return (
+                                          <Link key={p.id} href={`/media/podcasts/${p.id}`} className="flex flex-col bg-[#fffdf9] p-4 rounded-md border border-[#e8dfd1] shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full h-full">
+                                              <div className="flex gap-3 sm:gap-4 items-start mb-3">
+                                                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-[#e8dfd1] relative shadow-inner mt-0.5">
+                                                      <img src={p.thumbnailUrl || 'https://via.placeholder.com/300x300?text=CAST'} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" alt={p.title} />
+                                                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
+                                                          <Play className="text-white/90 w-6 h-6 fill-white shadow-sm drop-shadow-md" />
+                                                      </div>
+                                                  </div>
+                                                  <div className="flex-1 min-w-0 flex flex-col justify-center h-14 sm:h-16">
+                                                      <h3 className="text-sm sm:text-base font-bold text-[#3e2723] leading-snug line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors m-0 tracking-wide">{p.title || 'タイトルなし'}</h3>
+                                                  </div>
+                                              </div>
+                                              
+                                              <p className="text-[11px] sm:text-xs text-[#8b6a4f] line-clamp-2 leading-relaxed mb-4 flex-1 tracking-wide">{plainDesc}</p>
+                                              
+                                              <div className="flex flex-wrap items-center justify-between gap-2 mt-auto pt-3 border-t border-[#e8dfd1]/70">
+                                                  <div className="flex items-center gap-1.5 min-w-0 pr-2">
+                                                      <img src={p.authorIcon || 'https://via.placeholder.com/24?text=U'} className="w-5 h-5 rounded-full border border-[#e8dfd1] object-cover flex-shrink-0 shadow-sm" alt={p.authorName} />
+                                                      <span className="text-[10px] text-[#725b3f] truncate font-bold tracking-widest">{p.authorName || '名無し'}</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-2 shrink-0">
+                                                      <span className="text-[9px] text-[#a09080] font-mono">{dateStr}</span>
+                                                  </div>
+                                              </div>
+                                          </Link>
+                                      );
+                                  })}
+                              </div>
+                          )
+                      )}
                   </div>
               )}
           </div>
