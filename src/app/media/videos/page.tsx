@@ -7,6 +7,7 @@ import { db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Film, Search, ChevronRight, X, Play, CheckCircle2, Users, Sparkles, Plus } from 'lucide-react';
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
 
 interface VideoData {
     id: string;

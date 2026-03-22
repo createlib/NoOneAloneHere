@@ -22,8 +22,8 @@ export default function Login() {
   const [notification, setNotification] = useState<{msg: string, type: 'error' | 'success'} | null>(null);
 
   useEffect(() => {
-    if (user && !loading) {
-      router.push('/home'); // Redirect to dashboard if already logged in
+    if (user && !user.isAnonymous && !loading) {
+      router.push('/home'); // Redirect to dashboard if already logged in properly
     }
   }, [user, loading, router]);
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, storage } from '@/lib/firebase';
+import { db, storage, APP_ID } from '@/lib/firebase';
 import { collection, query, orderBy, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, where, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Navbar from '@/components/Navbar';
@@ -13,7 +13,6 @@ import { Anchor, Compass, Hourglass, Ship, User, Image as ImageIcon, Check, MapP
 import Script from 'next/script';
 
 const PRESET_TAGS = ["交流会", "勉強会", "スポーツ", "音楽", "アート", "グルメ", "アウトドア", "ビジネス", "初心者歓迎", "オンライン"];
-const APP_ID = 'noah-client';
 
 type EventData = {
     id: string;
@@ -1166,7 +1165,6 @@ export default function EventsPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-texture pb-20 flex flex-col">
-                <Navbar />
                 <div className="flex-1 flex items-center justify-center pt-20">
                     <Compass className="w-10 h-10 animate-spin text-brand-400 opacity-70" />
                 </div>

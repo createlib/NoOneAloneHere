@@ -41,7 +41,7 @@ function RegisterForm() {
 
   // Redirect if logged in
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !user.isAnonymous && !loading) {
       router.push('/home');
     }
   }, [user, loading, router]);

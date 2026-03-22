@@ -5,6 +5,7 @@ import { collection, getDocs, onSnapshot, query, where, orderBy } from 'firebase
 import { db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
 import { Podcast, Search, Users, Sparkles, X, ChevronRight, Radio, Mic, Play } from 'lucide-react';
 
 interface PodcastData {
@@ -179,8 +180,9 @@ export default function PodcastsPage() {
     };
 
     return (
-        <div className="antialiased min-h-screen bg-texture body-pb-nav lg:pb-0">
-            <main className="w-full max-w-[1600px] mx-auto pt-20 px-4 sm:px-6 lg:px-8">
+        <div className="antialiased min-h-screen bg-texture body-pb-nav lg:pb-0 pt-16">
+            <Navbar />
+            <main className="w-full max-w-[1600px] mx-auto pt-4 px-4 sm:px-6 lg:px-8">
                 
                 {/* Hero Header */}
                 <div className="py-8 md:py-12 flex flex-col items-center text-center relative max-w-4xl mx-auto">

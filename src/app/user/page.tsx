@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/lib/firebase';
+import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
 import { Anchor, Ship, Hourglass, Compass, User as UserIcon, Bell, Settings, Lock, Share, Image as ImageIcon, ChevronRight, Dna, FileText, Check, ShieldHalf, Key, Play, CheckCircle2 } from 'lucide-react';
@@ -54,8 +54,6 @@ function UserProfileContent() {
   const [userPodcasts, setUserPodcasts] = useState<any[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
 
-  const appId = 'NOAH_APP_v1';
-
   useEffect(() => {
     async function loadData() {
       if (!user) return;
@@ -66,7 +64,7 @@ function UserProfileContent() {
       setIsSelf(selfViewing);
       
       try {
-           const publicRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', targetId);
+           const publicRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', targetId);
            const publicSnap = await getDoc(publicRef);
            
            let loadedData: any = null;
@@ -78,12 +76,12 @@ function UserProfileContent() {
            
            if (!selfViewing) {
                // Check relationships
-               const myFollowingRef = doc(db, 'artifacts', appId, 'users', user.uid, 'following', targetId);
+               const myFollowingRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'following', targetId);
                const isFowSnap = await getDoc(myFollowingRef);
                const currentlyFollowing = isFowSnap.exists();
                setIsFollowing(currentlyFollowing);
                
-               const followerRef = doc(db, 'artifacts', appId, 'users', user.uid, 'followers', targetId);
+               const followerRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'followers', targetId);
                const isFowBackSnap = await getDoc(followerRef);
                const currentlyFollowedBack = isFowBackSnap.exists();
                
@@ -96,7 +94,7 @@ function UserProfileContent() {
            
            // Load private data if mutual, self, or covenant
            if (mutuallyFollowing || loadedData?.membershipRank === 'covenant' || selfViewing) {
-             const privateRef = doc(db, 'artifacts', appId, 'users', targetId, 'profile', 'data');
+             const privateRef = doc(db, 'artifacts', APP_ID, 'users', targetId, 'profile', 'data');
              const privateSnap = await getDoc(privateRef);
              if (privateSnap.exists()) {
                  loadedData = { ...(loadedData || {}), ...privateSnap.data() };
@@ -106,11 +104,11 @@ function UserProfileContent() {
            setUserData(loadedData);
         
         // Load Counts
-        const fowColl = collection(db, 'artifacts', appId, 'users', targetId, 'following');
+        const fowColl = collection(db, 'artifacts', APP_ID, 'users', targetId, 'following');
         const countSnapFow = await getCountFromServer(fowColl);
         setFollowingCount(countSnapFow.data().count);
         
-        const flerColl = collection(db, 'artifacts', appId, 'users', targetId, 'followers');
+        const flerColl = collection(db, 'artifacts', APP_ID, 'users', targetId, 'followers');
         const countSnapFler = await getCountFromServer(flerColl);
         setFollowersCount(countSnapFler.data().count);
         
@@ -125,14 +123,14 @@ function UserProfileContent() {
       if (!targetUid) return;
       setMediaLoading(true);
       try {
-        const videosRef = collection(db, 'artifacts', appId, 'public', 'data', 'videos');
+        const videosRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos');
         const vq = query(videosRef, where('authorId', '==', targetUid));
         const vSnap = await getDocs(vq);
         const videos = vSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         videos.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         setUserVideos(videos);
 
-        const podsRef = collection(db, 'artifacts', appId, 'public', 'data', 'podcasts');
+        const podsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts');
         const pq = query(podsRef, where('authorId', '==', targetUid));
         const pSnap = await getDocs(pq);
         const pods = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -156,8 +154,8 @@ function UserProfileContent() {
       if (!user || !targetUid || targetUid === user.uid) return;
       
       try {
-          const myFollowingRef = doc(db, 'artifacts', appId, 'users', user.uid, 'following', targetUid);
-          const targetFollowerRef = doc(db, 'artifacts', appId, 'users', targetUid, 'followers', user.uid);
+          const myFollowingRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'following', targetUid);
+          const targetFollowerRef = doc(db, 'artifacts', APP_ID, 'users', targetUid, 'followers', user.uid);
           
           if (isFollowing) {
               await deleteDoc(myFollowingRef);
