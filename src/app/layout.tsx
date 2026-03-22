@@ -5,10 +5,10 @@ import PWASetup from "@/components/PWASetup";
 import "./globals.css";
 
 const notoSerifJP = Noto_Serif_JP({
-  subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
   variable: "--font-noto-serif-jp",
   display: 'swap',
+  preload: false,
 });
 
 const cinzel = Cinzel({

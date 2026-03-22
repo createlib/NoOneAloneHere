@@ -4,12 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { ArrowLeft, Anchor, Ship, Eye, EyeOff, LoaderCircle } from 'lucide-react';
-
-const APP_ID = 'NOAH_APP_v1';
 
 export default function Login() {
   const router = useRouter();

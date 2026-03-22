@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, Ship, Hourglass, Compass, User as UserIcon, Bell, Settings, Lock, Share, Image as ImageIcon, ChevronRight, Dna, FileText, Check, ShieldHalf, Key, Play, CheckCircle2, MapPin } from 'lucide-react';
+import { Anchor, Ship, Hourglass, Compass, User as UserIcon, Bell, Settings, Lock, Share, Image as ImageIcon, ChevronRight, Dna, FileText, Check, ShieldHalf, Key, Play, CheckCircle2, MapPin, Globe, Instagram, Twitter } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -320,7 +320,7 @@ function UserProfileContent() {
                           )}
                       </div>
                       
-                      <div className={`grid ${isMutual || isSelf ? 'grid-cols-3' : 'grid-cols-2'} gap-2 py-4 border-t border-[#e8dfd1] relative z-20`}>
+                      <div className={`grid ${isMutual ? 'grid-cols-3' : 'grid-cols-2'} gap-2 py-4 border-t border-[#e8dfd1] relative z-20`}>
                           <button onClick={() => setFollowModalType('following')} className="text-center hover:bg-[#f7f5f0] transition-colors rounded-sm py-1">
                               <span className="block font-bold text-[#3e2723] text-lg font-serif">{followingCount}</span>
                               <span className="text-xs text-[#8b6a4f] font-medium tracking-widest">フォロー中</span>
@@ -329,7 +329,7 @@ function UserProfileContent() {
                               <span className="block font-bold text-[#3e2723] text-lg font-serif">{followersCount}</span>
                               <span className="text-xs text-[#8b6a4f] font-medium tracking-widest">フォロワー</span>
                           </button>
-                          {(isMutual || isSelf) && (
+                          {isMutual && (
                               <button onClick={() => setFollowModalType('mutual')} className="text-center border-l border-[#e8dfd1] hover:bg-[#f7f5f0] transition-colors rounded-sm py-1">
                                   <span className="block font-bold text-[#b8860b] text-lg font-serif">-</span>
                                   <span className="text-xs text-[#b8860b] font-medium tracking-widest">共通の航海士</span>
@@ -350,6 +350,13 @@ function UserProfileContent() {
                               <div className="w-8 h-8 rounded-full bg-[#f7f5f0] flex items-center justify-center text-[#8b6a4f] border border-[#e8dfd1]"><Compass size={14} /></div>
                               <span className="font-medium">{userData.prefecture || '地域未設定'} {userData.birthplace && `(出身: ${userData.birthplace})`}</span>
                           </div>
+                          {(userData.websiteUrl || userData.snsInstagram || userData.snsX) && (
+                              <div className="flex gap-3 pt-2">
+                                  {userData.websiteUrl && <a href={userData.websiteUrl} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full border border-[#e8dfd1] bg-[#fffdf9] flex items-center justify-center text-[#725b3f] hover:bg-[#f7f5f0] transition-colors shadow-sm"><Globe size={14} /></a>}
+                                  {userData.snsInstagram && <a href={userData.snsInstagram.startsWith('http') ? userData.snsInstagram : 'https://instagram.com/'+userData.snsInstagram} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full border border-[#e8dfd1] bg-[#fffdf9] flex items-center justify-center text-[#725b3f] hover:bg-[#f7f5f0] transition-colors shadow-sm"><Instagram size={14} /></a>}
+                                  {userData.snsX && <a href={userData.snsX.startsWith('http') ? userData.snsX : 'https://twitter.com/'+userData.snsX} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full border border-[#e8dfd1] bg-[#fffdf9] flex items-center justify-center text-[#725b3f] hover:bg-[#f7f5f0] transition-colors shadow-sm"><Twitter size={14} /></a>}
+                              </div>
+                          )}
                       </div>
                   </div>
               </div>
@@ -426,6 +433,49 @@ function UserProfileContent() {
                               </div>
                           )}
                       </div>
+
+                      {/* Skills & Hobbies Section */}
+                      {((userData.skills && userData.skills.length > 0) || (userData.hobbies && userData.hobbies.length > 0)) && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="bg-[#fffdf9] rounded-sm p-6 border border-[#e8dfd1] shadow-md">
+                                  <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest font-serif border-b border-[#e8dfd1] pb-2">スキル</h3>
+                                  <div className="flex flex-wrap gap-2">
+                                      {userData.skills && userData.skills.length > 0 ? (Array.isArray(userData.skills) ? userData.skills : [userData.skills]).map((tag: string, i: number) => (
+                                          <span key={i} className="bg-[#f7f5f0] border border-[#e8dfd1] text-[#8b6a4f] px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#{tag}</span>
+                                      )) : <span className="text-sm text-[#c8b9a6] italic">未設定</span>}
+                                  </div>
+                              </div>
+                              <div className="bg-[#fffdf9] rounded-sm p-6 border border-[#e8dfd1] shadow-md">
+                                  <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest font-serif border-b border-[#e8dfd1] pb-2">趣味</h3>
+                                  <div className="flex flex-wrap gap-2">
+                                      {userData.hobbies && userData.hobbies.length > 0 ? (Array.isArray(userData.hobbies) ? userData.hobbies : [userData.hobbies]).map((tag: string, i: number) => (
+                                          <span key={i} className="bg-[#f7f5f0] border border-[#e8dfd1] text-[#8b6a4f] px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#{tag}</span>
+                                      )) : <span className="text-sm text-[#c8b9a6] italic">未設定</span>}
+                                  </div>
+                              </div>
+                          </div>
+                      )}
+
+                      {/* Career Section */}
+                      {userData.career && Array.isArray(userData.career) && userData.career.length > 0 && (
+                          <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border border-[#e8dfd1] p-6 sm:p-8 relative">
+                              <h2 className="text-lg font-bold text-[#3e2723] mb-6 pb-2 border-b border-[#e8dfd1] font-serif tracking-widest">主な経歴・活動史</h2>
+                              <div className="space-y-6 mt-4 relative">
+                                  <div className="absolute left-[7px] top-2 bottom-2 w-px bg-[#e8dfd1]"></div>
+                                  {userData.career.map((c: any, i: number) => (
+                                      <div key={i} className="relative pl-6 pb-2">
+                                          <div className="absolute left-[-5px] top-1.5 h-3 w-3 rounded-full bg-[#b8860b] ring-4 ring-[#fffdf9] z-10 shadow-sm border border-[#e8dfd1]"></div>
+                                          <h4 className="font-bold text-[#3e2723] text-base font-serif tracking-widest">{c.company || '会社名不明'}</h4>
+                                          <div className="flex items-center gap-2 mb-3 mt-1">
+                                              <span className="text-[10px] font-bold text-[#725b3f] bg-[#f7f5f0] px-2 py-0.5 rounded-sm tracking-widest border border-[#e8dfd1]">{c.role || '役割'}</span>
+                                              <span className="text-xs text-[#8b6a4f] font-medium tracking-widest">{c.start || '?'} 〜 {c.end || '現在'}</span>
+                                          </div>
+                                          <div className="prose prose-sm max-w-none prose-stone text-[#5c4a3d] bg-[#fdfaf5] p-4 rounded-sm border border-[#e8dfd1] shadow-sm" dangerouslySetInnerHTML={{ __html: formatText(c.description || '') }}></div>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                      )}
 
                   </div>
               ) : (
@@ -595,8 +645,6 @@ export default function UserPage() {
               <UserProfileContent />
           </Suspense>
       </div>
-
-      <Footer />
     </div>
   );
 }
