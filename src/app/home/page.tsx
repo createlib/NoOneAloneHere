@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, collection, query, getDocs, where, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, getDocs, where, Timestamp, onSnapshot } from 'firebase/firestore';
 import { Compass, Link as LinkIcon, Users, CalendarCheck, List, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Crown, ShieldHalf, ArrowRight, Anchor, MapPin, Clock, User as UserIcon, AlignLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
@@ -26,6 +26,9 @@ export default function Home() {
   useEffect(() => {
     if (!user || loading) return;
 
+    let unsubHost: (() => void) | null = null;
+    let unsubJoin: (() => void) | null = null;
+
     const fetchData = async () => {
       setDataLoading(true);
       try {
@@ -41,63 +44,71 @@ export default function Home() {
 
         const now = new Date().toISOString();
 
-        // Fetch Hosting Events
+        // Fetch Hosting Events using onSnapshot to bypass Next.js Router Cache
         const eventsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'events');
-        const snapHost = await getDocs(eventsRef);
-        let hostEvents: any[] = [];
-        
-        snapHost.forEach(d => {
-            const evt = d.data();
-            if (!evt.endTimestamp || evt.endTimestamp >= now) {
-                const isHost = evt.organizerId === user.uid || evt.authorId === user.uid;
-                if (isHost) {
-                    hostEvents.push({ id: d.id, ...evt });
+        unsubHost = onSnapshot(eventsRef, (snapHost) => {
+            let hostEvents: any[] = [];
+            snapHost.forEach(d => {
+                const evt = d.data();
+                if (!evt.endTimestamp || evt.endTimestamp >= now) {
+                    const isHost = evt.organizerId === user.uid || evt.authorId === user.uid;
+                    if (isHost) {
+                        hostEvents.push({ id: d.id, ...evt });
+                    }
                 }
-            }
+            });
+
+            hostEvents.sort((a: any,b: any) => {
+                const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+                const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+                return tB - tA;
+            });
+            setHostingEvents(hostEvents);
+            setDataLoading(false);
+        }, (err) => {
+            console.error("Home Hosting Fetch Error:", err);
+            setDataLoading(false);
         });
 
-        hostEvents.sort((a,b) => {
-            const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-            const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-            return tB - tA;
-        });
-        setHostingEvents(hostEvents);
-
-        // Fetch Participating Events via legacy subcollection
+        // Fetch Participating Events via legacy subcollection using onSnapshot
         const myJoinColl = collection(db, 'artifacts', APP_ID, 'users', user.uid, 'participating_events');
-        const snapJoin = await getDocs(myJoinColl);
-        
-        const eventPromises = snapJoin.docs.map(async (joinDoc) => {
-            const eventId = joinDoc.id; 
-            try {
-                const evtRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', eventId);
-                const evtSnap = await getDoc(evtRef);
-                if (evtSnap.exists()) {
-                    return { id: evtSnap.id, ...evtSnap.data() };
-                }
-            } catch (e) { }
-            return null; 
+        unsubJoin = onSnapshot(myJoinColl, async (snapJoin) => {
+            const eventPromises = snapJoin.docs.map(async (joinDoc) => {
+                const eventId = joinDoc.id; 
+                try {
+                    const evtRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', eventId);
+                    const evtSnap = await getDoc(evtRef);
+                    if (evtSnap.exists()) {
+                        return { id: evtSnap.id, ...evtSnap.data() };
+                    }
+                } catch (e) { }
+                return null; 
+            });
+
+            const allJoinedEvents = (await Promise.all(eventPromises)).filter(e => e !== null);
+            let joinedEvents = allJoinedEvents.filter((evt: any) => !evt.endTimestamp || evt.endTimestamp >= now);
+
+            joinedEvents.sort((a: any,b: any) => {
+                const dateA = new Date(a.startDate).getTime() || 0;
+                const dateB = new Date(b.startDate).getTime() || 0;
+                return dateA - dateB;
+            });
+
+            setParticipatingEvents(joinedEvents);
         });
-
-        const allJoinedEvents = (await Promise.all(eventPromises)).filter(e => e !== null);
-        let joinedEvents = allJoinedEvents.filter((evt: any) => !evt.endTimestamp || evt.endTimestamp >= now);
-
-        joinedEvents.sort((a: any,b: any) => {
-            const dateA = new Date(a.startDate).getTime() || 0;
-            const dateB = new Date(b.startDate).getTime() || 0;
-            return dateA - dateB;
-        });
-
-        setParticipatingEvents(joinedEvents);
 
       } catch (err) {
         console.error("Home Data Fetch Error:", err);
-      } finally {
         setDataLoading(false);
       }
     };
 
     fetchData();
+
+    return () => {
+        if (unsubHost) unsubHost();
+        if (unsubJoin) unsubJoin();
+    };
   }, [user, loading]);
 
   const copyInviteLink = () => {
