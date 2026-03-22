@@ -1,6 +1,6 @@
 'use client';
-
 import { Suspense } from 'react';
+
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Bell } from 'lucide-react';
@@ -87,7 +87,7 @@ function NewsContent() {
   );
 }
 
-export default function NewsPage() {
+function NewsPageContent() {
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-texture relative">
       <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-10">
@@ -115,5 +115,14 @@ export default function NewsPage() {
         <p>&copy; {new Date().getFullYear()} NOAH Community. All rights reserved.</p>
       </footer>
     </div>
+  );
+}
+
+
+export default function NewsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-texture flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#b8860b] border-t-transparent rounded-full animate-spin"></div></div>}>
+      <NewsPageContent />
+    </Suspense>
   );
 }

@@ -499,10 +499,19 @@ function VideoPostContent() {
     );
 }
 
-export default function VideoPostPage() {
+function VideoPostPageContent() {
     return (
         <Suspense fallback={<div className="min-h-screen bg-texture flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#b8860b]"></div></div>}>
             <VideoPostContent />
         </Suspense>
     );
+}
+
+
+export default function VideoPostPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-texture flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#b8860b] border-t-transparent rounded-full animate-spin"></div></div>}>
+      <VideoPostPageContent />
+    </Suspense>
+  );
 }

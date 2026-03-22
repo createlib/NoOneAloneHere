@@ -340,7 +340,7 @@ function SearchContent() {
     );
 }
 
-export default function SearchPage() {
+function SearchPageContent() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-texture pb-20 flex flex-col">
@@ -353,4 +353,13 @@ export default function SearchPage() {
             <SearchContent />
         </Suspense>
     );
+}
+
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-texture flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#b8860b] border-t-transparent rounded-full animate-spin"></div></div>}>
+      <SearchPageContent />
+    </Suspense>
+  );
 }

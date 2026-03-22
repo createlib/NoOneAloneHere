@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -11,7 +12,7 @@ import { Podcast, ArrowLeft, CloudUpload, Image as ImageIcon, Music, SatelliteDi
 
 const PRESET_TAGS = ['対談・インタビュー', 'ひとり語り', 'ノウハウ共有', '活動報告', 'ビジネス', '恋愛'];
 
-export default function PodcastPostPage() {
+function PodcastPostPageContent() {
     const { user, loading } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -652,4 +653,13 @@ export default function PodcastPostPage() {
             )}
         </div>
     );
+}
+
+
+export default function PodcastPostPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-texture flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#b8860b] border-t-transparent rounded-full animate-spin"></div></div>}>
+      <PodcastPostPageContent />
+    </Suspense>
+  );
 }

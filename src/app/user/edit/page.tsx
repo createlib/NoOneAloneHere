@@ -676,10 +676,19 @@ function ProfileEditContent() {
   );
 }
 
-export default function ProfileEditPage() {
+function ProfileEditPageContent() {
     return (
         <Suspense fallback={<div className="min-h-screen bg-texture pt-24 text-center text-[#a09080]">Loading...</div>}>
             <ProfileEditContent />
         </Suspense>
     );
+}
+
+
+export default function ProfileEditPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-texture flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#b8860b] border-t-transparent rounded-full animate-spin"></div></div>}>
+      <ProfileEditPageContent />
+    </Suspense>
+  );
 }

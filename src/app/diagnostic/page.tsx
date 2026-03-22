@@ -164,7 +164,7 @@ function DiagnosticContent() {
                 beginAtZero: true,
                 angleLines: { color: 'rgba(255, 255, 255, 0.05)' }, 
                 grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                pointLabels: { font: { size: 12, weight: '500' as const, family: "'Zen Kaku Gothic New', sans-serif" }, color: '#E2E8F0' },
+                pointLabels: { font: { size: 12, weight: 'bold' as const, family: "'Zen Kaku Gothic New', sans-serif" }, color: '#E2E8F0' },
                 ticks: { display: false, stepSize: 20 }
             }
         },
