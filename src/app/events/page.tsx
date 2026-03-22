@@ -9,7 +9,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Navbar from '@/components/Navbar';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { Anchor, Compass, Hourglass, Ship, User, Image as ImageIcon, Check, MapPin, List, Briefcase, Sliders, X, CirclePlus, Tags, Lock, Building, DollarSign, Calendar, Search } from 'lucide-react';
+import { Anchor, Compass, Hourglass, Ship, User, Image as ImageIcon, Check, MapPin, List, Briefcase, Sliders, X, CirclePlus, Tags, Lock, Building, DollarSign, Calendar, Search, Share2 } from 'lucide-react';
 import Script from 'next/script';
 
 const PRESET_TAGS = ["交流会", "勉強会", "スポーツ", "音楽", "アート", "グルメ", "アウトドア", "ビジネス", "初心者歓迎", "オンライン"];
@@ -132,6 +132,81 @@ function EventsContent() {
     const leafletMap = useRef<any>(null);
     const markersRef = useRef<any[]>([]);
 
+    const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+
+    useEffect(() => {
+        if (typeof navigator !== 'undefined' && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                (err) => console.log("Location access denied or error")
+            );
+        }
+    }, []);
+
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    };
+
+    const formatText = (text: string) => {
+        if (!text) return '';
+        const rawHtml = marked.parse(text) as string;
+        const cleanHtml = DOMPurify.sanitize(rawHtml, { ADD_ATTR: ['target'] });
+        return cleanHtml.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline break-all" ');
+    };
+
+    const searchLocation = async (type: 'event' | 'job') => {
+        const queryStr = type === 'event' ? eventFormData.locationQuery : jobFormData.locationQuery;
+        if (!queryStr) return alert('検索キーワードを入力してください');
+        try {
+            const res = await fetch(`https://msearch.gsi.go.jp/address/search?q=${encodeURIComponent(queryStr)}`);
+            const data = await res.json();
+            if (data.length > 0) {
+                const first = data[0].geometry.coordinates;
+                setAdjustCoords({ lat: first[1], lng: first[0] });
+                if (type === 'event') {
+                    setEventFormData(prev => ({...prev, locationName: data[0].properties.title}));
+                    setEventModalOpen(false);
+                } else {
+                    setJobFormData(prev => ({...prev, locationName: data[0].properties.title}));
+                    setJobModalOpen(false);
+                }
+                setAdjustMode(type);
+                alert('地図を移動しました。赤色のピンをドラッグして正確な位置に微調整してください。');
+            } else {
+                alert('見つかりませんでした。別のキーワードで試してください。');
+            }
+        } catch(e) {
+            alert('検索エラーが発生しました。');
+        }
+    };
+
+    const shareItem = (item: EventData | JobData, type: 'event' | 'job') => {
+        const url = `${window.location.origin}/events?${type}Id=${item.id}`;
+        const inviterName = userData ? (userData.name || userData.userId) : 'ユーザー';
+        const title = item.title || '無題';
+        let desc = (type === 'event' ? (item as EventData).description : (item as JobData).desc) || '';
+        if (desc.length > 80) desc = desc.substring(0, 80) + '...以降は詳細へ';
+        
+        let text = '';
+        if (type === 'event') {
+            const ev = item as EventData;
+            const loc = ev.isOnline ? (ev.locationName || 'オンライン') : (ev.locationName || '未設定');
+            const price = Number(ev.price || 0) > 0 ? `¥${Number(ev.price).toLocaleString()}` : '無料';
+            text = `${inviterName}さんからイベント招待が届きました。\n■${title}\n■${loc}\n■${price}\n■${desc}\n${url}\n\n―――\nNOAHに参加していない方は、ユーザー登録をしてから参加ボタンを押してください。`;
+        } else {
+            text = `${inviterName}さんが仕事・依頼の募集を開始しました。\n■${title}\n■${desc}\n${url}\n\n―――\nNOAHに参加していない方は、ユーザー登録をしてから詳細をご確認ください。`;
+        }
+        
+        navigator.clipboard.writeText(text).then(() => alert('共有リンクと紹介文をコピーしました！')).catch(() => alert('コピーに失敗しました。'));
+    };
+
     useEffect(() => {
         if (user) {
             getDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data'))
@@ -144,8 +219,20 @@ function EventsContent() {
     }, [user]);
 
     useEffect(() => {
+        const targetEventId = searchParams?.get('eventId');
+        const targetJobId = searchParams?.get('jobId');
+        if (targetEventId && allEvents.length > 0 && !selectedEvent) {
+            const ev = allEvents.find(e => e.id === targetEventId);
+            if (ev) { setViewMode('list-events'); setSelectedEvent(ev); }
+        } else if (targetJobId && allJobs.length > 0 && !selectedJob) {
+            const j = allJobs.find(x => x.id === targetJobId);
+            if (j) { setViewMode('list-jobs'); setSelectedJob(j); }
+        }
+    }, [searchParams, allEvents, allJobs]);
+
+    useEffect(() => {
         filterData();
-    }, [allEvents, allJobs, mapSearchText, eventDateFilter, eventFormatFilter, eventPriceFilter, eventTagsFilter, jobTypeFilter, jobCategoryFilter, jobWorkstyleFilter, jobRewardFilter]);
+    }, [allEvents, allJobs, mapSearchText, eventDateFilter, eventFormatFilter, eventPriceFilter, eventTagsFilter, jobTypeFilter, jobCategoryFilter, jobWorkstyleFilter, jobRewardFilter, userLocation]);
 
     useEffect(() => {
         if (viewMode === 'map' && leafletMap.current) {
@@ -203,6 +290,14 @@ function EventsContent() {
             }
             return true;
         });
+
+        if (userLocation) {
+            evList.forEach((e: any) => {
+                if (e.lat && e.lng) e._distance = calculateDistance(userLocation.lat, userLocation.lng, e.lat, e.lng);
+                else e._distance = 999999;
+            });
+            evList.sort((a: any, b: any) => a._distance - b._distance);
+        }
 
         let jList = allJobs.filter(j => {
             if (queryText && 
@@ -441,7 +536,10 @@ function EventsContent() {
 
             let finalOrganizerId = user.uid;
             let finalOrganizerName = userData?.name || userData?.userId || '主催者';
-            if (editingEventId) {
+            if (userData?.userId === 'admin' && (eventFormData as any).overrideUserId) {
+                finalOrganizerId = (eventFormData as any).overrideUserId;
+                finalOrganizerName = '代理投稿';
+            } else if (editingEventId) {
                 const oldEvt = allEvents.find(e => e.id === editingEventId);
                 if (oldEvt) {
                     finalOrganizerId = oldEvt.organizerId || finalOrganizerId;
@@ -754,7 +852,7 @@ function EventsContent() {
                 <div className={`max-w-4xl mx-auto px-4 pt-6 ${viewMode === 'list-events' ? 'block' : 'hidden'}`}>
                     <div className="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
                         <h2 className="text-xl font-bold text-brand-900 font-serif tracking-widest">イベント一覧</h2>
-                        <span className="text-xs text-brand-500 tracking-widest">新着順</span>
+                        <span className="text-xs text-brand-500 tracking-widest">{userLocation ? '現在地から近い順' : '新着順'}</span>
                     </div>
                     {isLoading ? (
                         <div className="text-center py-10 text-brand-400">
@@ -782,8 +880,15 @@ function EventsContent() {
                                             <div className="flex items-center text-[10px] text-brand-500 mb-1 gap-1">
                                                 <Calendar className="w-3 h-3"/> {ev.startDate} {ev.startTime} 〜
                                             </div>
-                                            <div className="flex items-center text-[10px] text-brand-500 gap-1 truncate">
-                                                <MapPin className="w-3 h-3 shrink-0"/> {ev.isOnline ? ev.locationName : (ev.locationName || '場所未設定')}
+                                            <div className="flex items-center justify-between mt-1">
+                                                <div className="flex items-center text-[10px] text-brand-500 gap-1 truncate max-w-[70%]">
+                                                    <MapPin className="w-3 h-3 shrink-0"/> {ev.isOnline ? ev.locationName : (ev.locationName || '場所未設定')}
+                                                </div>
+                                                {!ev.isOnline && ev.lat && ev.lng && userLocation && (
+                                                    <span className="bg-brand-50 text-brand-600 px-1.5 py-0.5 rounded-sm text-[9px] font-bold shadow-sm whitespace-nowrap">
+                                                        <Compass className="w-2.5 h-2.5 inline mr-0.5" />{calculateDistance(userLocation.lat, userLocation.lng, ev.lat, ev.lng).toFixed(1)}km
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -934,7 +1039,7 @@ function EventsContent() {
                             
                             <div className="mb-6">
                                 <h3 className="text-sm font-bold text-brand-800 mb-2 tracking-widest border-l-2 border-[#b8860b] pl-2 font-serif">イベント詳細</h3>
-                                <p className="text-brand-700 text-sm whitespace-pre-wrap leading-relaxed">{selectedEvent.description}</p>
+                                <div className="text-brand-700 text-sm leading-relaxed whitespace-pre-wrap markdown-body" dangerouslySetInnerHTML={{ __html: formatText(selectedEvent.description) }} />
                             </div>
                             
                             {selectedEvent.tags?.length > 0 && (
@@ -952,6 +1057,7 @@ function EventsContent() {
                                 {(userData?.userId === 'admin' || userData?.uid === selectedEvent.organizerId) && (
                                     <button onClick={() => { setSelectedEvent(null); openEventModal(selectedEvent.id); }} className="w-full py-2.5 bg-[#f7f5f0] border border-brand-300 text-brand-700 rounded-sm text-xs font-bold tracking-widest hover:bg-white transition-colors shadow-sm">編集画面を開く</button>
                                 )}
+                                <button onClick={() => shareItem(selectedEvent, 'event')} className="w-full mt-2 py-2.5 bg-brand-50 border border-brand-200 text-brand-600 rounded-sm text-xs font-bold tracking-widest hover:bg-brand-100 transition-colors shadow-sm flex justify-center items-center gap-2"><Share2 className="w-4 h-4" />友達に共有する (リンクコピー)</button>
                             </div>
                         </div>
                     )}
@@ -998,7 +1104,7 @@ function EventsContent() {
 
                             <div className="mb-6">
                                 <h3 className="text-sm font-bold text-brand-800 mb-2 tracking-widest border-l-2 border-blue-500 pl-2 font-serif">業務詳細</h3>
-                                <p className="text-brand-700 text-sm whitespace-pre-wrap leading-relaxed">{selectedJob.desc}</p>
+                                <div className="text-brand-700 text-sm leading-relaxed whitespace-pre-wrap markdown-body" dangerouslySetInnerHTML={{ __html: formatText(selectedJob.desc) }} />
                             </div>
 
                             {(selectedJob.skills || selectedJob.flow || selectedJob.company || selectedJob.url) && (
@@ -1033,6 +1139,7 @@ function EventsContent() {
                                 {(userData?.userId === 'admin' || userData?.uid === selectedJob.organizerId) && (
                                     <button onClick={() => { setSelectedJob(null); openJobModal(selectedJob.id); }} className="w-full py-2.5 bg-[#f7f5f0] border border-brand-300 text-brand-700 rounded-sm text-xs font-bold tracking-widest hover:bg-white transition-colors shadow-sm">募集内容を編集する</button>
                                 )}
+                                <button onClick={() => shareItem(selectedJob, 'job')} className="w-full mt-2 py-2.5 bg-brand-50 border border-brand-200 text-brand-600 rounded-sm text-xs font-bold tracking-widest hover:bg-brand-100 transition-colors shadow-sm flex justify-center items-center gap-2"><Share2 className="w-4 h-4" />募集を共有する (リンクコピー)</button>
                             </div>
                         </div>
                     )}
@@ -1077,8 +1184,15 @@ function EventsContent() {
                                 </div>
                             ) : (
                                 <div className="bg-brand-50 p-4 rounded-sm border border-brand-200">
-                                    <button onClick={() => { setEventModalOpen(false); setAdjustMode('event'); }} type="button" className="w-full py-2 bg-white border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors flex items-center justify-center gap-2 tracking-widest shadow-sm mb-3">
-                                        <MapPin className="w-4 h-4 text-brand-500"/> 地図で位置を設定する
+                                    <div className="flex gap-2 mb-3">
+                                        <div className="relative flex-1">
+                                            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-400" />
+                                            <input type="text" value={eventFormData.locationQuery || ''} onChange={e=>setEventFormData({...eventFormData, locationQuery: e.target.value})} placeholder="住所や建物名で検索" className="w-full border border-brand-200 rounded-sm text-sm pl-9 p-2.5 bg-white" />
+                                        </div>
+                                        <button onClick={() => searchLocation('event')} type="button" className="bg-[#3e2723] text-[#d4af37] px-4 rounded-sm text-sm font-bold whitespace-nowrap hover:bg-[#2a1a17] tracking-widest border border-[#b8860b]">検索</button>
+                                    </div>
+                                    <button onClick={() => { setEventModalOpen(false); setAdjustMode('event'); }} type="button" className="w-full py-2 bg-white border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors flex items-center justify-center gap-1 tracking-widest shadow-sm mb-3">
+                                        <MapPin className="w-4 h-4 text-brand-500"/> (微調整) 現在のピンを地図で動かす
                                     </button>
                                     {adjustCoords && <p className="text-[10px] text-brand-500 mb-3 text-center">緯度: {adjustCoords.lat.toFixed(4)}, 経度: {adjustCoords.lng.toFixed(4)}</p>}
                                     <input type="text" value={eventFormData.locationName} onChange={e=>setEventFormData({...eventFormData, locationName: e.target.value})} placeholder="表示する場所名 (例: ミッドランドスクエア)" className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-white" />
@@ -1088,6 +1202,13 @@ function EventsContent() {
                                 <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">詳細内容</label>
                                 <textarea value={eventFormData.desc} onChange={e=>setEventFormData({...eventFormData, desc: e.target.value})} rows={5} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white leading-relaxed" placeholder="イベント詳細"></textarea>
                             </div>
+                            
+                            {userData?.userId === 'admin' && (
+                                <div className="bg-red-50 p-4 rounded-sm border border-red-200 mt-4 shadow-inner">
+                                    <h4 className="text-xs font-bold text-red-600 mb-2 tracking-widest">【管理者専用】代理投稿</h4>
+                                    <input type="text" value={(eventFormData as any).overrideUserId || ''} onChange={e=>setEventFormData({...eventFormData, overrideUserId: e.target.value} as any)} className="w-full border-red-200 rounded-sm text-sm p-2 bg-white" placeholder="代理投稿する場合のユーザーID (uid)" />
+                                </div>
+                            )}
                         </div>
                         <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
                             <button onClick={submitEvent} disabled={submittingEvent} className="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b] disabled:opacity-50">
