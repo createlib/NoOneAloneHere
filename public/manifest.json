@@ -1,0 +1,17 @@
+{
+  "name": "NOAH Community",
+  "short_name": "NOAH",
+  "description": "No One Alone, Here",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1a110f",
+  "theme_color": "#1a110f",
+  "icons": [
+    {
+      "src": "./img/NOAH.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

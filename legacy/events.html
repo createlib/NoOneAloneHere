@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>航海と仕事 | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <!-- Google Fonts: Noto Serif JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet CSS & JS (Map) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+    <!-- Marked.js & DOMPurify (Markdown対応用) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
+    <script src="js/tailwind-config.js"></script>
+    
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="img/NOAH.png">
+    <meta name="theme-color" content="#1a110f">
+    <script src="js/pwa-setup.js"></script>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/page-events.css">
+</head>
+<body class="antialiased h-screen w-screen relative flex flex-col bg-texture">
+
+    <!-- Navbar -->
+    <nav class="glass-header border-b border-brand-200 fixed w-full z-[1500] top-0 h-16 shadow-sm bg-texture">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
+            <div class="flex items-center gap-4">
+                <a href="home.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
+                    <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-anchor"></i></span>
+                    <span class="hidden sm:inline">NOAH</span>
+                </a>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center gap-3">
+                <!-- PC Navigation Links -->
+                <div class="hidden lg:flex items-center gap-6 mr-4">
+                    <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海</a>
+                    <a href="events.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
+                    <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
+                    
+                    <div class="relative group h-full flex items-center">
+                        <button class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
+                            <i class="fa-solid fa-photo-film"></i> メディア
+                        </button>
+                        <div class="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-[#fffdf9] border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity overflow-hidden">
+                            <a href="videos.html" class="flex items-center px-4 py-3 text-sm font-bold text-brand-800 hover:bg-brand-50 border-b border-brand-100 transition-colors tracking-widest group/item">
+                                <i class="fa-solid fa-film text-brand-400 group-hover/item:text-brand-600 mr-2 w-5 text-center transition-colors"></i> THEATER
+                            </a>
+                            <a href="podcasts.html" class="flex items-center px-4 py-3 text-sm font-bold text-brand-800 hover:bg-brand-50 transition-colors tracking-widest group/item">
+                                <i class="fa-solid fa-podcast text-[#b8860b] mr-2 w-5 text-center group-hover/item:scale-110 transition-transform"></i> CAST
+                            </a>
+                        </div>
+                    </div>
+
+                    <a href="user.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+
+    <!-- Top View Tabs -->
+    <div class="fixed top-16 w-full z-[1400] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
+        <div class="max-w-3xl mx-auto px-4 flex justify-between items-center">
+            <div class="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
+                <button onclick="switchView('map')" id="tab-map" class="tab-btn active flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-map-location-dot"></i> マップ
+                </button>
+                <button onclick="switchView('list-events')" id="tab-list-events" class="tab-btn flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-list"></i> イベント
+                </button>
+                <button onclick="switchView('list-jobs')" id="tab-list-jobs" class="tab-btn flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold text-brand-700 hover:text-brand-900 rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 relative">
+                    <i class="fa-solid fa-briefcase"></i> 仕事・依頼
+                </button>
+            </div>
+            <!-- Filter Button -->
+            <button onclick="toggleFilters()" class="ml-3 p-2 bg-[#fffdf9] border border-brand-200 text-brand-600 hover:bg-brand-50 rounded-sm transition-colors relative shadow-sm flex-shrink-0" title="絞り込み">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="mt-[120px] w-full flex-1 relative z-0">
+        
+        <!-- View 1: Map -->
+        <div id="view-map" class="block relative">
+            <div class="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-[90%] max-w-md pointer-events-none">
+                <div class="relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
+                    <input type="text" id="map-search-input" placeholder="イベントや仕事を検索..." 
+                        class="w-full bg-[#fffdf9]/95 backdrop-blur border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 shadow-sm font-serif tracking-widest">
+                </div>
+            </div>
+
+            <div id="map"></div>
+            
+            <div id="adjust-location-ui" class="hidden fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-sm pointer-events-auto">
+                <div class="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
+                    <p class="font-bold mb-3 tracking-widest text-sm"><i class="fa-solid fa-thumbtack text-red-500 mr-2 text-lg"></i>赤色のピンを動かして調整</p>
+                    <button onclick="finishLocationAdjust()" class="w-full bg-[#3e2723] text-[#d4af37] font-bold py-3 rounded-sm shadow-md tracking-widest text-sm hover:bg-[#2a1a17] border border-[#b8860b]">
+                        位置を決定して戻る
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Event List -->
+        <div id="view-list-events" class="hidden max-w-4xl mx-auto px-4 pt-6">
+            <div class="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
+                <h2 class="text-xl font-bold text-brand-900 font-serif tracking-widest">イベント一覧</h2>
+                <span id="event-list-status" class="text-xs text-brand-500 tracking-widest">現在地から近い順</span>
+            </div>
+            
+            <div id="event-list-loading" class="text-center py-10 text-brand-400">
+                <i class="fa-solid fa-compass fa-spin text-2xl mb-3 opacity-70"></i>
+                <p class="text-xs tracking-widest font-bold">航海図を読み込み中...</p>
+            </div>
+            
+            <div id="event-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden"></div>
+            <div id="event-list-empty" class="text-center py-10 text-brand-400 hidden">
+                <i class="fa-solid fa-anchor-circle-xmark text-3xl mb-3 opacity-50"></i>
+                <p class="text-sm font-bold tracking-widest">条件に合うイベントが見つかりません。</p>
+            </div>
+        </div>
+
+        <!-- View 3: Job List -->
+        <div id="view-list-jobs" class="hidden max-w-4xl mx-auto px-4 pt-6">
+            <div class="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
+                <h2 class="text-xl font-bold text-brand-900 font-serif tracking-widest">仕事・依頼一覧</h2>
+                <span class="text-xs text-brand-500 tracking-widest">新着順</span>
+            </div>
+            
+            <div id="job-list-loading" class="text-center py-10 text-brand-400">
+                <i class="fa-solid fa-compass fa-spin text-2xl mb-3 opacity-70"></i>
+                <p class="text-xs tracking-widest font-bold">依頼書を探しています...</p>
+            </div>
+            
+            <div id="job-list-container" class="space-y-4 hidden"></div>
+            <div id="job-list-empty" class="text-center py-10 text-brand-400 hidden">
+                <i class="fa-solid fa-anchor-circle-xmark text-3xl mb-3 opacity-50"></i>
+                <p class="text-sm font-bold tracking-widest">条件に合う仕事・依頼が見つかりません。</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Create FAB & Menu -->
+    <div class="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[2000] flex flex-col items-end">
+        <div id="create-menu" class="menu-closed mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48">
+            <button onclick="openCreateModal('event')" class="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest border-b border-brand-100 flex items-center justify-between">
+                <span><i class="fa-solid fa-champagne-glasses text-brand-500 w-5"></i> イベントを企画</span>
+            </button>
+            <button onclick="openCreateModal('job')" class="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest flex items-center justify-between group">
+                <span><i class="fa-solid fa-briefcase text-blue-500 w-5"></i> 仕事・依頼を掲載</span>
+                <i class="fa-solid fa-lock text-brand-300 text-xs group-hover:text-brand-500" title="BUILDER以上限定"></i>
+            </button>
+        </div>
+        <button id="create-fab-btn" onclick="toggleCreateMenu()" class="w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
+            <i class="fa-solid fa-plus text-xl transition-transform duration-300" id="fab-icon"></i>
+        </button>
+    </div>
+
+    <!-- Filter Panel -->
+    <div id="filter-panel" class="fixed top-0 left-0 w-full h-full bg-[#2a1a17]/50 z-[3000] hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+        <div class="absolute right-0 top-0 h-full w-80 sm:w-96 bg-[#fffdf9] bg-texture shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col border-l border-brand-200" id="filter-content">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] z-10 relative">
+                <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-200 to-transparent opacity-50"></div>
+                <h3 class="font-bold text-lg flex items-center gap-2 text-brand-900 font-serif tracking-widest">
+                    <i class="fa-solid fa-filter text-brand-500 text-sm"></i> <span id="filter-title">絞り込み</span>
+                </h3>
+                <button onclick="toggleFilters()" class="p-2 text-brand-400 hover:text-brand-700 rounded-sm hover:bg-brand-50 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Event Filters Section -->
+            <div id="filter-section-event" class="flex-1 overflow-y-auto p-5 space-y-6">
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-regular fa-calendar mr-1"></i>開催時期</label>
+                    <select id="filter-event-date" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="all">すべて</option>
+                        <option value="today">今日</option>
+                        <option value="week">1週間以内</option>
+                        <option value="month">1ヶ月以内</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-location-dot mr-1"></i>開催形式</label>
+                    <select id="filter-event-format" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="all">すべて</option>
+                        <option value="offline">オフライン（現地）のみ</option>
+                        <option value="online">オンラインのみ</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-yen-sign mr-1"></i>参加費</label>
+                    <select id="filter-event-price" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="all">すべて</option>
+                        <option value="free">無料のみ</option>
+                        <option value="paid">有料のみ</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-3"><i class="fa-solid fa-tags mr-1"></i>タグで絞り込み</label>
+                    <div id="filter-event-tags" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+
+            <!-- Job Filters Section -->
+            <div id="filter-section-job" class="flex-1 overflow-y-auto p-5 space-y-6 hidden">
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-file-contract mr-1"></i>募集タイプ</label>
+                    <select id="filter-job-type" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="">指定なし</option>
+                        <option value="業務委託">業務委託</option>
+                        <option value="正社員">正社員</option>
+                        <option value="契約社員">契約社員</option>
+                        <option value="アルバイト">アルバイト</option>
+                        <option value="単発依頼">単発依頼</option>
+                        <option value="共同事業パートナー">共同事業パートナー</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-briefcase mr-1"></i>業種カテゴリ</label>
+                    <select id="filter-job-category" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="">指定なし</option>
+                        <option value="デザイン">デザイン</option>
+                        <option value="エンジニア">エンジニア</option>
+                        <option value="マーケティング">マーケティング</option>
+                        <option value="営業">営業</option>
+                        <option value="動画制作">動画制作</option>
+                        <option value="ライティング">ライティング</option>
+                        <option value="事務・サポート">事務・サポート</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-building-user mr-1"></i>勤務形態</label>
+                    <select id="filter-job-workstyle" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="">指定なし</option>
+                        <option value="フルリモート">フルリモート</option>
+                        <option value="一部出社">一部出社</option>
+                        <option value="出社必須">出社必須</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><i class="fa-solid fa-coins mr-1"></i>報酬形態</label>
+                    <select id="filter-job-reward" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:border-brand-500 font-serif tracking-widest">
+                        <option value="">指定なし</option>
+                        <option value="固定報酬">固定報酬</option>
+                        <option value="時給">時給</option>
+                        <option value="月給">月給</option>
+                        <option value="成果報酬">成果報酬</option>
+                        <option value="無償・レベニューシェア">無償・レベニューシェア</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom relative z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <button onclick="applyFilters()" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723]">
+                    絞り込みを適用
+                </button>
+                <button onclick="resetFilters()" class="w-full mt-3 text-sm text-brand-500 hover:text-brand-800 py-2 font-bold tracking-widest transition-colors">
+                    条件をクリア
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Sheet (Event) -->
+    <div id="event-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture hidden">
+        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onclick="closeDetail('event')">
+            <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
+            <div class="hidden lg:flex w-full justify-between items-center px-5">
+                <span class="text-xs font-bold text-brand-500 tracking-widest">イベント詳細</span>
+                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 text-lg"></i>
+            </div>
+        </div>
+        <div id="event-sheet-content" class="px-5 pb-20 lg:pb-8 pt-4"></div>
+    </div>
+
+    <!-- Details Sheet (Job) -->
+    <div id="job-sheet" class="detail-sheet sheet-closed fixed bottom-0 left-0 w-full z-[2100] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture hidden">
+        <div class="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onclick="closeDetail('job')">
+            <div class="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
+            <div class="hidden lg:flex w-full justify-between items-center px-5">
+                <span class="text-xs font-bold text-brand-500 tracking-widest">仕事・依頼 詳細</span>
+                <i class="fa-solid fa-xmark text-brand-400 hover:text-brand-700 text-lg"></i>
+            </div>
+        </div>
+        <div id="job-sheet-content" class="px-5 pb-20 lg:pb-8 pt-4"></div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODALS (Create Event / Job) -->
+    <!-- ========================================== -->
+
+    <!-- Event Create Modal -->
+    <div id="event-modal" class="hidden fixed inset-0 z-[3000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
+        <div class="bg-[#fffdf9] bg-texture w-full sm:w-[600px] h-[95vh] sm:h-[90vh] rounded-t-sm sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center flex-shrink-0 bg-[#fffdf9]">
+                <h3 class="font-bold text-lg text-brand-900 font-serif tracking-widest" id="event-modal-title">イベントを企画</h3>
+                <button onclick="closeCreateModal('event')" class="p-2 text-brand-400 hover:text-brand-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto flex-1 space-y-6">
+                <!-- 管理者専用 代理投稿セクション -->
+                <div id="admin-override-section-event" class="hidden bg-red-50 p-4 rounded-sm border border-red-200 shadow-inner">
+                    <h4 class="text-xs font-bold text-red-600 mb-2 tracking-widest"><i class="fa-solid fa-crown mr-1"></i>【管理者専用】代理投稿</h4>
+                    <p class="text-[10px] text-red-500 mb-2">他のユーザーとして投稿・編集する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br>※空欄の場合は元の主催者（新規の場合はあなた自身）になります。</p>
+                    <input type="text" id="event-override-userid" class="w-full border-red-200 rounded-sm text-sm p-2 bg-white" placeholder="例: taro_123">
+                </div>
+
+                <!-- Thumbnail -->
+                <div>
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">イベント画像 (最大5枚) <span class="text-brand-400 text-[10px] font-normal ml-1">1枚目が一覧のサムネイルになります</span></label>
+                    <div id="event-image-previews" class="flex flex-wrap gap-2 mb-2 empty:hidden">
+                        <!-- JSでプレビューが挿入されます -->
+                    </div>
+                    <div id="event-image-add-btn" class="relative w-full h-16 bg-brand-50 rounded-sm border border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner">
+                        <input type="file" id="event-image-upload" accept="image/*" multiple class="absolute inset-0 opacity-0 cursor-pointer z-10" onclick="this.value = null" onchange="handleEventImageSelect(event)">
+                        <div class="group-hover:scale-105 transition-transform flex items-center gap-2">
+                            <i class="fa-solid fa-images text-xl"></i>
+                            <span class="text-[10px] tracking-widest font-bold">画像を選択して追加</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Title & Price -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">イベント名 <span class="text-red-500">*</span></label>
+                        <input type="text" id="event-title" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#fffdf9]" placeholder="例: 週末朝活コーヒー会" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">参加費(円)</label>
+                        <input type="number" id="event-price" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#fffdf9]" placeholder="無料なら0">
+                    </div>
+                </div>
+
+                <!-- Date & Time -->
+                <div class="bg-brand-50 p-4 rounded-sm border border-brand-200">
+                    <label class="block text-xs font-bold text-brand-800 mb-3 tracking-widest">日時 <span class="text-red-500">*</span></label>
+                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-3">
+                        <span class="text-xs font-bold text-brand-500 w-10">開始</span>
+                        <input type="date" id="event-start-date" class="flex-1 w-full sm:w-auto border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9]" required>
+                        <input type="time" id="event-start-time" class="w-full sm:w-28 border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9]" required>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                        <span class="text-xs font-bold text-brand-500 w-10">終了</span>
+                        <input type="date" id="event-end-date" class="flex-1 w-full sm:w-auto border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9]" required>
+                        <input type="time" id="event-end-time" class="w-full sm:w-28 border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9]" required>
+                    </div>
+                </div>
+
+                <!-- Tags (Online trigger) -->
+                <div>
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">タグを選択 <span class="text-red-500">*</span></label>
+                        <span class="text-[10px] text-brand-500">※「オンライン」選択で入力枠が変わります</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2" id="event-tag-area"></div>
+                    <input type="text" id="event-custom-tags" placeholder="その他のタグ (カンマ区切り)" class="mt-2 w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9]">
+                </div>
+
+                <!-- Location / Online URL Toggle Area -->
+                <div class="bg-brand-50 p-4 rounded-sm border border-brand-200 relative overflow-hidden" id="location-wrapper">
+                    
+                    <!-- Offline Mode -->
+                    <div id="offline-location-group">
+                        <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">開催場所の設定 (オフライン) <span class="text-red-500">*</span></label>
+                        <div class="flex gap-2 mb-2">
+                            <div class="relative flex-1">
+                                <i class="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-brand-400"></i>
+                                <input type="text" id="event-location-search-input" placeholder="住所や建物名で検索" class="w-full border-brand-200 rounded-sm text-sm pl-10 p-2.5 bg-[#fffdf9]">
+                            </div>
+                            <button onclick="searchLocation('event')" type="button" class="bg-brand-800 text-white px-4 rounded-sm text-sm font-bold whitespace-nowrap hover:bg-brand-900 tracking-widest">検索</button>
+                        </div>
+                        <p class="text-[10px] text-brand-500 mb-2 leading-tight">※番地や建物名でピンが立たない場合は、市区町村で検索し、地図上でピンを動かして調整してください。</p>
+                        <div id="event-location-results" class="hidden mb-3 border border-brand-200 rounded-sm overflow-hidden max-h-40 overflow-y-auto shadow-sm bg-white"></div>
+                        <button type="button" onclick="startLocationAdjust('event')" class="w-full py-2 bg-[#fffdf9] border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors mb-4 flex items-center justify-center gap-2 tracking-widest shadow-sm">
+                            <i class="fa-solid fa-map-location-dot text-brand-500"></i> 地図を見ながら位置を微調整する
+                        </button>
+                        <div>
+                            <label class="block text-[10px] font-bold text-brand-500 mb-1 tracking-widest">表示する場所名</label>
+                            <input type="text" id="event-location-name" placeholder="例: ミッドランドスクエア 42階" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9]">
+                        </div>
+                    </div>
+
+                    <!-- Online Mode -->
+                    <div id="online-url-group" class="hidden">
+                        <label class="block text-xs font-bold text-brand-800 mb-2 tracking-widest">オンライン開催設定 <span class="text-red-500">*</span></label>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-brand-500 mb-1 tracking-widest">開催ツール (例: Zoom, Google Meet)</label>
+                                <input type="text" id="event-online-tool" placeholder="Zoom" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9]">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-brand-500 mb-1 tracking-widest">参加URL</label>
+                                <input type="url" id="event-online-url" placeholder="https://..." class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9]">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">詳細・内容</label>
+                    <textarea id="event-desc" rows="5" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#fffdf9] leading-relaxed" placeholder="イベントの魅力や詳細を書きましょう（マークダウン記法で装飾・リンク化が可能です）"></textarea>
+                </div>
+
+                <!-- Settings -->
+                <div class="bg-[#fffdf9] p-3 rounded-sm border border-brand-200 shadow-sm">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" id="event-public-participants" class="w-5 h-5 text-brand-800 rounded-sm focus:ring-brand-500 border-brand-300" checked>
+                        <div>
+                            <span class="block text-sm font-bold text-brand-800 tracking-widest">参加者を公開する</span>
+                            <span class="block text-[10px] text-brand-500 tracking-widest mt-0.5">チェックを外すと、参加者は主催者のみに見えます</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
+                <button onclick="submitEvent()" id="event-submit-btn" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b]">
+                    イベントを企画する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Create Modal -->
+    <div id="job-modal" class="hidden fixed inset-0 z-[3000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
+        <div class="bg-[#fffdf9] bg-texture w-full sm:w-[650px] h-[95vh] sm:h-[90vh] rounded-t-sm sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center flex-shrink-0 bg-[#fffdf9]">
+                <h3 class="font-bold text-lg text-brand-900 font-serif tracking-widest" id="job-modal-title">仕事・依頼を掲載</h3>
+                <button onclick="closeCreateModal('job')" class="p-2 text-brand-400 hover:text-brand-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto flex-1 space-y-4" id="job-form-container">
+                <p class="text-xs text-brand-600 font-bold tracking-widest mb-2"><i class="fa-solid fa-circle-info mr-1"></i> 情報を詳細に記載するとマッチング率が上がります</p>
+                
+                <!-- 管理者専用 代理投稿セクション -->
+                <div id="admin-override-section-job" class="hidden bg-red-50 p-4 rounded-sm border border-red-200 shadow-inner">
+                    <h4 class="text-xs font-bold text-red-600 mb-2 tracking-widest"><i class="fa-solid fa-crown mr-1"></i>【管理者専用】代理投稿</h4>
+                    <p class="text-[10px] text-red-500 mb-2">他のユーザーとして投稿・編集する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br>※空欄の場合は元の主催者（新規の場合はあなた自身）になります。</p>
+                    <input type="text" id="job-override-userid" class="w-full border-red-200 rounded-sm text-sm p-2 bg-white" placeholder="例: taro_123">
+                </div>
+
+                <!-- Accordion 1: 基本情報 -->
+                <details class="group bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm" open>
+                    <summary class="flex justify-between items-center p-3 cursor-pointer hover:bg-brand-50 transition-colors select-none">
+                        <span class="font-bold text-sm text-brand-800 tracking-widest">1. 基本情報 (必須)</span>
+                        <span class="accordion-arrow text-brand-400"><i class="fa-solid fa-chevron-down text-xs"></i></span>
+                    </summary>
+                    <div class="p-4 border-t border-brand-100 bg-brand-50 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">募集タイトル</label>
+                            <input type="text" id="job-title" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 新規事業のUI/UXデザイナー募集" required>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">募集タイプ</label>
+                                <select id="job-type" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                    <option value="業務委託">業務委託</option>
+                                    <option value="正社員">正社員</option>
+                                    <option value="契約社員">契約社員</option>
+                                    <option value="アルバイト">アルバイト</option>
+                                    <option value="単発依頼">単発依頼</option>
+                                    <option value="共同事業パートナー">共同事業パートナー</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">業種カテゴリ</label>
+                                <select id="job-category" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                    <option value="デザイン">デザイン</option>
+                                    <option value="エンジニア">エンジニア</option>
+                                    <option value="マーケティング">マーケティング</option>
+                                    <option value="営業">営業</option>
+                                    <option value="動画制作">動画制作</option>
+                                    <option value="ライティング">ライティング</option>
+                                    <option value="事務・サポート">事務・サポート</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">業務内容詳細</label>
+                            <textarea id="job-desc" rows="6" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-white leading-relaxed" placeholder="背景・具体的な作業内容・期待する成果などを詳しく記載してください" required></textarea>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- Accordion 2: 報酬・期間・条件 -->
+                <details class="group bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm">
+                    <summary class="flex justify-between items-center p-3 cursor-pointer hover:bg-brand-50 transition-colors select-none">
+                        <span class="font-bold text-sm text-brand-800 tracking-widest">2. 報酬・期間・働き方</span>
+                        <span class="accordion-arrow text-brand-400"><i class="fa-solid fa-chevron-down text-xs"></i></span>
+                    </summary>
+                    <div class="p-4 border-t border-brand-100 bg-brand-50 space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">報酬形態</label>
+                                <select id="job-reward-type" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                    <option value="固定報酬">固定報酬</option>
+                                    <option value="時給">時給</option>
+                                    <option value="月給">月給</option>
+                                    <option value="成果報酬">成果報酬</option>
+                                    <option value="無償・レベニューシェア">無償・レベニューシェア</option>
+                                    <option value="応相談">応相談</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">金額・レンジ(円等)</label>
+                                <input type="text" id="job-reward-amount" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 100,000〜300,000">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">契約期間</label>
+                                <select id="job-period" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                    <option value="単発">単発</option>
+                                    <option value="1ヶ月">1ヶ月</option>
+                                    <option value="3ヶ月">3ヶ月</option>
+                                    <option value="長期">長期</option>
+                                    <option value="期間未定">期間未定</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">勤務形態</label>
+                                <select id="job-work-style" onchange="toggleJobLocationUI()" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                    <option value="フルリモート">フルリモート</option>
+                                    <option value="一部出社">一部出社</option>
+                                    <option value="出社必須">出社必須</option>
+                                    <option value="指定なし">指定なし</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Job Location UI -->
+                        <div id="job-location-wrapper" class="hidden p-3 border border-brand-200 rounded-sm bg-white">
+                            <label class="block text-[10px] font-bold text-brand-500 mb-2 tracking-widest">勤務地・活動場所をマップに設定 <span class="text-red-500">*</span></label>
+                            <div class="flex gap-2 mb-2">
+                                <div class="relative flex-1">
+                                    <i class="fa-solid fa-search absolute left-2 top-1/2 transform -translate-y-1/2 text-brand-300 text-xs"></i>
+                                    <input type="text" id="job-location-search-input" placeholder="住所検索" class="w-full border-brand-200 rounded-sm text-xs pl-7 p-2 bg-brand-50">
+                                </div>
+                                <button onclick="searchLocation('job')" type="button" class="bg-brand-600 text-white px-3 rounded-sm text-xs font-bold whitespace-nowrap hover:bg-brand-700">検索</button>
+                            </div>
+                            <div id="job-location-results" class="hidden mb-2 border border-brand-200 rounded-sm overflow-hidden max-h-32 overflow-y-auto shadow-sm bg-white"></div>
+                            <button type="button" onclick="startLocationAdjust('job')" class="w-full py-1.5 bg-brand-50 border border-brand-200 text-brand-700 rounded-sm text-[10px] font-bold hover:bg-brand-100 transition-colors mb-2 flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-map-location-dot text-brand-500"></i> 地図で微調整する
+                            </button>
+                            <div>
+                                <label class="block text-[10px] text-brand-500 mb-1">表示用テキスト</label>
+                                <input type="text" id="job-location-name" class="w-full border-brand-200 rounded-sm text-xs p-2 bg-brand-50" placeholder="例: 東京都渋谷区">
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- Accordion 3: 応募条件・フロー -->
+                <details class="group bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm">
+                    <summary class="flex justify-between items-center p-3 cursor-pointer hover:bg-brand-50 transition-colors select-none">
+                        <span class="font-bold text-sm text-brand-800 tracking-widest">3. 応募条件・選考フロー</span>
+                        <span class="accordion-arrow text-brand-400"><i class="fa-solid fa-chevron-down text-xs"></i></span>
+                    </summary>
+                    <div class="p-4 border-t border-brand-100 bg-brand-50 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">必須・歓迎スキル</label>
+                            <textarea id="job-skills" rows="3" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white leading-relaxed" placeholder="Figma実務経験2年以上、等"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">応募締切日</label>
+                                <input type="date" id="job-deadline" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">選考フロー</label>
+                                <select id="job-flow" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                    <option value="面談1回">面談1回</option>
+                                    <option value="書類選考 → 面接">書類選考 → 面接</option>
+                                    <option value="即決">即決</option>
+                                    <option value="その他">その他</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- Accordion 4: 投稿者情報 -->
+                <details class="group bg-[#fffdf9] border border-brand-200 rounded-sm overflow-hidden shadow-sm">
+                    <summary class="flex justify-between items-center p-3 cursor-pointer hover:bg-brand-50 transition-colors select-none">
+                        <span class="font-bold text-sm text-brand-800 tracking-widest">4. 投稿者・会社情報</span>
+                        <span class="accordion-arrow text-brand-400"><i class="fa-solid fa-chevron-down text-xs"></i></span>
+                    </summary>
+                    <div class="p-4 border-t border-brand-100 bg-brand-50 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">会社・団体名 (任意)</label>
+                            <input type="text" id="job-company" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">公式サイト等 URL</label>
+                            <input type="url" id="job-url" class="w-full border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="https://...">
+                        </div>
+                    </div>
+                </details>
+
+            </div>
+
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
+                <button onclick="submitJob()" id="job-submit-btn" class="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723]">
+                    募集を掲載する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div class="flex justify-around items-center h-16">
+            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-ship text-xl mb-1"></i>
+                <span class="text-[10px] font-bold tracking-widest">航海</span>
+            </a>
+            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px] transition-colors">
+                <i class="fa-solid fa-hourglass-half text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">イベント</span>
+            </a>
+            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-compass text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">さがす</span>
+            </a>
+            <a href="javascript:void(0)" onclick="toggleTheaterMenu()" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-photo-film text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">メディア</span>
+            </a>
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">マイページ</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- SP用 メディア選択ポップアップ -->
+    <div id="sp-theater-menu" class="hidden fixed inset-0 z-[2000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end justify-center">
+        <div class="absolute inset-0" onclick="toggleTheaterMenu()"></div>
+        <div class="bg-[#fffdf9] bg-texture w-full rounded-t-xl p-6 transform transition-transform translate-y-full relative shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sp-theater-menu-content">
+            <div class="flex justify-between items-center mb-4 border-b border-brand-200 pb-3">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center"><i class="fa-solid fa-photo-film text-brand-500 mr-2"></i>メディアを選択</h3>
+                <button onclick="toggleTheaterMenu()" class="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3">
+                <a href="videos.html" class="flex items-center gap-4 p-4 border border-brand-400 bg-brand-50 rounded-sm shadow-sm">
+                    <div class="w-12 h-12 bg-[#3e2723] text-[#f7f5f0] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-film"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH THEATER</h4>
+                        <p class="text-[10px] text-brand-600 mt-1 font-bold">動画で想いや活動の軌跡を共有</p>
+                    </div>
+                </a>
+                <a href="podcasts.html" class="flex items-center gap-4 p-4 border border-brand-200 rounded-sm hover:bg-brand-50 transition-colors shadow-sm bg-white">
+                    <div class="w-12 h-12 bg-brand-100 text-[#b8860b] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-podcast"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH CAST</h4>
+                        <p class="text-[10px] text-brand-500 mt-1 font-bold">音声で深い考えや対話を配信</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#c8b9a6] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
+    </div>
+
+    <!-- 画像フルスクリーン表示用のモーダル -->
+    <div id="fullscreen-image-modal" class="hidden fixed inset-0 z-[7000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer" onclick="closeFullscreenImage()">
+        <img id="fullscreen-image" src="" class="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-none">
+        <button type="button" class="absolute top-4 right-4 sm:top-8 sm:right-8 text-white hover:text-gray-300 w-10 h-10 flex items-center justify-center bg-black/50 rounded-full transition-colors z-50">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+    </div>
+
+    
+    <script type="module" src="js/page-events.js"></script>
+</body>
+</html>

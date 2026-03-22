@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>航海録を編集 | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="js/tailwind-config.js"></script>
+    
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="img/NOAH.png">
+    <meta name="theme-color" content="#1a110f">
+    <script src="js/pwa-setup.js"></script>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/page-profile.css">
+</head>
+<body class="antialiased min-h-screen bg-texture pb-20">
+
+    <nav class="glass-header border-b border-brand-200 fixed w-full z-[1500] top-0 h-16 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="user.html" id="back-link" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span class="hidden sm:inline">マイページへ戻る</span>
+                </a>
+            </div>
+            <div class="font-serif font-bold text-brand-900 tracking-widest text-base sm:text-lg">
+                航海録の編集
+            </div>
+            <div class="w-8 sm:w-24"></div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto pt-24 px-4 sm:px-6">
+        
+        <form id="profile-form" onsubmit="saveProfile(event)" oninput="updateLiveScore()" onchange="updateLiveScore()" class="space-y-8">
+            
+            <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200">
+                <h3 class="text-sm font-bold text-brand-800 mb-4 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-camera text-brand-400 mr-2"></i>プロフィール画像</h3>
+                <div class="flex flex-col items-center">
+                    <div class="relative w-32 h-32 bg-brand-50 rounded-full border-2 border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner mb-4">
+                        <input type="file" id="photo-upload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                        <img id="profile-image-preview" class="absolute inset-0 w-full h-full object-cover hidden">
+                        <!-- ★修正: id="edit-icon-placeholder" を追加 -->
+                        <div id="edit-icon-placeholder" class="group-hover:scale-110 transition-transform flex flex-col items-center">
+                            <i class="fa-solid fa-image text-3xl mb-1"></i>
+                            <span class="text-[10px] tracking-widest font-bold">画像を選択</span>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-brand-500 tracking-widest">正方形にトリミングされて表示されます</p>
+                </div>
+            </div>
+
+            <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-5">
+                <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-id-card text-brand-400 mr-2"></i>基本情報</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">表示名 (SNS名) <span class="text-red-500">*</span></label>
+                        <input type="text" id="name" required class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]" placeholder="例: 航海 太郎">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">本名 <span class="text-red-500">*</span> <span class="text-brand-400 text-[10px] font-normal ml-1">(※公開されません)</span></label>
+                        <input type="text" id="realName" required class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]" placeholder="例: 山田 太郎">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">ふりがな <span class="text-red-500">*</span></label>
+                        <input type="text" id="furigana" required class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]" placeholder="例: やまだ たろう">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">職業・肩書</label>
+                        <input type="text" id="jobTitle" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]" placeholder="例: UI/UXデザイナー">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">活動拠点 (都道府県)</label>
+                        <select id="prefecture" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">出身地</label>
+                        <select id="birthplace" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">性別</label>
+                        <select id="gender" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0]">
+                            <option value="無回答">無回答</option>
+                            <option value="男性">男性</option>
+                            <option value="女性">女性</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-brand-50 p-4 rounded-sm border border-brand-200 mt-2">
+                    <label class="block text-xs font-bold text-brand-800 mb-3 tracking-widest">生年月日と公開設定</label>
+                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                        <input type="date" id="birthDate" class="w-full sm:w-auto flex-1 border-brand-200 rounded-sm text-sm p-2.5 bg-white">
+                        <select id="birthVisibility" class="w-full sm:w-auto border-brand-200 rounded-sm text-sm p-2.5 bg-white">
+                            <option value="full">全体に公開 (年/月/日)</option>
+                            <option value="monthDay">月日のみ公開 (月/日)</option>
+                            <option value="none">非公開</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-6">
+                <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-feather text-brand-400 mr-2"></i>パーソナリティ</h3>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">自己紹介 (Bio) <span class="text-brand-400 text-[10px] font-normal ml-1">(※150字以上で評価)</span></label>
+                        <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
+                    </div>
+                    <textarea id="bio" rows="4" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="これまでの歩みや現在の活動内容を簡潔に。"></textarea>
+                    <div id="bio-count" class="text-right text-[10px] mt-1 tracking-widest"></div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">想い・メッセージ <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 150字以上で評価)</span></label>
+                        <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
+                    </div>
+                    <textarea id="message" rows="5" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="コミュニティの仲間に向けた熱い想いや価値観を語ってください。"></textarea>
+                    <div id="message-count" class="text-right text-[10px] mt-1 tracking-widest"></div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">目標・ビジョン <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローにのみ公開 / 150字以上で評価)</span></label>
+                        <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
+                    </div>
+                    <textarea id="goals" rows="3" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="将来成し遂げたいことや、次に進みたい世界について。"></textarea>
+                    <div id="goals-count" class="text-right text-[10px] mt-1 tracking-widest"></div>
+                </div>
+            </div>
+
+            <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-6">
+                <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-handshake text-brand-400 mr-2"></i>マッチング情報</h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">提供できること <span class="text-brand-400 text-[10px] font-normal">(カンマ区切り / 1つ以上で評価)</span></label>
+                        <textarea id="canOffer" rows="3" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="例: Webデザイン, 起業の相談, 美味しいコーヒーを淹れること"></textarea>
+                        <div id="canOffer-count" class="text-right text-[10px] mt-1 tracking-widest"></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-brand-700 mb-1.5 tracking-widest">求めていること <span class="text-brand-400 text-[10px] font-normal">(カンマ区切り / 1つ以上で評価)</span></label>
+                        <textarea id="lookingFor" rows="3" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-[#f7f5f0] leading-relaxed" placeholder="例: エンジニアの仲間, 動画編集ができる人, 週末カフェ巡り"></textarea>
+                        <div id="lookingFor-count" class="text-right text-[10px] mt-1 tracking-widest"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-6">
+                <h3 class="text-sm font-bold text-brand-800 mb-4 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-tags text-brand-400 mr-2"></i>スキルと趣味</h3>
+                
+                <div>
+                    <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">スキルの選択 <span class="text-brand-400 text-[10px] font-normal ml-1">(※3つ以上で評価)</span></label>
+                    <div id="skills-status" class="text-[10px] mb-3 font-bold tracking-widest"></div>
+                    <div id="skills-checkbox-container" class="space-y-3"></div>
+                    <input type="text" id="custom-skills" placeholder="その他のスキル (カンマ区切り)" class="mt-3 w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#f7f5f0]">
+                </div>
+
+                <div class="mt-8">
+                    <label class="block text-xs font-bold text-brand-700 mb-1 tracking-widest">趣味の選択 <span class="text-brand-400 text-[10px] font-normal ml-1">(※3つ以上で評価)</span></label>
+                    <div id="hobbies-status" class="text-[10px] mb-3 font-bold tracking-widest"></div>
+                    <div id="hobbies-checkbox-container" class="space-y-3"></div>
+                    <input type="text" id="custom-hobbies" placeholder="その他の趣味 (カンマ区切り)" class="mt-3 w-full border-brand-200 rounded-sm text-sm p-2.5 bg-[#f7f5f0]">
+                </div>
+            </div>
+
+            <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200">
+                <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-timeline text-brand-400 mr-2"></i>経歴 <span class="text-brand-400 text-[10px] font-normal ml-1">(※相互フォローに公開 / 1つ以上で評価)</span></span>
+                </h3>
+                <div id="career-status" class="text-[10px] mb-4 font-bold tracking-widest"></div>
+                
+                <div id="career-list-container" class="space-y-3 mb-4"></div>
+
+                <div class="bg-brand-50 border border-brand-200 p-4 rounded-sm shadow-sm relative">
+                    <div class="absolute top-0 left-0 w-0.5 h-full bg-brand-500"></div>
+                    <h4 class="text-xs font-bold text-brand-800 mb-3 tracking-widest">新しい経歴を追加</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                        <input type="text" id="career-company" placeholder="会社・組織名" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-white">
+                        <input type="text" id="career-role" placeholder="役職・役割" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-white">
+                        <input type="month" id="career-start" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-white text-brand-500">
+                        <input type="month" id="career-end" class="w-full border-brand-200 rounded-sm text-sm p-2.5 bg-white text-brand-500" title="空欄の場合は「現在」となります">
+                    </div>
+                    <div class="flex justify-between items-center mb-1.5 mt-4">
+                        <label class="block text-xs font-bold text-brand-700 tracking-widest">業務内容・詳細</label>
+                        <button type="button" onclick="openMarkdownHelp()" class="text-brand-600 hover:text-brand-900 transition-colors text-[10px] flex items-center gap-1 bg-brand-100 px-2 py-1 rounded-sm border border-brand-300 shadow-sm font-bold"><i class="fa-regular fa-circle-question"></i>書き方</button>
+                    </div>
+                    <textarea id="career-desc" rows="3" class="w-full border-brand-200 rounded-sm text-sm p-3 bg-white leading-relaxed" placeholder="どのような課題に取り組み、何を残したか。"></textarea>
+                    
+                    <button type="button" onclick="addCareer()" class="mt-4 w-full py-2.5 bg-brand-800 text-brand-50 font-bold text-xs rounded-sm hover:bg-brand-900 transition-colors shadow-md tracking-widest">
+                        <i class="fa-solid fa-plus mr-1"></i>経歴リストに追加
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-200 space-y-4">
+                <h3 class="text-sm font-bold text-brand-800 mb-2 tracking-widest border-b border-brand-100 pb-2"><i class="fa-solid fa-link text-brand-400 mr-2"></i>SNS・外部リンク <span class="text-brand-400 text-[10px] font-normal ml-1">(※どれか1つ以上で評価)</span></h3>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 flex justify-center text-brand-400 text-xl"><i class="fa-solid fa-globe"></i></div>
+                        <input type="url" id="websiteUrl" placeholder="ポートフォリオやブログのURL (https://...)" class="flex-1 border-brand-200 rounded-sm text-sm p-2.5 bg-[#f7f5f0]">
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 flex justify-center text-brand-400 text-xl"><i class="fa-brands fa-instagram"></i></div>
+                        <input type="text" id="snsInstagram" placeholder="InstagramのID または URL" class="flex-1 border-brand-200 rounded-sm text-sm p-2.5 bg-[#f7f5f0]">
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 flex justify-center text-brand-400 text-xl"><i class="fa-brands fa-x-twitter"></i></div>
+                        <input type="text" id="snsX" placeholder="X(Twitter)のID または URL" class="flex-1 border-brand-200 rounded-sm text-sm p-2.5 bg-[#f7f5f0]">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-brand-50 p-6 sm:p-8 rounded-sm shadow-inner border border-brand-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-sm font-bold text-brand-900 tracking-widest mb-1"><i class="fa-solid fa-eye text-brand-500 mr-2"></i>プロフィールの検索公開</h3>
+                    <p class="text-[10px] text-brand-500 tracking-widest">「公開」にすると、他の乗船者があなたを検索で見つけられるようになります。</p>
+                </div>
+                <select id="profilePublic" class="border-brand-300 rounded-sm text-sm p-2.5 bg-white font-bold text-brand-800 shadow-sm focus:ring-brand-500 focus:border-brand-500 min-w-[120px]">
+                    <option value="true">公開する</option>
+                    <option value="false">非公開にする</option>
+                </select>
+            </div>
+
+            <div id="score-summary" class="hidden bg-[#fffdf9] p-6 sm:p-8 rounded-sm shadow-md border border-brand-300 relative overflow-hidden mb-6">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-[#b8860b]"></div>
+                <h3 class="text-base font-bold text-brand-900 tracking-widest mb-3 flex items-center">
+                    <i class="fa-solid fa-chart-pie text-[#b8860b] mr-2"></i> 100%達成まであと少し！
+                </h3>
+                <p class="text-sm text-brand-700 mb-4 tracking-widest font-bold">現在の充実度: <span id="score-summary-current" class="text-xl text-[#b8860b] mx-1"></span>%</p>
+                <div class="bg-brand-50 p-4 border border-brand-200 rounded-sm">
+                    <p class="text-xs font-bold text-brand-800 mb-2 tracking-widest">残り必要な項目</p>
+                    <ul id="score-summary-missing" class="text-xs text-brand-600 space-y-1.5 tracking-widest grid grid-cols-1 sm:grid-cols-2 gap-x-4"></ul>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="pb-10 pt-4">
+                <button type="submit" id="btn-save" class="w-full py-4 bg-[#3e2723] text-[#d4af37] font-bold text-lg rounded-sm hover:bg-[#2a1a17] transition-colors shadow-xl tracking-widest border border-[#b8860b]">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> 航海録を保存する
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <div id="md-help-modal" class="hidden fixed inset-0 z-[4000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#fffdf9] bg-texture w-full max-w-md rounded-sm shadow-2xl flex flex-col border border-brand-300 overflow-hidden">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9]">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center"><i class="fa-solid fa-pen-nib mr-2 text-brand-500"></i>テキストの装飾方法</h3>
+                <button onclick="closeMarkdownHelp()" type="button" class="text-brand-400 hover:text-brand-700 transition-colors w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 border border-brand-100"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-5 text-sm text-brand-800 leading-relaxed bg-[#fffdf9]">
+                <p class="text-xs text-brand-600 font-bold tracking-widest mb-2 border-l-4 border-brand-500 pl-2">文章を以下の記号で囲むと、綺麗にデザインされて表示されます。</p>
+                
+                <ul class="space-y-4">
+                    <li class="flex flex-col gap-1">
+                        <span class="font-bold text-brand-900 bg-brand-50 px-2 py-1 rounded-sm border border-brand-200 w-fit text-[10px] tracking-widest"><i class="fa-solid fa-arrow-turn-down mr-1"></i>改行</span> 
+                        <span class="text-xs text-brand-700">そのまま普通に改行（Enter）するだけで反映されます。</span>
+                    </li>
+                    <li class="flex flex-col gap-1">
+                        <span class="font-bold text-brand-900 bg-brand-50 px-2 py-1 rounded-sm border border-brand-200 w-fit text-[10px] tracking-widest"><i class="fa-solid fa-heading mr-1"></i>見出し1 (大)</span> 
+                        <span class="text-xs text-brand-700"><code class="text-brand-600 font-bold bg-[#f7f5f0] px-1 py-0.5 rounded"># 見出しテキスト</code> （※#の後に半角スペース）</span>
+                    </li>
+                    <li class="flex flex-col gap-1">
+                        <span class="font-bold text-brand-900 bg-brand-50 px-2 py-1 rounded-sm border border-brand-200 w-fit text-[10px] tracking-widest"><i class="fa-solid fa-heading mr-1 text-sm"></i>見出し2 (中)</span> 
+                        <span class="text-xs text-brand-700"><code class="text-brand-600 font-bold bg-[#f7f5f0] px-1 py-0.5 rounded">## 見出しテキスト</code></span>
+                    </li>
+                    <li class="flex flex-col gap-1">
+                        <span class="font-bold text-brand-900 bg-brand-50 px-2 py-1 rounded-sm border border-brand-200 w-fit text-[10px] tracking-widest"><i class="fa-solid fa-bold mr-1"></i>太文字</span> 
+                        <span class="text-xs text-brand-700"><code class="text-brand-600 font-bold bg-[#f7f5f0] px-1 py-0.5 rounded">**強調したい文字**</code></span>
+                    </li>
+                    <li class="flex flex-col gap-1">
+                        <span class="font-bold text-brand-900 bg-brand-50 px-2 py-1 rounded-sm border border-brand-200 w-fit text-[10px] tracking-widest"><i class="fa-solid fa-italic mr-1"></i>斜体文字</span> 
+                        <span class="text-xs text-brand-700"><code class="text-brand-600 font-bold bg-[#f7f5f0] px-1 py-0.5 rounded">*斜めにしたい文字*</code></span>
+                    </li>
+                    <li class="flex flex-col gap-1">
+                        <span class="font-bold text-brand-900 bg-brand-50 px-2 py-1 rounded-sm border border-brand-200 w-fit text-[10px] tracking-widest"><i class="fa-solid fa-underline mr-1"></i>アンダーバー(下線)</span> 
+                        <span class="text-xs text-brand-700"><code class="text-brand-600 font-bold bg-[#f7f5f0] px-1 py-0.5 rounded">__下線を引きたい文字__</code> （※アンダーバー2つで囲む）</span>
+                    </li>
+                    <li class="flex flex-col gap-1">
+                        <span class="font-bold text-brand-900 bg-brand-50 px-2 py-1 rounded-sm border border-brand-200 w-fit text-[10px] tracking-widest"><i class="fa-solid fa-list-ul mr-1"></i>リスト(箇条書き)</span> 
+                        <span class="text-xs text-brand-700"><code class="text-brand-600 font-bold bg-[#f7f5f0] px-1 py-0.5 rounded">- リスト項目</code> （※ハイフンの後に半角スペース）</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="p-4 border-t border-brand-200 bg-[#f7f5f0] text-center">
+                <button onclick="closeMarkdownHelp()" type="button" class="w-full py-3.5 bg-[#3e2723] text-[#d4af37] font-bold rounded-sm tracking-widest shadow-md hover:bg-[#2a1a17] transition-colors border border-[#b8860b]">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[3000] hidden transition-all duration-300 translate-y-20">
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#d4af37] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
+    </div>
+
+    
+    <script type="module" src="js/page-profile.js"></script>
+</body>
+</html>

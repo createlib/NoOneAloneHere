@@ -1,0 +1,42 @@
+body { 
+            font-family: 'Noto Serif JP', serif;
+            background-color: #f7f5f0; 
+            color: #4a3b32;
+        }
+        
+        .font-eng { font-family: 'Cinzel', serif; }
+        
+        .bg-texture {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+
+        @media (min-width: 1024px) {
+            .profile-sidebar { position: sticky; top: 5rem; height: calc(100vh - 6rem); overflow-y: auto; scrollbar-width: none; }
+            .profile-sidebar::-webkit-scrollbar { display: none; }
+        }
+
+        .cover-gradient { 
+            background: linear-gradient(120deg, #dcd4c6 0%, #eae5d8 100%); 
+            position: relative;
+        }
+        .cover-gradient::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+        }
+
+        /* ランクバッジ */
+        .badge-arrival { background-color: #f7f5f0; color: #5c4a3d; border: 1px solid #c8b9a6; }
+        .badge-settler { background: linear-gradient(135deg, #e8dfd1 0%, #dcd4c6 100%); color: #4a3b32; border: 1px solid #8b6a4f; }
+        .badge-builder { background: linear-gradient(135deg, #dcd4c6 0%, #c8b9a6 100%); color: #3e2723; border: 1px solid #725b3f; }
+        .badge-guardian { background: linear-gradient(135deg, #c8b9a6 0%, #a09080 100%); color: #f7f5f0; border: 1px solid #5c4a3d; }
+        .badge-covenant { background: linear-gradient(135deg, #fef9c3 0%, #d4af37 100%); color: #3e2723; border: 1px solid #b8860b; }
+
+        .prose h1, .prose h2, .prose h3 { color: #3e2723; font-family: 'Noto Serif JP', serif; letter-spacing: 0.05em; margin-top: 1.5em; margin-bottom: 0.5em; font-weight: 700; }
+        .prose h1 { font-size: 1.25rem; border-bottom: 1px solid #e8dfd1; padding-bottom: 0.3em; }
+        .prose h2 { font-size: 1.1rem; }
+        .prose p { margin-top: 0.5em; margin-bottom: 0.5em; line-height: 1.8; }
+        .prose a { color: #8b6a4f; text-decoration: underline; }
+        .prose ul { list-style-type: disc; padding-left: 1.25em; }
+        .prose blockquote { border-left: 3px solid #c8b9a6; padding-left: 1em; color: #725b3f; font-style: italic; }

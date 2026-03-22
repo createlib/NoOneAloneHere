@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プロフィール | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <!-- Google Fonts: Noto Serif JP & Cinzel -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS with Typography Plugin -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    
+    <!-- Marked.js (Markdown変換) & DOMPurify (セキュリティ保護) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="js/tailwind-config.js"></script>
+    
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="img/NOAH.png">
+    <meta name="theme-color" content="#1a110f">
+    <script src="js/pwa-setup.js"></script>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/page-user.css">
+</head>
+<body class="antialiased body-pb-nav lg:pb-0 bg-texture">
+
+    <nav class="bg-[#fffdf9] bg-texture border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center relative z-10">
+            <div class="flex items-center gap-4">
+                <a href="user.html" class="text-xl font-black text-brand-900 tracking-widest flex items-center gap-2 font-serif">
+                    <span class="bg-brand-900 text-brand-50 w-8 h-8 flex items-center justify-center rounded-sm text-sm"><i class="fa-solid fa-anchor"></i></span>
+                    <span id="header-title">マイページ</span>
+                </a>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- PC Navigation Links -->
+                <div class="hidden lg:flex items-center gap-6 mr-4">
+                    <a href="home.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-ship"></i> 航海</a>
+                    <a href="events.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-hourglass-half"></i> イベント</a>
+                    <a href="search.html" class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-compass"></i> さがす</a>
+                    
+                    <div class="relative group h-full flex items-center">
+                        <button class="text-brand-400 hover:text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide focus:outline-none">
+                            <i class="fa-solid fa-photo-film"></i> メディア
+                        </button>
+                        <div class="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-[#fffdf9] border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity overflow-hidden">
+                            <a href="videos.html" class="flex items-center px-4 py-3 text-sm font-bold text-brand-800 hover:bg-brand-50 border-b border-brand-100 transition-colors tracking-widest group/item">
+                                <i class="fa-solid fa-film text-brand-400 group-hover/item:text-brand-600 mr-2 w-5 text-center transition-colors"></i> THEATER
+                            </a>
+                            <a href="podcasts.html" class="flex items-center px-4 py-3 text-sm font-bold text-brand-800 hover:bg-brand-50 transition-colors tracking-widest group/item">
+                                <i class="fa-solid fa-podcast text-[#b8860b] mr-2 w-5 text-center group-hover/item:scale-110 transition-transform"></i> CAST
+                            </a>
+                        </div>
+                    </div>
+
+                    <a href="user.html" class="text-brand-600 transition-colors flex items-center gap-2 font-bold text-sm tracking-wide"><i class="fa-solid fa-user"></i> マイページ</a>
+                </div>
+
+                <!-- PC用 UPGRADEボタン -->
+                <a href="upgrade.html" class="hidden lg:inline-flex items-center px-4 py-1.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] text-xs font-bold rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 border border-[#996515]">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> 契約変更
+                </a>
+                
+                <a href="notifications.html" class="p-2 text-brand-300 hover:text-brand-600 transition-colors relative" title="通知">
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <span id="nav-badge" class="hidden absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-[#8b6a4f] rounded-full border-2 border-[#fffdf9]"></span>
+                </a>
+                <button onclick="location.reload()" class="p-2 text-brand-300 hover:text-brand-600 transition-colors" title="更新"><i class="fa-solid fa-rotate-right"></i></button>
+                <div class="h-6 w-px bg-brand-200 mx-1 hidden lg:block"></div>
+                <button onclick="handleLogout()" class="text-sm font-bold text-brand-400 hover:text-red-800 transition-colors flex items-center gap-2"><span class="hidden sm:inline tracking-widest">下船する</span><i class="fa-solid fa-right-from-bracket text-lg"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Bottom Navigation -->
+    <nav class="lg:hidden bottom-nav-fixed shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div class="bottom-nav-content">
+            <a href="home.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-ship text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">航海</span>
+            </a>
+            <a href="events.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-hourglass-half text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">イベント</span>
+            </a>
+            <a href="search.html" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-compass text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">さがす</span>
+            </a>
+            <a href="javascript:void(0)" onclick="toggleTheaterMenu()" class="flex flex-col items-center justify-center w-full h-full text-brand-400 hover:text-brand-600 transition-colors">
+                <i class="fa-solid fa-photo-film text-xl mb-1"></i>
+                <span class="text-[10px] font-medium tracking-widest">メディア</span>
+            </a>
+            <a href="user.html" class="flex flex-col items-center justify-center w-full h-full text-brand-600 border-t-2 border-brand-500 pt-[2px]">
+                <i class="fa-solid fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-bold tracking-widest">マイページ</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- SP用 メディア選択ポップアップ -->
+    <div id="sp-theater-menu" class="hidden fixed inset-0 z-[2000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end justify-center">
+        <div class="absolute inset-0" onclick="toggleTheaterMenu()"></div>
+        <div class="bg-[#fffdf9] bg-texture w-full rounded-t-xl p-6 transform transition-transform translate-y-full relative shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="sp-theater-menu-content">
+            <div class="flex justify-between items-center mb-4 border-b border-brand-200 pb-3">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center"><i class="fa-solid fa-photo-film text-brand-500 mr-2"></i>メディアを選択</h3>
+                <button onclick="toggleTheaterMenu()" class="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3">
+                <a href="videos.html" class="flex items-center gap-4 p-4 border border-brand-400 bg-brand-50 rounded-sm shadow-sm">
+                    <div class="w-12 h-12 bg-[#3e2723] text-[#f7f5f0] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-film"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH THEATER</h4>
+                        <p class="text-[10px] text-brand-600 mt-1 font-bold">動画で想いや活動の軌跡を共有</p>
+                    </div>
+                </a>
+                <a href="podcasts.html" class="flex items-center gap-4 p-4 border border-brand-200 rounded-sm hover:bg-brand-50 transition-colors shadow-sm bg-white">
+                    <div class="w-12 h-12 bg-brand-100 text-[#b8860b] rounded-full flex items-center justify-center text-lg"><i class="fa-solid fa-podcast"></i></div>
+                    <div>
+                        <h4 class="font-bold text-brand-900 tracking-widest text-base font-serif">NOAH CAST</h4>
+                        <p class="text-[10px] text-brand-500 mt-1 font-bold">音声で深い考えや対話を配信</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Container -->
+    <div id="error-container" class="hidden fixed inset-0 z-40 flex items-center justify-center bg-[#fffdf9]/80 backdrop-blur-sm">
+        <div class="bg-[#fffdf9] p-8 rounded-sm shadow-xl border border-brand-200 text-center max-w-sm mx-4">
+            <div class="w-16 h-16 bg-brand-50 rounded-full border border-brand-200 flex items-center justify-center mx-auto mb-4 text-brand-400 text-2xl"><i class="fa-solid fa-user-slash"></i></div>
+            <h3 class="text-lg font-bold text-brand-900 mb-2 font-serif">ユーザーが見つかりません</h3>
+            <p class="text-brand-500 text-sm mb-6">IDが間違っているか、データが取得できませんでした。</p>
+            <a href="user.html" class="inline-block w-full bg-brand-900 text-brand-50 font-bold py-3 rounded-sm hover:bg-brand-800 transition-colors tracking-widest">自分のページに戻る</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto pt-16 px-0 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:py-8">
+            
+            <aside class="w-full lg:w-[360px] flex-shrink-0">
+                <div class="profile-sidebar">
+                    <div class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 overflow-hidden relative">
+                        <!-- 装飾コーナー -->
+                        <div class="absolute top-0 left-0 w-8 h-8 border-t border-l border-brand-500 z-10 m-2"></div>
+                        <div class="absolute top-0 right-0 w-8 h-8 border-t border-r border-brand-500 z-10 m-2"></div>
+
+                        <div id="profile-cover" class="h-32 sm:h-40 cover-gradient w-full border-b border-brand-200 relative flex items-center justify-center overflow-hidden transition-all duration-500">
+                            <div id="os-cover-bg-layer" class="absolute inset-0 transition-all duration-500 z-0"></div>
+                            <div class="absolute inset-0 bg-texture opacity-50 pointer-events-none z-0"></div>
+                            <div id="os-cover-content" class="hidden z-10 flex flex-col items-center justify-center pt-2 sm:pt-4">
+                                <div id="os-ruby" class="text-[10px] sm:text-xs tracking-[0.4em] font-eng font-bold mb-0.5 drop-shadow-md"></div>
+                                <div id="os-kanji" class="text-3xl sm:text-4xl font-bold tracking-[0.15em] font-serif pl-2"></div>
+                            </div>
+                        </div>
+
+                        <div class="px-6 relative">
+                            <div class="-mt-12 flex justify-between items-end mb-4">
+                                <div class="relative">
+                                    <div class="h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20">
+                                        <i id="header-icon-placeholder" class="fa-solid fa-anchor text-4xl text-brand-200 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+                                        <img id="header-icon-img" src="" class="hidden w-full h-full object-cover" alt="Profile">
+                                    </div>
+                                </div>
+                                <div id="header-actions" class="mb-1 relative z-20"></div>
+                            </div>
+
+                            <div class="mb-4 relative z-20">
+                                <h1 class="text-2xl font-bold text-brand-900 leading-tight font-serif flex items-center flex-wrap gap-3">
+                                    <span id="profile-name" class="shimmer block w-32 h-8 rounded-sm mb-1"></span>
+                                    <button id="btn-open-memo" onclick="openMemoModal()" class="hidden items-center gap-1.5 px-3 py-1 bg-[#fffdf9] border border-brand-300 rounded-sm text-xs font-bold text-brand-700 hover:bg-brand-50 hover:text-brand-900 hover:border-brand-500 transition-all shadow-sm tracking-widest font-sans" title="自分だけが見られるメモ">
+                                        <i class="fa-solid fa-key text-brand-500"></i>鍵メモ
+                                    </button>
+                                </h1>
+                                <div class="flex flex-wrap items-center gap-2 mt-1">
+                                    <p class="text-sm text-brand-500 font-medium tracking-wide" id="profile-id">@...</p>
+                                    <span id="rank-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest"></span>
+                                    <span id="mutual-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7f5f0] text-brand-600 border border-brand-200 tracking-widest"><i class="fa-solid fa-handshake mr-1"></i>相互フォロー</span>
+                                    <span id="admin-badge" class="hidden inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#3e2723] text-[#d4af37] border border-[#b8860b] tracking-widest"><i class="fa-solid fa-crown mr-1"></i>管理者</span>
+                                </div>
+
+                                <!-- 外部公開用プロフィールリンクの発行ボタン -->
+                                <div id="public-link-container" class="hidden mt-4">
+                                    <button onclick="copyPublicProfileLink()" class="inline-flex items-center gap-2 px-4 py-2 bg-brand-50 border border-brand-200 text-brand-700 rounded-sm text-xs font-bold hover:bg-[#fffdf9] hover:border-[#b8860b] hover:text-[#b8860b] transition-all shadow-sm tracking-widest">
+                                        <i class="fa-solid fa-link"></i> 自己紹介リンクをコピー
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- フォロー・フォロワー・共通の航海士エリア -->
+                            <div class="grid grid-cols-2 gap-2 py-4 border-t border-brand-100 relative z-20" id="follow-stats-container">
+                                <div class="text-center cursor-pointer hover:opacity-75 transition-opacity" onclick="openFollowModal('following')">
+                                    <span class="block font-bold text-brand-900 text-lg font-serif" id="count-following">-</span>
+                                    <span class="text-xs text-brand-500 font-medium tracking-widest">フォロー中</span>
+                                </div>
+                                <div class="text-center cursor-pointer hover:opacity-75 transition-opacity" onclick="openFollowModal('followers')">
+                                    <span class="block font-bold text-brand-900 text-lg font-serif" id="count-followers">-</span>
+                                    <span class="text-xs text-brand-500 font-medium tracking-widest">フォロワー</span>
+                                </div>
+                                <!-- 共通の航海士 -->
+                                <div id="area-common-mutual" class="hidden text-center cursor-pointer hover:opacity-75 transition-opacity border-l border-brand-100" onclick="openFollowModal('mutual')">
+                                    <span class="block font-bold text-[#b8860b] text-lg font-serif" id="count-common-mutual">-</span>
+                                    <span class="text-xs text-[#b8860b] font-medium tracking-widest">共通の航海士</span>
+                                </div>
+                            </div>
+
+                            <!-- Bio Section -->
+                            <div class="py-4 border-t border-brand-100 relative z-20" id="section-bio">
+                                <div id="profile-bio" class="prose prose-sm max-w-none prose-stone text-brand-700 leading-relaxed"></div>
+                            </div>
+
+                            <div class="py-4 border-t border-brand-100 space-y-3 relative z-20">
+                                <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-feather"></i></div><span id="profile-job" class="font-medium">-</span></div>
+                                <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-map-location-dot"></i></div><span id="profile-location" class="font-medium">-</span></div>
+                                
+                                <div class="mutual-only hidden space-y-3 pt-1">
+                                    <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-venus-mars"></i></div><span id="data-gender" class="font-medium">-</span></div>
+                                    <div class="flex items-center gap-3 text-sm text-brand-700"><div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-400 border border-brand-100 flex-shrink-0"><i class="fa-solid fa-hourglass"></i></div><span id="data-birth" class="font-medium">-</span></div>
+                                </div>
+                                <div id="profile-sns-links" class="flex gap-3 pt-2"></div>
+                                
+                                <!-- Personal Mask Overlay -->
+                                <div id="personal-mask" class="hidden mt-2 p-3 bg-brand-50 border border-brand-200 border-dashed text-center">
+                                    <p class="text-xs text-brand-500 font-medium tracking-widest"><i class="fa-solid fa-lock mr-1"></i>詳細は相互フォローで公開</p>
+                                </div>
+                            </div>
+
+                            <!-- 充実度バー (条件によって非表示になる) -->
+                            <div id="completion-bar-container" class="hidden my-4 p-4 bg-brand-50 border border-brand-200 relative z-20">
+                                <div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-brand-500 tracking-widest">プロフィール充実度</span><span id="score-text" class="text-sm font-bold text-brand-600">0%</span></div>
+                                <div class="w-full bg-brand-200 h-1.5"><div id="score-bar" class="bg-brand-500 h-1.5 transition-all duration-1000 ease-out" style="width: 0%"></div></div>
+                            </div>
+
+                            <!-- 魂の設計図ボタン (100%達成時のみ表示) -->
+                            <div id="diagnostic-btn-container" class="hidden mt-4 relative z-20">
+                                <a href="diagnostic.html" class="block w-full bg-gradient-to-r from-[#2a1a17] to-[#3e2723] border border-[#b8860b] text-[#f7f5f0] rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group relative overflow-hidden">
+                                    <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=%2220%22 height=%2220%22 viewBox=%220 0 20 20%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ccircle cx=%222%22 cy=%222%22 r=%221%22 fill=%22%23ffffff%22 fill-opacity=%220.05%22/%3E%3C/svg%3E')"></div>
+                                    <div class="px-4 py-4 flex items-center justify-between relative z-10">
+                                        <div class="flex items-center gap-4">
+                                            <div class="bg-[#d4af37]/20 rounded-full p-3 group-hover:scale-110 transition-transform border border-[#d4af37]/30">
+                                                <i class="fa-solid fa-dna text-xl text-[#d4af37]"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <p class="text-[10px] font-bold text-[#c8b9a6] tracking-widest mb-1 flex items-center gap-1">
+                                                    <i class="fa-solid fa-unlock-keyhole text-[#d4af37]"></i> PROFILE 100%
+                                                </p>
+                                                <p class="text-sm sm:text-base font-black tracking-widest leading-tight font-serif">魂の設計図 <span class="text-xs font-sans text-[#d4af37] border border-[#d4af37] px-1 ml-1 rounded-sm opacity-80">OS</span></p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-[#c8b9a6] text-lg"></i>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Upgrade CTA -->
+                            <div id="upgrade-cta-container" class="hidden mt-4 mb-6 relative z-20">
+                                <a href="upgrade.html" class="block w-full bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] border border-[#996515] rounded-sm shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5 group">
+                                    <div class="px-3 py-2.5 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-[#fffdf9]/30 rounded-full p-1.5 group-hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-shield-halved text-base text-[#2a1a17]"></i>
+                                            </div>
+                                            <div class="text-left">
+                                                <p class="text-[10px] font-bold text-[#2a1a17]/80 leading-tight tracking-widest">機能制限を解除</p>
+                                                <p class="text-sm font-black tracking-widest leading-tight mt-0.5 font-serif">契約をアップグレード</p>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right text-[#2a1a17]/80 text-sm"></i>
+                                    </div>
+                                </a>
+                            </div>
+
+                            <!-- Debug: Rank Switcher (Admin Only) -->
+                            <div id="debug-rank-switcher" class="hidden mt-6 pt-6 border-t border-dashed border-brand-200 relative z-20 pb-4">
+                                <p class="text-[10px] font-bold text-[#b8860b] mb-2 uppercase tracking-widest">【管理者用】役割変更</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="changeRank('arrival')" class="flex-1 py-1 text-[9px] font-bold bg-brand-50 text-brand-600 rounded-sm hover:bg-brand-100 border border-brand-200 min-w-[60px]">ARRIVAL</button>
+                                    <button onclick="changeRank('settler')" class="flex-1 py-1 text-[9px] font-bold bg-brand-100 text-brand-700 rounded-sm hover:bg-brand-200 border border-brand-300 min-w-[60px]">SETTLER</button>
+                                    <button onclick="changeRank('builder')" class="flex-1 py-1 text-[9px] font-bold bg-brand-200 text-brand-800 rounded-sm hover:bg-brand-300 border border-brand-400 min-w-[60px]">BUILDER</button>
+                                    <button onclick="changeRank('guardian')" class="flex-1 py-1 text-[9px] font-bold bg-brand-300 text-[#fffdf9] rounded-sm hover:bg-brand-400 border border-brand-500 min-w-[60px]">GUARDIAN</button>
+                                    <button onclick="changeRank('covenant')" class="flex-1 py-1 text-[9px] font-bold bg-[#d4af37] text-[#2a1a17] rounded-sm hover:bg-[#b8860b] border border-[#996515] min-w-[60px]">COVENANT</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="flex-1 min-w-0">
+                
+                <!-- メインタブ (航海録 / MEDIA LOG) スマホ時は中央寄せ -->
+                <div class="mb-6 border-b border-brand-200 px-4 sm:px-0">
+                    <div class="flex justify-center sm:justify-start gap-6">
+                        <button onclick="switchMainTab('profile')" id="tab-main-profile" class="pb-3 border-b-[3px] border-[#b8860b] text-[#b8860b] font-bold tracking-widest text-sm transition-colors">航海録 (プロフィール)</button>
+                        <button onclick="switchMainTab('media')" id="tab-main-media" class="pb-3 border-b-[3px] border-transparent text-brand-400 hover:text-brand-600 font-bold tracking-widest text-sm transition-colors hidden">MEDIA LOG</button>
+                    </div>
+                </div>
+
+                <div id="area-main-profile" class="space-y-6 px-4 sm:px-0">
+                    
+                    <!-- Message Section -->
+                    <div id="section-message" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4 pb-2 border-b border-brand-200">
+                            <h2 class="text-lg font-bold text-brand-900 flex items-center gap-2 font-serif tracking-widest">想い・メッセージ</h2>
+                            <i id="message-lock-icon" class="fa-solid fa-lock text-brand-300 hidden"></i>
+                        </div>
+                        <div id="message-container" class="hidden">
+                            <div class="relative mt-6">
+                                <i class="fa-solid fa-quote-left text-brand-100 text-4xl absolute -top-4 -left-2 z-0"></i>
+                                <div id="profile-message" class="relative z-10 prose prose-sm max-w-none prose-stone text-brand-700 pl-6"></div>
+                            </div>
+                        </div>
+                        <div id="message-mask" class="hidden py-8 bg-brand-50 border border-dashed border-brand-200 text-center mt-4">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#fffdf9] border border-brand-100 mb-3 shadow-sm"><i class="fa-solid fa-lock text-brand-300"></i></div>
+                            <p class="text-sm font-bold text-brand-500 tracking-widest"></p>
+                        </div>
+                    </div>
+
+                    <!-- Matching Section -->
+                    <div id="section-matching" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-[#f7f5f0] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-100"></div>
+                            <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">提供できること</h3>
+                            <ul id="list-can-offer" class="space-y-3 relative z-10"><li class="text-brand-300 italic text-sm">未設定</li></ul>
+                        </div>
+                        <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-[#eae5d8] rounded-bl-full -mr-2 -mt-2 transition-transform group-hover:scale-110 border-b border-l border-brand-200"></div>
+                            <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">求めていること</h3>
+                            <ul id="list-looking-for" class="space-y-3 relative z-10"><li class="text-brand-300 italic text-sm">未設定</li></ul>
+                        </div>
+                    </div>
+
+                    <!-- Skills & Hobbies Section -->
+                    <div id="section-tags" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
+                            <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">スキル</h3>
+                            <div id="skills-container" class="flex flex-wrap gap-2 relative z-10"><span class="text-sm text-brand-300 italic">未設定</span></div>
+                        </div>
+                        <div class="bg-[#fffdf9] rounded-sm p-6 border border-brand-200 shadow-md relative overflow-hidden group hover:border-brand-500 transition-colors">
+                            <h3 class="text-sm font-bold text-brand-500 mb-4 tracking-widest font-serif relative z-10 border-b border-brand-100 pb-2">趣味</h3>
+                            <div id="hobbies-container" class="flex flex-wrap gap-2 relative z-10"><span class="text-sm text-brand-300 italic">未設定</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Goals Section -->
+                    <div id="section-goals" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4 pb-2 border-b border-brand-200">
+                            <h2 class="text-lg font-bold text-brand-900 font-serif tracking-widest">目標・ビジョン</h2>
+                            <i id="goals-lock-icon" class="fa-solid fa-lock text-brand-300 hidden"></i>
+                        </div>
+                        <div id="goals-container" class="hidden">
+                            <div class="relative mt-2">
+                                <div id="profile-goals" class="prose prose-sm max-w-none prose-stone text-brand-700"></div>
+                            </div>
+                        </div>
+                        <div id="goals-mask" class="hidden py-8 bg-brand-50 border border-dashed border-brand-200 text-center mt-4">
+                            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#fffdf9] border border-brand-100 mb-3 shadow-sm"><i class="fa-solid fa-lock text-brand-300"></i></div>
+                            <p class="text-sm font-bold text-brand-500 tracking-widest"></p>
+                        </div>
+                    </div>
+
+                    <!-- Career Section -->
+                    <div id="section-career" class="bg-[#fffdf9] sm:rounded-sm shadow-md border border-brand-200 p-6 sm:p-8 relative">
+                        <div class="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-brand-300 m-4 pointer-events-none opacity-50"></div>
+                        
+                        <div class="flex items-center justify-between mb-6 pb-2 border-b border-brand-200">
+                            <h2 class="text-lg font-bold text-brand-900 font-serif tracking-widest">経歴</h2>
+                            <i id="career-lock-icon" class="fa-solid fa-lock text-brand-300"></i>
+                        </div>
+                        <div id="career-container" class="space-y-8 mt-4 relative">
+                            <div class="absolute left-[7px] top-2 bottom-2 w-px bg-brand-200"></div>
+                        </div>
+                        <div id="career-mask" class="hidden py-10 bg-brand-50 border border-dashed border-brand-200 text-center mt-4">
+                            <p class="text-sm font-bold text-brand-500 tracking-widest">相互フォローで経歴を表示</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MEDIA LOG エリア -->
+                <div id="area-main-media" class="hidden space-y-6 px-4 sm:px-0">
+                    
+                    <!-- Content Tabs -->
+                    <div class="mb-6">
+                        <div class="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3">
+                            <button onclick="switchMediaTab('videos')" id="tab-media-videos" class="media-tab-btn active px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#b8860b] text-[#fffdf9] shadow-md border border-[#b8860b] whitespace-nowrap">
+                                <i class="fa-solid fa-film mr-1"></i> 動画
+                            </button>
+                            <button onclick="switchMediaTab('podcasts')" id="tab-media-podcasts" class="media-tab-btn px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#fffdf9] text-brand-500 hover:bg-brand-50 border border-brand-200 whitespace-nowrap">
+                                <i class="fa-solid fa-podcast mr-1"></i> 音声
+                            </button>
+                            <button onclick="switchMediaTab('playlists')" id="tab-media-playlists" class="media-tab-btn px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#fffdf9] text-brand-500 hover:bg-brand-50 border border-brand-200 whitespace-nowrap">
+                                <i class="fa-solid fa-list mr-1"></i> プレイリスト
+                            </button>
+                            <button onclick="switchMediaTab('liked-videos')" id="tab-media-liked-videos" class="hidden media-tab-btn px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#fffdf9] text-brand-500 hover:bg-brand-50 border border-brand-200 whitespace-nowrap relative">
+                                <i class="fa-regular fa-heart mr-1"></i> お気に入り(動画) <i class="fa-solid fa-lock text-[8px] absolute top-0 -right-1 text-brand-300"></i>
+                            </button>
+                            <button onclick="switchMediaTab('liked-podcasts')" id="tab-media-liked-podcasts" class="hidden media-tab-btn px-4 py-2 rounded-full text-xs font-bold tracking-widest transition-all bg-[#fffdf9] text-brand-500 hover:bg-brand-50 border border-brand-200 whitespace-nowrap relative">
+                                <i class="fa-regular fa-heart mr-1"></i> お気に入り(音声) <i class="fa-solid fa-lock text-[8px] absolute top-0 -right-1 text-brand-300"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Content Grid -->
+                    <div id="media-content-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pb-12">
+                        <div class="col-span-full text-center py-12 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>コンテンツを読み込み中...</div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- プレイリスト詳細（スライドドロワー） -->
+    <div id="playlist-detail-overlay" class="fixed inset-0 bg-[#2a1a17]/60 backdrop-blur-sm z-[2999] hidden opacity-0 transition-opacity duration-300" onclick="closePlaylistDetail()"></div>
+    <div id="playlist-detail-drawer" class="fixed inset-y-0 right-0 w-full sm:w-[400px] bg-[#fffdf9] bg-texture shadow-2xl z-[3000] transform translate-x-full transition-transform duration-300 flex flex-col border-l border-brand-300">
+        <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] relative z-10">
+            <div class="flex items-center gap-3 overflow-hidden">
+                <button onclick="closePlaylistDetail()" class="text-brand-500 hover:text-brand-800 transition-colors w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 border border-brand-100 shrink-0">
+                    <i class="fa-solid fa-chevron-right text-sm"></i>
+                </button>
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest truncate" id="playlist-detail-title">プレイリスト</h3>
+            </div>
+            <div id="playlist-detail-actions" class="flex gap-2 shrink-0"></div>
+        </div>
+        
+        <div class="p-4 flex flex-col gap-4 bg-brand-50 border-b border-brand-200">
+            <div class="flex gap-4 items-start">
+                <div class="w-24 aspect-video rounded-sm overflow-hidden border border-brand-200 shadow-sm shrink-0 bg-black">
+                    <img id="playlist-detail-cover" src="" class="w-full h-full object-cover opacity-90">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-brand-500 mb-1" id="playlist-detail-count">0 items</p>
+                    <p class="text-[10px] text-brand-400 font-mono tracking-widest" id="playlist-detail-date">更新: -</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-3 bg-[#fffdf9]" id="playlist-detail-items">
+            <!-- items injected by JS -->
+        </div>
+    </div>
+
+    <!-- フォロー/フォロワー一覧モーダル -->
+    <div id="follow-modal" class="hidden fixed inset-0 z-[4000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#fffdf9] bg-texture w-full max-w-md h-[80vh] rounded-sm shadow-2xl flex flex-col border border-brand-300">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9]">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center">
+                    <i class="fa-solid fa-users text-brand-500 mr-2"></i>
+                    <span id="follow-modal-title">一覧</span>
+                </h3>
+                <button onclick="closeFollowModal()" type="button" class="text-brand-400 hover:text-brand-700 transition-colors w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 border border-brand-100"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-0 overflow-y-auto flex-1 custom-scrollbar bg-[#fffdf9]" id="follow-list">
+                <!-- JSでリストを挿入 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- プライベートメモ用のモーダルウィンドウ -->
+    <div id="memo-modal" class="hidden fixed inset-0 z-[4000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#fffdf9] bg-texture w-full max-w-lg rounded-sm shadow-2xl flex flex-col border border-brand-300 max-h-[90vh]">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9]">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center"><i class="fa-solid fa-key text-brand-500 mr-2"></i>鍵メモ</h3>
+                <button onclick="closeMemoModal()" type="button" class="text-brand-400 hover:text-brand-700 transition-colors w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 border border-brand-100"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 bg-[#fffdf9] custom-scrollbar">
+                <div class="bg-brand-50 border border-brand-200 p-3 rounded-sm mb-6 flex items-start gap-2">
+                    <i class="fa-solid fa-eye-slash text-brand-400 mt-0.5"></i>
+                    <p class="text-xs text-brand-600 tracking-widest leading-relaxed">出会ったきっかけや会話の内容などを記録しておけます。このメモはあなたにしか見えません。</p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">新しいログを追加</label>
+                    <textarea id="new-memo-content" rows="3" class="w-full border-brand-300 rounded-sm text-sm p-3 bg-white leading-relaxed focus:ring-brand-500 shadow-sm placeholder-brand-300" placeholder="例：2/25の名古屋のイベントで挨拶。Webデザインに興味があるとのこと。"></textarea>
+                    <div class="flex justify-end mt-2">
+                        <button onclick="addNewMemoLog()" id="btn-add-memo" class="bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] px-4 py-2 rounded-sm text-xs font-bold shadow-md transition-colors tracking-widest border border-[#b8860b] flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> 追加する
+                        </button>
+                    </div>
+                </div>
+
+                <div class="border-t border-brand-200 pt-6">
+                    <h4 class="text-xs font-bold text-brand-800 mb-4 tracking-widest flex items-center"><i class="fa-solid fa-clock-rotate-left mr-2 text-brand-400"></i>過去のログ</h4>
+                    <div id="memo-log-container" class="space-y-4">
+                        <!-- ここにログがJSで挿入されます -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- プレイリスト作成・編集モーダル -->
+    <div id="playlist-modal" class="hidden fixed inset-0 z-[4000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-[#fffdf9] bg-texture w-full max-w-4xl h-[85vh] rounded-sm shadow-2xl flex flex-col border border-[#b8860b] transform transition-all">
+            <div class="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9]">
+                <h3 class="font-bold text-brand-900 font-serif tracking-widest flex items-center" id="playlist-modal-title">
+                    <i class="fa-solid fa-folder-plus text-[#b8860b] mr-2"></i>プレイリスト作成
+                </h3>
+                <button onclick="closePlaylistModal()" type="button" class="text-brand-400 hover:text-brand-700 transition-colors w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 border border-brand-100"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar bg-[#fffdf9] flex flex-col">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">フォルダ名</label>
+                    <input type="text" id="playlist-name-input" placeholder="例: お気に入りまとめ、資料集" class="w-full border-brand-300 rounded-sm text-sm p-3 bg-white leading-relaxed focus:ring-[#b8860b] shadow-sm placeholder-brand-300">
+                </div>
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-brand-700 mb-2 tracking-widest">カバー画像URL (任意)</label>
+                    <input type="text" id="playlist-cover-input" placeholder="https://..." class="w-full border-brand-300 rounded-sm text-sm p-3 bg-white leading-relaxed focus:ring-[#b8860b] shadow-sm placeholder-brand-300">
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 flex-1 min-h-[300px]">
+                    <!-- 左カラム: 選択可能な自分のコンテンツ -->
+                    <div class="flex-1 flex flex-col border border-brand-200 rounded-sm overflow-hidden bg-brand-50">
+                        <div class="bg-brand-100 px-3 py-2 border-b border-brand-200 font-bold text-xs text-brand-800 tracking-widest flex items-center">
+                            <i class="fa-solid fa-list mr-2 text-brand-500"></i>自分のコンテンツ
+                        </div>
+                        <div class="p-2 flex gap-2 border-b border-brand-200 bg-[#fffdf9]">
+                            <!-- 動画か音声かの絞り込みタブ -->
+                            <button onclick="filterPlaylistAvailable('video')" id="pl-filter-video" class="flex-1 text-[10px] py-1 border border-[#b8860b] bg-[#b8860b] text-white font-bold rounded-sm tracking-widest transition-colors">動画</button>
+                            <button onclick="filterPlaylistAvailable('podcast')" id="pl-filter-podcast" class="flex-1 text-[10px] py-1 border border-brand-300 bg-white text-brand-500 font-bold rounded-sm tracking-widest hover:bg-brand-50 transition-colors">音声</button>
+                        </div>
+                        <div id="available-items-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 max-h-[400px]">
+                            <!-- JS -->
+                        </div>
+                    </div>
+
+                    <!-- 右カラム: プレイリストに入れるコンテンツ -->
+                    <div class="flex-1 flex flex-col border border-[#b8860b]/50 rounded-sm overflow-hidden bg-[#fffdf9] shadow-sm relative mt-4 md:mt-0">
+                        <div class="bg-gradient-to-r from-[#d4af37]/20 to-[#b8860b]/10 px-3 py-2 border-b border-[#b8860b]/30 font-bold text-xs text-brand-900 tracking-widest flex items-center">
+                            <i class="fa-solid fa-folder-open mr-2 text-[#b8860b]"></i>このフォルダに入れるコンテンツ
+                        </div>
+                        <div id="selected-items-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 max-h-[400px]">
+                            <!-- JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-brand-200 bg-[#fffdf9] flex justify-end gap-3">
+                <button onclick="closePlaylistModal()" class="px-5 py-2 text-brand-600 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-sm text-xs font-bold tracking-widest transition-colors">キャンセル</button>
+                <button onclick="savePlaylist()" class="bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] px-6 py-2 rounded-sm text-xs font-bold shadow-md transition-colors tracking-widest border border-[#b8860b] flex items-center gap-2">
+                    <i class="fa-solid fa-save"></i> 保存する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[5000] hidden transition-all duration-300 translate-y-20">
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#d4af37] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
+    </div>
+
+    
+    <script type="module" src="js/page-user.js"></script>
+</body>
+</html>

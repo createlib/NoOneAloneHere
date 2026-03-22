@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAST 再生 | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    
+    <script src="js/tailwind-config.js"></script>
+    
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="img/NOAH.png">
+    <meta name="theme-color" content="#1a110f">
+    <script src="js/pwa-setup.js"></script>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/page-podcast_detail.css">
+</head>
+<body class="antialiased min-h-screen bg-texture body-pb-nav lg:pb-0 relative">
+
+    <!-- 全体コンテナ (ミニプレーヤー化の際に切り替える) -->
+    <div id="full-screen-ui" class="transition-all duration-300">
+        
+        <!-- Navbar -->
+        <nav class="bg-[rgba(255,253,249,0.95)] backdrop-blur border-b border-brand-200 fixed w-full z-40 top-0 h-16 shadow-sm">
+            <div class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <a href="javascript:void(0)" onclick="history.back();" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest group">
+                        <div class="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </div>
+                        <span class="hidden sm:inline">戻る</span>
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <!-- ミニプレーヤー化ボタン -->
+                    <button onclick="toggleMiniPlayer()" class="text-[#a09080] hover:text-brand-800 transition-colors flex items-center gap-1.5 text-xs font-bold tracking-widest bg-brand-50 px-3 py-1.5 rounded-full border border-brand-200 shadow-sm" title="プレーヤーを縮小する">
+                        <i class="fa-solid fa-compress"></i> <span class="hidden sm:inline">ミニプレーヤー</span>
+                    </button>
+                    
+                    <div id="admin-actions" class="hidden gap-2 border-l border-brand-200 pl-4 ml-1">
+                        <button onclick="editPodcast()" class="text-xs bg-[#fffdf9] text-brand-700 px-3 py-1.5 border border-brand-300 rounded-sm font-bold hover:bg-brand-50 transition-colors shadow-sm tracking-widest"><i class="fa-solid fa-pen mr-1"></i>編集</button>
+                        <button onclick="deletePodcast()" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 border border-red-200 rounded-sm font-bold hover:bg-red-100 transition-colors shadow-sm tracking-widest"><i class="fa-solid fa-trash mr-1"></i>削除</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="w-full max-w-[1600px] mx-auto pt-24 px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-8 lg:gap-10 xl:gap-12">
+            
+            <!-- Left: Player & Info -->
+            <div class="flex-1 min-w-0">
+                
+                <!-- Player Area -->
+                <div id="player-container" class="w-full bg-[#1a110f] sm:rounded-md overflow-hidden shadow-2xl border border-brand-300 relative flex flex-col justify-center items-center p-6 sm:p-10 mb-6 group">
+                    <img id="podcast-large-thumb" src="" class="absolute inset-0 w-full h-full object-cover opacity-20 blur-xl scale-110 pointer-events-none" onerror="this.src='https://via.placeholder.com/640?text=NOAH+CAST'">
+                    
+                    <!-- Thumbnail for direct audio -->
+                    <img id="podcast-center-thumb" src="" class="w-40 h-40 sm:w-64 sm:h-64 object-cover rounded-md shadow-2xl border border-[#5c4a3d] mb-8 relative z-10 hidden" onerror="this.src='https://via.placeholder.com/640?text=NOAH+CAST'">
+                    
+                    <!-- Direct Audio Player -->
+                    <audio id="direct-audio-player" controls class="w-full max-w-2xl relative z-10 hidden shadow-lg rounded-full"></audio>
+                    
+                    <!-- Embed Iframe Player -->
+                    <div id="embed-container" class="w-full max-w-3xl relative z-10 hidden">
+                        <iframe id="embed-iframe" src="" class="w-full h-40 sm:h-60 rounded-md shadow-xl" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+                    </div>
+
+                    <div id="loading-player" class="absolute inset-0 flex items-center justify-center text-[#d4af37] z-20">
+                        <i class="fa-solid fa-spinner fa-spin text-4xl opacity-80"></i>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <div id="podcast-tags" class="flex flex-wrap gap-2 mb-3"></div>
+                    
+                    <h1 id="podcast-title" class="text-2xl sm:text-3xl font-bold text-brand-900 leading-tight mb-5 font-serif tracking-wide">読み込み中...</h1>
+                    
+                    <!-- 投稿者と、再生時間等のメタ情報を完全に分離したデザイン -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-brand-200">
+                        
+                        <!-- 投稿者リンクボックス (アイコン＋名前のみ) -->
+                        <a id="author-link" href="#" class="flex items-center gap-3 sm:gap-4 group cursor-pointer bg-[#fffdf9] pl-1 pr-4 sm:pl-2 sm:pr-6 py-1 sm:py-1.5 rounded-full border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b] min-w-0">
+                            <img id="author-icon" src="https://via.placeholder.com/48" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover group-hover:scale-105 transition-transform flex-shrink-0 ml-0.5" onerror="this.src='https://via.placeholder.com/48?text=U'">
+                            <p id="author-name" class="font-bold text-brand-900 group-hover:text-[#b8860b] transition-colors text-sm sm:text-base flex items-center gap-1.5 truncate tracking-widest font-serif">
+                                名無し <i class="fa-solid fa-circle-check text-[10px] sm:text-xs text-[#d4af37]"></i>
+                            </p>
+                        </a>
+
+                        <!-- 日付とファイルの長さ (独立したバッジデザイン) -->
+                        <div class="flex items-center gap-4 text-xs font-mono text-brand-500 bg-brand-50 px-4 py-2.5 rounded-sm border border-brand-200 shadow-inner shrink-0">
+                            <span class="flex items-center gap-1.5 tracking-wider"><i class="fa-regular fa-calendar-days text-[#8b6a4f]"></i> <span id="podcast-date">----/--/--</span></span>
+                            <span class="w-px h-3 bg-brand-300"></span>
+                            <span class="flex items-center gap-1.5 tracking-wider"><i class="fa-solid fa-headphones text-[#8b6a4f]"></i> <span id="podcast-duration">--:--</span></span>
+                        </div>
+
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-3 mb-8">
+                        <button onclick="toggleLike()" id="btn-like" class="action-btn flex items-center gap-2 bg-[#fffdf9] border border-brand-200 px-5 py-2.5 rounded-full text-sm font-bold text-brand-700 hover:bg-brand-50 hover:border-[#b8860b] shadow-sm tracking-widest">
+                            <i class="fa-regular fa-heart text-lg" id="icon-like"></i> <span id="like-count" class="min-w-[1rem] text-center">0</span>
+                        </button>
+                        <button onclick="sharePodcast()" class="action-btn flex items-center gap-2 bg-[#fffdf9] border border-brand-200 px-5 py-2.5 rounded-full text-sm font-bold text-brand-700 hover:bg-brand-50 hover:border-[#b8860b] shadow-sm tracking-widest">
+                            <i class="fa-solid fa-share-nodes text-lg text-brand-400"></i> シェア
+                        </button>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-12 bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm relative">
+                        <h3 class="text-lg font-bold text-brand-900 mb-6 flex items-center font-serif tracking-widest border-b border-brand-100 pb-4">
+                            <div class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center border border-brand-200 text-brand-400 shadow-inner mr-3 flex-shrink-0">
+                                <i class="fa-solid fa-align-left text-xs"></i>
+                            </div>
+                            エピソードの概要
+                        </h3>
+                        <div id="podcast-desc" class="prose prose-stone max-w-none text-brand-700 leading-relaxed text-sm sm:text-base"></div>
+                    </div>
+
+                    <!-- Comments -->
+                    <div id="comments-section" class="mb-12 bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm">
+                        <h3 class="text-xl font-bold text-brand-900 mb-8 flex items-center font-serif tracking-widest border-b border-brand-100 pb-4">
+                            <i class="fa-regular fa-comments mr-3 text-brand-400 text-2xl"></i>コメント <span id="comment-count" class="text-base font-normal text-brand-500 ml-2">(0)</span>
+                        </h3>
+                        
+                        <div id="comment-form-area" class="flex gap-4 mb-10 items-start">
+                            <img id="my-icon" src="https://via.placeholder.com/40" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-brand-200 shadow-sm object-cover" onerror="this.src='https://via.placeholder.com/40?text=U'">
+                            <div class="flex-1 bg-brand-50 p-1 rounded-sm border border-brand-200 focus-within:border-[#b8860b] focus-within:ring-1 focus-within:ring-[#b8860b] transition-all shadow-inner">
+                                <textarea id="comment-input" rows="2" class="w-full bg-transparent resize-none text-sm p-3 outline-none transition-colors text-brand-800 placeholder-brand-400" placeholder="エピソードの感想や質問をコメントしてみましょう..."></textarea>
+                                <div class="flex justify-between items-center p-2 border-t border-brand-200/50 bg-[#fffdf9]">
+                                    <label class="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-brand-600 cursor-pointer group px-2 py-1 hover:bg-brand-50 rounded-sm transition-colors">
+                                        <input type="checkbox" id="comment-private" class="rounded border-brand-300 text-brand-600 focus:ring-brand-500">
+                                        <i class="fa-solid fa-lock text-brand-400 group-hover:text-brand-600 transition-colors"></i> 投稿者にのみ公開する
+                                    </label>
+                                    <button onclick="postComment()" id="btn-submit-comment" class="bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] px-6 py-2 rounded-sm text-xs font-bold transition-colors shadow-md disabled:opacity-50 tracking-widest border border-[#b8860b]">送信</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="comments-list" class="space-y-6">
+                            <div class="text-center text-brand-400 text-sm py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>読み込み中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Related -->
+            <div class="w-full lg:w-[320px] xl:w-[400px] flex-shrink-0">
+                <h3 class="font-bold text-brand-800 mb-5 tracking-widest text-sm border-b border-brand-200 pb-2 flex items-center"><i class="fa-solid fa-podcast mr-2 text-[#b8860b]"></i>新着のCAST</h3>
+                <div id="related-podcasts" class="flex flex-col gap-4">
+                    <!-- JSで挿入 -->
+                </div>
+            </div>
+
+        </main>
+    </div> <!-- end full-screen-ui -->
+
+    <!-- ミニプレーヤー UI -->
+    <!-- 縮小時は画面右下に固定。クリックで元のフルスクリーンに戻る -->
+    <div id="mini-player-ui" class="hidden fixed bottom-4 right-4 sm:bottom-8 sm:right-8 w-[calc(100%-2rem)] sm:w-80 bg-[#1a110f] rounded-md shadow-2xl border border-[#5c4a3d] z-[8000] p-3 cursor-pointer mini-player-hover transition-all duration-300" onclick="toggleMiniPlayer()">
+        <div class="flex items-center gap-3 sm:gap-4 relative z-10">
+            <img id="mini-thumb" src="https://via.placeholder.com/150" class="w-14 h-14 rounded-sm object-cover border border-[#3e2723] shadow-md flex-shrink-0">
+            <div class="flex-1 min-w-0">
+                <p class="text-[9px] text-[#d4af37] font-bold tracking-widest mb-0.5 flex items-center gap-1"><i class="fa-solid fa-podcast"></i> 再生中</p>
+                <p id="mini-title" class="text-sm font-bold text-[#f7f5f0] truncate font-serif tracking-wide leading-snug">タイトル</p>
+                <p id="mini-author" class="text-[10px] text-[#a09080] truncate mt-1 tracking-widest font-bold">名無し</p>
+            </div>
+            
+            <!-- 再生画面を閉じる（一覧へ戻る）ボタン -->
+            <button onclick="event.stopPropagation(); history.back();" class="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 text-white transition-colors flex items-center justify-center border border-[#5c4a3d] shrink-0 shadow-md" title="再生を終了して閉じる">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed top-24 left-1/2 transform -translate-x-1/2 z-[9000] hidden transition-all duration-300 translate-y-20">
+        <div class="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]"><i class="fa-solid fa-check text-[#d4af37] text-lg"></i><span id="notif-message" class="text-sm font-bold tracking-widest font-serif"></span></div>
+    </div>
+
+    
+    <script type="module" src="js/page-podcast_detail.js"></script>
+</body>
+</html>

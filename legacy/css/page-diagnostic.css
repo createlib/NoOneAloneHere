@@ -1,0 +1,133 @@
+/* デフォルトカラー（JSで十干のデータに合わせて一瞬で上書きされます） */
+        :root {
+            --bg-color: #060913; 
+            --surface-color: rgba(255, 255, 255, 0.03);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --text-main: #E2E8F0;
+            --text-muted: #8BA2BC;
+            --accent-main: #c5a880; 
+            --accent-sub: #3b82f6;  
+            
+            --font-serif: 'Noto Serif JP', serif;
+            --font-sans: 'Zen Kaku Gothic New', sans-serif;
+            --font-eng: 'Cinzel', serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top center, rgba(255,255,255,0.05) 0%, var(--bg-color) 100%);
+            color: var(--text-main); font-family: var(--font-sans); line-height: 2.0; margin: 0; padding: 0; overflow-x: hidden; letter-spacing: 0.05em;
+            transition: background-color 0.8s ease;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px 120px; }
+        .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 1.2s, transform 1.2s; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+        section { margin-bottom: 110px; }
+        h1, h2, h3, h4, .serif { font-family: var(--font-serif); font-weight: 500; }
+        .pc-only { display: inline; }
+
+        .nav-back { color: var(--accent-sub); text-decoration: none; font-size: 0.85rem; letter-spacing: 0.1em; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 30px; transition: opacity 0.3s; }
+        .nav-back:hover { opacity: 0.7; }
+
+        .chapter-heading { text-align: center; margin-bottom: 50px; }
+        .chapter-eng { font-family: var(--font-eng); color: var(--accent-sub); font-size: clamp(0.8rem, 2vw, 1rem); letter-spacing: 0.3em; display: block; margin-bottom: 5px; }
+        .chapter-jp { font-size: clamp(1.2rem, 4vw, 1.8rem); color: #fff; margin: 0; display: inline-block; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; word-break: keep-all; }
+
+        /* THE CORE */
+        .core-section { text-align: center; padding-top: 20px; padding-bottom: 60px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 80px; }
+        .badge { display: inline-block; border: 1px solid var(--accent-sub); color: var(--accent-sub); padding: 8px 24px; font-size: clamp(0.7rem, 2vw, 0.85rem); letter-spacing: 0.2em; border-radius: 30px; margin-bottom: 30px; white-space: nowrap; }
+        .ruby { font-family: var(--font-eng); color: var(--accent-main); letter-spacing: 0.6em; font-size: clamp(0.8rem, 2.5vw, 1rem); margin-bottom: -10px; }
+        .title-kanji { font-size: clamp(3.5rem, 15vw, 6.5rem); color: #ffffff; letter-spacing: 0.15em; margin: 15px 0; text-shadow: 0 0 40px var(--accent-main); white-space: nowrap; }
+        .catchcopy { font-size: clamp(1rem, 3.5vw, 1.6rem); color: var(--text-main); margin-bottom: 40px; font-style: italic; overflow-wrap: break-word; }
+        .keywords { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        .kw-tag { background: var(--surface-color); border: 1px solid var(--border-subtle); color: var(--accent-sub); padding: 6px 16px; border-radius: 4px; font-size: 0.85rem; letter-spacing: 0.1em; white-space: nowrap;}
+
+        .glass-box { background: linear-gradient(135deg, var(--surface-color) 0%, rgba(0,0,0,0) 100%); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 40px; margin-bottom: 50px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); backdrop-filter: blur(10px); text-align: center; }
+        .metaphor-text { font-size: clamp(1rem, 3.5vw, 1.3rem); font-style: italic; color: #fff; line-height: 2.2; }
+        .metaphor-text p { margin: 0; }
+        
+        .body-text p { font-size: 1.05rem; color: #C9D1D9; text-align: justify; margin-bottom: 1.8em; line-height: 2.2; }
+        .highlight-text { color: var(--accent-main); font-weight: bold; }
+
+        /* インフォグラフィック */
+        .structure-diagram { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 20px; margin: 60px 0; padding: 50px 20px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--border-subtle); }
+        .node { text-align: center; width: 160px; }
+        .node-circle { 
+            width: 120px; 
+            height: 120px; 
+            border-radius: 50%; 
+            border: 1px solid var(--accent-sub); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1rem; 
+            margin: 0 auto 15px; 
+            background: rgba(0,0,0,0.5); 
+            color: #fff; 
+            line-height: 1.4; 
+            box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
+            text-align: center;
+            white-space: nowrap;
+        }
+        .node-circle.highlight { border-color: var(--accent-main); color: var(--accent-main); text-shadow: 0 0 10px var(--accent-main); }
+        .node-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+        .arrow { font-size: 1.5rem; color: var(--accent-sub); opacity: 0.5; }
+
+        /* THE RESONANCE */
+        .synergy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .syn-card { background: rgba(255, 255, 255, 0.01); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 35px 30px; display: flex; flex-direction: column; transition: transform 0.3s; }
+        .syn-card:hover { border-color: var(--accent-sub); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .syn-icon { width: 32px; height: 32px; stroke: var(--accent-sub); fill: none; stroke-width: 1.5; margin-bottom: 20px; opacity: 0.9; }
+        .syn-title { font-size: clamp(1.1rem, 3.5vw, 1.25rem); color: #fff; margin-bottom: 25px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 15px; word-break: keep-all; }
+        .syn-section { margin-bottom: 25px; }
+        .syn-label { font-size: 0.8rem; color: var(--accent-sub); display: block; margin-bottom: 8px; letter-spacing: 0.1em; font-weight: bold; }
+        .syn-text { font-size: 0.95rem; color: #C9D1D9; line-height: 1.8; }
+        
+        .premium-container { position: relative; margin-top: auto; padding: 25px 20px; border-radius: 8px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-subtle); overflow: hidden; }
+        .premium-content { transition: filter 0.4s ease, opacity 0.4s ease; margin-top: 15px; }
+        .syn-match-item { font-size: 0.95rem; color: #fff; margin-bottom: 10px; line-height: 1.6; }
+        .syn-match-item span { color: var(--accent-main); font-weight: bold; margin-right: 8px; font-family: var(--font-serif); letter-spacing: 0.05em;}
+        .syn-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; border-top: 1px dashed var(--border-subtle); padding-top: 12px; }
+
+        .premium-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); z-index: 10; text-align: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; cursor: pointer; }
+        .premium-overlay svg { width: 26px; height: 26px; stroke: var(--accent-sub); fill: none; stroke-width: 1.5; margin-bottom: 10px; transition: 0.3s; }
+        .premium-overlay:hover svg { stroke: var(--accent-main); transform: scale(1.1); }
+        
+        /* ランク制御ロック機能 (bodyタグの属性で一括制御) */
+        body[data-tier="ARRIVAL"] .premium-content { filter: blur(6px); opacity: 0.3; user-select: none; pointer-events: none; }
+        body[data-tier="ARRIVAL"] .premium-overlay { opacity: 1; pointer-events: auto; }
+
+        /* THE STRATEGY */
+        .chart-wrapper { max-width: 600px; margin: 0 auto 60px; }
+        .matrix-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 50px; }
+        .matrix-card { padding: 40px 30px; border-radius: 16px; position: relative; overflow: hidden; background: var(--surface-color); border: 1px solid var(--border-subtle); }
+        .card-good::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%; background: radial-gradient(circle at top right, rgba(16,185,129,0.05) 0%, transparent 70%); pointer-events: none; }
+        .card-bad::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%; background: radial-gradient(circle at top right, rgba(239,68,68,0.05) 0%, transparent 70%); pointer-events: none; }
+        .matrix-title { font-size: clamp(1.1rem, 3vw, 1.4rem); margin-top: 0; margin-bottom: 25px; word-break: keep-all; position: relative; z-index: 1;}
+        .card-good .matrix-title { color: #10B981; }
+        .card-bad .matrix-title { color: #EF4444; }
+        .matrix-list { padding-left: 20px; margin: 0; color: #E2E8F0; font-size: 0.95rem; position: relative; z-index: 1;}
+        .matrix-list li { margin-bottom: 15px; line-height: 1.8; }
+
+        .message-box { text-align: center; padding: 60px 40px; background: radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, transparent 70%); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); }
+        .message-body { font-size: clamp(1.05rem, 3.5vw, 1.25rem); line-height: 2.2; color: #fff; }
+        .message-body p { margin-top: 0; margin-bottom: 1.8em; }
+        .message-body p:last-child { margin-bottom: 0; }
+        .signature { margin-top: 60px; font-family: var(--font-eng); color: var(--accent-sub); letter-spacing: 0.2em; font-size: 0.9rem; text-align: center; }
+
+        /* Loading */
+        #loader { position: fixed; inset: 0; background: #060913; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #C5A880; transition: opacity 0.8s; }
+        .spinner { width: 40px; height: 40px; border: 2px solid rgba(197, 168, 128, 0.2); border-top: 2px solid #C5A880; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .synergy-grid, .matrix-container { grid-template-columns: 1fr; }
+            .structure-diagram { flex-direction: column; gap: 10px; padding: 40px 20px; }
+            .arrow { transform: rotate(90deg); margin: 5px 0; }
+            .pc-only { display: none !important; }
+            .metaphor-text, .message-box { text-align: left; }
+            .message-box { padding: 40px 20px; }
+            .node { width: 100%; max-width: 250px; }
+            .node-circle { width: 120px; height: 120px; font-size: 1rem; }
+        }

@@ -1,0 +1,177 @@
+import Link from 'next/link';
+import Footer from '@/components/Footer';
+import { ArrowLeft } from 'lucide-react';
+
+export default function TermsPage() {
+  return (
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 bg-texture relative">
+      <div className="absolute top-4 left-4 sm:top-8 sm:left-8 z-10">
+        <Link href="/" className="inline-flex items-center text-xs font-bold text-[#8b6a4f] hover:text-[#5c4a3d] transition-colors tracking-widest">
+            <ArrowLeft size={16} className="mr-2" />
+            NOAHについて
+        </Link>
+      </div>
+      <div className="max-w-4xl mx-auto pt-10 pb-20">
+        
+
+  <div className="max-w-4xl mx-auto">
+    {/*  Header  */}
+    <div className="text-center mb-12">
+      <a href="index.html" className="text-[#8b6a4f] font-serif tracking-[0.3em] text-xl mb-4 inline-block hover:opacity-70 transition-opacity">
+        NOAH
+      </a>
+      <h1 className="text-3xl font-bold text-[#3e2723] sm:text-4xl">利用規約</h1>
+      <p className="mt-4 text-sm text-[#5c4a3d]">本コミュニティの航海にご参加いただくにあたり、以下の利用規約をご確認ください。</p>
+    </div>
+
+    {/*  Main Content  */}
+    <div className="bg-[#fffdf9] shadow-md sm:rounded-sm border border-[#e8dfd1] p-8 sm:p-12">
+      
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第1条（目的）</h2>
+        <p className="text-[#5c4a3d] leading-relaxed mb-4">
+          本コミュニティ「NOAH」は、「ここでは誰も一人にならない」という理念のもと、いい人がいい人を紹介することで繋がる、完全紹介制のクローズドコミュニティです。
+        </p>
+        <p className="text-[#5c4a3d] leading-relaxed mb-4">
+          メンバー同士が互いの背景や行動理念を深く知り、自分がコミュニティに対して何を提供できるか、コミュニティがメンバーに何ができるかを考え、共に成長し合うための安心・安全な場を提供することを目的とします。
+        </p>
+        <p className="text-[#5c4a3d] leading-relaxed">
+          本サービスは単なる利益追求やノウハウ提供の場ではなく、テクノロジーと人間らしい温かさを通じて、会員が人生の最高のパートナーを見つけ、共に次の世界を創り上げるための環境です。
+        </p>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第2条（会員資格）</h2>
+        <p className="text-[#5c4a3d] mb-4">以下の条件をすべて満たす方のみ、本コミュニティの箱舟に乗船（参加）することができます。</p>
+        <ol className="list-decimal pl-6 space-y-2 text-[#5c4a3d] mb-6">
+          <li>本規約に同意し、NOAHの理念・世界観に賛同する方</li>
+          <li>自らもコミュニティや他メンバーに対して価値を提供し、共に成長する意思のある方</li>
+          <li>既存会員からの紹介、または運営が認めた手続きを経て参加資格を得た方</li>
+        </ol>
+        
+        <div className="bg-[#f7f5f0] p-5 rounded-sm border border-[#e8dfd1]">
+          <p className="text-sm font-bold text-[#3e2723] mb-3">【参加のお断り・退会措置について】</p>
+          <p className="text-sm text-[#5c4a3d] mb-3">本コミュニティの安心と質を守るため、以下に該当する場合、運営の判断により事前通知なく参加のお断り、または強制退会措置を行うことがあります。</p>
+          <ul className="list-disc pl-5 space-y-2 text-sm text-[#5c4a3d]">
+            <li><strong>他責思考が強く、自ら学び実践し、他者へ貢献する意思が見られない場合</strong></li>
+            <li><strong>自身の利益やノウハウ収集のみを目的とし、コミュニティへの還元や他者との共鳴を拒む場合</strong></li>
+            <li><strong>他会員、運営、または関係者に対し、誠実さを欠く行為、思いやりのない言動が見られる場合</strong></li>
+            <li>その他、NOAHの「誰も取り残さない」という理念に反する行動をとった場合</li>
+          </ul>
+        </div>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第3条（提供内容）</h2>
+        <p className="text-[#5c4a3d] mb-4">本コミュニティでは、ご契約の役割（プラン）に応じて以下のサービスや機能を提供します。</p>
+        <ul className="list-disc pl-6 space-y-2 text-[#5c4a3d] mb-4">
+          <li><strong>自社メディア運営 & メンバーDB：</strong>独自のプラットフォーム上でのメディア閲覧およびコミュニティメンバーのデータベース利用</li>
+          <li><strong>イベント共有・宣伝：</strong>コミュニティメンバー同士が交流できる場の告知、宣伝、および参加</li>
+          <li><strong>プロフィールマッチング：</strong>各種プロフィールの内容を検索し、相性の良い人物やイベント、場所をマッチングする機能</li>
+          <li><strong>起業・企業支援：</strong>起業志望者や事業主のための支援、各種ツールの提供</li>
+          <li><strong>広告・PRサポート：</strong>企業PR動画やライブ配信、写真等に関する資産（asset）製作サポート</li>
+          <li><strong>地域・他コミュニティ連携：</strong>連携する地域サービス等の優先的、またはお得な利用権利</li>
+        </ul>
+        <p className="text-xs text-[#725b3f]">※提供内容は、会員の役割（PASSENGER, SETTLER, BUILDER, GUARDIAN, COVENANT等）により異なり、必要に応じてアップデートされます。</p>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第4条（禁止事項）</h2>
+        <p className="text-[#5c4a3d] mb-4">会員は、以下の行為を行ってはなりません。</p>
+        <ol className="list-decimal pl-6 space-y-2 text-[#5c4a3d]">
+          <li>他会員や運営に対する誹謗中傷、威圧的・攻撃的な言動</li>
+          <li>相手の同意を得ない無断での強引な営業・勧誘行為</li>
+          <li>マルチ商法・ネットワークビジネス、宗教等への勧誘</li>
+          <li>コミュニティの運営を妨害する行為</li>
+          <li>法令または公序良俗に反する行為</li>
+        </ol>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第5条（情報・コンテンツおよびアカウントの取り扱い）</h2>
+        <ol className="list-decimal pl-6 space-y-3 text-[#5c4a3d]">
+          <li>
+            <strong>アカウントの専属利用：</strong>
+            会員に付与されたアカウントは、当該アカウントを所有する会員個人のみが利用できるものとします。いかなる理由があっても、アカウントの第三者への貸与、譲渡、共有は固く禁じます。
+          </li>
+          <li>
+            <strong>コンテンツの利用と公開：</strong>
+            コミュニティ内で提供されるコンテンツは原則として会員の活動のために利用するものとします。ただし、イベントの宣伝ページや公開が許可されているメディア記事など、URLを共有することで会員相互のメリットに繋がるものについては、自由に外部へ共有して構いません。
+          </li>
+          <li>
+            <strong>不利益となる情報漏洩の禁止：</strong>
+            他会員のプライバシーに関わる深い悩みや個人情報、または公開することで他者の不利益となるようなクローズドな情報の無断転載・外部への漏洩は厳禁とします。
+          </li>
+        </ol>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第6条（成果・免責）</h2>
+        <ol className="list-decimal pl-6 space-y-2 text-[#5c4a3d]">
+          <li>本コミュニティは、理想のパートナーの発見や事業における成果・利益を確約するものではありません。</li>
+          <li>提供される情報やマッチングを通じた実践・判断は、すべて会員自身の責任で行うものとします。</li>
+          <li>本サービスの利用、または会員間のトラブルによって生じたいかなる損害についても、運営は一切の責任を負いません。</li>
+        </ol>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第7条（料金・支払い）</h2>
+        <p className="text-[#5c4a3d] leading-relaxed">
+          会員は、自らが選択した役割（プラン）に定められた会費を、所定の方法で支払うものとします。<br />
+          決済が完了した会費については、いかなる理由（中途解約、強制退会等）があっても返金は行われません。
+        </p>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第8条（解約・退会）</h2>
+        <ol className="list-decimal pl-6 space-y-2 text-[#5c4a3d]">
+          <li>会員は、所定の手続きを行うことでいつでも定期課金の解約および退会が可能です。</li>
+          <li>解約手続きは次回決済日の前日までに行う必要があり、期間途中での解約に伴う日割り返金等は行いません。</li>
+        </ol>
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第9条（規約変更）</h2>
+        <p className="text-[#5c4a3d] leading-relaxed">
+          本規約は、コミュニティの健全な発展のために必要に応じて変更されることがあります。<br />
+          変更後の規約は、本サイト上での掲載、またはコミュニティ内での告知をもって効力を生じるものとします。
+        </p>
+      </section>
+
+      <section className="mb-12">
+        <h2 className="text-xl font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#c8b9a6]">第10条（準拠法・管轄）</h2>
+        <p className="text-[#5c4a3d] leading-relaxed">
+          本規約は日本法を準拠法とし、本サービスに関する紛争が生じた場合は、運営者所在地を管轄する裁判所を第一審の専属的合意管轄裁判所とします。
+        </p>
+      </section>
+
+      {/*  Message Box  */}
+      <div className="bg-[#f7f5f0] p-6 rounded-sm border border-[#c8b9a6] text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-[#8b6a4f]"></div>
+        <h3 className="font-serif font-bold text-[#3e2723] mb-4 text-lg tracking-widest">最後に</h3>
+        <p className="text-[#5c4a3d] leading-relaxed">
+          NOAHは、利益を奪い合う場所ではなく、互いの違いに触れ、共鳴し、与え合う場所です。<br />
+          安心して相手の目を見て話せる「もっとも人間らしい温かさを生み出す箱舟」を守るため、<br className="hidden md:block" />
+          本規約へのご理解とご協力を心よりお願い申し上げます。
+        </p>
+      </div>
+
+      <div className="text-right text-sm text-[#725b3f] mt-8">
+        制定日：2026年2月20日
+      </div>
+
+    </div>
+
+    {/*  Footer  */}
+    <div className="mt-8 text-center text-sm text-[#725b3f]">
+      <p className="mb-1 font-serif tracking-widest">NOAH - No One Alone, Here</p>
+      &copy;  NOAH Community. All rights reserved.
+    </div>
+  </div>
+
+    
+
+      </div>
+    </div>
+  );
+}

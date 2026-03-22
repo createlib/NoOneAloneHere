@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f7f5f0;
+  --color-brand-100: #e8dfd1;
+  --color-brand-200: #dcd4c6;
+  --color-brand-300: #c8b9a6;
+  --color-brand-400: #a09080;
+  --color-brand-500: #8b6a4f;
+  --color-brand-600: #725b3f;
+  --color-brand-700: #5c4a3d;
+  --color-brand-800: #4a3b32;
+  --color-brand-900: #3e2723;
+  --font-serif: var(--font-noto-serif-jp), serif;
+  --font-cinzel: var(--font-cinzel), serif;
+}
+
+@layer utilities {
+  .bg-texture {
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  }
+}
+
+@layer base {
+  body {
+    background-color: var(--color-brand-50);
+    color: var(--color-brand-800);
+    font-family: var(--font-serif);
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: #f7f5f0; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: #c8b9a6; border-radius: 10px; }

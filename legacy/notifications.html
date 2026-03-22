@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通知 | NOAH</title>
+    <link rel="icon" href="img/icon.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="js/tailwind-config.js"></script>
+    
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="img/NOAH.png">
+    <meta name="theme-color" content="#1a110f">
+    <script src="js/pwa-setup.js"></script>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/page-notifications.css">
+</head>
+<body class="antialiased min-h-screen bg-texture">
+
+    <!-- Navbar -->
+    <nav class="glass-header border-b border-brand-200 fixed w-full z-[1500] top-0 h-16 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
+            <a href="javascript:history.back()" class="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest">
+                <i class="fa-solid fa-arrow-left"></i> <span class="hidden sm:inline">戻る</span>
+            </a>
+            <div class="font-serif font-bold text-brand-900 tracking-widest text-base sm:text-lg flex items-center gap-2">
+                <i class="fa-regular fa-bell text-[#b8860b]"></i> 通知
+            </div>
+            <div class="w-8 sm:w-16"></div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto pt-24 px-4 sm:px-6 pb-20">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold text-brand-900 font-serif tracking-widest">お知らせ・通知</h1>
+            <button onclick="markAllAsRead()" class="text-xs text-brand-500 hover:text-brand-800 font-bold tracking-widest transition-colors flex items-center gap-1 bg-[#fffdf9] px-3 py-1.5 rounded-sm border border-brand-200 shadow-sm">
+                <i class="fa-solid fa-check-double"></i> すべて既読にする
+            </button>
+        </div>
+        
+        <div id="notifications-list" class="space-y-3">
+            <div class="text-center py-10 text-brand-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i>通知を読み込み中...</div>
+        </div>
+    </main>
+
+    
+    <script type="module" src="js/page-notifications.js"></script>
+</body>
+</html>

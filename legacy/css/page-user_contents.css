@@ -1,0 +1,27 @@
+body { font-family: 'Noto Serif JP', serif; background-color: #f7f5f0; color: #4a3b32; }
+        .bg-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E"); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn.active { border-bottom-color: #b8860b; color: #b8860b; }
+        
+        .bottom-nav-fixed {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: #fffdf9; border-top: 1px solid #e8dfd1;
+            z-index: 50; height: 4rem; height: calc(4rem + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .bottom-nav-content { height: 4rem; display: flex; justify-content: space-around; align-items: center; width: 100%; }
+        .body-pb-nav { padding-bottom: calc(5rem + env(safe-area-inset-bottom)); }
+
+        /* ====== ライブ配信通知アイコン用 ====== */
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+        .live-ring {
+            border-color: #d4af37 !important;
+            animation: pulse-ring 2s infinite;
+        }
