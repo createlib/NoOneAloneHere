@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, setDoc, doc, addDoc } from 'firebase/firestore';
 import { auth, db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
@@ -156,6 +156,25 @@ function RegisterForm() {
             referrerId: referrer || null,
             profileScore: 0
         });
+
+        // Referral Notification Dispatch
+        if (referrer && referrer !== ADMIN_SECRET) {
+            try {
+                const qRef = query(usersRef, where("userId", "==", referrer));
+                const refSnap = await getDocs(qRef);
+                if (!refSnap.empty) {
+                    const referrerUid = refSnap.docs[0].id;
+                    await addDoc(collection(db, 'artifacts', APP_ID, 'users', referrerUid, 'notifications'), {
+                        type: 'system',
+                        title: '新しい乗船者',
+                        body: `あなたの紹介リンクから ${userid} さんがNOAHに乗船しました！`,
+                        link: `/p?uid=${newUser.uid}`,
+                        isRead: false,
+                        createdAt: Date.now()
+                    });
+                }
+            } catch(e) { console.error("Referral Error:", e); }
+        }
 
         showNotif('乗船手続き完了！ホームへ移動します', 'success');
         // Redirect handled by AuthContext useEffect

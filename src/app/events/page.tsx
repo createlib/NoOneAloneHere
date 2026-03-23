@@ -666,7 +666,20 @@ ${registerUrl}`;
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', editingEventId), evtData);
                 alert('イベントを更新しました！');
             } else {
-                await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'events'), evtData);
+                const newDocRef = await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'events'), evtData);
+                
+                // Disseminate to followers
+                try {
+                    const followersSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'followers'));
+                    const promises = followersSnap.docs.map(fDoc => {
+                        return addDoc(collection(db, 'artifacts', APP_ID, 'users', fDoc.id, 'notifications'), {
+                            type: 'event', title: '新しいイベント', body: `${userData?.name || 'ユーザー'}さんが新しいイベント「${eventFormData.title}」を企画・公開しました。`,
+                            link: `/events?eventId=${newDocRef.id}`, isRead: false, createdAt: Date.now()
+                        });
+                    });
+                    await Promise.allSettled(promises);
+                } catch(e) { console.error("Event Notification Gen Failed:", e); }
+
                 alert('イベントを企画しました！');
             }
             
@@ -728,7 +741,20 @@ ${registerUrl}`;
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'jobs', editingJobId), jbData);
                 alert('募集情報を更新しました！');
             } else {
-                await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'jobs'), jbData);
+                const newDocRef = await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'jobs'), jbData);
+                
+                // Disseminate to followers
+                try {
+                    const followersSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'followers'));
+                    const promises = followersSnap.docs.map(fDoc => {
+                        return addDoc(collection(db, 'artifacts', APP_ID, 'users', fDoc.id, 'notifications'), {
+                            type: 'job', title: '新しい仕事・依頼', body: `${userData?.name || 'ユーザー'}さんが新しい仕事・依頼「${jobFormData.title}」を募集開始しました。`,
+                            link: `/events?jobId=${newDocRef.id}`, isRead: false, createdAt: Date.now()
+                        });
+                    });
+                    await Promise.allSettled(promises);
+                } catch(e) { console.error("Job Notification Gen Failed:", e); }
+                
                 alert('募集を掲載しました！');
             }
             setJobModalOpen(false);
@@ -774,6 +800,16 @@ ${registerUrl}`;
 
                 setEventJoinStatusMap(prev => ({...prev, [evt.id]: true}));
                 setRefreshPartsKey(k => k + 1);
+                
+                if (evt.organizerId && evt.organizerId !== user.uid) {
+                    try {
+                        await addDoc(collection(db, 'artifacts', APP_ID, 'users', evt.organizerId, 'notifications'), {
+                            type: 'event', title: 'イベントへの新規参加', body: `${userData?.name || 'ユーザー'}さんがあなたのイベント「${evt.title}」に参加申し込みしました！`,
+                            link: `/events?eventId=${evt.id}`, isRead: false, createdAt: Date.now()
+                        });
+                    } catch(e) { console.error(e); }
+                }
+
                 alert('イベントの参加申し込みが完了しました！');
             }
         } catch (e: any) {

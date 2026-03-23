@@ -307,6 +307,20 @@ function UserProfileContent() {
               // Optimistically assuming they might follow you back is handled by the initial load.
               // For a simple toggle, just updating counts
               setFollowersCount(prev => prev + 1);
+
+              // Inject Notification
+              try {
+                  await addDoc(collection(db, 'artifacts', APP_ID, 'users', targetUid, 'notifications'), {
+                      type: 'system',
+                      title: '新しい共鳴者',
+                      body: `${userData?.name || 'ユーザー'}さんがあなたをフォローしました。`,
+                      link: `/p?uid=${user.uid}`,
+                      isRead: false,
+                      createdAt: Date.now()
+                  });
+              } catch (err) {
+                  console.error("Failed to send notification", err);
+              }
           }
       } catch(e) {
           console.error("Follow error", e);

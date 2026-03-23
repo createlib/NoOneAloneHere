@@ -60,12 +60,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            <Link href="/user" onClick={(e) => {
-              if (pathname === '/user') {
-                e.preventDefault();
-                window.location.assign('/user');
-              }
-            }} className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/user' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
+            <Link href="/user" className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/user' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
               <User size={16} /> マイページ
             </Link>
             {pathname === '/user' && (
@@ -113,12 +108,7 @@ export default function Navbar() {
             <Film size={20} className="mb-1" />
             <span className={`text-[10px] tracking-widest ${pathname.includes('/media') ? 'font-bold' : 'font-medium'}`}>メディア</span>
           </button>
-          <Link href="/user" onClick={(e) => {
-            if (pathname === '/user') {
-              e.preventDefault();
-              window.location.assign('/user');
-            }
-          }} className={`flex flex-col items-center justify-center w-full h-full transition-colors ${pathname === '/user' ? 'text-brand-600 border-t-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
+          <Link href="/user" className={`flex flex-col items-center justify-center w-full h-full transition-colors ${pathname === '/user' ? 'text-brand-600 border-t-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
             <User size={20} className="mb-1" />
             <span className={`text-[10px] tracking-widest ${pathname === '/user' ? 'font-bold' : 'font-medium'}`}>マイページ</span>
           </Link>

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, writeBatch, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, writeBatch, Timestamp, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Bell, BellOff, CheckCheck, UserPlus, Radio, Film, Podcast, Clock } from 'lucide-react';
@@ -15,6 +15,9 @@ interface NotificationData {
     isRead?: boolean;
     type?: string;
     contentId?: string;
+    title?: string;
+    body?: string;
+    link?: string;
     fromUser?: {
         name: string;
         photoURL: string;
@@ -22,6 +25,34 @@ interface NotificationData {
 }
 
 const DEFAULT_ICON = 'https://via.placeholder.com/150/f7f5f0/c8b9a6?text=U';
+
+function FollowBackButton({ targetUid, currentUid }: { targetUid: string, currentUid: string }) {
+    const [isFollowing, setIsFollowing] = useState(false);
+    useEffect(() => {
+        if (!targetUid || !currentUid) return;
+        const ref = doc(db, 'artifacts', APP_ID, 'users', currentUid, 'following', targetUid);
+        getDoc(ref).then(snap => setIsFollowing(snap.exists()));
+    }, [targetUid, currentUid]);
+
+    const handleFollow = async (e: React.MouseEvent) => {
+        e.preventDefault(); e.stopPropagation();
+        if (isFollowing) return;
+        try {
+            const myFollowingRef = doc(db, 'artifacts', APP_ID, 'users', currentUid, 'following', targetUid);
+            const targetFollowerRef = doc(db, 'artifacts', APP_ID, 'users', targetUid, 'followers', currentUid);
+            const ts = serverTimestamp();
+            await setDoc(myFollowingRef, { createdAt: ts });
+            await setDoc(targetFollowerRef, { createdAt: ts });
+            setIsFollowing(true);
+        } catch(e) { console.error(e) }
+    };
+    if (isFollowing) return <span className="text-[10px] text-brand-400 font-bold border border-brand-200 px-2 py-1 rounded-sm bg-brand-50 mt-2 inline-flex items-center gap-1 shadow-inner"><CheckCheck size={10}/> フォロー中</span>;
+    return (
+        <button onClick={handleFollow} className="text-[10px] font-bold tracking-widest bg-[#3e2723] text-[#f7f5f0] px-3 py-1.5 rounded-sm hover:bg-[#2a1a17] transition-colors mt-2 shadow-md inline-flex items-center gap-1">
+            <UserPlus size={10} /> フォローバック
+        </button>
+    );
+}
 
 export default function NotificationsPage() {
     const { user, loading } = useAuth();
@@ -79,7 +110,10 @@ export default function NotificationsPage() {
                         fromUid: data.fromUid,
                         isRead: data.isRead || false,
                         type: data.type || 'unknown',
-                        contentId: data.contentId
+                        contentId: data.contentId,
+                        title: data.title,
+                        body: data.body,
+                        link: data.link
                     });
                 });
 
@@ -189,8 +223,13 @@ export default function NotificationsPage() {
                             if (n.type === 'follow') {
                                 IconComponent = UserPlus;
                                 iconColor = 'text-brand-500';
-                                htmlContent = <><span className="font-bold text-brand-900">{n.fromUser?.name}</span> さんがあなたをフォローしました。</>;
-                                linkUrl = `/user/${n.fromUid}`;
+                                htmlContent = (
+                                    <>
+                                        <span className="font-bold text-brand-900">{n.fromUser?.name}</span> さんがあなたをフォローしました。<br />
+                                        {n.fromUid && user && <FollowBackButton targetUid={n.fromUid} currentUid={user.uid} />}
+                                    </>
+                                );
+                                linkUrl = `/user?uid=${n.fromUid}`;
                             } else if (n.type === 'live_start') {
                                 IconComponent = Radio;
                                 iconColor = 'text-[#f7f5f0] animate-pulse';
@@ -207,30 +246,37 @@ export default function NotificationsPage() {
                                 iconColor = 'text-[#b8860b]';
                                 htmlContent = <><span className="font-bold text-brand-900">{n.fromUser?.name}</span> さんが新しい <span className="font-bold">音声</span> を配信しました。</>;
                                 linkUrl = `/media/podcasts/${n.contentId}`;
+                            } else if (n.title || n.body) {
+                                IconComponent = Bell;
+                                iconColor = 'text-brand-500';
+                                htmlContent = <><span className="font-bold text-brand-900">{n.title}</span><br/><span className="text-xs text-brand-700 font-normal leading-relaxed mt-1 block">{n.body}</span></>;
+                                linkUrl = n.link || '#';
                             } else {
                                 htmlContent = <>新しい通知があります。</>;
                             }
 
                             return (
-                                <Link href={linkUrl} key={n.id} onClick={() => markAsRead(n.id)} className="block relative group">
+                                <div key={n.id} className={`${bgClass} border border-brand-200 rounded-sm hover:shadow-lg transition-all group-hover:border-brand-400 relative`}>
                                     {!isRead && (
-                                        <div className="absolute top-1/2 -left-1.5 transform -translate-y-1/2 w-3 h-3 bg-red-500 rounded-full border-2 border-[#f7f5f0] shadow-sm z-10"></div>
+                                        <div className="absolute top-[8px] -left-1.5 w-3 h-3 bg-red-500 rounded-full border-2 border-[#f7f5f0] shadow-sm z-10"></div>
                                     )}
-                                    <div className={`${bgClass} border border-brand-200 rounded-sm p-4 flex items-start gap-4 hover:shadow-lg transition-all group-hover:border-brand-400 relative`}>
-                                        <div className="relative w-12 h-12 flex-shrink-0 mt-0.5">
+                                    <div className="flex items-start gap-4 p-4">
+                                        <Link href={n.fromUid ? `/user?uid=${n.fromUid}` : '#'} onClick={() => markAsRead(n.id)} className="relative w-12 h-12 flex-shrink-0 mt-0.5 z-10 hover:opacity-80 transition-opacity">
                                             <img src={n.fromUser?.photoURL || DEFAULT_ICON} className="w-12 h-12 rounded-full object-cover border border-brand-200 shadow-sm" alt="User Icon" />
                                             <div className={`absolute -bottom-1 -right-1 w-6 h-6 ${iconCircleBg} rounded-full border flex items-center justify-center shadow-sm`}>
                                                 <IconComponent className={`w-3 h-3 ${iconColor}`} />
                                             </div>
-                                        </div>
+                                        </Link>
                                         <div className="flex-1 min-w-0 pt-0.5">
-                                            <p className="text-sm text-brand-800 leading-relaxed tracking-wide mb-1.5">{htmlContent}</p>
-                                            <p className="text-[10px] text-brand-400 font-mono tracking-widest flex items-center gap-1">
-                                                <Clock size={10} /> {dateStr}
-                                            </p>
+                                            <Link href={linkUrl} onClick={() => markAsRead(n.id)} className="block hover:opacity-80 transition-opacity cursor-pointer">
+                                                <div className="text-sm text-brand-800 leading-relaxed tracking-wide mb-1.5">{htmlContent}</div>
+                                                <p className="text-[10px] text-brand-400 font-mono tracking-widest flex items-center gap-1">
+                                                    <Clock size={10} /> {dateStr}
+                                                </p>
+                                            </Link>
                                         </div>
                                     </div>
-                                </Link>
+                                </div>
                             );
                         })
                     )}

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/contexts/AuthContext";
 import PWASetup from "@/components/PWASetup";
+import PWANotifications from "@/components/PWANotifications";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className={`antialiased font-serif bg-texture min-h-screen text-brand-800 text-[14px] sm:text-[16px]`}>
         <AuthProvider>
           <PWASetup />
+          <PWANotifications />
           {children}
         </AuthProvider>
       </body>
