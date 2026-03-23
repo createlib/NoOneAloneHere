@@ -38,7 +38,7 @@ function NewsContent() {
           </div>
           
           <div 
-             className="prose max-w-none text-[#5c4a3d] leading-relaxed"
+             className="markdown-body max-w-none"
              dangerouslySetInnerHTML={{ __html: formatText(article.content) }}
           />
 

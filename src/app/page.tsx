@@ -2,6 +2,7 @@ import Footer from "@/components/Footer";
 import { Bell, Compass, Feather, BookOpen, MonitorPlay, Hourglass, UserCheck, Building, Video, Handshake, Sparkles, Play, Mic, Shield, Anchor } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { NOAH_NEWS_DATA } from "@/lib/newsData";
 
 export default function Home() {
   return (
@@ -70,10 +71,16 @@ export default function Home() {
               </div>
           </div>
           
-          <ul className="space-y-4">
-              <li className="text-center py-4 text-brand-400 text-sm tracking-widest flex items-center justify-center">
-                  最新のお知らせはありません。
-              </li>
+          <ul className="divide-y divide-brand-100">
+              {NOAH_NEWS_DATA.slice(0, 5).map(item => (
+                  <li key={item.id} className="py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 group">
+                      <span className="text-xs text-brand-500 font-mono w-24 shrink-0">{item.date}</span>
+                      <span className="text-[10px] bg-brand-200 text-brand-700 border border-brand-300 px-2 py-0.5 rounded-sm tracking-widest w-fit font-bold">{item.category}</span>
+                      <Link href={`/news?id=${item.id}`} className="text-sm text-brand-800 group-hover:text-brand-500 transition-colors leading-relaxed flex-1 font-medium mt-1 sm:mt-0">
+                          {item.title}
+                      </Link>
+                  </li>
+              ))}
           </ul>
         </div>
       </section>
