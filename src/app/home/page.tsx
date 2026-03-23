@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { db } from '@/lib/firebase';
+import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, query, getDocs, where, Timestamp, onSnapshot } from 'firebase/firestore';
 import { Compass, Link as LinkIcon, Users, CalendarCheck, List, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Crown, ShieldHalf, ArrowRight, Anchor, MapPin, Clock, User as UserIcon, AlignLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
-
-// Use a hardcoded appId or fetch from environment/config
-const APP_ID = '3Q113i1Uu472zY2iO2uH';
 
 export default function Home() {
   const { user, loading } = useAuth();
