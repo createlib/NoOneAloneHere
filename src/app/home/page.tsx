@@ -395,11 +395,14 @@ export default function Home() {
                         ) : (
                             <div className="space-y-2">
                                 {referrals.map(ref => (
-                                    <Link href={`/user/${ref.userId}`} key={ref.id} className="flex items-center gap-3 p-3 bg-white rounded-sm border border-brand-200 shadow-sm hover:border-[#b8860b] hover:shadow-md transition-all group">
+                                    <Link href={`/user?uid=${ref.userId || ref.id}`} key={ref.id} className="flex items-center gap-3 p-3 bg-white rounded-sm border border-brand-200 shadow-sm hover:border-[#b8860b] hover:shadow-md transition-all group">
                                         <img src={ref.photoURL || 'https://via.placeholder.com/40?text=U'} className="w-10 h-10 rounded-sm object-cover border border-brand-200 bg-brand-50" />
                                         <div className="flex-1">
                                             <h4 className="font-bold text-sm text-brand-900 group-hover:text-blue-600 transition-colors">{ref.name || '名称未設定'}</h4>
                                             <p className="text-[10px] text-brand-500 tracking-widest">ID: {ref.userId}</p>
+                                        </div>
+                                        <div className="text-[10px] font-bold text-brand-500 bg-brand-50 px-2.5 py-1.5 rounded-sm border border-brand-200 tracking-widest shadow-inner">
+                                            プロフィール充実度: <span className="text-brand-800 text-xs">{ref.profileScore || 0}%</span>
                                         </div>
                                     </Link>
                                 ))}

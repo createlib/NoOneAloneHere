@@ -168,7 +168,7 @@ export default function EventDetailSheet({
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-xs font-bold text-brand-500 tracking-widest"><User className="w-4 h-4 inline mr-1 text-brand-400"/>主催者</span>
-                            <Link href={`/user/${event.organizerId}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">{event.organizerName}</Link>
+                            <Link href={`/user?uid=${event.organizerId}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">{event.organizerName}</Link>
                         </div>
                         <div className="flex flex-col items-start border-t border-brand-200 pt-4 pb-1">
                             <span className="text-xs font-bold text-brand-500 tracking-widest mt-0.5 opacity-80 flex items-center gap-1 mb-2"><User className="w-3.5 h-3.5 text-brand-400"/> 参加予定の乗船者</span>

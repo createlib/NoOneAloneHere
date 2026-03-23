@@ -1133,7 +1133,7 @@ function EventsContent() {
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs font-bold text-brand-500 tracking-widest"><User className="w-4 h-4 inline mr-1 text-brand-400"/>投稿者</span>
-                                    <Link href={`/user/${selectedJob.organizerId}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">{selectedJob.organizerName}</Link>
+                                    <Link href={`/user?uid=${selectedJob.organizerId}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">{selectedJob.organizerName}</Link>
                                 </div>
                             </div>
 
