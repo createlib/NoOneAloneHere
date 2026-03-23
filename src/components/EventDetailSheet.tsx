@@ -110,7 +110,8 @@ export default function EventDetailSheet({
     toggleParticipate,
     openEditModal,
     onDelete,
-    onShare
+    onShare,
+    hideEventLink
 }: { 
     event: any | null, 
     onClose: () => void, 
@@ -123,7 +124,8 @@ export default function EventDetailSheet({
     toggleParticipate?: (evt: any) => void,
     openEditModal?: (id: string) => void,
     onDelete?: (evt: any) => void,
-    onShare?: (evt: any) => void
+    onShare?: (evt: any) => void,
+    hideEventLink?: boolean
 }) {
 
     if (!event) return null;
@@ -218,10 +220,12 @@ export default function EventDetailSheet({
                             </div>
                         )}
 
-                        <Link href={`/events?eventId=${event.id}`} className="w-full mt-3 py-3 bg-[#e8dfd1] text-[#3e2723] rounded-sm text-center text-xs font-bold tracking-widest block hover:bg-[#dcd4c6] transition-colors shadow-sm relative group overflow-hidden">
-                            イベントの詳細ページを開く
-                            <div className="absolute top-0 left-0 w-2 h-full bg-[#b8860b] group-hover:w-full opacity-10 transition-all duration-300"></div>
-                        </Link>
+                        {!hideEventLink && (
+                            <Link href={`/events?eventId=${event.id}`} className="w-full mt-3 py-3 bg-[#e8dfd1] text-[#3e2723] rounded-sm text-center text-xs font-bold tracking-widest block hover:bg-[#dcd4c6] transition-colors shadow-sm relative group overflow-hidden">
+                                イベントの詳細ページを開く
+                                <div className="absolute top-0 left-0 w-2 h-full bg-[#b8860b] group-hover:w-full opacity-10 transition-all duration-300"></div>
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>

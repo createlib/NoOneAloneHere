@@ -1097,6 +1097,7 @@ function EventsContent() {
                 toggleParticipate={toggleParticipate}
                 openEditModal={openEventModal}
                 onShare={(evt: any) => shareItem(evt, 'event')}
+                hideEventLink={true}
             />
 
             {/* Job Detail Sheet (placeholder) */}
