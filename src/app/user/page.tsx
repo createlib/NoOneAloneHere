@@ -155,12 +155,12 @@ function UserProfileContent() {
 
            // Check Admin Hook
            let myAdmin = false;
-           if (selfViewing && loadedData?.membershipRank === 'admin') {
+           if (selfViewing && (loadedData?.membershipRank === 'admin' || loadedData?.userId === 'admin')) {
                myAdmin = true;
            } else if (!selfViewing && user) {
                const myRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', user.uid);
                const mySnap = await getDoc(myRef);
-               if (mySnap.exists() && mySnap.data().membershipRank === 'admin') myAdmin = true;
+               if (mySnap.exists() && (mySnap.data().membershipRank === 'admin' || mySnap.data().userId === 'admin')) myAdmin = true;
            }
            
            if (user?.uid === "Zm7FWRopJKVfyzbp8KXXokMFjNC3") myAdmin = true;
