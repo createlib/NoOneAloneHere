@@ -208,19 +208,40 @@ function EventsContent() {
 
     const shareItem = (item: EventData | JobData, type: 'event' | 'job') => {
         const url = `${window.location.origin}/events?${type}Id=${item.id}`;
+        const registerUrl = `${window.location.origin}/register?ref=${user?.uid || ''}`;
         const inviterName = userData ? (userData.name || userData.userId) : 'ユーザー';
         const title = item.title || '無題';
-        let desc = (type === 'event' ? (item as EventData).description : (item as JobData).desc) || '';
-        if (desc.length > 80) desc = desc.substring(0, 80) + '...以降は詳細へ';
+        let rawDesc = (type === 'event' ? (item as EventData).description : (item as JobData).desc) || '';
         
         let text = '';
         if (type === 'event') {
+            let shortDesc = rawDesc.substring(0, 200).replace(/\n/g, ' ');
+            if (rawDesc.length > 200) shortDesc += '…';
+
             const ev = item as EventData;
             const loc = ev.isOnline ? (ev.locationName || 'オンライン') : (ev.locationName || '未設定');
             const price = Number(ev.price || 0) > 0 ? `¥${Number(ev.price).toLocaleString()}` : '無料';
-            text = `${inviterName}さんからイベント招待が届きました。\n■${title}\n■${loc}\n■${price}\n■${desc}\n${url}\n\n―――\nNOAHに参加していない方は、ユーザー登録をしてから参加ボタンを押してください。`;
+            
+            text = `${inviterName}さんからイベント招待が届きました。
+■イベントタイトル
+　${title}
+■場所
+　${loc}
+■参加費
+　${price}
+■イベント概要
+${shortDesc}
+
+⇩以降は詳細へ⇩
+${url}
+
+―――
+⇩NOAHに参加していない方は、ユーザー登録をしてから参加ボタンを押してください。⇩
+${registerUrl}`;
         } else {
-            text = `${inviterName}さんが仕事・依頼の募集を開始しました。\n■${title}\n■${desc}\n${url}\n\n―――\nNOAHに参加していない方は、ユーザー登録をしてから詳細をご確認ください。`;
+            let desc = rawDesc;
+            if (desc.length > 80) desc = desc.substring(0, 80) + '...以降は詳細へ';
+            text = `${inviterName}さんが仕事・依頼の募集を開始しました。\n■${title}\n■${desc}\n${url}\n\n―――\n⇩NOAHに参加していない方は、ユーザー登録をしてから詳細をご確認ください。⇩\n${registerUrl}`;
         }
         
         navigator.clipboard.writeText(text).then(() => alert('共有リンクと紹介文をコピーしました！')).catch(() => alert('コピーに失敗しました。'));
