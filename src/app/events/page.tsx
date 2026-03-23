@@ -240,12 +240,41 @@ function EventsContent() {
     useEffect(() => {
         const targetEventId = searchParams?.get('eventId');
         const targetJobId = searchParams?.get('jobId');
-        if (targetEventId && allEvents.length > 0 && !selectedEvent) {
+        const editEventId = searchParams?.get('editEventId');
+
+        if (editEventId && allEvents.length > 0) {
+            const ev = allEvents.find(e => e.id === editEventId);
+            if (ev && !eventModalOpen) {
+                setEventFormData({
+                    title: ev.title || '',
+                    price: String(ev.price) || '0',
+                    startDate: ev.startDate || '',
+                    startTime: ev.startTime || '',
+                    endDate: ev.endDate || '',
+                    endTime: ev.endTime || '',
+                    desc: ev.description || '',
+                    isOnline: !!ev.isOnline,
+                    onlineTool: ev.onlineUrl ? 'other' : '',
+                    onlineUrl: ev.onlineUrl || '',
+                    locationName: ev.locationName || '',
+                    locationQuery: ev.locationName || '',
+                    participantPublic: ev.isParticipantsPublic ?? true
+                });
+                setEditingEventId(editEventId);
+                setEventSelectedTags(new Set(ev.tags || []));
+                setEventOldImages(ev.imageUrls && ev.imageUrls.length > 0 ? ev.imageUrls : (ev.thumbnailUrl ? [ev.thumbnailUrl] : []));
+                setEventFiles([]);
+                setEventModalOpen(true);
+                window.history.replaceState(null, '', '/events');
+            }
+        } else if (targetEventId && allEvents.length > 0 && !selectedEvent) {
             const ev = allEvents.find(e => e.id === targetEventId);
             if (ev) { setViewMode('list-events'); setSelectedEvent(ev); }
+            window.history.replaceState(null, '', '/events');
         } else if (targetJobId && allJobs.length > 0 && !selectedJob) {
             const j = allJobs.find(x => x.id === targetJobId);
             if (j) { setViewMode('list-jobs'); setSelectedJob(j); }
+            window.history.replaceState(null, '', '/events');
         }
     }, [searchParams, allEvents, allJobs]);
 

@@ -103,6 +103,7 @@ export default function EventDetailSheet({
     isJoined,
     toggleParticipate,
     openEditModal,
+    onDelete,
     onShare
 }: { 
     event: any | null, 
@@ -115,6 +116,7 @@ export default function EventDetailSheet({
     isJoined?: boolean,
     toggleParticipate?: (evt: any) => void,
     openEditModal?: (id: string) => void,
+    onDelete?: (evt: any) => void,
     onShare?: (evt: any) => void
 }) {
 
@@ -191,17 +193,29 @@ export default function EventDetailSheet({
                                 {isJoined ? '参加をキャンセル' : '参加を申し込む'}
                             </button>
                         )}
-                        {isOrganizerOrAdmin && openEditModal && (
-                            <button onClick={() => { onClose(); openEditModal(event.id); }} className="w-full py-2.5 bg-[#f7f5f0] border border-brand-300 text-brand-700 rounded-sm text-xs font-bold tracking-widest hover:bg-white transition-colors shadow-sm">編集画面を開く</button>
+                        {isJoined && (
+                            <a href={getGoogleCalendarLink(event)} target="_blank" rel="noopener noreferrer" className="w-full mt-1 py-2.5 bg-white border border-[#4285F4] text-[#4285F4] rounded-sm text-xs font-bold tracking-widest hover:bg-[#e8f0fe] transition-colors shadow-sm flex justify-center items-center gap-2">
+                                <CalendarPlus className="w-4 h-4" /> Googleカレンダーに追加
+                            </a>
                         )}
-                        
-                        <a href={getGoogleCalendarLink(event)} target="_blank" rel="noopener noreferrer" className="w-full mt-1 py-2.5 bg-white border border-[#4285F4] text-[#4285F4] rounded-sm text-xs font-bold tracking-widest hover:bg-[#e8f0fe] transition-colors shadow-sm flex justify-center items-center gap-2">
-                            <CalendarPlus className="w-4 h-4" /> Googleカレンダーに追加
-                        </a>
 
                         {onShare && (
                             <button onClick={() => onShare(event)} className="w-full mt-1 py-2.5 bg-brand-50 border border-brand-200 text-brand-600 rounded-sm text-xs font-bold tracking-widest hover:bg-brand-100 transition-colors shadow-sm flex justify-center items-center gap-2"><Share2 className="w-4 h-4" />友達に共有する (リンクコピー)</button>
                         )}
+                        
+                        {isOrganizerOrAdmin && openEditModal && (
+                            <div className="flex gap-2 mt-2 border-t border-brand-200 pt-3">
+                                <button onClick={() => { onClose(); openEditModal(event.id); }} className="flex-1 py-2.5 bg-[#f7f5f0] border border-brand-300 text-brand-700 rounded-sm text-xs font-bold tracking-widest hover:bg-white transition-colors shadow-sm">編集</button>
+                                {onDelete && (
+                                    <button onClick={() => { if(window.confirm('本当にこのイベントを削除しますか？')){ onDelete(event); onClose(); } } } className="flex-1 py-2.5 bg-[#fffdf9] border border-red-300 text-red-600 rounded-sm text-xs font-bold tracking-widest hover:bg-red-50 transition-colors shadow-sm">削除</button>
+                                )}
+                            </div>
+                        )}
+
+                        <Link href={`/events?eventId=${event.id}`} className="w-full mt-3 py-3 bg-[#e8dfd1] text-[#3e2723] rounded-sm text-center text-xs font-bold tracking-widest block hover:bg-[#dcd4c6] transition-colors shadow-sm relative group overflow-hidden">
+                            イベントの詳細ページを開く
+                            <div className="absolute top-0 left-0 w-2 h-full bg-[#b8860b] group-hover:w-full opacity-10 transition-all duration-300"></div>
+                        </Link>
                     </div>
                 </div>
             </div>

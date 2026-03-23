@@ -23,6 +23,10 @@ export default function Home() {
   const [eventJoinStatusMap, setEventJoinStatusMap] = useState<Record<string, boolean>>({});
   const [userData, setUserData] = useState<any>(null);
 
+  const [isReferralsModalOpen, setIsReferralsModalOpen] = useState(false);
+  const [referrals, setReferrals] = useState<any[]>([]);
+  const [referralsLoading, setReferralsLoading] = useState(false);
+
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -203,7 +207,22 @@ export default function Home() {
                       <button onClick={copyInviteLink} className="flex-1 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] border border-[#996515] px-4 py-3.5 rounded-sm font-bold text-xs shadow-md flex items-center justify-center gap-2 tracking-widest">
                           <LinkIcon size={16} /> 招待リンクをコピー
                       </button>
-                      <button className="flex-1 bg-[#1a110f] text-[#d4af37] border border-[#8b6a4f] px-4 py-3.5 rounded-sm font-bold text-xs shadow-md flex items-center justify-center gap-2 tracking-widest">
+                      <button onClick={() => {
+                          setIsReferralsModalOpen(true);
+                          if (!myProfile || !myProfile.userId) return;
+                          setReferralsLoading(true);
+                          const usersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'users');
+                          const q = query(usersRef, where("referrerId", "==", myProfile.userId));
+                          getDocs(q).then(snap => {
+                              const refList: any[] = [];
+                              snap.forEach(d => refList.push({ id: d.id, ...d.data() }));
+                              setReferrals(refList);
+                              setReferralsLoading(false);
+                          }).catch(e => {
+                              console.error(e);
+                              setReferralsLoading(false);
+                          });
+                      }} className="flex-1 bg-[#1a110f] text-[#d4af37] border border-[#8b6a4f] px-4 py-3.5 rounded-sm font-bold text-xs shadow-md flex items-center justify-center gap-2 tracking-widest">
                           <Users size={16} /> 招待した人を見る
                       </button>
                   </div>
@@ -333,11 +352,63 @@ export default function Home() {
                     setEventJoinStatusMap(prev => ({...prev, [evt.id]: !isJoined}));
                 } catch(e) { console.error(e); }
             }}
+            onDelete={async (evt: any) => {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', evt.id));
+                    setHostingEvents(prev => prev.filter(e => e.id !== evt.id));
+                } catch(e) { console.error('Delete failed:', e); alert('削除に失敗しました'); }
+            }}
+            openEditModal={(id) => {
+                window.location.href = `/events?editEventId=${id}`;
+            }}
             onShare={(evt) => {
                 const url = `${window.location.origin}/events?eventId=${evt.id}`;
                 navigator.clipboard.writeText(url).then(() => alert('リンクをコピーしました！'));
             }}
         />
+
+        {/* Referrals Modal */}
+        {isReferralsModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsReferralsModalOpen(false)}></div>
+                <div className="bg-[#fffdf9] w-full max-w-lg rounded-sm shadow-2xl relative z-10 max-h-[85vh] flex flex-col border border-brand-300">
+                    <div className="flex justify-between items-center p-4 border-b border-brand-200 bg-texture">
+                        <h3 className="font-bold text-lg text-brand-900 font-serif tracking-widest flex items-center gap-2">
+                            <Users className="text-brand-500" /> 招待した人（乗船記録）
+                        </h3>
+                        <button onClick={() => setIsReferralsModalOpen(false)} className="text-brand-400 hover:text-brand-700 bg-brand-50 p-1.5 rounded-sm transition-colors border border-transparent hover:border-brand-200">
+                            <X size={20} />
+                        </button>
+                    </div>
+                    
+                    <div className="p-4 overflow-y-auto flex-1 bg-[#f7f5f0]/50 custom-scrollbar">
+                        {referralsLoading ? (
+                            <div className="text-center text-brand-400 py-12 flex flex-col items-center">
+                                <Compass className="animate-spin text-3xl mb-4 opacity-50 block mx-auto"/>
+                                <p className="text-sm tracking-widest font-bold">乗船記録を検索中...</p>
+                            </div>
+                        ) : referrals.length === 0 ? (
+                            <div className="text-center py-12 bg-white rounded-sm border border-brand-200 shadow-sm">
+                                <Users className="text-brand-300 text-4xl mb-4 mx-auto"/>
+                                <p className="text-sm text-brand-600 font-bold tracking-widest">まだ招待した人はいません</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {referrals.map(ref => (
+                                    <Link href={`/user/${ref.userId}`} key={ref.id} className="flex items-center gap-3 p-3 bg-white rounded-sm border border-brand-200 shadow-sm hover:border-[#b8860b] hover:shadow-md transition-all group">
+                                        <img src={ref.photoURL || 'https://via.placeholder.com/40?text=U'} className="w-10 h-10 rounded-sm object-cover border border-brand-200 bg-brand-50" />
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-sm text-brand-900 group-hover:text-blue-600 transition-colors">{ref.name || '名称未設定'}</h4>
+                                            <p className="text-[10px] text-brand-500 tracking-widest">ID: {ref.userId}</p>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
 
         {fullImageUrl && (
             <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center backdrop-blur-sm transition-opacity" onClick={() => setFullImageUrl(null)}>
