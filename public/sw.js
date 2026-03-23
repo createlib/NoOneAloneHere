@@ -6,8 +6,9 @@ self.addEventListener('install', (e) => {
             // Next.js App Router sets up its own client routing and caching.
             // We just cache the manifest and icon to satisfy PWA requirements.
             return cache.addAll([
+                '/',
                 '/manifest.json',
-                '/img/NOAH.png'
+                '/img/icon.png'
             ]).catch(err => {
                 console.error('SW installation caching failed', err);
             });
