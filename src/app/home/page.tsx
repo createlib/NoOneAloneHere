@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
-import { doc, getDoc, collection, query, getDocs, where, Timestamp, onSnapshot } from 'firebase/firestore';
-import { Compass, Link as LinkIcon, Users, CalendarCheck, List, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Crown, ShieldHalf, ArrowRight, Anchor, MapPin, Clock, User as UserIcon, AlignLeft } from 'lucide-react';
+import { doc, getDoc, collection, query, getDocs, where, Timestamp, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
+import { Compass, Link as LinkIcon, Users, CalendarCheck, List, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Crown, ShieldHalf, ArrowRight, Anchor, MapPin, Clock, User as UserIcon, AlignLeft, X } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import EventDetailSheet from '@/components/EventDetailSheet';
 import Link from 'next/link';
 
 export default function Home() {
@@ -17,6 +18,11 @@ export default function Home() {
   const [participatingEvents, setParticipatingEvents] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [fullImageUrl, setFullImageUrl] = useState<string | null>(null);
+  const [eventJoinStatusMap, setEventJoinStatusMap] = useState<Record<string, boolean>>({});
+  const [userData, setUserData] = useState<any>(null);
+
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -26,8 +32,23 @@ export default function Home() {
     let unsubHost: (() => void) | null = null;
     let unsubJoin: (() => void) | null = null;
 
-    const fetchData = async () => {
-      setDataLoading(true);
+      const fetchData = async () => {
+        setDataLoading(true);
+
+        const myProfileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data');
+        getDoc(myProfileRef).then(snap => {
+            if(snap.exists()) {
+                setUserData(snap.data());
+                setIsAdmin(snap.data().userId === 'admin');
+            }
+        });
+
+        const joinRef = collection(db, 'artifacts', APP_ID, 'users', user.uid, 'participating_events');
+        getDocs(joinRef).then(snap => {
+            const smap: Record<string, boolean> = {};
+            snap.forEach(d => smap[d.id] = true);
+            setEventJoinStatusMap(smap);
+        });
       try {
         // Fetch Profile
         let profileUserId = user.uid;
@@ -223,7 +244,7 @@ export default function Home() {
                         </div>
                       ) : (
                         participatingEvents.map(evt => (
-                            <EventCard key={evt.id} evt={evt} />
+                            <EventCard key={evt.id} evt={evt} onClick={() => setSelectedEvent(evt)} />
                         ))
                       )}
                   </div>
@@ -267,7 +288,7 @@ export default function Home() {
                       </div>
                   ) : (
                       hostingEvents.map(evt => (
-                          <EventCard key={evt.id} evt={evt} />
+                          <EventCard key={evt.id} evt={evt} onClick={() => setSelectedEvent(evt)} />
                       ))
                   )}
               </div>
@@ -287,20 +308,58 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Global Modals for Home */}
+        <EventDetailSheet 
+            event={selectedEvent} 
+            onClose={() => setSelectedEvent(null)}
+            adjustMode={false}
+            setFullImageUrl={setFullImageUrl}
+            userData={userData}
+            currentUserId={user?.uid}
+            isJoined={selectedEvent ? eventJoinStatusMap[selectedEvent.id] : false}
+            toggleParticipate={async (evt: any) => {
+                const isJoined = eventJoinStatusMap[evt.id];
+                const myJoinRef = doc(db, 'artifacts', APP_ID, 'users', user!.uid, 'participating_events', evt.id);
+                const partRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', evt.id, 'participants', user!.uid);
+                try {
+                    if(isJoined) {
+                        await deleteDoc(myJoinRef);
+                        await deleteDoc(partRef);
+                    } else {
+                        await setDoc(myJoinRef, { joinedAt: new Date().toISOString() });
+                        await setDoc(partRef, { joinedAt: new Date().toISOString() });
+                    }
+                    setEventJoinStatusMap(prev => ({...prev, [evt.id]: !isJoined}));
+                } catch(e) { console.error(e); }
+            }}
+            onShare={(evt) => {
+                const url = `${window.location.origin}/events?eventId=${evt.id}`;
+                navigator.clipboard.writeText(url).then(() => alert('リンクをコピーしました！'));
+            }}
+        />
+
+        {fullImageUrl && (
+            <div className="fixed inset-0 z-[200] bg-black/95 flex items-center justify-center backdrop-blur-sm transition-opacity" onClick={() => setFullImageUrl(null)}>
+                <img src={fullImageUrl} className="max-w-[95vw] max-h-[95vh] object-contain shadow-2xl" />
+                <button className="absolute top-4 right-4 text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-colors"><X className="w-6 h-6" /></button>
+            </div>
+        )}
+
       </main>
     </div>
   );
 }
 
 // Simple reusable EventCard for local file use
-function EventCard({ evt }: { evt: any }) {
+function EventCard({ evt, onClick }: { evt: any, onClick: () => void }) {
     const thumb = evt.thumbnailUrl || 'https://via.placeholder.com/150?text=NOAH';
     const dateStr = (evt.startDate === evt.endDate) 
             ? `${evt.startDate || ''} ${evt.startTime || ''}`
             : `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
 
     return (
-        <Link href={`/events?eventId=${evt.id}`} className="flex items-center gap-4 p-4 bg-[#fffdf9] rounded-sm border border-brand-200 cursor-pointer hover:bg-brand-50 transition-colors group">
+        <button onClick={onClick} className="w-full text-left flex items-center gap-4 p-4 bg-[#fffdf9] rounded-sm border border-brand-200 cursor-pointer hover:bg-brand-50 transition-colors group">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-sm overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-sm">
                 <img src={thumb} alt={evt.title} className="w-full h-full object-cover" />
             </div>
@@ -319,6 +378,6 @@ function EventCard({ evt }: { evt: any }) {
             <div className="text-brand-300 pr-2 group-hover:text-brand-500 transition-colors">
                 <ChevronRight size={16} />
             </div>
-        </Link>
+        </button>
     );
 }
