@@ -618,9 +618,22 @@ function EventsContent() {
 
             let finalOrganizerId = user.uid;
             let finalOrganizerName = userData?.name || userData?.userId || '主催者';
+            let finalOrganizerAvatar = userData?.photoURL || null;
+
             if (userData?.userId === 'admin' && (eventFormData as any).overrideUserId) {
-                finalOrganizerId = (eventFormData as any).overrideUserId;
-                finalOrganizerName = '代理投稿';
+                const targetRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'users');
+                const q = query(targetRef, where("userId", "==", ((eventFormData as any).overrideUserId).trim()));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    setSubmittingEvent(false);
+                    return alert(`エラー: 指定されたユーザーID「@${(eventFormData as any).overrideUserId}」は見つかりませんでした。`);
+                }
+                const docSnap = querySnapshot.docs[0];
+                finalOrganizerId = docSnap.id;
+                const tData = docSnap.data();
+                finalOrganizerName = tData.name || tData.userId || '主催者';
+                finalOrganizerAvatar = tData.photoURL || null;
             } else if (editingEventId) {
                 const oldEvt = allEvents.find(e => e.id === editingEventId);
                 if (oldEvt) {
