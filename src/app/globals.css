@@ -82,8 +82,11 @@
   @apply bg-[#1a110f] text-[#d4af37] px-1.5 py-0.5 rounded-sm text-[11px] sm:text-xs font-mono border border-[#8b6a4f];
 }
 .markdown-body pre {
-  @apply bg-[#1a110f] text-[#f7f5f0] p-4 rounded-sm overflow-x-auto mb-4 custom-scrollbar text-xs font-mono shadow-md border border-[#3e2723];
+  @apply bg-[#1a110f] text-[#f7f5f0] p-4 rounded-sm overflow-x-auto mb-4 text-xs font-mono shadow-md border border-[#3e2723];
 }
+.markdown-body pre::-webkit-scrollbar { height: 6px; }
+.markdown-body pre::-webkit-scrollbar-track { background: #1a110f; }
+.markdown-body pre::-webkit-scrollbar-thumb { background-color: #3e2723; border-radius: 10px; }
 .markdown-body pre code {
   @apply bg-transparent text-inherit p-0 border-none;
 }
