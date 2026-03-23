@@ -313,7 +313,7 @@ function DiagnosticContent() {
                                                 return (
                                                     <div key={idx} className="text-[0.95rem] text-white mb-2 leading-relaxed">
                                                         {osNum ? (
-                                                            <a href={`/diagnostic?osId=${osNum}`} className="font-bold mr-2 font-serif tracking-[0.05em] underline underline-offset-4 hover:opacity-80 transition-opacity" style={{ color: theme.main }}>{m.name}</a>
+                                                            <a href={`/search?osNumber=${osNum}`} className="font-bold mr-2 font-serif tracking-[0.05em] underline underline-offset-4 hover:opacity-80 transition-opacity" style={{ color: theme.main }}>{m.name}</a>
                                                         ) : (
                                                             <span className="font-bold mr-2 font-serif tracking-[0.05em]" style={{ color: theme.main }}>{m.name}</span>
                                                         )}
