@@ -208,11 +208,14 @@ function LiveRoomClientPageInner() {
     };
 
     const connectLiveKit = async (roomName: string, isPublisher: boolean) => {
+        let room: Room | null = null;
         try {
-            if (livekitRoomRef.current) await livekitRoomRef.current.disconnect();
+            if (livekitRoomRef.current) {
+                await livekitRoomRef.current.disconnect().catch(() => {});
+            }
             
             const token = await generateLiveKitToken(roomName, myProfile?.name || user?.uid || 'Unknown', isPublisher);
-            const room = new Room({ adaptiveStream: true, dynacast: true });
+            room = new Room({ adaptiveStream: true, dynacast: true });
             livekitRoomRef.current = room;
 
             room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
@@ -231,24 +234,30 @@ function LiveRoomClientPageInner() {
                 const spIds = speakers.map(s => s.identity);
                 setActiveSpeakers(spIds);
                 if (user && spIds.includes(user.uid)) {
-                    updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId, 'participants', user.uid), { isSpeaking: true });
+                    updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId, 'participants', user.uid), { isSpeaking: true }).catch(()=>{});
                 } else if (user) {
-                    updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId, 'participants', user.uid), { isSpeaking: false });
+                    updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId, 'participants', user.uid), { isSpeaking: false }).catch(()=>{});
                 }
             });
 
             await room.connect(LIVEKIT_URL, token);
             try {
-                if (isPublisher) {
+                if (isPublisher && livekitRoomRef.current === room && !isLeaving) {
                     await room.localParticipant.setMicrophoneEnabled(true);
                     setIsMicMuted(false);
-                    updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId, 'participants', user!.uid), { isMuted: false });
+                    updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', targetRoomId, 'participants', user!.uid), { isMuted: false }).catch(()=>{});
                 }
             } catch (micE: any) {
-                console.warn("LiveKit Mike warning", micE);
-                showNotif(`マイクの権限エラー: ${micE.message || 'ブラウザでマイクが許可されていません'}`);
+                if (livekitRoomRef.current === room && !isLeaving) {
+                    console.warn("LiveKit Mike warning", micE);
+                    showNotif(`マイクの権限エラー: ${micE.message || 'ブラウザでマイクが許可されていません'}`);
+                }
             }
         } catch(e: any) {
+            if (livekitRoomRef.current !== room || isLeaving) {
+                console.warn("Ignored obsolete LiveKit error connection trace:", e?.message);
+                return;
+            }
             console.warn("LiveKit Connection Error", e);
             showNotif(`音声サーバーエラー: ${e.message || '接続を拒否されました'}`);
         }
