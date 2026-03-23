@@ -101,7 +101,7 @@ function UserProfileContent() {
     async function loadData() {
       if (!user) return;
       
-      const targetId = uidParam || user.uid;
+      let targetId = uidParam || user.uid;
       setTargetUid(targetId);
       const selfViewing = targetId === user.uid;
       setIsSelf(selfViewing);
@@ -113,6 +113,21 @@ function UserProfileContent() {
            let loadedData: any = null;
            if (publicSnap.exists()) {
              loadedData = publicSnap.data();
+           } else {
+               // Resolution Fallback: Handle Legacy "Custom User ID" deep links
+               const fallbackQuery = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'users'), where('userId', '==', targetId));
+               const fallbackSnap = await getDocs(fallbackQuery);
+               if (!fallbackSnap.empty) {
+                   const resolvedDoc = fallbackSnap.docs[0];
+                   const realUid = resolvedDoc.id;
+                   
+                   loadedData = resolvedDoc.data();
+                   
+                   // Overwrite local trackers with the resolved precise Auth UID
+                   targetId = realUid;
+                   setTargetUid(realUid);
+                   setIsSelf(realUid === user.uid);
+               }
            }
            
            let mutuallyFollowing = false;
@@ -143,13 +158,9 @@ function UserProfileContent() {
            if (selfViewing && loadedData?.membershipRank === 'admin') {
                myAdmin = true;
            } else if (!selfViewing && user) {
-               if (user.uid === "Zm7FWRopJKVfyzbp8KXXokMFjNC3") {
-                   myAdmin = true;
-               } else {
-                   const myRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', user.uid);
-                   const mySnap = await getDoc(myRef);
-                   if (mySnap.exists() && mySnap.data().membershipRank === 'admin') myAdmin = true;
-               }
+               const myRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', user.uid);
+               const mySnap = await getDoc(myRef);
+               if (mySnap.exists() && mySnap.data().membershipRank === 'admin') myAdmin = true;
            }
            setIsAdmin(myAdmin);
            if (myAdmin) loadPrivData = true;

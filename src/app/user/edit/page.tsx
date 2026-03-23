@@ -120,11 +120,10 @@ function ProfileEditContent() {
 
         try {
             // Check Admin
-            const myDocRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data');
+            const myDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', user.uid);
             const mySnap = await getDoc(myDocRef);
             let myAdmin = false;
-            if (mySnap.exists() && mySnap.data().userId === 'admin') myAdmin = true;
-            if (user.uid === "Zm7FWRopJKVfyzbp8KXXokMFjNC3") myAdmin = true;
+            if (mySnap.exists() && mySnap.data().membershipRank === 'admin') myAdmin = true;
             setIsAdmin(myAdmin);
 
             if (targetUid !== user.uid && !myAdmin) {

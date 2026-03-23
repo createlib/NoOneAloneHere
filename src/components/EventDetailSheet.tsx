@@ -55,7 +55,13 @@ export function EventParticipantsList({ eventId, isPublic, isOrganizer, refreshK
             <div className="flex flex-wrap gap-1.5 justify-end w-full pl-6">
                 {users.map((u: any) => (
                     <Link key={u.uid} href={`/user/${u.uid}`} title={u.name || 'User'} className="relative group/avatar cursor-pointer">
-                        <img src={u.photoURL || 'https://via.placeholder.com/40?text=U'} alt={u.name || 'User'} className="w-8 h-8 rounded-sm border border-brand-300 object-cover shadow-sm bg-white hover:border-[#b8860b] hover:shadow-md transition-all z-0" />
+                        {u.photoURL ? (
+                            <img src={u.photoURL} alt={u.name || 'User'} className="w-8 h-8 rounded-sm border border-brand-300 object-cover shadow-sm bg-white group-hover/avatar:border-[#b8860b] group-hover/avatar:shadow-md transition-all z-0" />
+                        ) : (
+                            <div className="w-8 h-8 rounded-sm border border-brand-200 bg-[#f7f5f0] flex items-center justify-center text-[#c8b9a6] shadow-sm group-hover/avatar:border-[#b8860b] group-hover/avatar:shadow-md transition-all z-0">
+                                <User size={16} />
+                            </div>
+                        )}
                         <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 px-2 py-1 bg-black/80 text-white text-[9px] font-bold rounded-sm whitespace-nowrap opacity-0 group-hover/avatar:opacity-100 transition-opacity z-20 shadow-md">
                             {u.name || 'User'}
                         </span>

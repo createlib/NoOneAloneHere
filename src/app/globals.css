@@ -45,3 +45,51 @@
 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: #f7f5f0; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #c8b9a6; border-radius: 10px; }
+
+/* Custom Markdown Styles targeting NOAH Aesthetic */
+.markdown-body h1 {
+  @apply text-xl sm:text-2xl font-bold text-brand-900 border-b-2 border-brand-200 pb-2 mb-4 mt-6;
+}
+.markdown-body h2 {
+  @apply text-lg sm:text-xl font-bold text-brand-800 border-l-4 border-[#b8860b] pl-3 mb-3 mt-5 bg-brand-50 py-1.5 shadow-sm;
+}
+.markdown-body h3 {
+  @apply text-base sm:text-lg font-bold text-brand-800 mb-2 mt-4 flex items-center gap-2;
+}
+.markdown-body h3::before {
+  content: "✦";
+  @apply text-[#d4af37] text-sm;
+}
+.markdown-body p {
+  @apply mb-4 leading-relaxed text-brand-700 text-sm sm:text-base;
+}
+.markdown-body ul {
+  @apply list-disc list-outside mb-4 space-y-1.5 text-brand-700 text-sm sm:text-base ml-5;
+}
+.markdown-body ol {
+  @apply list-decimal list-outside mb-4 space-y-1.5 text-brand-700 text-sm sm:text-base ml-5;
+}
+.markdown-body a {
+  @apply text-blue-600 hover:text-blue-800 hover:underline font-bold;
+}
+.markdown-body blockquote {
+  @apply border-l-4 border-brand-200 bg-[#f7f5f0] italic px-4 py-3 text-brand-600 mb-4 rounded-r-sm shadow-inner;
+}
+.markdown-body strong {
+  @apply font-bold text-brand-900 bg-[#fffdf9] border border-[#dcd4c6] px-1.5 py-0.5 rounded-sm;
+}
+.markdown-body code {
+  @apply bg-[#1a110f] text-[#d4af37] px-1.5 py-0.5 rounded-sm text-[11px] sm:text-xs font-mono border border-[#8b6a4f];
+}
+.markdown-body pre {
+  @apply bg-[#1a110f] text-[#f7f5f0] p-4 rounded-sm overflow-x-auto mb-4 custom-scrollbar text-xs font-mono shadow-md border border-[#3e2723];
+}
+.markdown-body pre code {
+  @apply bg-transparent text-inherit p-0 border-none;
+}
+.markdown-body img {
+  @apply max-w-full rounded-sm shadow-md border border-brand-200 my-5 object-cover;
+}
+.markdown-body hr {
+  @apply border-0 border-t-2 border-dashed border-brand-200 my-6;
+}
