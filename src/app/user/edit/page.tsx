@@ -442,9 +442,31 @@ function ProfileEditContent() {
                         <div>
                             <label className="block text-xs font-bold text-[#5c4a3d] mb-1.5 tracking-widest">MBTI</label>
                             <select value={mbti} onChange={e=>setMbti(e.target.value)} className="w-full border-[#e8dfd1] rounded-sm text-sm p-3 bg-[#f7f5f0]">
-                                {['未設定', 'INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'].map(o => (
-                                    <option key={o} value={o}>{o}</option>
-                                ))}
+                                <option value="未設定">未設定</option>
+                                <optgroup label="分析家 (紫)">
+                                    <option value="INTJ">INTJ (建築家)</option>
+                                    <option value="INTP">INTP (論理学者)</option>
+                                    <option value="ENTJ">ENTJ (指揮官)</option>
+                                    <option value="ENTP">ENTP (討論者)</option>
+                                </optgroup>
+                                <optgroup label="外交官 (緑)">
+                                    <option value="INFJ">INFJ (提唱者)</option>
+                                    <option value="INFP">INFP (仲介者)</option>
+                                    <option value="ENFJ">ENFJ (主人公)</option>
+                                    <option value="ENFP">ENFP (運動家)</option>
+                                </optgroup>
+                                <optgroup label="番人 (青)">
+                                    <option value="ISTJ">ISTJ (管理者)</option>
+                                    <option value="ISFJ">ISFJ (擁護者)</option>
+                                    <option value="ESTJ">ESTJ (幹部)</option>
+                                    <option value="ESFJ">ESFJ (領事)</option>
+                                </optgroup>
+                                <optgroup label="探検家 (黄)">
+                                    <option value="ISTP">ISTP (巨匠)</option>
+                                    <option value="ISFP">ISFP (冒険家)</option>
+                                    <option value="ESTP">ESTP (起業家)</option>
+                                    <option value="ESFP">ESFP (エンターテイナー)</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>

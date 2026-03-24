@@ -21,13 +21,22 @@ function getMbtiBadge(mbti?: string | null) {
     const sentinels = ['ISTJ', 'ISFJ', 'ESTJ', 'ESFJ'];
     const explorers = ['ISTP', 'ISFP', 'ESTP', 'ESFP'];
     
+    const names: Record<string, string> = {
+        'INTJ': '建築家', 'INTP': '論理学者', 'ENTJ': '指揮官', 'ENTP': '討論者',
+        'INFJ': '提唱者', 'INFP': '仲介者', 'ENFJ': '主人公', 'ENFP': '運動家',
+        'ISTJ': '管理者', 'ISFJ': '擁護者', 'ESTJ': '幹部', 'ESFJ': '領事',
+        'ISTP': '巨匠', 'ISFP': '冒険家', 'ESTP': '起業家', 'ESFP': 'エンターテイナー'
+    };
+    
     let colorClass = 'bg-[#f7f5f0] text-[#725b3f] border-[#e8dfd1]';
     if (analysts.includes(mbti)) colorClass = 'bg-purple-50 text-purple-700 border-purple-200';
     if (diplomats.includes(mbti)) colorClass = 'bg-green-50 text-green-700 border-green-200';
     if (sentinels.includes(mbti)) colorClass = 'bg-blue-50 text-blue-700 border-blue-200';
     if (explorers.includes(mbti)) colorClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
 
-    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest font-mono shadow-sm ${colorClass}`}>{mbti}</span>;
+    const displayName = names[mbti] ? `${mbti} (${names[mbti]})` : mbti;
+
+    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold border tracking-widest font-mono shadow-sm ${colorClass}`}>{displayName}</span>;
 }
 
 type UserData = {
@@ -278,28 +287,28 @@ function SearchContent() {
                                     >
                                         <option value="">MBTI</option>
                                         <optgroup label="分析家 (紫)">
-                                            <option value="INTJ">INTJ</option>
-                                            <option value="INTP">INTP</option>
-                                            <option value="ENTJ">ENTJ</option>
-                                            <option value="ENTP">ENTP</option>
+                                            <option value="INTJ">INTJ (建築家)</option>
+                                            <option value="INTP">INTP (論理学者)</option>
+                                            <option value="ENTJ">ENTJ (指揮官)</option>
+                                            <option value="ENTP">ENTP (討論者)</option>
                                         </optgroup>
                                         <optgroup label="外交官 (緑)">
-                                            <option value="INFJ">INFJ</option>
-                                            <option value="INFP">INFP</option>
-                                            <option value="ENFJ">ENFJ</option>
-                                            <option value="ENFP">ENFP</option>
+                                            <option value="INFJ">INFJ (提唱者)</option>
+                                            <option value="INFP">INFP (仲介者)</option>
+                                            <option value="ENFJ">ENFJ (主人公)</option>
+                                            <option value="ENFP">ENFP (運動家)</option>
                                         </optgroup>
                                         <optgroup label="番人 (青)">
-                                            <option value="ISTJ">ISTJ</option>
-                                            <option value="ISFJ">ISFJ</option>
-                                            <option value="ESTJ">ESTJ</option>
-                                            <option value="ESFJ">ESFJ</option>
+                                            <option value="ISTJ">ISTJ (管理者)</option>
+                                            <option value="ISFJ">ISFJ (擁護者)</option>
+                                            <option value="ESTJ">ESTJ (幹部)</option>
+                                            <option value="ESFJ">ESFJ (領事)</option>
                                         </optgroup>
                                         <optgroup label="探検家 (黄)">
-                                            <option value="ISTP">ISTP</option>
-                                            <option value="ISFP">ISFP</option>
-                                            <option value="ESTP">ESTP</option>
-                                            <option value="ESFP">ESFP</option>
+                                            <option value="ISTP">ISTP (巨匠)</option>
+                                            <option value="ISFP">ISFP (冒険家)</option>
+                                            <option value="ESTP">ESTP (起業家)</option>
+                                            <option value="ESFP">ESFP (エンターテイナー)</option>
                                         </optgroup>
                                     </select>
                                 </div>

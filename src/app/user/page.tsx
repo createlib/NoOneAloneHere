@@ -65,13 +65,22 @@ function getMbtiBadge(mbti?: string | null) {
     const sentinels = ['ISTJ', 'ISFJ', 'ESTJ', 'ESFJ'];
     const explorers = ['ISTP', 'ISFP', 'ESTP', 'ESFP'];
     
+    const names: Record<string, string> = {
+        'INTJ': '建築家', 'INTP': '論理学者', 'ENTJ': '指揮官', 'ENTP': '討論者',
+        'INFJ': '提唱者', 'INFP': '仲介者', 'ENFJ': '主人公', 'ENFP': '運動家',
+        'ISTJ': '管理者', 'ISFJ': '擁護者', 'ESTJ': '幹部', 'ESFJ': '領事',
+        'ISTP': '巨匠', 'ISFP': '冒険家', 'ESTP': '起業家', 'ESFP': 'エンターテイナー'
+    };
+    
     let colorClass = 'bg-[#f7f5f0] text-[#725b3f] border-[#e8dfd1]';
     if (analysts.includes(mbti)) colorClass = 'bg-purple-50 text-purple-700 border-purple-200';
     if (diplomats.includes(mbti)) colorClass = 'bg-green-50 text-green-700 border-green-200';
     if (sentinels.includes(mbti)) colorClass = 'bg-blue-50 text-blue-700 border-blue-200';
     if (explorers.includes(mbti)) colorClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
 
-    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest font-mono shadow-sm ${colorClass}`}>{mbti}</span>;
+    const displayName = names[mbti] ? `${mbti} (${names[mbti]})` : mbti;
+
+    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold border tracking-widest font-mono shadow-sm ${colorClass}`}>{displayName}</span>;
 }
 
 // Extracted Profile Content Component to use useSearchParams inside Suspense
