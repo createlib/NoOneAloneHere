@@ -187,7 +187,7 @@ function PublicProfileContent() {
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto pt-14 px-0 sm:px-6 lg:px-8 pb-20 sm:pt-20 lg:pt-24">
+            <div className="max-w-7xl mx-auto pt-14 px-0 sm:px-6 lg:px-8 pb-20">
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-center">
                     
                     {/* Sidebar Area */}
