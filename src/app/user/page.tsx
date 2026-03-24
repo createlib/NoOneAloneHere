@@ -122,13 +122,14 @@ function UserProfileContent() {
   const [likedPodcasts, setLikedPodcasts] = useState<any[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
+    const isMock = typeof window !== 'undefined' && localStorage.getItem('isAdminMock') === 'true';
     async function loadData() {
-      if (!user) return;
+      if (!user && !isMock) return;
       
-      let targetId = uidParam || user.uid;
+      let targetId = uidParam || (user?.uid || 'admin_mock');
       setTargetUid(targetId);
-      const selfViewing = targetId === user.uid;
+      const selfViewing = targetId === (user?.uid || 'admin_mock');
       setIsSelf(selfViewing);
       
       try {
@@ -151,13 +152,13 @@ function UserProfileContent() {
                    // Overwrite local trackers with the resolved precise Auth UID
                    targetId = realUid;
                    setTargetUid(realUid);
-                   setIsSelf(realUid === user.uid);
+                   setIsSelf(realUid === (user?.uid || 'admin_mock'));
                }
            }
            
            let mutuallyFollowing = false;
            
-           if (!selfViewing) {
+           if (!selfViewing && user) {
                // Check relationships
                const myFollowingRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'following', targetId);
                const isFowSnap = await getDoc(myFollowingRef);
@@ -180,7 +181,7 @@ function UserProfileContent() {
 
            // Check Admin Hook
            let myAdmin = false;
-           if (selfViewing && (loadedData?.membershipRank === 'admin' || loadedData?.userId === 'admin')) {
+           if (selfViewing && (loadedData?.membershipRank === 'admin' || loadedData?.userId === 'admin' || isMock)) {
                myAdmin = true;
            } else if (!selfViewing && user) {
                const myRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', user.uid);
@@ -188,7 +189,7 @@ function UserProfileContent() {
                if (mySnap.exists() && (mySnap.data().membershipRank === 'admin' || mySnap.data().userId === 'admin')) myAdmin = true;
            }
            
-           if (user?.uid === "Zm7FWRopJKVfyzbp8KXXokMFjNC3") myAdmin = true;
+           if (user?.uid === "Zm7FWRopJKVfyzbp8KXXokMFjNC3" || isMock) myAdmin = true;
            setIsAdmin(myAdmin);
            if (myAdmin) loadPrivData = true;
 
@@ -277,12 +278,14 @@ function UserProfileContent() {
       }
     }
 
-    if (user) {
+    if (user || isMock) {
         loadData().then(() => {
             if (targetUid) loadUserMedia();
         });
+    } else if (!loading) {
+        setLoading(false);
     }
-  }, [user, uidParam, targetUid, mediaRefreshKey]);
+  }, [user, loading, uidParam, targetUid, mediaRefreshKey]);
 
   useEffect(() => {
       if (!targetUid) return;
@@ -391,17 +394,17 @@ function UserProfileContent() {
   const hasPlaylistPermission = isSelf && ['guardian', 'covenant', 'admin'].includes(rank);
 
   return (
-    <div className="max-w-7xl mx-auto pt-0 sm:pt-24 px-0 sm:px-6 lg:px-8 pb-20">
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-center">
+    <div className="max-w-7xl mx-auto pt-16 px-0 sm:px-6 lg:px-8 pb-20">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-center -mt-8 sm:mt-0">
           
           <aside className="w-full lg:w-[360px] flex-shrink-0">
               <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border-x-0 sm:border border-[#e8dfd1] overflow-hidden relative">
                   
                   {/* Decorative corners */}
-                  <div className="absolute top-16 sm:top-0 left-0 w-8 h-8 border-t border-l border-[#c8b9a6] z-10 m-2"></div>
-                  <div className="absolute top-16 sm:top-0 right-0 w-8 h-8 border-t border-r border-[#c8b9a6] z-10 m-2"></div>
+                  <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-[#c8b9a6] z-10 m-2"></div>
+                  <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-[#c8b9a6] z-10 m-2"></div>
 
-                  <div className={`h-48 sm:h-40 w-full border-b border-[#e8dfd1] relative flex items-center justify-center overflow-hidden bg-gradient-to-tr from-[#f0ebdd] to-[#f8f5ed] pt-16 sm:pt-0 ${showOSCover ? '' : ''}`}
+                  <div className={`h-32 sm:h-40 w-full border-b border-[#e8dfd1] relative flex items-center justify-center overflow-hidden bg-gradient-to-tr from-[#f0ebdd] to-[#f8f5ed] ${showOSCover ? '' : ''}`}
                        style={showOSCover ? { borderColor: osTheme.main } : {}}
                   >
                         {showOSCover && (
