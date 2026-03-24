@@ -138,7 +138,9 @@ function PublicProfileContent() {
 
     const isProfileComplete = (userData.profileScore || 0) >= 100;
     const showOSCover = isProfileComplete && userData.osNumber;
-    const osTheme = showOSCover && osData?.jukkan ? OS_THEMES[osData.jukkan] : (userData.osJukkan ? OS_THEMES[userData.osJukkan] : OS_THEMES['癸']);
+    const STEM_LIST = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+    const calculatedStem = userData.osNumber ? STEM_LIST[(Number(userData.osNumber) - 1) % 10] : '癸';
+    const osTheme = showOSCover ? OS_THEMES[calculatedStem] : OS_THEMES['癸'];
 
     const rank = userData.membershipRank || 'arrival';
 
