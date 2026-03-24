@@ -187,17 +187,17 @@ function PublicProfileContent() {
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto pt-14 px-0 sm:px-6 lg:px-8 pb-20">
+            <div className="max-w-7xl mx-auto pt-0 sm:pt-20 px-0 sm:px-6 lg:px-8 pb-20">
                 <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-center">
                     
                     {/* Sidebar Area */}
                     <aside className="w-full lg:w-[360px] flex-shrink-0 animate-fade-in-up">
                         <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border-x-0 sm:border border-[#e8dfd1] overflow-hidden relative">
                             {/* Decorative corners */}
-                            <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-[#c8b9a6] z-10 m-2"></div>
-                            <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-[#c8b9a6] z-10 m-2"></div>
+                            <div className="absolute top-14 sm:top-0 left-0 w-8 h-8 border-t border-l border-[#c8b9a6] z-10 m-2"></div>
+                            <div className="absolute top-14 sm:top-0 right-0 w-8 h-8 border-t border-r border-[#c8b9a6] z-10 m-2"></div>
 
-                            <div className={`h-32 sm:h-40 w-full border-b border-[#e8dfd1] relative flex items-center justify-center overflow-hidden bg-gradient-to-tr from-[#f0ebdd] to-[#f8f5ed] ${showOSCover ? '' : ''}`}
+                            <div className={`h-[184px] sm:h-40 w-full border-b border-[#e8dfd1] relative flex items-center justify-center overflow-hidden bg-gradient-to-tr from-[#f0ebdd] to-[#f8f5ed] pt-14 sm:pt-0 ${showOSCover ? '' : ''}`}
                                  style={showOSCover ? { borderColor: osTheme.main } : {}}
                             >
                                 {showOSCover && (
