@@ -59,7 +59,7 @@ export default function Login() {
                     throw new Error("初期設定が完了していません。一度「メールアドレス」でログインし、プロフィールを保存し直してください。");
                 }
             } else {
-                throw new Error("指定されたユーザーIDは見つかりません。");
+                throw new Error("[DB] 指定されたユーザーIDは見つかりません（データベース未登録）");
             }
         }
 
@@ -70,7 +70,7 @@ export default function Login() {
         console.error(error);
         let msg = 'ログインに失敗しました。';
         if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') msg = 'ID・メールアドレス、またはパスワードが間違っています。';
-        else if (error.code === 'auth/user-not-found') msg = 'ユーザーが見つかりません。';
+        else if (error.code === 'auth/user-not-found') msg = '[Auth] ユーザーが見つかりません（認証サーバーに登録されていません）';
         else if (error.message) msg = error.message;
         
         showNotif(msg, 'error');
