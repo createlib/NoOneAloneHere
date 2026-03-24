@@ -14,6 +14,22 @@ const PREFECTURES = ["北海道","青森県","岩手県","宮城県","秋田県"
 const rankLevels: Record<string, number> = { 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 };
 function getRankLevel(rank: string) { return rankLevels[rank] || 0; }
 
+function getMbtiBadge(mbti?: string | null) {
+    if (!mbti || mbti === '未設定') return null;
+    const analysts = ['INTJ', 'INTP', 'ENTJ', 'ENTP'];
+    const diplomats = ['INFJ', 'INFP', 'ENFJ', 'ENFP'];
+    const sentinels = ['ISTJ', 'ISFJ', 'ESTJ', 'ESFJ'];
+    const explorers = ['ISTP', 'ISFP', 'ESTP', 'ESFP'];
+    
+    let colorClass = 'bg-[#f7f5f0] text-[#725b3f] border-[#e8dfd1]';
+    if (analysts.includes(mbti)) colorClass = 'bg-purple-50 text-purple-700 border-purple-200';
+    if (diplomats.includes(mbti)) colorClass = 'bg-green-50 text-green-700 border-green-200';
+    if (sentinels.includes(mbti)) colorClass = 'bg-blue-50 text-blue-700 border-blue-200';
+    if (explorers.includes(mbti)) colorClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
+
+    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest font-mono shadow-sm ${colorClass}`}>{mbti}</span>;
+}
+
 type UserData = {
     id: string;
     userId: string;
@@ -30,6 +46,7 @@ type UserData = {
     lookingFor?: string[];
     photoURL?: string;
     membershipRank?: string;
+    mbti?: string;
 };
 
 function SearchContent() {
@@ -46,6 +63,7 @@ function SearchContent() {
     const [searchQ, setSearchQ] = useState('');
     const [osQ, setOsQ] = useState(searchParams.get('osNumber') || '');
     const [areaQ, setAreaQ] = useState('');
+    const [mbtiQ, setMbtiQ] = useState(searchParams.get('mbti') || '');
     
     useEffect(() => {
         if (!authLoading && !user) {
@@ -144,9 +162,14 @@ function SearchContent() {
                 matchOs = String(u.osNumber) === targetOsStr;
             }
             
-            return matchSearch && matchArea && matchOs;
+            let matchMbti = true;
+            if (mbtiQ) {
+                matchMbti = u.mbti === mbtiQ;
+            }
+            
+            return matchSearch && matchArea && matchOs && matchMbti;
         });
-    }, [allUsers, searchQ, osQ, areaQ]);
+    }, [allUsers, searchQ, osQ, areaQ, mbtiQ]);
 
     const getRankBadge = (rank?: string) => {
         if (!rank || rank === 'arrival') return null;
@@ -241,10 +264,43 @@ function SearchContent() {
                                         value={areaQ}
                                         onChange={e => setAreaQ(e.target.value)}
                                         disabled={!hasAccess}
-                                        className="flex-1 sm:w-40 border border-[#e8dfd1] rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-[#5c4a3d] shadow-sm focus:ring-[#8b6a4f] font-medium tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex-1 sm:w-36 border border-[#e8dfd1] rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-[#5c4a3d] shadow-sm focus:ring-[#8b6a4f] font-medium tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <option value="">全てのエリア</option>
                                         {PREFECTURES.map(p => <option key={p} value={p}>{p}</option>)}
+                                    </select>
+                                    
+                                    <select 
+                                        value={mbtiQ}
+                                        onChange={e => setMbtiQ(e.target.value)}
+                                        disabled={!hasAccess}
+                                        className="flex-1 sm:w-36 border border-[#e8dfd1] rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-[#5c4a3d] shadow-sm focus:ring-[#8b6a4f] font-medium font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <option value="">MBTI</option>
+                                        <optgroup label="分析家 (紫)">
+                                            <option value="INTJ">INTJ</option>
+                                            <option value="INTP">INTP</option>
+                                            <option value="ENTJ">ENTJ</option>
+                                            <option value="ENTP">ENTP</option>
+                                        </optgroup>
+                                        <optgroup label="外交官 (緑)">
+                                            <option value="INFJ">INFJ</option>
+                                            <option value="INFP">INFP</option>
+                                            <option value="ENFJ">ENFJ</option>
+                                            <option value="ENFP">ENFP</option>
+                                        </optgroup>
+                                        <optgroup label="番人 (青)">
+                                            <option value="ISTJ">ISTJ</option>
+                                            <option value="ISFJ">ISFJ</option>
+                                            <option value="ESTJ">ESTJ</option>
+                                            <option value="ESFJ">ESFJ</option>
+                                        </optgroup>
+                                        <optgroup label="探検家 (黄)">
+                                            <option value="ISTP">ISTP</option>
+                                            <option value="ISFP">ISFP</option>
+                                            <option value="ESTP">ESTP</option>
+                                            <option value="ESFP">ESFP</option>
+                                        </optgroup>
                                     </select>
                                 </div>
                             </div>
@@ -289,13 +345,19 @@ function SearchContent() {
                                                         </div>
                                                     )}
                                                     
-                                                    <div className="absolute -bottom-2 sm:relative sm:bottom-0 z-20">
-                                                        {getRankBadge(u.membershipRank)}
+                                                    <div className="absolute -bottom-2 sm:relative sm:bottom-0 z-20 flex flex-col gap-1 items-center sm:items-end w-[calc(100%-80px)] sm:w-auto">
+                                                        <div className="flex gap-1 flex-wrap justify-center sm:justify-end">
+                                                            {getRankBadge(u.membershipRank)}
+                                                            {getMbtiBadge(u.mbti)}
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 
                                                 <div className="text-center sm:text-left mt-3 sm:mt-0">
                                                     <h3 className="font-bold text-[#3e2723] text-xs sm:text-lg truncate font-serif tracking-wide group-hover:text-[#8b6a4f] transition-colors">{name}</h3>
+                                                    <div className="flex flex-wrap items-center justify-center sm:justify-start mt-1 gap-1 mb-1 sm:mb-0">
+                                                        <span className="text-[10px] text-[#8b6a4f] font-mono tracking-widest">@{u.userId || 'unknown'}</span>
+                                                    </div>
                                                     <p className="text-[9px] sm:text-xs text-[#725b3f] truncate mb-0 sm:mb-3 tracking-widest">{job}</p>
                                                     
                                                     <div className="hidden sm:block">

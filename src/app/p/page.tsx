@@ -44,6 +44,22 @@ function getRankBadge(rank: string) {
     return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7f5f0] text-[#a09080] border border-[#e8dfd1] tracking-widest"><Anchor size={10} className="mr-1"/>ARRIVAL</span>;
 }
 
+function getMbtiBadge(mbti?: string | null) {
+    if (!mbti || mbti === '未設定') return null;
+    const analysts = ['INTJ', 'INTP', 'ENTJ', 'ENTP'];
+    const diplomats = ['INFJ', 'INFP', 'ENFJ', 'ENFP'];
+    const sentinels = ['ISTJ', 'ISFJ', 'ESTJ', 'ESFJ'];
+    const explorers = ['ISTP', 'ISFP', 'ESTP', 'ESFP'];
+    
+    let colorClass = 'bg-[#f7f5f0] text-[#725b3f] border-[#e8dfd1]';
+    if (analysts.includes(mbti)) colorClass = 'bg-purple-50 text-purple-700 border-purple-200';
+    if (diplomats.includes(mbti)) colorClass = 'bg-green-50 text-green-700 border-green-200';
+    if (sentinels.includes(mbti)) colorClass = 'bg-blue-50 text-blue-700 border-blue-200';
+    if (explorers.includes(mbti)) colorClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
+
+    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-widest font-mono shadow-sm ${colorClass}`}>{mbti}</span>;
+}
+
 function PublicProfileContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -204,7 +220,7 @@ function PublicProfileContent() {
                                     <div className="flex flex-wrap items-center gap-2 mt-1">
                                         <p className="text-sm text-[#8b6a4f] font-mono font-medium tracking-wide">@{userData.userId || 'unknown'}</p>
                                         {getRankBadge(rank)}
-                                        {userData.mbti && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#fdfaf5] text-[#b8860b] border border-[#d4af37] tracking-widest font-mono shadow-sm">MBTI: {userData.mbti}</span>}
+                                        {getMbtiBadge(userData.mbti)}
                                     </div>
                                 </div>
                             </div>
