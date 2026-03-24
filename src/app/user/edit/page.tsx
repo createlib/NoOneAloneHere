@@ -81,6 +81,7 @@ function ProfileEditContent() {
   const [gender, setGender] = useState('無回答');
   const [birthDate, setBirthDate] = useState('');
   const [birthVisibility, setBirthVisibility] = useState('full');
+  const [mbti, setMbti] = useState('未設定');
   
   const [bio, setBio] = useState('');
   const [message, setMessage] = useState('');
@@ -151,6 +152,7 @@ function ProfileEditContent() {
             setGender(data.gender || '無回答');
             setBirthDate(data.birthDate || '');
             setBirthVisibility(data.birthVisibility || 'full');
+            setMbti(data.mbti || '未設定');
             
             setBio(data.bio || '');
             setMessage(data.message || '');
@@ -226,7 +228,7 @@ function ProfileEditContent() {
 
   }, [
       photoURL, photoFile, name, realName, furigana, jobTitle, prefecture, birthplace, 
-      gender, birthDate, bio, message, goals, canOfferStr, lookingForStr, 
+      gender, birthDate, birthVisibility, mbti, bio, message, goals, canOfferStr, lookingForStr, 
       selectedSkills, customSkillsStr, selectedHobbies, customHobbiesStr, 
       careerList, websiteUrl, snsInstagram, snsX, contactEmail
   ]);
@@ -285,6 +287,7 @@ function ProfileEditContent() {
               birthDate,
               osNumber: osNumberVal,
               birthVisibility,
+              mbti: mbti === '未設定' ? null : mbti,
               bio: bio.trim(),
               message: message.trim(),
               canOffer: offers,
@@ -434,6 +437,14 @@ function ProfileEditContent() {
                                 <option value="男性">男性</option>
                                 <option value="女性">女性</option>
                                 <option value="その他">その他</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-[#5c4a3d] mb-1.5 tracking-widest">MBTI</label>
+                            <select value={mbti} onChange={e=>setMbti(e.target.value)} className="w-full border-[#e8dfd1] rounded-sm text-sm p-3 bg-[#f7f5f0]">
+                                {['未設定', 'INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'].map(o => (
+                                    <option key={o} value={o}>{o}</option>
+                                ))}
                             </select>
                         </div>
                     </div>

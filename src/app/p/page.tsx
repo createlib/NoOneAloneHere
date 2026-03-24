@@ -204,6 +204,7 @@ function PublicProfileContent() {
                                     <div className="flex flex-wrap items-center gap-2 mt-1">
                                         <p className="text-sm text-[#8b6a4f] font-mono font-medium tracking-wide">@{userData.userId || 'unknown'}</p>
                                         {getRankBadge(rank)}
+                                        {userData.mbti && <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#fdfaf5] text-[#b8860b] border border-[#d4af37] tracking-widest font-mono shadow-sm">MBTI: {userData.mbti}</span>}
                                     </div>
                                 </div>
                             </div>
