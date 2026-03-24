@@ -391,11 +391,11 @@ function UserProfileContent() {
   const hasPlaylistPermission = isSelf && ['guardian', 'covenant', 'admin'].includes(rank);
 
   return (
-    <div className="max-w-7xl mx-auto pt-8 px-0 sm:px-6 lg:px-8 pb-20">
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:py-8">
+    <div className="max-w-7xl mx-auto pt-16 px-0 sm:px-6 lg:px-8 pb-20 sm:pt-24 lg:pt-24">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-center">
           
           <aside className="w-full lg:w-[360px] flex-shrink-0">
-              <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border border-[#e8dfd1] overflow-hidden relative">
+              <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border-x-0 sm:border border-[#e8dfd1] overflow-hidden relative">
                   
                   {/* Decorative corners */}
                   <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-[#c8b9a6] z-10 m-2"></div>
