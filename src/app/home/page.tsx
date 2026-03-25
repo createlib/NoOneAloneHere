@@ -362,7 +362,7 @@ export default function Home() {
             }}
             onShare={(evt) => {
                 const url = `${window.location.origin}/events?eventId=${evt.id}`;
-                const registerUrl = `${window.location.origin}/register?ref=${user?.uid || ''}`;
+                const registerUrl = `${window.location.origin}/register?ref=${myProfile?.userId || user?.uid || ''}`;
                 const inviterName = myProfile ? (myProfile.name || myProfile.userId) : 'ユーザー';
                 const title = evt.title || '無題';
                 const rawDesc = evt.description || '';

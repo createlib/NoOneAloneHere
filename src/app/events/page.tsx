@@ -47,6 +47,7 @@ type EventData = {
 type JobData = {
     id: string;
     title: string;
+    listingType?: string;
     type: string;
     category: string;
     desc: string;
@@ -178,7 +179,7 @@ function EventsContent() {
     const [jobModalOpen, setJobModalOpen] = useState(false);
     const [editingJobId, setEditingJobId] = useState<string | null>(null);
     const [jobFormData, setJobFormData] = useState({
-        title: '', type: '業務委託', category: 'デザイン', desc: '', rewardType: '固定報酬', rewardAmount: '',
+        title: '', listingType: 'formal_job', type: '業務委託', category: 'デザイン', desc: '', rewardType: '固定報酬', rewardAmount: '',
         period: '単発', workStyle: 'フルリモート', locationQuery: '', locationName: '', skills: '', deadline: '',
         flow: '面談1回', company: '', url: '', visibilityMode: 'public', allowedUsers: [] as string[], allowedUserDetails: [] as {uid: string, name: string}[]
     });
@@ -284,7 +285,7 @@ function EventsContent() {
 
     const shareItem = (item: EventData | JobData, type: 'event' | 'job') => {
         const url = `${window.location.origin}/events?${type}Id=${item.id}`;
-        const registerUrl = `${window.location.origin}/register?ref=${user?.uid || ''}`;
+        const registerUrl = `${window.location.origin}/register?ref=${userData?.userId || user?.uid || ''}`;
         const inviterName = userData ? (userData.name || userData.userId) : 'ユーザー';
         const title = item.title || '無題';
         let rawDesc = (type === 'event' ? (item as EventData).description : (item as JobData).desc) || '';
@@ -479,7 +480,10 @@ ${registerUrl}`;
                   (j.company?.toLowerCase().includes(queryText)))) {
                 return false;
             }
-            if (jobTypeFilter && j.type !== jobTypeFilter) return false;
+            if (jobTypeFilter) {
+                const lType = j.listingType || 'formal_job';
+                if (lType !== jobTypeFilter) return false;
+            }
             if (jobCategoryFilter && j.category !== jobCategoryFilter) return false;
             if (jobWorkstyleFilter && j.workStyle !== jobWorkstyleFilter) return false;
             if (jobRewardFilter && j.rewardType !== jobRewardFilter) return false;
@@ -683,7 +687,7 @@ ${registerUrl}`;
             if (j) {
                 setEditingJobId(editId);
                 setJobFormData({
-                    title: j.title, type: j.type || '業務委託', category: j.category || 'デザイン', desc: j.desc || '',
+                    title: j.title, listingType: j.listingType || 'formal_job', type: j.type || '業務委託', category: j.category || 'デザイン', desc: j.desc || '',
                     rewardType: j.rewardType || '固定報酬', rewardAmount: j.rewardAmount || '', period: j.period || '単発',
                     workStyle: j.workStyle || 'フルリモート', locationQuery: '', locationName: j.location || '',
                     skills: j.skills || '', deadline: j.deadline || '', flow: j.flow || '面談1回', company: j.company || '', url: j.url || '',
@@ -695,7 +699,7 @@ ${registerUrl}`;
         } else {
             setEditingJobId(null);
             setJobFormData({
-                title: '', type: '業務委託', category: 'デザイン', desc: '', rewardType: '固定報酬', rewardAmount: '',
+                title: '', listingType: 'formal_job', type: '業務委託', category: 'デザイン', desc: '', rewardType: '固定報酬', rewardAmount: '',
                 period: '単発', workStyle: 'フルリモート', locationQuery: '', locationName: '', skills: '', deadline: '',
                 flow: '面談1回', company: '', url: '', visibilityMode: 'public', allowedUsers: [], allowedUserDetails: []
             });
@@ -847,7 +851,7 @@ ${registerUrl}`;
             }
 
             const jbData: any = {
-                title: jobFormData.title, type: jobFormData.type, category: jobFormData.category, desc: jobFormData.desc,
+                title: jobFormData.title, listingType: jobFormData.listingType, type: jobFormData.type, category: jobFormData.category, desc: jobFormData.desc,
                 rewardType: jobFormData.rewardType, rewardAmount: jobFormData.rewardAmount, period: jobFormData.period,
                 workStyle: jobFormData.workStyle, location: jobFormData.locationName, skills: jobFormData.skills,
                 deadline: jobFormData.deadline, flow: jobFormData.flow, company: jobFormData.company, url: jobFormData.url,
@@ -1025,12 +1029,10 @@ ${registerUrl}`;
                                 <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><Briefcase className="w-4 h-4 inline mr-1"/>募集タイプ</label>
                                 <select value={jobTypeFilter} onChange={e=>setJobTypeFilter(e.target.value)} className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:outline-none focus:border-brand-500 font-serif tracking-widest">
                                     <option value="">指定なし</option>
-                                    <option value="業務委託">業務委託</option>
-                                    <option value="正社員">正社員</option>
-                                    <option value="契約社員">契約社員</option>
-                                    <option value="アルバイト">アルバイト</option>
-                                    <option value="単発依頼">単発依頼</option>
-                                    <option value="共同事業パートナー">共同事業パートナー</option>
+                                    <option value="formal_job">求人・業務委託</option>
+                                    <option value="casual_request">軽いお願い・お手伝い</option>
+                                    <option value="lending">モノ・場所の貸し借り</option>
+                                    <option value="member">仲間・パートナー募集</option>
                                 </select>
                             </div>
                             <div>
@@ -1078,22 +1080,24 @@ ${registerUrl}`;
                 </div>
             </div>
 
+            {/* Global Search Bar (moved out of map container) */}
+            <div className={`fixed top-28 sm:top-32 left-1/2 transform -translate-x-1/2 z-[45] w-[90%] max-w-md pointer-events-none transition-opacity duration-300 ${isFilterOpen ? 'opacity-0' : 'opacity-100'}`}>
+                <div className={`relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200 text-brand-700 ${adjustMode ? 'hidden' : ''}`}>
+                    <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400" />
+                    <input 
+                        type="text"
+                        value={mapSearchText}
+                        onChange={(e) => setMapSearchText(e.target.value)}
+                        placeholder={viewMode === 'list-jobs' ? "仕事・依頼を検索..." : "イベント・場所を検索..."}
+                        className="w-full bg-[#fffdf9]/95 backdrop-blur border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-sm font-serif tracking-widest"
+                    />
+                </div>
+            </div>
+
             {/* Main Content Area */}
             <div className="mt-14 w-full flex-1 relative z-0">
                 {/* View 1: Map */}
                 <div className={`relative w-full h-[calc(100vh-120px)] ${viewMode === 'map' ? 'block' : 'hidden'}`}>
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[30] w-[90%] max-w-md pointer-events-none">
-                        <div className={`relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200 text-brand-700 ${adjustMode ? 'hidden' : ''}`}>
-                            <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400" />
-                            <input 
-                                type="text"
-                                value={mapSearchText}
-                                onChange={(e) => setMapSearchText(e.target.value)}
-                                placeholder="イベントや仕事を検索..." 
-                                className="w-full bg-[#fffdf9]/95 backdrop-blur border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-sm font-serif tracking-widest"
-                            />
-                        </div>
-                    </div>
                     <div ref={mapRef} className="w-full h-full z-[10]" />
 
                     {adjustMode && (
@@ -1185,14 +1189,20 @@ ${registerUrl}`;
                                 {filteredJobs.map(job => (
                                     <div key={job.id} className="bg-white border text-brand-800 border-brand-200 rounded-sm p-4 hover:bg-brand-50 transition-colors shadow-sm cursor-pointer relative">
                                         <div className="flex justify-between items-start mb-2">
-                                            <span className="text-[10px] font-bold bg-brand-100 text-brand-700 px-2 py-0.5 rounded-sm tracking-widest border border-brand-200">{job.type}</span>
-                                            <span className="text-[10px] text-brand-400 tracking-widest font-medium"><Briefcase className="w-3 h-3 inline mr-1"/> {job.category}</span>
+                                            <span className="text-[10px] font-bold bg-brand-100 text-brand-700 px-2 py-0.5 rounded-sm tracking-widest border border-brand-200">
+                                                {job.listingType === 'casual_request' ? 'お手伝い' : (job.listingType === 'lending' ? '貸し借り' : (job.listingType === 'member' ? 'メンバー募集' : (job.type || '業務委託')))}
+                                            </span>
+                                            {job.listingType === 'formal_job' && job.category && <span className="text-[10px] text-brand-400 tracking-widest font-medium"><Briefcase className="w-3 h-3 inline mr-1"/> {job.category}</span>}
                                         </div>
                                         <h3 className="font-bold text-brand-900 text-base leading-tight mb-2 tracking-widest font-serif pr-16">{job.title}</h3>
                                         <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
-                                            <div className="flex items-center text-[11px] text-brand-600 font-bold bg-green-50 px-1 py-0.5"><DollarSign className="w-3 h-3 mr-1 text-green-600"/> <span className="text-green-700">{job.rewardType}：{job.rewardAmount || '応相談'}</span></div>
-                                            <div className="flex items-center text-[10px] text-brand-500"><Building className="w-3 h-3 mr-1"/> {job.workStyle}</div>
-                                            <div className="flex items-center text-[10px] text-brand-500"><Calendar className="w-3 h-3 mr-1"/> {job.period}</div>
+                                            {job.listingType !== 'lending' && job.rewardType && (
+                                                <div className="flex items-center text-[11px] text-brand-600 font-bold bg-green-50 px-1 py-0.5"><DollarSign className="w-3 h-3 mr-1 text-green-600"/> <span className="text-green-700">{job.rewardType}：{job.rewardAmount || '応相談'}</span></div>
+                                            )}
+                                            {(job.listingType === 'formal_job' || job.listingType === 'member') && job.workStyle && (
+                                                <div className="flex items-center text-[10px] text-brand-500"><Building className="w-3 h-3 mr-1"/> {job.workStyle}</div>
+                                            )}
+                                            <div className="flex items-center text-[10px] text-brand-500"><Calendar className="w-3 h-3 mr-1"/> {job.period || '単発'}</div>
                                         </div>
                                     </div>
                                 ))}
@@ -1544,60 +1554,125 @@ ${registerUrl}`;
                         </div>
                         <div className="p-5 overflow-y-auto flex-1 space-y-4">
                             <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">募集タイトル</label>
-                                <input type="text" value={jobFormData.title} onChange={e=>setJobFormData({...jobFormData, title: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 新規事業のUI/UXデザイナー募集" required />
+                                <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">募集タイプ</label>
+                                <select value={jobFormData.listingType} onChange={e=>setJobFormData({...jobFormData, listingType: e.target.value})} className="w-full border border-brand-300 rounded-sm text-sm p-3 bg-brand-50 mb-2 font-bold text-brand-900 border-l-4 border-l-[#b8860b] shadow-sm tracking-widest">
+                                    <option value="formal_job">求人・業務委託</option>
+                                    <option value="casual_request">軽いお願い・お手伝い</option>
+                                    <option value="lending">モノや場所の貸し借り</option>
+                                    <option value="member">仲間・パートナー募集</option>
+                                </select>
+                                <p className="text-[10px] text-brand-500 mb-1 font-bold">※選択したタイプに合わせて続く入力項目が最適化されます。</p>
                             </div>
+
                             <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">業務詳細</label>
+                                <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">募集タイトル</label>
+                                <input type="text" value={jobFormData.title} onChange={e=>setJobFormData({...jobFormData, title: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder={jobFormData.listingType === 'casual_request' ? "例: デスクの組み立てを手伝って！" : (jobFormData.listingType === 'lending' ? "例: 撮影・配信用カメラお貸しします" : "例: 新規事業のUI/UXデザイナー募集")} required />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">{jobFormData.listingType === 'lending' ? '貸し借りするモノ・場所の詳細' : '業務やお願いの詳細'}</label>
                                 <textarea value={jobFormData.desc} onChange={e=>setJobFormData({...jobFormData, desc: e.target.value})} rows={6} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white leading-relaxed" required></textarea>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">必須・歓迎スキル</label>
-                                <input type="text" value={jobFormData.skills} onChange={e=>setJobFormData({...jobFormData, skills: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: Figma, React等の経験" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
+
+                            {jobFormData.listingType === 'formal_job' && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-700 mb-1">募集形式</label>
+                                        <select value={jobFormData.type} onChange={e=>setJobFormData({...jobFormData, type: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                            <option value="業務委託">業務委託</option>
+                                            <option value="正社員">正社員</option>
+                                            <option value="契約社員">契約社員</option>
+                                            <option value="アルバイト">アルバイト</option>
+                                            <option value="単発依頼">単発依頼</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-700 mb-1">職種カテゴリ</label>
+                                        <select value={jobFormData.category} onChange={e=>setJobFormData({...jobFormData, category: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                            <option value="デザイン">デザイン</option>
+                                            <option value="エンジニア">エンジニア</option>
+                                            <option value="マーケティング">マーケティング</option>
+                                            <option value="営業">営業</option>
+                                            <option value="動画制作">動画制作</option>
+                                            <option value="ライティング">ライティング</option>
+                                            <option value="事務・サポート">事務・サポート</option>
+                                            <option value="その他">その他</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
+                            {(jobFormData.listingType === 'formal_job' || jobFormData.listingType === 'member') && (
                                 <div>
-                                    <label className="block text-xs font-bold text-brand-700 mb-1">報酬形態</label>
-                                    <select value={jobFormData.rewardType} onChange={e=>setJobFormData({...jobFormData, rewardType: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white">
-                                        <option value="固定報酬">固定報酬</option>
-                                        <option value="時給">時給</option>
-                                        <option value="成果報酬">成果報酬</option>
-                                        <option value="応相談">応相談</option>
+                                    <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">必須・歓迎スキル</label>
+                                    <input type="text" value={jobFormData.skills} onChange={e=>setJobFormData({...jobFormData, skills: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: Figma, React等の経験" />
+                                </div>
+                            )}
+
+                            {(jobFormData.listingType === 'formal_job' || jobFormData.listingType === 'casual_request') && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-700 mb-1">{jobFormData.listingType === 'casual_request' ? 'お礼の形態' : '報酬形態'}</label>
+                                        <select value={jobFormData.rewardType} onChange={e=>setJobFormData({...jobFormData, rewardType: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                            <option value="固定報酬">固定報酬</option>
+                                            <option value="時給">時給</option>
+                                            <option value="成果報酬">成果報酬</option>
+                                            <option value="応相談">応相談</option>
+                                            {jobFormData.listingType === 'casual_request' && <option value="ご飯やお酒奢ります">ご飯やお酒奢ります</option>}
+                                            {jobFormData.listingType === 'casual_request' && <option value="無償のお願い(善意)">無償のお願い(善意)</option>}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-700 mb-1">{jobFormData.listingType === 'casual_request' ? '金額目安(あれば)' : '金額・レンジ'}</label>
+                                        <input type="text" value={jobFormData.rewardAmount} onChange={e=>setJobFormData({...jobFormData, rewardAmount: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder={jobFormData.listingType === 'casual_request' ? "例: 2000円" : "例: 10万円〜"} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {(jobFormData.listingType === 'formal_job' || jobFormData.listingType === 'member') && (
+                                <div>
+                                    <label className="block text-xs font-bold text-brand-700 mb-1">勤務形態</label>
+                                    <select value={jobFormData.workStyle} onChange={e=>setJobFormData({...jobFormData, workStyle: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                        <option value="フルリモート">フルリモート</option>
+                                        <option value="一部出社">一部出社</option>
+                                        <option value="出社必須">出社必須</option>
                                     </select>
                                 </div>
+                            )}
+
+                            <div>
+                                <label className="block text-xs font-bold text-brand-700 mb-1">期間・時期</label>
+                                <input type="text" value={jobFormData.period} onChange={e=>setJobFormData({...jobFormData, period: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder={jobFormData.listingType === 'lending' ? '例: 3/20の1日間のみ' : '例: 単発 / 週3日〜'} />
+                            </div>
+
+                            {jobFormData.listingType !== 'lending' && (
                                 <div>
-                                    <label className="block text-xs font-bold text-brand-700 mb-1">金額・レンジ</label>
-                                    <input type="text" value={jobFormData.rewardAmount} onChange={e=>setJobFormData({...jobFormData, rewardAmount: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 10万円〜" />
+                                    <label className="block text-xs font-bold text-brand-700 mb-1">募集期限</label>
+                                    <input type="date" value={jobFormData.deadline} onChange={e=>setJobFormData({...jobFormData, deadline: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" />
                                 </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-1">勤務形態</label>
-                                <select value={jobFormData.workStyle} onChange={e=>setJobFormData({...jobFormData, workStyle: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white">
-                                    <option value="フルリモート">フルリモート</option>
-                                    <option value="一部出社">一部出社</option>
-                                    <option value="出社必須">出社必須</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-1">募集期限</label>
-                                <input type="date" value={jobFormData.deadline} onChange={e=>setJobFormData({...jobFormData, deadline: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-1">選考フロー</label>
-                                <input type="text" value={jobFormData.flow} onChange={e=>setJobFormData({...jobFormData, flow: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 書類選考 → 面談1回" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-1">会社・組織名</label>
-                                <input type="text" value={jobFormData.company} onChange={e=>setJobFormData({...jobFormData, company: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 株式会社NOAH" />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-1">関連URL</label>
-                                <input type="url" value={jobFormData.url} onChange={e=>setJobFormData({...jobFormData, url: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="https://" />
-                            </div>
-                            {jobFormData.workStyle !== 'フルリモート' && (
+                            )}
+
+                            {jobFormData.listingType === 'formal_job' && (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-700 mb-1">選考フロー</label>
+                                        <input type="text" value={jobFormData.flow} onChange={e=>setJobFormData({...jobFormData, flow: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 書類選考 → 面談1回" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-700 mb-1">会社・組織名</label>
+                                        <input type="text" value={jobFormData.company} onChange={e=>setJobFormData({...jobFormData, company: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 株式会社NOAH" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-brand-700 mb-1">関連URL</label>
+                                        <input type="url" value={jobFormData.url} onChange={e=>setJobFormData({...jobFormData, url: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="https://" />
+                                    </div>
+                                </>
+                            )}
+
+                            {((jobFormData.listingType !== 'formal_job' && jobFormData.listingType !== 'member') || jobFormData.workStyle !== 'フルリモート') && (
                                 <div className="p-3 border border-brand-200 rounded-sm bg-brand-50 mt-2">
                                     <button onClick={() => { setJobModalOpen(false); setAdjustMode('job'); setViewMode('map'); }} type="button" className="w-full py-2 bg-white border border-brand-300 text-brand-700 rounded-sm text-xs font-bold hover:bg-brand-100 transition-colors flex items-center justify-center gap-1 mb-2 shadow-sm tracking-widest">
-                                        <MapPin className="w-4 h-4 text-brand-500" /> 地図で微調整する
+                                        <MapPin className="w-4 h-4 text-brand-500" /> 地図で{jobFormData.listingType === 'formal_job' ? '勤務地' : '場所'}を微調整する
                                     </button>
                                     {adjustCoords && <p className="text-[10px] text-brand-500 mb-3 text-center">緯度: {adjustCoords.lat.toFixed(4)}, 経度: {adjustCoords.lng.toFixed(4)}</p>}
                                     <input type="text" value={jobFormData.locationName} onChange={e=>setJobFormData({...jobFormData, locationName: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="表示名 (例: 渋谷)" />
