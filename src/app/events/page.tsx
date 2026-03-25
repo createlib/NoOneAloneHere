@@ -183,27 +183,59 @@ function EventsContent() {
     const searchLocation = async (type: 'event' | 'job') => {
         const queryStr = type === 'event' ? eventFormData.locationQuery : jobFormData.locationQuery;
         if (!queryStr) return alert('検索キーワードを入力してください');
-        try {
-            const res = await fetch(`https://msearch.gsi.go.jp/address/search?q=${encodeURIComponent(queryStr)}`);
-            const data = await res.json();
-            if (data.length > 0) {
-                const first = data[0].geometry.coordinates;
-                setAdjustCoords({ lat: first[1], lng: first[0] });
-                if (type === 'event') {
-                    setEventFormData(prev => ({...prev, locationName: data[0].properties.title}));
-                    setEventModalOpen(false);
-                } else {
-                    setJobFormData(prev => ({...prev, locationName: data[0].properties.title}));
-                    setJobModalOpen(false);
-                }
-                setAdjustMode(type);
-                alert('地図を移動しました。赤色のピンをドラッグして正確な位置に微調整してください。');
+        
+        const applyLocation = (lat: number, lng: number, locName: string) => {
+            setAdjustCoords({ lat, lng });
+            if (type === 'event') {
+                setEventFormData(prev => ({...prev, locationName: locName}));
+                setEventModalOpen(false);
             } else {
-                alert('見つかりませんでした。別のキーワードで試してください。');
+                setJobFormData(prev => ({...prev, locationName: locName}));
+                setJobModalOpen(false);
+            }
+            setAdjustMode(type);
+            alert('地図を移動しました。赤色のピンをドラッグして正確な位置に微調整してください。');
+        };
+
+        try {
+            // 国土地理院 API (msearch.gsi.go.jp)
+            const res = await fetch(`https://msearch.gsi.go.jp/address/search?q=${encodeURIComponent(queryStr)}`);
+            if (res.ok) {
+                const text = await res.text();
+                try {
+                    const data = JSON.parse(text);
+                    if (Array.isArray(data) && data.length > 0) {
+                        const first = data[0].geometry.coordinates;
+                        applyLocation(first[1], first[0], data[0].properties.title);
+                        return; // 成功したら終了
+                    }
+                } catch(e) {
+                    console.warn('GSI parse error', e);
+                }
             }
         } catch(e) {
-            alert('検索エラーが発生しました。');
+            console.warn('GSI fetch error', e);
         }
+
+        // フォールバック: OSM Nominatim API
+        try {
+            const resOsm = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}`, {
+                headers: { 'Accept-Language': 'ja' }
+            });
+            if (resOsm.ok) {
+                const dataOsm = await resOsm.json();
+                if (Array.isArray(dataOsm) && dataOsm.length > 0) {
+                    const firstOsm = dataOsm[0];
+                    const locNameOsm = firstOsm.display_name.split(',')[0];
+                    applyLocation(parseFloat(firstOsm.lat), parseFloat(firstOsm.lon), locNameOsm);
+                    return; // 成功したら終了
+                }
+            }
+        } catch(e) {
+            console.warn('Osm Nominatim fetch error', e);
+        }
+
+        alert('見つかりませんでした。別のキーワードで試してください。');
     };
 
     const shareItem = (item: EventData | JobData, type: 'event' | 'job') => {

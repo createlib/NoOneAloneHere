@@ -130,7 +130,7 @@ export default function EventDetailSheet({
 
     if (!event) return null;
 
-    const isOrganizerOrAdmin = userData?.userId === 'admin' || userData?.uid === event.organizerId;
+    const isOrganizerOrAdmin = userData?.userId === 'admin' || currentUserId === event.organizerId;
 
     return (
         <div className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${!adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}>
