@@ -245,9 +245,9 @@ function SearchContent() {
                                 </div>
                                 
                                 {/* Filters */}
-                                <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                                <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
                                     {/* OS Number Filter */}
-                                    <div className="relative flex-1 sm:w-36">
+                                    <div className="relative flex-1 sm:w-32">
                                         <Dna className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#a09080] w-4 h-4" />
                                         <input 
                                             type="number" 
@@ -274,7 +274,7 @@ function SearchContent() {
                                         value={mbtiQ}
                                         onChange={e => setMbtiQ(e.target.value)}
                                         disabled={!hasAccess}
-                                        className="flex-1 sm:w-36 border border-[#e8dfd1] rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-[#5c4a3d] shadow-sm focus:ring-[#8b6a4f] font-medium font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="flex-1 sm:w-32 border border-[#e8dfd1] rounded-sm py-3 px-3 text-sm bg-[#f7f5f0] text-[#5c4a3d] shadow-sm focus:ring-[#8b6a4f] font-medium font-mono disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <option value="">MBTI</option>
                                         <optgroup label="分析家 (紫)">
@@ -302,6 +302,21 @@ function SearchContent() {
                                             <option value="ESFP">ESFP (エンターテイナー)</option>
                                         </optgroup>
                                     </select>
+
+                                    <button
+                                        onClick={() => {
+                                            setSearchQ('');
+                                            setOsQ('');
+                                            setAreaQ('');
+                                            setMbtiQ('');
+                                            router.replace('/search');
+                                        }}
+                                        disabled={!hasAccess || (!searchQ && !osQ && !areaQ && !mbtiQ)}
+                                        className="px-4 py-3 bg-white border border-[#e8dfd1] text-[#a09080] hover:text-[#5c4a3d] hover:bg-[#f7f5f0] rounded-sm text-sm font-bold shadow-sm transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center sm:w-auto w-full"
+                                        title="検索条件とURLパラメータをリセット"
+                                    >
+                                        <X className="w-4 h-4 mr-1" /> 条件クリア
+                                    </button>
                                 </div>
                             </div>
                             
