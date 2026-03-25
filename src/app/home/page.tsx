@@ -29,6 +29,7 @@ export default function Home() {
 
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || loading) return;
@@ -150,6 +151,7 @@ export default function Home() {
       const newDate = new Date(currentDate);
       newDate.setMonth(newDate.getMonth() + diff);
       setCurrentDate(newDate);
+      setSelectedDate(null);
   };
 
   if (loading || (!user && !loading)) {
@@ -173,8 +175,13 @@ export default function Home() {
       const d = i + 1;
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const hasEvent = participatingEvents.some(e => e.startDate === dateStr);
+      const isSelected = selectedDate === dateStr;
+      
       return (
-          <div key={`day-${d}`} className={`calendar-day text-sm sm:text-base cursor-pointer p-2 flex items-center justify-center rounded-sm transition-colors ${hasEvent ? 'bg-brand-100 border border-brand-300 font-bold text-brand-900 shadow-sm relative after:content-[""] after:w-1.5 after:h-1.5 after:bg-brand-500 after:rounded-full after:absolute after:bottom-1' : 'hover:bg-brand-50 text-brand-700'}`}>
+          <div 
+              key={`day-${d}`} 
+              onClick={() => setSelectedDate(dateStr)}
+              className={`calendar-day text-sm sm:text-base cursor-pointer p-2 flex items-center justify-center rounded-sm transition-colors ${hasEvent ? 'bg-brand-100 border border-brand-300 font-bold text-brand-900 shadow-sm relative after:content-[""] after:w-1.5 after:h-1.5 after:bg-brand-500 after:rounded-full after:absolute after:bottom-1' : 'hover:bg-brand-50 text-brand-700'} ${isSelected ? 'ring-2 ring-brand-500 bg-brand-50' : ''}`}>
               {d}
           </div>
       );
@@ -282,6 +289,23 @@ export default function Home() {
                           {emptyDays}
                           {calendarDays}
                       </div>
+
+                      {selectedDate && (
+                          <div className="mt-8 space-y-4 border-t border-brand-200 pt-6">
+                              <h4 className="font-bold text-brand-900 font-serif tracking-widest mb-4">
+                                  {new Date(selectedDate).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })} のイベント
+                              </h4>
+                              {participatingEvents.filter(e => e.startDate === selectedDate).length > 0 ? (
+                                  participatingEvents.filter(e => e.startDate === selectedDate).map(evt => (
+                                      <EventCard key={evt.id} evt={evt} onClick={() => setSelectedEvent(evt)} />
+                                  ))
+                              ) : (
+                                  <div className="text-sm text-brand-400 py-4 bg-brand-50 rounded-sm border border-brand-200 border-dashed text-center tracking-widest">
+                                      この日のイベントはありません
+                                  </div>
+                              )}
+                          </div>
+                      )}
                   </div>
               )}
             </div>
