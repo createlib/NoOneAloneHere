@@ -37,6 +37,9 @@ type EventData = {
     participantCount: number;
     participants?: string[];
     endTimestamp?: string;
+    visibilityMode?: string;
+    allowedUsers?: string[];
+    allowedUserDetails?: {uid: string, name: string}[];
     createdAt?: any;
     updatedAt?: any;
 };
@@ -62,6 +65,9 @@ type JobData = {
     organizerAvatar?: string;
     lat?: number;
     lng?: number;
+    visibilityMode?: string;
+    allowedUsers?: string[];
+    allowedUserDetails?: {uid: string, name: string}[];
     createdAt?: any;
     updatedAt?: any;
 };
@@ -89,6 +95,9 @@ function EventsContent() {
     const [theaterMenuOpen, setTheaterMenuOpen] = useState(false);
     const [eventJoinStatusMap, setEventJoinStatusMap] = useState<Record<string, boolean>>({});
 
+    const [myFollowingSet, setMyFollowingSet] = useState<Set<string>>(new Set());
+    const [myFollowersSet, setMyFollowersSet] = useState<Set<string>>(new Set());
+
     useEffect(() => {
         if (!user || user.isAnonymous) return;
         const checkJoins = async () => {
@@ -98,7 +107,19 @@ function EventsContent() {
             snapJoin.forEach(d => { statusMap[d.id] = true; });
             setEventJoinStatusMap(statusMap);
         };
+        const checkRelationships = async () => {
+            try {
+                const followingSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'following'));
+                const followingIds = new Set(followingSnap.docs.map(d => d.id));
+                setMyFollowingSet(followingIds);
+                
+                const followersSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'followers'));
+                const followersIds = new Set(followersSnap.docs.map(d => d.id));
+                setMyFollowersSet(followersIds);
+            } catch(e) { console.error('Error fetching relationships:', e); }
+        };
         checkJoins();
+        checkRelationships();
     }, [user]);
 
     // Filter states
@@ -118,12 +139,34 @@ function EventsContent() {
     const [selectedEvent, setSelectedEvent] = useState<EventData | null>(null);
     const [selectedJob, setSelectedJob] = useState<JobData | null>(null);
     
+    // User Search State for Visibility
+    const [userSearchQuery, setUserSearchQuery] = useState('');
+    const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
+    const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+
+    const searchUsers = async (q: string) => {
+        if (!q.trim()) { setUserSearchResults([]); return; }
+        setIsSearchingUsers(true);
+        try {
+            const usersRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'users');
+            const snap = await getDocs(usersRef);
+            const lowerQ = q.toLowerCase();
+            const results = snap.docs.map(d => ({ uid: d.id, ...d.data() })).filter((u: any) => 
+                (u.name && u.name.toLowerCase().includes(lowerQ)) || 
+                (u.userId && u.userId.toLowerCase().includes(lowerQ))
+            ).slice(0, 20);
+            setUserSearchResults(results);
+        } catch(e) { console.error(e); }
+        setIsSearchingUsers(false);
+    };
+    
     // Create/Edit Event State
     const [eventModalOpen, setEventModalOpen] = useState(false);
     const [editingEventId, setEditingEventId] = useState<string | null>(null);
     const [eventFormData, setEventFormData] = useState({
         title: '', price: '0', startDate: '', startTime: '', endDate: '', endTime: '', desc: '',
-        isOnline: false, onlineTool: '', onlineUrl: '', locationName: '', locationQuery: '', participantPublic: true
+        isOnline: false, onlineTool: '', onlineUrl: '', locationName: '', locationQuery: '', participantPublic: true,
+        visibilityMode: 'public', allowedUsers: [] as string[], allowedUserDetails: [] as {uid: string, name: string}[]
     });
     const [eventFiles, setEventFiles] = useState<{file: File, preview: string}[]>([]);
     const [eventOldImages, setEventOldImages] = useState<string[]>([]);
@@ -137,7 +180,7 @@ function EventsContent() {
     const [jobFormData, setJobFormData] = useState({
         title: '', type: '業務委託', category: 'デザイン', desc: '', rewardType: '固定報酬', rewardAmount: '',
         period: '単発', workStyle: 'フルリモート', locationQuery: '', locationName: '', skills: '', deadline: '',
-        flow: '面談1回', company: '', url: ''
+        flow: '面談1回', company: '', url: '', visibilityMode: 'public', allowedUsers: [] as string[], allowedUserDetails: [] as {uid: string, name: string}[]
     });
     const [submittingJob, setSubmittingJob] = useState(false);
 
@@ -311,7 +354,10 @@ ${registerUrl}`;
                     onlineUrl: ev.onlineUrl || '',
                     locationName: ev.locationName || '',
                     locationQuery: ev.locationName || '',
-                    participantPublic: ev.isParticipantsPublic ?? true
+                    participantPublic: ev.isParticipantsPublic ?? true,
+                    visibilityMode: ev.visibilityMode || 'public',
+                    allowedUsers: ev.allowedUsers || [],
+                    allowedUserDetails: ev.allowedUserDetails || []
                 });
                 setEditingEventId(editEventId);
                 setEventSelectedTags(new Set(ev.tags || []));
@@ -333,7 +379,7 @@ ${registerUrl}`;
 
     useEffect(() => {
         filterData();
-    }, [allEvents, allJobs, mapSearchText, eventDateFilter, eventFormatFilter, eventPriceFilter, eventTagsFilter, jobTypeFilter, jobCategoryFilter, jobWorkstyleFilter, jobRewardFilter, userLocation]);
+    }, [allEvents, allJobs, mapSearchText, eventDateFilter, eventFormatFilter, eventPriceFilter, eventTagsFilter, jobTypeFilter, jobCategoryFilter, jobWorkstyleFilter, jobRewardFilter, userLocation, user, myFollowingSet, myFollowersSet]);
 
     useEffect(() => {
         if (viewMode === 'map' && leafletMap.current) {
@@ -395,6 +441,25 @@ ${registerUrl}`;
                 const hasTag = e.tags?.some(t => eventTagsFilter.has(t));
                 if (!hasTag) return false;
             }
+            
+            // Visibility logic
+            if (e.organizerId !== user?.uid && e.organizerId !== 'admin') {
+                let canView = false;
+                if (e.allowedUsers?.includes(user?.uid || '')) {
+                    canView = true;
+                } else {
+                    const vMode = e.visibilityMode || 'public';
+                    if (vMode === 'public') {
+                        canView = true;
+                    } else if (user && !user.isAnonymous) {
+                        if (vMode === 'followers' && myFollowingSet.has(e.organizerId)) canView = true;
+                        if (vMode === 'following' && myFollowersSet.has(e.organizerId)) canView = true;
+                        if (vMode === 'mutual' && myFollowingSet.has(e.organizerId) && myFollowersSet.has(e.organizerId)) canView = true;
+                    }
+                }
+                if (!canView) return false;
+            }
+            
             return true;
         });
 
@@ -417,6 +482,25 @@ ${registerUrl}`;
             if (jobCategoryFilter && j.category !== jobCategoryFilter) return false;
             if (jobWorkstyleFilter && j.workStyle !== jobWorkstyleFilter) return false;
             if (jobRewardFilter && j.rewardType !== jobRewardFilter) return false;
+
+            // Visibility logic
+            if (j.organizerId !== user?.uid && j.organizerId !== 'admin') {
+                let canView = false;
+                if (j.allowedUsers?.includes(user?.uid || '')) {
+                    canView = true;
+                } else {
+                    const vMode = j.visibilityMode || 'public';
+                    if (vMode === 'public') {
+                        canView = true;
+                    } else if (user && !user.isAnonymous) {
+                        if (vMode === 'followers' && myFollowingSet.has(j.organizerId)) canView = true;
+                        if (vMode === 'following' && myFollowersSet.has(j.organizerId)) canView = true;
+                        if (vMode === 'mutual' && myFollowingSet.has(j.organizerId) && myFollowersSet.has(j.organizerId)) canView = true;
+                    }
+                }
+                if (!canView) return false;
+            }
+
             return true;
         });
 
@@ -552,6 +636,8 @@ ${registerUrl}`;
 
     const openEventModal = (editId?: string) => {
         setIsCreateMenuOpen(false);
+        setUserSearchQuery('');
+        setUserSearchResults([]);
         if (editId) {
             const ev = allEvents.find(e => e.id === editId);
             if (ev) {
@@ -560,7 +646,8 @@ ${registerUrl}`;
                     title: ev.title, price: ev.price.toString(), startDate: ev.startDate || '',
                     startTime: ev.startTime || '', endDate: ev.endDate || '', endTime: ev.endTime || '', desc: ev.description || '',
                     isOnline: !!ev.isOnline, onlineTool: ev.locationName?.replace('オンライン (', '')?.replace(')', '') || '',
-                    onlineUrl: ev.onlineUrl || '', locationName: ev.locationName || '', locationQuery: '', participantPublic: ev.isParticipantsPublic !== false
+                    onlineUrl: ev.onlineUrl || '', locationName: ev.locationName || '', locationQuery: '', participantPublic: ev.isParticipantsPublic !== false,
+                    visibilityMode: ev.visibilityMode || 'public', allowedUsers: ev.allowedUsers || [], allowedUserDetails: ev.allowedUserDetails || []
                 });
                 setEventSelectedTags(new Set(ev.tags || []));
                 setEventOldImages(ev.imageUrls || (ev.thumbnailUrl ? [ev.thumbnailUrl] : []));
@@ -571,7 +658,8 @@ ${registerUrl}`;
             setEditingEventId(null);
             setEventFormData({
                 title: '', price: '0', startDate: new Date().toISOString().split('T')[0], startTime: '19:00', endDate: new Date().toISOString().split('T')[0], endTime: '21:00', desc: '',
-                isOnline: false, onlineTool: '', onlineUrl: '', locationName: '', locationQuery: '', participantPublic: true
+                isOnline: false, onlineTool: '', onlineUrl: '', locationName: '', locationQuery: '', participantPublic: true,
+                visibilityMode: 'public', allowedUsers: [], allowedUserDetails: []
             });
             setEventSelectedTags(new Set());
             setEventOldImages([]);
@@ -583,6 +671,8 @@ ${registerUrl}`;
 
     const openJobModal = (editId?: string) => {
         setIsCreateMenuOpen(false);
+        setUserSearchQuery('');
+        setUserSearchResults([]);
         if (!userData || (userData.membershipRank !== 'covenant' && userData.membershipRank !== 'guardian' && userData.membershipRank !== 'builder' && userData.userId !== 'admin')) {
             alert('仕事・依頼の掲載は BUILDER 以上の機能です。契約変更をご検討ください。');
             return;
@@ -595,7 +685,8 @@ ${registerUrl}`;
                     title: j.title, type: j.type || '業務委託', category: j.category || 'デザイン', desc: j.desc || '',
                     rewardType: j.rewardType || '固定報酬', rewardAmount: j.rewardAmount || '', period: j.period || '単発',
                     workStyle: j.workStyle || 'フルリモート', locationQuery: '', locationName: j.location || '',
-                    skills: j.skills || '', deadline: j.deadline || '', flow: j.flow || '面談1回', company: j.company || '', url: j.url || ''
+                    skills: j.skills || '', deadline: j.deadline || '', flow: j.flow || '面談1回', company: j.company || '', url: j.url || '',
+                    visibilityMode: j.visibilityMode || 'public', allowedUsers: j.allowedUsers || [], allowedUserDetails: j.allowedUserDetails || []
                 });
                 if (j.lat && j.lng) setAdjustCoords({ lat: j.lat, lng: j.lng });
                 else setAdjustCoords(null);
@@ -605,7 +696,7 @@ ${registerUrl}`;
             setJobFormData({
                 title: '', type: '業務委託', category: 'デザイン', desc: '', rewardType: '固定報酬', rewardAmount: '',
                 period: '単発', workStyle: 'フルリモート', locationQuery: '', locationName: '', skills: '', deadline: '',
-                flow: '面談1回', company: '', url: ''
+                flow: '面談1回', company: '', url: '', visibilityMode: 'public', allowedUsers: [], allowedUserDetails: []
             });
             setAdjustCoords(null);
         }
@@ -674,7 +765,8 @@ ${registerUrl}`;
                 endTimestamp: new Date(`${eventFormData.endDate}T${eventFormData.endTime}`).toISOString(),
                 description: eventFormData.desc, tags: finalTags, thumbnailUrl, imageUrls: finalImageUrls,
                 organizerId: finalOrganizerId, organizerName: finalOrganizerName,
-                isParticipantsPublic: eventFormData.participantPublic, updatedAt: serverTimestamp()
+                isParticipantsPublic: eventFormData.participantPublic, updatedAt: serverTimestamp(),
+                visibilityMode: eventFormData.visibilityMode, allowedUsers: eventFormData.allowedUsers, allowedUserDetails: eventFormData.allowedUserDetails
             };
 
             if (!editingEventId) {
@@ -759,7 +851,7 @@ ${registerUrl}`;
                 workStyle: jobFormData.workStyle, location: jobFormData.locationName, skills: jobFormData.skills,
                 deadline: jobFormData.deadline, flow: jobFormData.flow, company: jobFormData.company, url: jobFormData.url,
                 organizerId: finalOrganizerId, organizerName: finalOrganizerName, organizerAvatar: finalOrganizerAvatar,
-                updatedAt: serverTimestamp()
+                updatedAt: serverTimestamp(), visibilityMode: jobFormData.visibilityMode, allowedUsers: jobFormData.allowedUsers, allowedUserDetails: jobFormData.allowedUserDetails
             };
 
             if (!editingJobId) jbData.createdAt = serverTimestamp();
@@ -1374,6 +1466,57 @@ ${registerUrl}`;
                                 <textarea value={eventFormData.desc} onChange={e=>setEventFormData({...eventFormData, desc: e.target.value})} rows={5} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white leading-relaxed" placeholder="イベント詳細"></textarea>
                             </div>
                             
+                            <div className="bg-brand-50 p-4 rounded-sm border border-brand-200 mt-4 shadow-sm">
+                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">公開範囲 (Base Visibility)</label>
+                                <select value={eventFormData.visibilityMode} onChange={e=>setEventFormData({...eventFormData, visibilityMode: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white mb-4">
+                                    <option value="public">全体に公開 (Public)</option>
+                                    <option value="mutual">相互フォローに公開 (Mutual followers)</option>
+                                    <option value="followers">フォロワーに公開 (Followers)</option>
+                                    <option value="following">フォロー中に公開 (Following)</option>
+                                    <option value="private">選択した乗組員のみ (Private / Selected only)</option>
+                                </select>
+
+                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest border-t border-brand-200 pt-3">＋ 特定の乗組員を追加して公開</label>
+                                <div className="flex gap-2 mb-3">
+                                    <input type="text" value={userSearchQuery} onChange={e=>setUserSearchQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); searchUsers(userSearchQuery); }}} placeholder="ユーザー名やIDで検索" className="flex-1 border border-brand-200 rounded-sm text-sm p-2 bg-white" />
+                                    <button type="button" onClick={() => searchUsers(userSearchQuery)} disabled={isSearchingUsers} className="bg-brand-600 text-white px-3 rounded-sm text-sm font-bold tracking-widest hover:bg-brand-700">{isSearchingUsers ? '検索中...' : '検索'}</button>
+                                </div>
+                                {userSearchResults.length > 0 && (
+                                    <div className="border border-brand-200 rounded-sm bg-white overflow-hidden mb-3 max-h-48 overflow-y-auto">
+                                        {userSearchResults.map(u => (
+                                            <div key={u.uid} className="flex items-center justify-between p-2 border-b border-brand-100 hover:bg-brand-50">
+                                                <div className="flex items-center gap-2">
+                                                    <img src={u.photoURL || 'https://via.placeholder.com/32?text=User'} alt="user" className="w-6 h-6 rounded-full object-cover" />
+                                                    <span className="text-xs font-bold text-brand-800">{u.name || u.userId}</span>
+                                                </div>
+                                                <button type="button" onClick={() => {
+                                                    if (!eventFormData.allowedUsers.includes(u.uid)) {
+                                                        setEventFormData({...eventFormData, allowedUsers: [...eventFormData.allowedUsers, u.uid], allowedUserDetails: [...eventFormData.allowedUserDetails, {uid: u.uid, name: u.name || u.userId}]});
+                                                    }
+                                                    setUserSearchResults(prev => prev.filter(x => x.uid !== u.uid));
+                                                }} className="text-[10px] bg-brand-100 text-brand-700 px-2 py-1 rounded-sm tracking-widest font-bold">追加</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {eventFormData.allowedUserDetails.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {eventFormData.allowedUserDetails.map(u => (
+                                            <div key={u.uid} className="flex items-center gap-1 bg-white border border-brand-200 px-2 py-1 rounded-full text-xs shadow-sm">
+                                                <span className="font-bold text-brand-700">{u.name}</span>
+                                                <button type="button" onClick={() => {
+                                                    setEventFormData({
+                                                        ...eventFormData,
+                                                        allowedUsers: eventFormData.allowedUsers.filter(id => id !== u.uid),
+                                                        allowedUserDetails: eventFormData.allowedUserDetails.filter(ud => ud.uid !== u.uid)
+                                                    });
+                                                }} className="text-red-500 hover:text-red-700"><X className="w-3 h-3"/></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            
                             {userData?.userId === 'admin' && (
                                 <div className="bg-red-50 p-4 rounded-sm border border-red-200 mt-4 shadow-inner">
                                     <h4 className="text-xs font-bold text-red-600 mb-2 tracking-widest">【管理者専用】代理投稿</h4>
@@ -1439,6 +1582,57 @@ ${registerUrl}`;
                                     <input type="text" value={jobFormData.locationName} onChange={e=>setJobFormData({...jobFormData, locationName: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="表示名 (例: 渋谷)" />
                                 </div>
                             )}
+
+                            <div className="bg-brand-50 p-4 rounded-sm border border-brand-200 mt-4 shadow-sm">
+                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">公開範囲 (Base Visibility)</label>
+                                <select value={jobFormData.visibilityMode} onChange={e=>setJobFormData({...jobFormData, visibilityMode: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white mb-4">
+                                    <option value="public">全体に公開 (Public)</option>
+                                    <option value="mutual">相互フォローに公開 (Mutual followers)</option>
+                                    <option value="followers">フォロワーに公開 (Followers)</option>
+                                    <option value="following">フォロー中に公開 (Following)</option>
+                                    <option value="private">選択した乗組員のみ (Private / Selected only)</option>
+                                </select>
+
+                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest border-t border-brand-200 pt-3">＋ 特定の乗組員を追加して公開</label>
+                                <div className="flex gap-2 mb-3">
+                                    <input type="text" value={userSearchQuery} onChange={e=>setUserSearchQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); searchUsers(userSearchQuery); }}} placeholder="ユーザー名やIDで検索" className="flex-1 border border-brand-200 rounded-sm text-sm p-2 bg-white" />
+                                    <button type="button" onClick={() => searchUsers(userSearchQuery)} disabled={isSearchingUsers} className="bg-brand-600 text-white px-3 rounded-sm text-sm font-bold tracking-widest hover:bg-brand-700">{isSearchingUsers ? '検索中...' : '検索'}</button>
+                                </div>
+                                {userSearchResults.length > 0 && (
+                                    <div className="border border-brand-200 rounded-sm bg-white overflow-hidden mb-3 max-h-48 overflow-y-auto">
+                                        {userSearchResults.map(u => (
+                                            <div key={u.uid} className="flex items-center justify-between p-2 border-b border-brand-100 hover:bg-brand-50">
+                                                <div className="flex items-center gap-2">
+                                                    <img src={u.photoURL || 'https://via.placeholder.com/32?text=User'} alt="user" className="w-6 h-6 rounded-full object-cover" />
+                                                    <span className="text-xs font-bold text-brand-800">{u.name || u.userId}</span>
+                                                </div>
+                                                <button type="button" onClick={() => {
+                                                    if (!jobFormData.allowedUsers.includes(u.uid)) {
+                                                        setJobFormData({...jobFormData, allowedUsers: [...jobFormData.allowedUsers, u.uid], allowedUserDetails: [...jobFormData.allowedUserDetails, {uid: u.uid, name: u.name || u.userId}]});
+                                                    }
+                                                    setUserSearchResults(prev => prev.filter(x => x.uid !== u.uid));
+                                                }} className="text-[10px] bg-brand-100 text-brand-700 px-2 py-1 rounded-sm tracking-widest font-bold">追加</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {jobFormData.allowedUserDetails.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {jobFormData.allowedUserDetails.map(u => (
+                                            <div key={u.uid} className="flex items-center gap-1 bg-white border border-brand-200 px-2 py-1 rounded-full text-xs shadow-sm">
+                                                <span className="font-bold text-brand-700">{u.name}</span>
+                                                <button type="button" onClick={() => {
+                                                    setJobFormData({
+                                                        ...jobFormData,
+                                                        allowedUsers: jobFormData.allowedUsers.filter(id => id !== u.uid),
+                                                        allowedUserDetails: jobFormData.allowedUserDetails.filter(ud => ud.uid !== u.uid)
+                                                    });
+                                                }} className="text-red-500 hover:text-red-700"><X className="w-3 h-3"/></button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
                             <button onClick={submitJob} disabled={submittingJob} className="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723] disabled:opacity-50">
