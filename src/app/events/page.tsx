@@ -570,7 +570,7 @@ ${registerUrl}`;
         if (typeof window !== 'undefined' && mapRef.current && !leafletMap.current) {
             const L = (window as any).L;
             if (L) {
-                leafletMap.current = L.map(mapRef.current).setView([35.681236, 139.767125], 5);
+                leafletMap.current = L.map(mapRef.current).setView([35.681236, 139.767125], 12);
                 L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
                     attribution: '&copy; Google'
                 }).addTo(leafletMap.current);
