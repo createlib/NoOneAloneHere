@@ -237,6 +237,7 @@ function EventsContent() {
                 setJobModalOpen(false);
             }
             setAdjustMode(type);
+            setViewMode('map');
             alert('地図を移動しました。赤色のピンをドラッグして正確な位置に微調整してください。');
         };
 
@@ -1282,7 +1283,7 @@ ${registerUrl}`;
             />
 
             {/* Job Detail Sheet (placeholder) */}
-            <div className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-[calc(2rem+env(safe-area-inset-bottom))] max-h-[90dvh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${selectedJob && !adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}>
+            <div className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-24 max-h-[90dvh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${selectedJob && !adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}>
                 <div className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onClick={() => setSelectedJob(null)}>
                     <div className="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
                     <div className="hidden lg:flex w-full justify-between items-center px-5">
@@ -1524,7 +1525,7 @@ ${registerUrl}`;
                                 </div>
                             )}
                         </div>
-                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-[calc(2rem+env(safe-area-inset-bottom))] sm:pb-4 flex-shrink-0">
+                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-24 sm:pb-4 flex-shrink-0">
                             <button onClick={submitEvent} disabled={submittingEvent} className="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b] disabled:opacity-50">
                                 {submittingEvent ? '保存中...' : (editingEventId ? '更新する' : '企画する')}
                             </button>
@@ -1550,6 +1551,10 @@ ${registerUrl}`;
                                 <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">業務詳細</label>
                                 <textarea value={jobFormData.desc} onChange={e=>setJobFormData({...jobFormData, desc: e.target.value})} rows={6} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white leading-relaxed" required></textarea>
                             </div>
+                            <div>
+                                <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">必須・歓迎スキル</label>
+                                <input type="text" value={jobFormData.skills} onChange={e=>setJobFormData({...jobFormData, skills: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: Figma, React等の経験" />
+                            </div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-xs font-bold text-brand-700 mb-1">報酬形態</label>
@@ -1572,6 +1577,22 @@ ${registerUrl}`;
                                     <option value="一部出社">一部出社</option>
                                     <option value="出社必須">出社必須</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-brand-700 mb-1">募集期限</label>
+                                <input type="date" value={jobFormData.deadline} onChange={e=>setJobFormData({...jobFormData, deadline: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-brand-700 mb-1">選考フロー</label>
+                                <input type="text" value={jobFormData.flow} onChange={e=>setJobFormData({...jobFormData, flow: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 書類選考 → 面談1回" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-brand-700 mb-1">会社・組織名</label>
+                                <input type="text" value={jobFormData.company} onChange={e=>setJobFormData({...jobFormData, company: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: 株式会社NOAH" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-brand-700 mb-1">関連URL</label>
+                                <input type="url" value={jobFormData.url} onChange={e=>setJobFormData({...jobFormData, url: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="https://" />
                             </div>
                             {jobFormData.workStyle !== 'フルリモート' && (
                                 <div className="p-3 border border-brand-200 rounded-sm bg-brand-50 mt-2">
@@ -1634,7 +1655,7 @@ ${registerUrl}`;
                                 )}
                             </div>
                         </div>
-                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-[calc(2rem+env(safe-area-inset-bottom))] sm:pb-4 flex-shrink-0">
+                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-24 sm:pb-4 flex-shrink-0">
                             <button onClick={submitJob} disabled={submittingJob} className="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723] disabled:opacity-50">
                                 {submittingJob ? '保存中...' : (editingJobId ? '更新する' : '掲載する')}
                             </button>
