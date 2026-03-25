@@ -955,14 +955,14 @@ ${registerUrl}`;
             <div className="fixed top-16 w-full z-[40] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
                 <div className="max-w-3xl mx-auto px-4 flex justify-between items-center">
                     <div className="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
-                        <button onClick={() => setViewMode('map')} className={`tab-btn flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 ${viewMode === 'map' ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]' : 'text-brand-700 bg-[#fffdf9] border border-transparent'}`}>
-                            <MapPin className="w-4 h-4" /> マップ
+                        <button onClick={() => setViewMode('map')} className={`tab-btn flex-1 sm:flex-none px-2 sm:px-5 py-2 text-[11px] sm:text-xs font-bold rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 whitespace-nowrap ${viewMode === 'map' ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]' : 'text-brand-700 bg-[#fffdf9] border border-transparent'}`}>
+                            <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> マップ
                         </button>
-                        <button onClick={() => setViewMode('list-events')} className={`tab-btn flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 ${viewMode === 'list-events' ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]' : 'text-brand-700 bg-[#fffdf9] border border-transparent'}`}>
-                            <List className="w-4 h-4" /> イベント
+                        <button onClick={() => setViewMode('list-events')} className={`tab-btn flex-1 sm:flex-none px-2 sm:px-5 py-2 text-[11px] sm:text-xs font-bold rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 whitespace-nowrap ${viewMode === 'list-events' ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]' : 'text-brand-700 bg-[#fffdf9] border border-transparent'}`}>
+                            <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> イベント
                         </button>
-                        <button onClick={() => setViewMode('list-jobs')} className={`tab-btn flex-1 sm:flex-none px-3 sm:px-5 py-2 text-xs font-bold rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 ${viewMode === 'list-jobs' ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]' : 'text-brand-700 bg-[#fffdf9] border border-transparent'}`}>
-                            <Briefcase className="w-4 h-4" /> 仕事・依頼
+                        <button onClick={() => setViewMode('list-jobs')} className={`tab-btn flex-1 sm:flex-none px-1 sm:px-5 py-2 text-[11px] sm:text-xs font-bold rounded-sm transition-colors tracking-[0.05em] sm:tracking-widest font-serif flex items-center justify-center gap-0.5 sm:gap-1 whitespace-nowrap ${viewMode === 'list-jobs' ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]' : 'text-brand-700 bg-[#fffdf9] border border-transparent'}`}>
+                            <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 仕事・依頼
                         </button>
                     </div>
                     {/* Filter Button */}
