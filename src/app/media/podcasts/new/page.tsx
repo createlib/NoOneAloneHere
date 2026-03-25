@@ -33,13 +33,7 @@ function PodcastPostInternalForm() {
     const [isAdmin, setIsAdmin] = useState(false);
 
     // Form states
-    const [audioType, setAudioType] = useState<'upload' | 'url' | 'live'>(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            return params.get('type') === 'live' ? 'live' : 'upload';
-        }
-        return 'upload';
-    });
+    const [audioType, setAudioType] = useState<'upload' | 'url'>('upload');
     const [audioFile, setAudioFile] = useState<File | null>(null);
     const [audioUrlInput, setAudioUrlInput] = useState('');
     const [duration, setDuration] = useState(0);
@@ -59,10 +53,6 @@ function PodcastPostInternalForm() {
 
     const [overrideUserId, setOverrideUserId] = useState('');
 
-    // Live specific
-    const [livePrivacy, setLivePrivacy] = useState('public');
-    const [liveType, setLiveType] = useState('talk');
-    const [liveRecord, setLiveRecord] = useState(false);
     
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -219,7 +209,7 @@ function PodcastPostInternalForm() {
         let finalAudioUrl = '';
         let finalThumbUrl = '';
 
-        if (audioType !== 'live' && !editPid) {
+        if (!editPid) {
             if (audioType === 'upload' && !audioFile) return alert('音声ファイルを選択してください');
             if (audioType === 'url' && !audioUrlInput.trim()) return alert('音声のURLを入力してください');
         }
@@ -233,7 +223,7 @@ function PodcastPostInternalForm() {
 
         setIsSaving(true);
         setProgress(5);
-        setProgressText(audioType === 'live' ? '配信の準備中...' : 'アップロードの準備中...');
+        setProgressText('アップロードの準備中...');
 
         try {
             // Determine Final Author Info
@@ -268,72 +258,6 @@ function PodcastPostInternalForm() {
                 const snap = await uploadBytes(thumbRef, thumbFile);
                 finalThumbUrl = await getDownloadURL(snap.ref);
             };
-
-            // ---- LIVE ROOM ----
-            if (audioType === 'live') {
-                // Clear old data
-                try {
-                    const oldCommentsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', finalAuthorId, 'comments');
-                    const oldCommentsSnap = await getDocs(oldCommentsRef);
-                    await Promise.all(oldCommentsSnap.docs.map(d => deleteDoc(d.ref)));
-                    
-                    const oldPartsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', finalAuthorId, 'participants');
-                    const oldPartsSnap = await getDocs(oldPartsRef);
-                    await Promise.all(oldPartsSnap.docs.map(d => deleteDoc(d.ref)));
-                } catch (e) {
-                    console.warn("Init old data error:", e);
-                }
-
-                await uploadThumb();
-
-                const roomData = {
-                    hostId: finalAuthorId,
-                    hostName: finalAuthorName,
-                    hostIcon: finalAuthorIcon,
-                    title,
-                    desc: description,
-                    guestsStr: guests,
-                    privacy: livePrivacy,
-                    type: liveType,
-                    tags,
-                    isRecord: liveRecord,
-                    thumbUrl: finalThumbUrl || null,
-                    status: 'live',
-                    startedAt: serverTimestamp()
-                };
-
-                const roomRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', finalAuthorId);
-                await setDoc(roomRef, roomData);
-
-                const partRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms', finalAuthorId, 'participants', finalAuthorId);
-                await setDoc(partRef, {
-                    uid: finalAuthorId,
-                    name: finalAuthorName,
-                    icon: finalAuthorIcon,
-                    role: 'host',
-                    isMuted: false,
-                    joinedAt: serverTimestamp()
-                });
-
-                // Notify followers
-                try {
-                    const followersSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', finalAuthorId, 'followers'));
-                    const notifyPromises = followersSnap.docs.map(fDoc => {
-                        const notifRef = collection(db, 'artifacts', APP_ID, 'users', fDoc.id, 'notifications');
-                        return addDoc(notifRef, {
-                            type: 'live_start',
-                            fromUid: finalAuthorId,
-                            contentId: finalAuthorId,
-                            createdAt: serverTimestamp(),
-                            isRead: false
-                        });
-                    });
-                    await Promise.all(notifyPromises);
-                } catch (e) { console.error(e); }
-
-                router.push(`/media/live_room?roomId=${finalAuthorId}`);
-                return;
-            }
 
             // ---- PODCAST ----
             if (audioType === 'upload' && audioFile) {
@@ -429,7 +353,6 @@ function PodcastPostInternalForm() {
     };
 
     const rankLevel = myProfile ? ({ 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 }[myProfile.membershipRank as string] || 0) : 0;
-    const canLiveStream = rankLevel >= 3 || isAdmin;
 
     return (
         <div className="antialiased min-h-screen bg-texture pb-20">
@@ -466,11 +389,6 @@ function PodcastPostInternalForm() {
                         <div className="flex gap-4 sm:gap-6 mb-6 border-b border-brand-200 overflow-x-auto no-scrollbar">
                             <button type="button" onClick={() => setAudioType('upload')} className={`pb-2 border-b-2 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap ${audioType === 'upload' ? 'border-[#b8860b] text-[#b8860b] font-bold' : 'border-transparent text-brand-400 hover:text-brand-600'}`}>ファイルをアップロード</button>
                             <button type="button" onClick={() => setAudioType('url')} className={`pb-2 border-b-2 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap ${audioType === 'url' ? 'border-[#b8860b] text-[#b8860b] font-bold' : 'border-transparent text-brand-400 hover:text-brand-600'}`}>URLを指定</button>
-                            {canLiveStream && !editPid && (
-                                <button type="button" onClick={() => setAudioType('live')} className={`pb-2 border-b-2 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap flex items-center gap-1 ${audioType === 'live' ? 'border-red-600 text-red-600 font-bold' : 'border-transparent text-red-400 hover:text-red-600'}`}>
-                                    <SatelliteDish size={14} />生配信 (SIGNAL CAST)
-                                </button>
-                            )}
                         </div>
 
                         {audioType === 'upload' && (
@@ -489,7 +407,7 @@ function PodcastPostInternalForm() {
                             </div>
                         )}
 
-                        {(parsedAudioUrl && audioType !== 'live') && (
+                        {parsedAudioUrl && (
                             <div className="mt-4 bg-brand-50 p-4 rounded-sm border border-brand-200">
                                 <div className="flex items-center justify-between mb-2">
                                     <p className="text-[10px] font-bold text-brand-500 tracking-widest uppercase">Preview</p>
@@ -567,7 +485,6 @@ function PodcastPostInternalForm() {
                             <input type="text" value={customTags} onChange={e => setCustomTags(e.target.value)} className="w-full border border-brand-200 rounded-sm p-3 bg-[#f7f5f0] text-sm focus:bg-white transition-colors outline-none focus:border-[#b8860b]" placeholder="その他のタグ (カンマ区切りで入力)" />
                         </div>
 
-                        {audioType !== 'live' && (
                             <div className="border-t border-brand-100 pt-6">
                                 <label className="block text-sm font-bold text-brand-900 mb-4 tracking-widest">コメント機能の設定</label>
                                 <div className="flex gap-6">
@@ -579,55 +496,8 @@ function PodcastPostInternalForm() {
                                     </label>
                                 </div>
                             </div>
-                        )}
 
-                        {audioType === 'live' && (
-                            <div className="border-t border-brand-100 pt-6">
-                                <label className="block text-sm font-bold text-red-600 mb-4 tracking-widest flex items-center gap-2"><SatelliteDish className="animate-pulse w-4 h-4" />ライブ配信設定</label>
-                                
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                                    <div>
-                                        <label className="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">公開範囲 <span className="text-red-500">*</span></label>
-                                        <select value={livePrivacy} onChange={e => setLivePrivacy(e.target.value)} className="w-full border border-brand-200 rounded-sm p-3 bg-white text-sm font-bold text-brand-700 focus:border-[#b8860b] focus:ring-[#b8860b] outline-none">
-                                            <option value="public">🌍 公開（SETTLER以上）</option>
-                                            <option value="followers">👥 フォロワー限定</option>
-                                            <option value="invite">🔒 招待制（クローズド）</option>
-                                            <option value="community">🏢 コミュニティ限定</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-brand-800 mb-1.5 tracking-widest">ルーム種別 <span className="text-red-500">*</span></label>
-                                        <select value={liveType} onChange={e => setLiveType(e.target.value)} className="w-full border border-brand-200 rounded-sm p-3 bg-white text-sm font-bold text-brand-700 focus:border-[#b8860b] focus:ring-[#b8860b] outline-none">
-                                            <option value="talk">💬 通常トーク</option>
-                                            <option value="panel">🗣 パネルディスカッション</option>
-                                            <option value="interview">🎤 インタビュー形式</option>
-                                            <option value="music">🎵 音楽・ライブ形式</option>
-                                        </select>
-                                    </div>
-                                </div>
 
-                                <div className="bg-brand-50 p-4 border border-brand-200 rounded-sm">
-                                    <label className="block text-xs font-bold text-brand-800 mb-3 tracking-widest">アーカイブ設定</label>
-                                    <div className="flex flex-wrap gap-3">
-                                        <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
-                                            <input type="radio" checked={liveRecord === true} onChange={() => { setLiveRecord(true); alert("【重要確認】\n配信の自動録音機能はありません。\n\n必ずご自身のボイスレコーダー等で録音を行い、配信終了後にマイページから音声ファイルをアップロードしてください。"); }} className="text-[#b8860b] focus:ring-[#b8860b]" /> 録音して残す
-                                        </label>
-                                        <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-xs font-bold text-brand-700 bg-white border border-brand-200 px-3 py-2.5 rounded-sm shadow-sm hover:bg-brand-50 transition-colors whitespace-nowrap">
-                                            <input type="radio" checked={liveRecord === false} onChange={() => setLiveRecord(false)} className="text-[#b8860b] focus:ring-[#b8860b]" /> 録音しない
-                                        </label>
-                                    </div>
-                                    <p className="text-[10px] text-brand-500 mt-2 text-center sm:text-left">※「録音して残す」を選択すると、配信終了後に自動でポッドキャスト枠が作成されます。</p>
-                                    
-                                    {liveRecord && (
-                                        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-sm text-red-600 text-[10px] sm:text-xs leading-relaxed shadow-inner">
-                                            <span className="font-bold flex items-center gap-1 mb-1"><AlertTriangle size={12} />【重要】自動録音機能はありません</span>
-                                            システム側での録音は行われません。必ずご自身の端末（スマホのボイスレコーダー等）で別途録音を行ってください。<br />
-                                            配信終了後に作成される「ポッドキャスト枠」の編集画面から、録音した音声ファイルをアップロードできます。
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {isAdmin && (
@@ -639,10 +509,8 @@ function PodcastPostInternalForm() {
                     )}
 
                     <div className="pb-12 pt-6">
-                        <button type="submit" disabled={isSaving} className={`w-full py-4 font-bold text-lg rounded-sm transition-all shadow-xl tracking-widest border flex items-center justify-center gap-3 transform hover:-translate-y-0.5 ${audioType === 'live' ? 'bg-gradient-to-r from-[#3e2723] to-red-900 text-white border-red-600 hover:from-[#2a1a17] hover:to-red-800' : 'bg-gradient-to-r from-[#2a1a17] to-[#3e2723] text-[#d4af37] border-[#b8860b] hover:from-[#1a110f] hover:to-[#2a1a17]'}`}>
-                            {audioType === 'live' ? (
-                                <><SatelliteDish className="animate-pulse w-6 h-6" /> ライブ配信を START する</>
-                            ) : editPid ? (
+                        <button type="submit" disabled={isSaving} className="w-full py-4 font-bold text-lg rounded-sm transition-all shadow-xl tracking-widest border flex items-center justify-center gap-3 transform hover:-translate-y-0.5 bg-gradient-to-r from-[#2a1a17] to-[#3e2723] text-[#d4af37] border-[#b8860b] hover:from-[#1a110f] hover:to-[#2a1a17]">
+                            {editPid ? (
                                 <><CloudUpload className="w-6 h-6" /> 編集を保存する</>
                             ) : (
                                 <><Podcast className="w-6 h-6" /> 音声を配信する</>

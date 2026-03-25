@@ -485,7 +485,7 @@ function UserProfileContent() {
                                               <SatelliteDish size={16} className="animate-pulse" /> 配信ルームに戻る
                                           </Link>
                                       ) : (
-                                          <Link href="/media/podcasts/new?type=live" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] border border-[#996515] rounded-sm text-sm font-bold hover:shadow-lg transition-all tracking-widest w-full sm:w-auto transform hover:-translate-y-0.5 mt-2">
+                                          <Link href="/media/live/new" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#d4af37] to-[#b8860b] text-[#2a1a17] border border-[#996515] rounded-sm text-sm font-bold hover:shadow-lg transition-all tracking-widest w-full sm:w-auto transform hover:-translate-y-0.5 mt-2">
                                               <SatelliteDish size={16} className="animate-pulse" /> SIGNAL CAST を配信する
                                           </Link>
                                       )
