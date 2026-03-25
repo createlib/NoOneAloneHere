@@ -1080,24 +1080,23 @@ ${registerUrl}`;
                 </div>
             </div>
 
-            {/* Global Search Bar (moved out of map container) */}
-            <div className={`fixed top-28 sm:top-32 left-1/2 transform -translate-x-1/2 z-[45] w-[90%] max-w-md pointer-events-none transition-opacity duration-300 ${isFilterOpen ? 'opacity-0' : 'opacity-100'}`}>
-                <div className={`relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200 text-brand-700 ${adjustMode ? 'hidden' : ''}`}>
-                    <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400" />
-                    <input 
-                        type="text"
-                        value={mapSearchText}
-                        onChange={(e) => setMapSearchText(e.target.value)}
-                        placeholder={viewMode === 'list-jobs' ? "仕事・依頼を検索..." : "イベント・場所を検索..."}
-                        className="w-full bg-[#fffdf9]/95 backdrop-blur border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-sm font-serif tracking-widest"
-                    />
-                </div>
-            </div>
-
             {/* Main Content Area */}
             <div className="mt-14 w-full flex-1 relative z-0">
                 {/* View 1: Map */}
                 <div className={`relative w-full h-[calc(100vh-120px)] ${viewMode === 'map' ? 'block' : 'hidden'}`}>
+                    {/* Floating Map Search Bar */}
+                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[30] w-[90%] max-w-md pointer-events-none transition-opacity duration-300">
+                        <div className={`relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200 text-brand-700 ${adjustMode ? 'hidden' : ''}`}>
+                            <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400" />
+                            <input 
+                                type="text"
+                                value={mapSearchText}
+                                onChange={(e) => setMapSearchText(e.target.value)}
+                                placeholder="イベント・仕事・場所を検索..."
+                                className="w-full bg-[#fffdf9]/95 backdrop-blur border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-sm font-serif tracking-widest"
+                            />
+                        </div>
+                    </div>
                     <div ref={mapRef} className="w-full h-full z-[10]" />
 
                     {adjustMode && (
@@ -1118,6 +1117,18 @@ ${registerUrl}`;
 
                 {/* View 2: List Events */}
                 <div className={`max-w-4xl mx-auto px-4 pt-6 ${viewMode === 'list-events' ? 'block' : 'hidden'}`}>
+                    {/* Event List Search Bar */}
+                    <div className="mb-6 relative shadow-sm rounded-sm border border-brand-200 bg-white">
+                        <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400" />
+                        <input 
+                            type="text"
+                            value={mapSearchText}
+                            onChange={(e) => setMapSearchText(e.target.value)}
+                            placeholder="イベント・場所を検索..." 
+                            className="w-full bg-transparent border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none font-serif tracking-widest"
+                        />
+                    </div>
+                    
                     <div className="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
                         <h2 className="text-xl font-bold text-brand-900 font-serif tracking-widest">イベント一覧</h2>
                         <span className="text-xs text-brand-500 tracking-widest">{userLocation ? '現在地から近い順' : '新着順'}</span>
@@ -1174,6 +1185,18 @@ ${registerUrl}`;
 
                 {/* View 3: List Jobs */}
                 <div className={`max-w-4xl mx-auto px-4 pt-6 ${viewMode === 'list-jobs' ? 'block' : 'hidden'}`}>
+                    {/* Job List Search Bar */}
+                    <div className="mb-6 relative shadow-sm rounded-sm border border-brand-200 bg-white">
+                        <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400" />
+                        <input 
+                            type="text"
+                            value={mapSearchText}
+                            onChange={(e) => setMapSearchText(e.target.value)}
+                            placeholder="仕事・依頼を検索..." 
+                            className="w-full bg-transparent border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none font-serif tracking-widest"
+                        />
+                    </div>
+
                     <div className="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
                         <h2 className="text-xl font-bold text-brand-900 font-serif tracking-widest">仕事・依頼一覧</h2>
                         <span className="text-xs text-brand-500 tracking-widest">新着順</span>
