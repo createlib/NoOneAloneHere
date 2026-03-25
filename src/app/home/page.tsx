@@ -137,13 +137,12 @@ export default function Home() {
 
   const copyInviteLink = () => {
     if (!myProfile || !myProfile.userId) return alert('ユーザーIDが取得できませんでした');
-    const url = `${window.location.origin}/register?ref=${myProfile.userId}`;
     const userName = myProfile.name || myProfile.userId;
-    const inviteText = `${userName}さんからNOAHに招待されました。\n下記のリンクから乗船手続きを進めてください。\n\n■新規登録｜NOAH｜No One Alone, Here\n${url}\n`;
+    const inviteText = `${userName}さんからNOAHに招待されました。\n下記のリンクから乗船手続きを進めてください。\n\n■新規登録｜NOAH｜No One Alone, Here\nhttps://noonealonehere.pages.dev/register.html?ref=${myProfile.userId}\n\n■公式LINE｜公式LINEを登録し、いつでも乗船できるようにしてください。\nhttps://lin.ee/aaP0V9F\n\n■公式オープンチャット｜「フルネーム＠NOAHのID」で参加申請してください。\nhttps://line.me/ti/g2/yo2C_bp7U7agH9Rz--E2YhZ4Sc4Yy1ybqhQQZw?utm_source=invitation&utm_medium=link_copy&utm_campaign=default\n`;
     navigator.clipboard.writeText(inviteText).then(() => {
         alert('招待文とURLをコピーしました！');
     }).catch(err => {
-        alert('コピーに失敗しました。\n' + url);
+        alert('コピーに失敗しました。');
     });
   };
 
@@ -363,7 +362,33 @@ export default function Home() {
             }}
             onShare={(evt) => {
                 const url = `${window.location.origin}/events?eventId=${evt.id}`;
-                navigator.clipboard.writeText(url).then(() => alert('リンクをコピーしました！'));
+                const registerUrl = `${window.location.origin}/register?ref=${user?.uid || ''}`;
+                const inviterName = myProfile ? (myProfile.name || myProfile.userId) : 'ユーザー';
+                const title = evt.title || '無題';
+                const rawDesc = evt.description || '';
+                let shortDesc = rawDesc.substring(0, 200).replace(/\n/g, ' ');
+                if (rawDesc.length > 200) shortDesc += '…';
+
+                const loc = evt.isOnline ? (evt.locationName || 'オンライン') : (evt.locationName || '未設定');
+                const price = Number(evt.price || 0) > 0 ? `¥${Number(evt.price).toLocaleString()}` : '無料';
+                
+                const text = `${inviterName}さんからイベント招待が届きました。
+■イベントタイトル
+　${title}
+■場所
+　${loc}
+■参加費
+　${price}
+■イベント概要
+${shortDesc}
+
+⇩以降は詳細へ⇩
+${url}
+
+―――
+⇩NOAHに参加していない方は、ユーザー登録をしてから参加ボタンを押してください。⇩
+${registerUrl}`;
+                navigator.clipboard.writeText(text).then(() => alert('共有リンクと紹介文をコピーしました！')).catch(() => alert('コピーに失敗しました。'));
             }}
         />
 

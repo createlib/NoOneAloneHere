@@ -1282,7 +1282,7 @@ ${registerUrl}`;
             />
 
             {/* Job Detail Sheet (placeholder) */}
-            <div className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${selectedJob && !adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}>
+            <div className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-[calc(2rem+env(safe-area-inset-bottom))] max-h-[90dvh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${selectedJob && !adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}>
                 <div className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onClick={() => setSelectedJob(null)}>
                     <div className="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
                     <div className="hidden lg:flex w-full justify-between items-center px-5">
@@ -1366,7 +1366,7 @@ ${registerUrl}`;
             {/* Event Modal */}
             {eventModalOpen && (
                 <div className="fixed inset-0 z-[120] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
-                    <div className="bg-[#fffdf9] bg-texture w-full sm:w-[600px] h-[95vh] sm:h-[90vh] rounded-t-sm sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
+                    <div className="bg-[#fffdf9] bg-texture w-full sm:w-[600px] h-[90dvh] sm:h-[90vh] rounded-t-sm sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
                         <div className="p-4 border-b border-brand-200 flex justify-between items-center flex-shrink-0 bg-[#fffdf9]">
                             <h3 className="font-bold text-lg text-brand-900 font-serif tracking-widest">{editingEventId ? 'イベントを編集' : 'イベントを企画'}</h3>
                             <button onClick={() => setEventModalOpen(false)} className="p-2 text-brand-400 hover:text-brand-700"><X className="w-5 h-5" /></button>
@@ -1524,7 +1524,7 @@ ${registerUrl}`;
                                 </div>
                             )}
                         </div>
-                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
+                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-[calc(2rem+env(safe-area-inset-bottom))] sm:pb-4 flex-shrink-0">
                             <button onClick={submitEvent} disabled={submittingEvent} className="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b] disabled:opacity-50">
                                 {submittingEvent ? '保存中...' : (editingEventId ? '更新する' : '企画する')}
                             </button>
@@ -1536,7 +1536,7 @@ ${registerUrl}`;
             {/* Job Modal */}
             {jobModalOpen && (
                 <div className="fixed inset-0 z-[120] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
-                    <div className="bg-[#fffdf9] bg-texture w-full sm:w-[650px] h-[95vh] sm:h-[90vh] rounded-t-sm sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
+                    <div className="bg-[#fffdf9] bg-texture w-full sm:w-[650px] h-[90dvh] sm:h-[90vh] rounded-t-sm sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
                         <div className="p-4 border-b border-brand-200 flex justify-between items-center flex-shrink-0 bg-[#fffdf9]">
                             <h3 className="font-bold text-lg text-brand-900 font-serif tracking-widest">{editingJobId ? '仕事・依頼を編集' : '仕事・依頼を掲載'}</h3>
                             <button onClick={() => setJobModalOpen(false)} className="p-2 text-brand-400 hover:text-brand-700"><X className="w-5 h-5" /></button>
@@ -1634,7 +1634,7 @@ ${registerUrl}`;
                                 )}
                             </div>
                         </div>
-                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-safe-bottom sm:pb-4 flex-shrink-0">
+                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-[calc(2rem+env(safe-area-inset-bottom))] sm:pb-4 flex-shrink-0">
                             <button onClick={submitJob} disabled={submittingJob} className="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723] disabled:opacity-50">
                                 {submittingJob ? '保存中...' : (editingJobId ? '更新する' : '掲載する')}
                             </button>
