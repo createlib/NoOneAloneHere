@@ -292,7 +292,7 @@ function EventsContent() {
         
         let text = '';
         if (type === 'event') {
-            let shortDesc = rawDesc.substring(0, 200).replace(/\n/g, ' ');
+            let shortDesc = rawDesc.substring(0, 200);
             if (rawDesc.length > 200) shortDesc += '…';
 
             const ev = item as EventData;

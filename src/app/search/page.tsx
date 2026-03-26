@@ -64,7 +64,15 @@ function SearchContent() {
     const [osQ, setOsQ] = useState(searchParams.get('osNumber') || '');
     const [areaQ, setAreaQ] = useState('');
     const [mbtiQ, setMbtiQ] = useState(searchParams.get('mbti') || '');
+    const [isFilterOpen, setIsFilterOpen] = useState(!!(searchParams.get('osNumber') || searchParams.get('mbti')));
     
+    useEffect(() => {
+        const queryParams = searchParams.toString();
+        if (queryParams && typeof window !== 'undefined') {
+            window.history.replaceState(null, '', window.location.pathname);
+        }
+    }, [searchParams]);
+
     useEffect(() => {
         if (!authLoading && !user) {
             router.push('/login');
@@ -227,7 +235,23 @@ function SearchContent() {
                     )}
                     
                     {/* Search & Filter Header */}
-                        <div className="mb-8 bg-[#fffdf9] p-4 sm:p-6 rounded-sm shadow-md border border-[#e8dfd1] relative overflow-hidden">
+                    <div className="mb-4">
+                        <button 
+                            onClick={() => setIsFilterOpen(!isFilterOpen)}
+                            className="w-full flex items-center justify-between p-4 bg-[#fffdf9] border border-[#e8dfd1] rounded-sm shadow-sm text-[#5c4a3d] font-bold tracking-widest hover:bg-[#f0ebdd] transition-colors group"
+                        >
+                            <span className="flex items-center"><SearchIcon className="w-5 h-5 mr-2 text-[#a09080] group-hover:text-[#8b6a4f] transition-colors" /> 乗客を検索・絞り込み</span>
+                            <span className="text-[#a09080] text-sm tabular-nums flex items-center gap-1">
+                                {(searchQ || osQ || areaQ || mbtiQ) ? (
+                                    <span className="bg-[#8b6a4f] text-[#fffdf9] text-[10px] px-2 py-0.5 rounded-sm mr-2">絞り込み中</span>
+                                ) : null}
+                                {isFilterOpen ? '▲ 閉じる' : '▼ 開く'}
+                            </span>
+                        </button>
+                    </div>
+
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isFilterOpen ? 'max-h-[1000px] opacity-100 mb-8' : 'max-h-0 opacity-0 mb-0'}`}>
+                        <div className="bg-[#fffdf9] p-4 sm:p-6 rounded-sm shadow-md border border-[#e8dfd1] relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-[#8b6a4f] z-10 m-2 opacity-50"></div>
                             
                             <div className="flex flex-col lg:flex-row gap-4 relative z-10">
@@ -325,6 +349,7 @@ function SearchContent() {
                                 <span className="tracking-widest">※非公開設定のユーザーは表示されません</span>
                             </div>
                         </div>
+                    </div>
 
                         {/* Users Grid */}
                         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-6">

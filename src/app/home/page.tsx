@@ -390,7 +390,7 @@ export default function Home() {
                 const inviterName = myProfile ? (myProfile.name || myProfile.userId) : 'ユーザー';
                 const title = evt.title || '無題';
                 const rawDesc = evt.description || '';
-                let shortDesc = rawDesc.substring(0, 200).replace(/\n/g, ' ');
+                let shortDesc = rawDesc.substring(0, 200);
                 if (rawDesc.length > 200) shortDesc += '…';
 
                 const loc = evt.isOnline ? (evt.locationName || 'オンライン') : (evt.locationName || '未設定');
