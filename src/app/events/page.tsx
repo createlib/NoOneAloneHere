@@ -299,9 +299,15 @@ function EventsContent() {
             const loc = ev.isOnline ? (ev.locationName || 'オンライン') : (ev.locationName || '未設定');
             const price = Number(ev.price || 0) > 0 ? `¥${Number(ev.price).toLocaleString()}` : '無料';
             
+            const dateStr = (ev.startDate === ev.endDate) 
+                ? `${ev.startDate || ''} ${ev.startTime || ''} 〜 ${ev.endTime || ''}`
+                : `${ev.startDate || ''} ${ev.startTime || ''} 〜 ${ev.endDate || ''} ${ev.endTime || ''}`;
+
             text = `${inviterName}さんからイベント招待が届きました。
 ■イベントタイトル
 　${title}
+■日時
+　${dateStr.trim()}
 ■場所
 　${loc}
 ■参加費

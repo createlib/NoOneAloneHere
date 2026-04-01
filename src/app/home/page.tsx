@@ -396,9 +396,15 @@ export default function Home() {
                 const loc = evt.isOnline ? (evt.locationName || 'オンライン') : (evt.locationName || '未設定');
                 const price = Number(evt.price || 0) > 0 ? `¥${Number(evt.price).toLocaleString()}` : '無料';
                 
+                const dateStr = (evt.startDate === evt.endDate) 
+                    ? `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endTime || ''}`
+                    : `${evt.startDate || ''} ${evt.startTime || ''} 〜 ${evt.endDate || ''} ${evt.endTime || ''}`;
+
                 const text = `${inviterName}さんからイベント招待が届きました。
 ■イベントタイトル
 　${title}
+■日時
+　${dateStr.trim()}
 ■場所
 　${loc}
 ■参加費
