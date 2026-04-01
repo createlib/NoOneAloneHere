@@ -63,6 +63,7 @@ export default function PodcastDetailPage() {
     const [relatedPodcasts, setRelatedPodcasts] = useState<PodcastData[]>([]);
     const [showNotification, setShowNotification] = useState(false);
     
+    const [isDescExpanded, setIsDescExpanded] = useState(false);
     const [isMiniPlayerActive, setIsMiniPlayerActive] = useState(false);
 
     useEffect(() => {
@@ -370,32 +371,43 @@ export default function PodcastDetailPage() {
                                     </div>
                                     エピソードの概要
                                 </h3>
-                                <div className="prose prose-stone max-w-none text-brand-700 leading-relaxed text-sm sm:text-base" dangerouslySetInnerHTML={{ __html: formatText(podcastData.description) }}></div>
+                                
+                                <div className={`relative transition-all duration-300 ${!isDescExpanded ? 'max-h-48 overflow-hidden' : ''}`}>
+                                    <div className="prose prose-stone max-w-none text-brand-700 leading-relaxed text-sm sm:text-base" dangerouslySetInnerHTML={{ __html: formatText(podcastData.description) }}></div>
 
-                                {relatedUrls.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-brand-100">
-                                        <h3 className="text-base font-bold text-brand-900 mb-4 flex items-center font-serif tracking-widest">
-                                            <div className="w-7 h-7 rounded-full bg-brand-50 flex items-center justify-center border border-brand-200 text-brand-400 shadow-inner mr-3 shrink-0">
-                                                <Share2 size={12} />
+                                    {relatedUrls.length > 0 && (
+                                        <div className="mt-8 pt-6 border-t border-brand-100 pb-2">
+                                            <h3 className="text-base font-bold text-brand-900 mb-4 flex items-center font-serif tracking-widest">
+                                                <div className="w-7 h-7 rounded-full bg-brand-50 flex items-center justify-center border border-brand-200 text-brand-400 shadow-inner mr-3 shrink-0">
+                                                    <Share2 size={12} />
+                                                </div>
+                                                関連記事
+                                            </h3>
+                                            <div className="space-y-4">
+                                                {relatedUrls.map((url, idx) => {
+                                                    const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
+                                                    if (noteMatch && noteMatch[1]) {
+                                                        return <iframe key={idx} className="w-full max-w-full rounded-sm border border-brand-200 shadow-sm" src={`https://note.com/embed/notes/${noteMatch[1]}`} style={{ border: 0, display: "block", padding: 0, margin: 0, width: "100%", height: "260px" }}></iframe>;
+                                                    } else {
+                                                        return (
+                                                            <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="block p-3 bg-brand-50 border border-brand-200 rounded-sm hover:border-[#b8860b] transition-colors text-sm text-brand-700 font-bold truncate shadow-sm">
+                                                                <Share2 size={12} className="inline mr-2 text-[#8b6a4f]" />{url}
+                                                            </a>
+                                                        );
+                                                    }
+                                                })}
                                             </div>
-                                            関連記事
-                                        </h3>
-                                        <div className="space-y-4">
-                                            {relatedUrls.map((url, idx) => {
-                                                const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
-                                                if (noteMatch && noteMatch[1]) {
-                                                    return <iframe key={idx} className="w-full max-w-full rounded-sm border border-brand-200 shadow-sm" src={`https://note.com/embed/notes/${noteMatch[1]}`} style={{ border: 0, display: "block", padding: 0, margin: 0, width: "100%", height: "260px" }}></iframe>;
-                                                } else {
-                                                    return (
-                                                        <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="block p-3 bg-brand-50 border border-brand-200 rounded-sm hover:border-[#b8860b] transition-colors text-sm text-brand-700 font-bold truncate shadow-sm">
-                                                            <Share2 size={12} className="inline mr-2 text-[#8b6a4f]" />{url}
-                                                        </a>
-                                                    );
-                                                }
-                                            })}
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+
+                                    {!isDescExpanded && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#fffdf9] to-transparent pointer-events-none"></div>
+                                    )}
+                                </div>
+                                
+                                <button onClick={() => setIsDescExpanded(!isDescExpanded)} className="mt-2 text-[#b8860b] hover:text-[#8b6508] text-sm font-bold tracking-widest transition-colors flex items-center border border-transparent hover:border-[#b8860b] px-3 py-1.5 rounded-full bg-brand-50 shadow-sm">
+                                    {isDescExpanded ? '一部を表示' : 'もっと見る'}
+                                </button>
                             </div>
 
                             <div className="mb-12 bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm">

@@ -58,6 +58,7 @@ export default function VideoDetailPage() {
     
     const [relatedVideos, setRelatedVideos] = useState<VideoData[]>([]);
     const [showNotification, setShowNotification] = useState(false);
+    const [isDescExpanded, setIsDescExpanded] = useState(false);
 
     useEffect(() => {
         if (loading) return;
@@ -320,7 +321,15 @@ export default function VideoDetailPage() {
                                 </div>
                                 概要
                             </h3>
-                            <div className="prose prose-stone max-w-none text-brand-700 leading-relaxed text-sm sm:text-base" dangerouslySetInnerHTML={{ __html: formatText(videoData.description) }}></div>
+                            <div className={`relative transition-all duration-300 ${!isDescExpanded ? 'max-h-48 overflow-hidden' : ''}`}>
+                                <div className="prose prose-stone max-w-none text-brand-700 leading-relaxed text-sm sm:text-base mb-2" dangerouslySetInnerHTML={{ __html: formatText(videoData.description) }}></div>
+                                {!isDescExpanded && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#fffdf9] to-transparent pointer-events-none"></div>
+                                )}
+                            </div>
+                            <button onClick={() => setIsDescExpanded(!isDescExpanded)} className="mt-4 text-[#b8860b] hover:text-[#8b6508] text-sm font-bold tracking-widest transition-colors flex items-center border border-transparent hover:border-[#b8860b] px-3 py-1.5 rounded-full bg-brand-50 shadow-sm">
+                                {isDescExpanded ? '一部を表示' : 'もっと見る'}
+                            </button>
                         </div>
 
                         <div className="mb-12 bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm">
