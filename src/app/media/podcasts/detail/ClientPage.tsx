@@ -487,21 +487,22 @@ export default function PodcastDetailPage() {
                     {/* Right: Related */}
                     <div className="w-full lg:w-[320px] xl:w-[400px] shrink-0">
                         <h3 className="font-bold text-brand-800 mb-5 tracking-widest text-sm border-b border-brand-200 pb-2 flex items-center"><Podcast size={16} className="mr-2 text-[#b8860b]" />新着のCAST</h3>
-                        <div className="flex flex-col gap-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             {relatedPodcasts.map(p => {
-                                const pDate = new Date(p.createdAt || p.updatedAt);
+                                const m = p.duration ? Math.floor(p.duration / 60) : 0;
+                                const s = p.duration ? Math.floor(p.duration % 60) : 0;
+                                const durStr = p.duration ? `${m}:${s < 10 ? '0'+s : s}` : '';
                                 return (
-                                    <Link key={p.id} href={`/media/podcasts/${p.id}`} className="flex gap-3 group cursor-pointer bg-[#fffdf9] p-3 rounded-md border border-brand-200 hover:border-[#b8860b]/50 hover:shadow-md transition-all">
-                                        <div className="w-20 h-20 bg-[#1a110f] rounded-md overflow-hidden shrink-0 relative border border-brand-100 shadow-inner">
-                                            <img src={p.thumbnailUrl || 'https://via.placeholder.com/150'} className="w-full h-full object-cover opacity-90 transition-transform group-hover:scale-110 duration-500" alt="" />
-                                            <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center"><Play size={18} className="text-white/90 fill-white shadow-sm" /></div>
+                                    <Link key={p.id} href={`/media/podcasts/detail?id=${p.id}`} className="flex flex-col group block transition-all w-full">
+                                        <div className="w-full aspect-square rounded-xl bg-[#e8dfd1] overflow-hidden relative shadow-sm mb-2 border border-[#e8dfd1]">
+                                            <img src={p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop'} className="w-full h-full object-cover opacity-95 group-hover:scale-105 group-hover:opacity-100 transition-transform duration-500" alt={p.title} />
+                                            {durStr && (
+                                                <div className="absolute bottom-1.5 right-1.5 bg-black/70 backdrop-blur-sm text-white text-[9px] font-sans font-bold px-1.5 py-0.5 rounded tracking-widest leading-none shadow-sm">{durStr}</div>
+                                            )}
                                         </div>
-                                        <div className="flex-1 min-w-0 flex flex-col justify-center py-0.5">
-                                            <h4 className="text-sm font-bold text-brand-900 leading-snug line-clamp-2 mb-1.5 group-hover:text-[#b8860b] transition-colors font-serif">{p.title || 'タイトルなし'}</h4>
-                                            <p className="text-[10px] text-brand-500 truncate mb-1">{p.authorName || '名無し'}</p>
-                                            <div className="flex items-center justify-between mt-auto">
-                                                <span className="text-[9px] text-brand-400 font-mono tracking-widest">{pDate.getFullYear()}/{pDate.getMonth() + 1}/{pDate.getDate()}</span>
-                                            </div>
+                                        <div className="px-0.5">
+                                            <h4 className="text-xs sm:text-sm font-bold text-[#3e2723] line-clamp-2 leading-tight group-hover:text-[#b8860b] transition-colors mb-0.5 tracking-wide font-serif">{p.title || 'タイトルなし'}</h4>
+                                            <p className="text-[10px] text-[#725b3f] line-clamp-1 truncate tracking-wide font-medium">{p.authorName || '名無し'}</p>
                                         </div>
                                     </Link>
                                 );

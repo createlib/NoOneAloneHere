@@ -148,41 +148,22 @@ export default function PodcastsPage() {
     };
 
     const PodcastCard = ({ p, isScrollMode = false }: { p: PodcastData, isScrollMode?: boolean }) => {
-        const date = new Date(p.createdAt || p.updatedAt || Date.now());
-        const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
-        const plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
         const durationStr = formatDuration(p.duration);
 
         return (
-            <Link href={`/media/podcasts/detail?id=${p.id}`} className={`flex flex-col bg-[#fffdf9] p-4 rounded-md border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group ${isScrollMode ? 'w-full h-full snap-start' : 'w-full h-full'}`}>
-                <div className="flex gap-3 sm:gap-4 items-start mb-3">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-brand-100 relative shadow-inner mt-0.5">
-                        <img src={p.thumbnailUrl || 'https://via.placeholder.com/300x300?text=CAST'} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" alt={p.title} />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
-                            <Play className="text-white/90 w-6 h-6 fill-white shadow-sm drop-shadow-md" />
-                        </div>
+            <Link href={`/media/podcasts/detail?id=${p.id}`} className={`flex flex-col group block transition-all ${isScrollMode ? 'w-36 sm:w-44 shrink-0 snap-start' : 'w-full'}`}>
+                <div className="w-full aspect-square rounded-xl bg-[#e8dfd1] overflow-hidden relative shadow-sm mb-3">
+                    <img src={p.thumbnailUrl || 'https://via.placeholder.com/300x300?text=CAST'} className="w-full h-full object-cover opacity-95 group-hover:scale-105 group-hover:opacity-100 transition-transform duration-500" alt={p.title} />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                        <Play className="text-white w-10 h-10 sm:w-12 sm:h-12 opacity-0 group-hover:opacity-100 transition-transform duration-300 drop-shadow-lg fill-white transform scale-90 group-hover:scale-100" />
                     </div>
-                    <div className="flex-1 min-w-0 flex flex-col justify-center h-14 sm:h-16">
-                        <h3 className="text-sm sm:text-base font-bold text-brand-900 leading-snug line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors m-0 tracking-wide">{p.title || 'タイトルなし'}</h3>
-                    </div>
+                    {durationStr && (
+                        <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-sans font-bold px-1.5 py-0.5 rounded tracking-widest leading-none shadow-sm">{durationStr}</div>
+                    )}
                 </div>
-                
-                <p className="text-[11px] sm:text-xs text-brand-500 line-clamp-2 leading-relaxed mb-4 flex-1 tracking-wide">{plainDesc}</p>
-                
-                <div className="flex flex-wrap items-center justify-between gap-2 mt-auto pt-3 border-t border-brand-100/70">
-                    <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                        <img src={p.authorIcon || 'https://via.placeholder.com/24?text=U'} className="w-5 h-5 rounded-full border border-brand-200 object-cover flex-shrink-0 shadow-sm" alt={p.authorName} />
-                        <span className="text-[10px] text-brand-700 truncate font-bold tracking-widest">{p.authorName || '名無し'}</span>
-                        {durationStr && <span className="text-[9px] text-[#b8860b] font-mono tracking-wider ml-1 bg-brand-50 px-1 rounded-sm border border-brand-100">{durationStr}</span>}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex gap-1 hidden sm:flex">
-                            {(p.tags || []).slice(0, 2).map((t: string) => (
-                                <span key={t} className="text-[8px] sm:text-[9px] bg-brand-50 border border-brand-200 text-[#b8860b] px-1.5 py-0.5 rounded-sm font-bold tracking-widest truncate">#{t}</span>
-                            ))}
-                        </div>
-                        <span className="text-[9px] text-brand-400 font-mono">{dateStr}</span>
-                    </div>
+                <div className="px-0.5">
+                    <h3 className="text-sm sm:text-[15px] font-bold text-brand-900 leading-tight line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors mb-1">{p.title || 'タイトルなし'}</h3>
+                    <p className="text-[11px] sm:text-xs text-brand-500 line-clamp-1 truncate tracking-wide font-medium">{p.authorName || '名無し'}</p>
                 </div>
             </Link>
         );
@@ -277,7 +258,7 @@ export default function PodcastsPage() {
                                     <p>該当する配信がありません。</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                                <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                                     {filteredPodcasts.map(p => <PodcastCard key={p.id} p={p} />)}
                                 </div>
                             )}
@@ -295,7 +276,7 @@ export default function PodcastsPage() {
                                             すべて見る <ChevronRight size={14} className="ml-1" />
                                         </button>
                                     </div>
-                                    <div className="grid grid-rows-[repeat(5,max-content)] grid-flow-col auto-cols-[280px] sm:auto-cols-[340px] overflow-x-auto gap-4 sm:gap-6 pb-4 no-scrollbar snap-x snap-mandatory px-1">
+                                    <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-2 no-scrollbar snap-x snap-mandatory px-1">
                                         {followingPodcasts.slice(0, 25).map(p => <PodcastCard key={p.id} p={p} isScrollMode={true} />)}
                                     </div>
                                 </div>
@@ -311,11 +292,11 @@ export default function PodcastsPage() {
                                         すべて見る <ChevronRight size={14} className="ml-1" />
                                     </button>
                                 </div>
-                                <div className="grid grid-rows-[repeat(5,max-content)] grid-flow-col auto-cols-[280px] sm:auto-cols-[340px] overflow-x-auto gap-4 sm:gap-6 pb-4 no-scrollbar snap-x snap-mandatory px-1">
+                                <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-2 no-scrollbar snap-x snap-mandatory px-1">
                                     {!isDataLoaded ? (
-                                        <div className="w-full flex-col flex items-center justify-center text-center py-12 text-brand-400 col-span-full">音声を読み込み中...</div>
+                                        <div className="w-full flex-col flex items-center justify-center text-center py-12 text-brand-400">音声を読み込み中...</div>
                                     ) : shuffledRecommended.length === 0 ? (
-                                        <div className="w-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200 col-span-full">
+                                        <div className="w-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200">
                                             <Mic className="text-4xl w-12 h-12 mb-3 text-brand-200" />
                                             <p>まだ配信がありません。</p>
                                         </div>
@@ -340,7 +321,7 @@ export default function PodcastsPage() {
                             <button onClick={() => setShowMoreModal({ isOpen: false, type: null })} className="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors border border-brand-200 shadow-sm"><X size={16} /></button>
                         </div>
                         <div className="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar bg-texture">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
                                 {getDisplayPodcasts().map(p => <PodcastCard key={p.id} p={p} />)}
                             </div>
                         </div>

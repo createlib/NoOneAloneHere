@@ -379,23 +379,29 @@ function PublicProfileContent() {
                                     </div>
                                 )}
 
-                                {userPodcasts.length > 0 && (
-                                    <div>
+                                    <div className="mt-8">
                                         <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest border-b border-[#e8dfd1] pb-1">公開ラジオ ({userPodcasts.length})</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {userPodcasts.map((p, i) => (
-                                                <a key={i} href={`/media/podcasts/detail?id=${p.id}`} target="_blank" rel="noreferrer" className="flex gap-3 bg-[#fdfaf5] p-3 border border-[#e8dfd1] rounded-sm hover:-translate-y-0.5 hover:shadow-md transition-all group">
-                                                    <div className="w-10 h-10 bg-[#1a110f] rounded-sm flex items-center justify-center flex-shrink-0 border border-brand-100 shadow-inner">
-                                                        <img src={p.thumbnailUrl || 'https://via.placeholder.com/100x100?text=AUDIO'} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt="" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                        <div className="text-xs font-bold text-[#3e2723] line-clamp-2 leading-tight group-hover:text-[#b8860b] transition-colors">{p.title}</div>
-                                                    </div>
-                                                </a>
-                                            ))}
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                            {userPodcasts.map((p, i) => {
+                                                const m = p.duration ? Math.floor(p.duration / 60) : 0;
+                                                const s = p.duration ? Math.floor(p.duration % 60) : 0;
+                                                const durStr = p.duration ? `${m}:${s < 10 ? '0'+s : s}` : '';
+                                                return (
+                                                    <a key={i} href={`/media/podcasts/detail?id=${p.id}`} target="_blank" rel="noreferrer" className="flex flex-col group block transition-all w-full">
+                                                        <div className="w-full aspect-square rounded-xl bg-[#e8dfd1] overflow-hidden relative shadow-sm mb-2 border border-[#e8dfd1]">
+                                                            <img src={p.thumbnailUrl || 'https://via.placeholder.com/300x300?text=CAST'} className="w-full h-full object-cover opacity-95 group-hover:scale-105 group-hover:opacity-100 transition-transform duration-500" alt={p.title} />
+                                                            {durStr && (
+                                                                <div className="absolute bottom-1.5 right-1.5 bg-black/70 backdrop-blur-sm text-white text-[9px] font-sans font-bold px-1.5 py-0.5 rounded tracking-widest leading-none shadow-sm">{durStr}</div>
+                                                            )}
+                                                        </div>
+                                                        <div className="px-0.5">
+                                                            <div className="text-xs sm:text-sm font-bold text-[#3e2723] line-clamp-2 leading-tight group-hover:text-[#b8860b] transition-colors mb-0.5 tracking-wide font-serif">{p.title || 'タイトルなし'}</div>
+                                                        </div>
+                                                    </a>
+                                                );
+                                            })}
                                         </div>
                                     </div>
-                                )}
                             </div>
                         )}
 

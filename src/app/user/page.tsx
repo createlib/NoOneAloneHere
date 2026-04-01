@@ -794,7 +794,7 @@ function UserProfileContent() {
                               )}
 
                               {(mediaTab === 'podcasts' || mediaTab === 'liked-podcasts') && (
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 pb-12">
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6 pb-12">
                                       {mediaTab === 'podcasts' && userPodcasts.length === 0 && (
                                           <div className="col-span-full flex flex-col items-center justify-center text-[#a09080] py-20 bg-[#fffdf9] rounded-sm border border-dashed border-[#e8dfd1]">
                                               <Play className="text-4xl mb-3 text-[#e8dfd1]" size={40} />
@@ -808,32 +808,20 @@ function UserProfileContent() {
                                           </div>
                                       )}
                                       {(mediaTab === 'podcasts' ? userPodcasts : likedPodcasts).map((p: any) => {
-                                          const plainDesc = p.description ? p.description.replace(/[#*`\->]/g, '').trim() : '説明がありません';
-                                          const dateStr = new Date(p.createdAt || p.updatedAt || Date.now()).toLocaleDateString();
+                                          const m = p.duration ? Math.floor(p.duration / 60) : 0;
+                                          const s = p.duration ? Math.floor(p.duration % 60) : 0;
+                                          const durStr = p.duration ? `${m}:${s < 10 ? '0'+s : s}` : '';
                                           return (
-                                              <Link href={`/media/podcasts/detail?id=${p.id}`} key={p.id} className="flex flex-col bg-[#fffdf9] p-4 rounded-md border border-[#e8dfd1] shadow-sm hover:shadow-md transition-all hover:border-[#b8860b]/50 group w-full h-full">
-                                                  <div className="flex gap-3 sm:gap-4 items-start mb-3">
-                                                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md bg-[#1a110f] overflow-hidden flex-shrink-0 border border-[#e8dfd1] relative shadow-inner mt-0.5">
-                                                          <img src={p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop'} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" />
-                                                          <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/30 transition-colors">
-                                                              <Play className="text-white/90 text-xl shadow-sm drop-shadow-md group-hover:scale-110 transition-transform" fill="white" />
-                                                          </div>
-                                                      </div>
-                                                      <div className="flex-1 min-w-0 flex flex-col justify-center h-14 sm:h-16">
-                                                          <h3 className="text-sm sm:text-base font-bold text-[#3e2723] leading-snug line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors m-0 tracking-wide">{p.title || 'タイトルなし'}</h3>
-                                                      </div>
+                                              <Link key={p.id} href={`/media/podcasts/detail?id=${p.id}`} className="flex flex-col group block transition-all w-full">
+                                                  <div className="w-full aspect-square rounded-xl bg-[#e8dfd1] overflow-hidden relative shadow-sm mb-2 border border-[#e8dfd1]">
+                                                      <img src={p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop'} className="w-full h-full object-cover opacity-95 group-hover:scale-105 group-hover:opacity-100 transition-transform duration-500" alt={p.title} />
+                                                      {durStr && (
+                                                          <div className="absolute bottom-1.5 right-1.5 bg-black/70 backdrop-blur-sm text-white text-[9px] font-sans font-bold px-1.5 py-0.5 rounded tracking-widest leading-none shadow-sm">{durStr}</div>
+                                                      )}
                                                   </div>
-                                                  
-                                                  <p className="text-[11px] sm:text-xs text-[#8b6a4f] line-clamp-2 leading-relaxed mb-4 flex-1 tracking-wide">{plainDesc}</p>
-                                                  
-                                                  <div className="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-[#e8dfd1]/70">
-                                                      <div className="flex items-center gap-1.5 min-w-0 pr-2">
-                                                          <img src={p.authorIcon || 'https://via.placeholder.com/24?text=U'} className="w-5 h-5 rounded-full border border-[#e8dfd1] object-cover flex-shrink-0 shadow-sm" alt={p.authorName} />
-                                                          <span className="text-[10px] text-[#725b3f] truncate font-bold tracking-widest">{p.authorName || '名無し'}</span>
-                                                      </div>
-                                                      <div className="flex items-center gap-2 shrink-0">
-                                                          <span className="text-[9px] text-[#a09080] font-mono">{dateStr}</span>
-                                                      </div>
+                                                  <div className="px-0.5">
+                                                      <h3 className="text-xs sm:text-sm font-bold text-[#3e2723] line-clamp-2 leading-tight group-hover:text-[#b8860b] transition-colors mb-0.5 tracking-wide font-serif">{p.title || 'タイトルなし'}</h3>
+                                                      <p className="text-[11px] text-[#725b3f] line-clamp-1 truncate tracking-wide font-medium">{p.authorName || '名無し'}</p>
                                                   </div>
                                               </Link>
                                           );
