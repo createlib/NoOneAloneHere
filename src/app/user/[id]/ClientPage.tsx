@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, APP_ID } from '@/lib/firebase';
-import { Anchor, UserX, ShieldHalf, Gavel, Hammer, Home, Feather, MapPin, Globe, Instagram, Twitter, Check, Search, Quote, ArrowLeft } from 'lucide-react';
+import { Anchor, UserX, ShieldHalf, Gavel, Hammer, Home, Feather, MapPin, Globe, Instagram, Twitter, Check, Search, Quote, ArrowLeft, CalendarHeart } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
@@ -181,6 +181,22 @@ export default function PublicProfilePage() {
                                             <div className="w-8 h-8 rounded-full bg-[#fffdf9] flex items-center justify-center text-brand-400 border border-brand-200 flex-shrink-0 shadow-sm"><MapPin size={14} /></div>
                                             <span className="font-medium">{locStr}</span>
                                         </div>
+                                        {(() => {
+                                            if (!profile?.birthDate || profile.birthVisibility === 'none') return null;
+                                            const parts = profile.birthDate.split('-');
+                                            if (parts.length !== 3) return null;
+                                            const text = profile.birthVisibility === 'monthDay' 
+                                                ? `${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日` 
+                                                : `${parts[0]}年${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日`;
+                                            return (
+                                                <div className="flex items-center gap-3 text-sm text-brand-700">
+                                                    <div className="w-8 h-8 rounded-full bg-[#fffdf9] flex items-center justify-center text-brand-400 border border-brand-200 flex-shrink-0 shadow-sm">
+                                                        <CalendarHeart size={14} />
+                                                    </div>
+                                                    <span className="font-medium">{text}生</span>
+                                                </div>
+                                            );
+                                        })()}
                                         {(profile.websiteUrl || profile.snsInstagram || profile.snsX) && (
                                             <div className="flex gap-3 pt-2">
                                                 {profile.websiteUrl && <a href={profile.websiteUrl} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full border border-brand-200 bg-[#fffdf9] flex items-center justify-center text-brand-500 hover:bg-brand-100 transition-colors shadow-sm"><Globe size={14} /></a>}

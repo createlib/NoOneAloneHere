@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy, onSnapshot, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home, SatelliteDish } from 'lucide-react';
+import { Anchor, LogOut, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home, SatelliteDish, CalendarHeart } from 'lucide-react';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -527,6 +527,22 @@ function UserProfileContent() {
                               <div className="w-8 h-8 rounded-full bg-[#f7f5f0] flex items-center justify-center text-[#8b6a4f] border border-[#e8dfd1]"><Compass size={14} /></div>
                               <span className="font-medium">{userData.prefecture || '地域未設定'} {userData.birthplace && `(出身: ${userData.birthplace})`}</span>
                           </div>
+                          {(() => {
+                              if (!userData.birthDate || userData.birthVisibility === 'none') return null;
+                              const parts = userData.birthDate.split('-');
+                              if (parts.length !== 3) return null;
+                              const text = userData.birthVisibility === 'monthDay' 
+                                  ? `${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日` 
+                                  : `${parts[0]}年${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日`;
+                              return (
+                                  <div className="flex items-center gap-3 text-sm text-[#5c4a3d]">
+                                      <div className="w-8 h-8 rounded-full bg-[#f7f5f0] flex items-center justify-center text-[#8b6a4f] border border-[#e8dfd1]">
+                                          <CalendarHeart size={14} />
+                                      </div>
+                                      <span className="font-medium">{text}生</span>
+                                  </div>
+                              );
+                          })()}
                           {(userData.websiteUrl || userData.snsInstagram || userData.snsX) && (
                               <div className="flex gap-3 pt-2">
                                   {userData.websiteUrl && <a href={userData.websiteUrl} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full border border-[#e8dfd1] bg-[#fffdf9] flex items-center justify-center text-[#725b3f] hover:bg-[#f7f5f0] transition-colors shadow-sm"><Globe size={14} /></a>}
