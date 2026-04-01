@@ -130,50 +130,17 @@ export default function EventDetailSheet({
 
     if (!event) return null;
 
-    const [startY, setStartY] = useState<number | null>(null);
-    const [currentY, setCurrentY] = useState<number | null>(null);
-
-    const handleTouchStart = (e: React.TouchEvent) => {
-        setStartY(e.touches[0].clientY);
-        setCurrentY(0);
-    };
-
-    const handleTouchMove = (e: React.TouchEvent) => {
-        if (startY === null) return;
-        const diff = e.touches[0].clientY - startY;
-        if (diff > 0) {
-            setCurrentY(diff);
-        }
-    };
-
-    const handleTouchEnd = () => {
-        if (currentY !== null && currentY > 80) {
-            onClose();
-        }
-        setStartY(null);
-        setCurrentY(null);
-    };
-
     const isOrganizerOrAdmin = userData?.userId === 'admin' || currentUserId === event.organizerId;
-    const dragStyle = currentY ? { transform: `translateY(${currentY}px)`, transition: 'none' } : {};
 
     return (
         <div 
-            className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture ${(!adjustMode && currentY === null) ? 'transition-transform duration-300 translate-y-0 lg:translate-x-0' : currentY !== null ? '' : 'transition-transform duration-300 translate-y-full lg:translate-x-full'}`}
-            style={dragStyle}
+            className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${!adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}
         >
-            <div 
-                className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" 
-                onClick={onClose}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-            >
-                <div className="w-12 h-1.5 bg-brand-300 rounded-full lg:hidden opacity-80"></div>
-                <div className="hidden lg:flex w-full justify-between items-center px-5">
-                    <span className="text-xs font-bold text-brand-500 tracking-widest">イベント詳細</span>
-                    <X className="w-5 h-5 text-brand-400 hover:text-brand-700" />
-                </div>
+            <div className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 border-b border-brand-100 flex items-center justify-between px-5 py-3 lg:py-4">
+                <span className="text-xs font-bold text-brand-500 tracking-widest">イベント詳細</span>
+                <button onClick={onClose} className="p-1.5 bg-[#f7f5f0] border border-brand-200 text-brand-600 rounded-full hover:bg-brand-100 transition-colors shadow-sm cursor-pointer" aria-label="閉じる">
+                    <X className="w-5 h-5" />
+                </button>
             </div>
             <div className="px-5 pb-20 lg:pb-8 pt-4">
                 <div>
