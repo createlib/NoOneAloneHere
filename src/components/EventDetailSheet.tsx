@@ -130,12 +130,46 @@ export default function EventDetailSheet({
 
     if (!event) return null;
 
+    const [startY, setStartY] = useState<number | null>(null);
+    const [currentY, setCurrentY] = useState<number | null>(null);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        setStartY(e.touches[0].clientY);
+        setCurrentY(0);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (startY === null) return;
+        const diff = e.touches[0].clientY - startY;
+        if (diff > 0) {
+            setCurrentY(diff);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (currentY !== null && currentY > 80) {
+            onClose();
+        }
+        setStartY(null);
+        setCurrentY(null);
+    };
+
     const isOrganizerOrAdmin = userData?.userId === 'admin' || currentUserId === event.organizerId;
+    const dragStyle = currentY ? { transform: `translateY(${currentY}px)`, transition: 'none' } : {};
 
     return (
-        <div className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${!adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}>
-            <div className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onClick={onClose}>
-                <div className="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
+        <div 
+            className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-safe-bottom max-h-[90vh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture ${(!adjustMode && currentY === null) ? 'transition-transform duration-300 translate-y-0 lg:translate-x-0' : currentY !== null ? '' : 'transition-transform duration-300 translate-y-full lg:translate-x-full'}`}
+            style={dragStyle}
+        >
+            <div 
+                className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" 
+                onClick={onClose}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+            >
+                <div className="w-12 h-1.5 bg-brand-300 rounded-full lg:hidden opacity-80"></div>
                 <div className="hidden lg:flex w-full justify-between items-center px-5">
                     <span className="text-xs font-bold text-brand-500 tracking-widest">イベント詳細</span>
                     <X className="w-5 h-5 text-brand-400 hover:text-brand-700" />

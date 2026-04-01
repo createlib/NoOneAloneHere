@@ -145,6 +145,31 @@ function EventsContent() {
     const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
     const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
+    // Job Detail Sheet Touch State
+    const [jobSheetStartY, setJobSheetStartY] = useState<number | null>(null);
+    const [jobSheetCurrentY, setJobSheetCurrentY] = useState<number | null>(null);
+
+    const handleJobTouchStart = (e: React.TouchEvent) => {
+        setJobSheetStartY(e.touches[0].clientY);
+        setJobSheetCurrentY(0);
+    };
+
+    const handleJobTouchMove = (e: React.TouchEvent) => {
+        if (jobSheetStartY === null) return;
+        const diff = e.touches[0].clientY - jobSheetStartY;
+        if (diff > 0) {
+            setJobSheetCurrentY(diff);
+        }
+    };
+
+    const handleJobTouchEnd = () => {
+        if (jobSheetCurrentY !== null && jobSheetCurrentY > 80) {
+            setSelectedJob(null);
+        }
+        setJobSheetStartY(null);
+        setJobSheetCurrentY(null);
+    };
+
     const searchUsers = async (q: string) => {
         if (!q.trim()) { setUserSearchResults([]); return; }
         setIsSearchingUsers(true);
@@ -1322,9 +1347,18 @@ ${registerUrl}`;
             />
 
             {/* Job Detail Sheet (placeholder) */}
-            <div className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-24 max-h-[90dvh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${selectedJob && !adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}>
-                <div className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" onClick={() => setSelectedJob(null)}>
-                    <div className="w-12 h-1 bg-brand-300 rounded-full lg:hidden"></div>
+            <div 
+                className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-24 max-h-[90dvh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture ${(!adjustMode && selectedJob && jobSheetCurrentY === null) ? 'transition-transform duration-300 translate-y-0 lg:translate-x-0' : jobSheetCurrentY !== null ? '' : 'transition-transform duration-300 translate-y-full lg:translate-x-full'}`}
+                style={jobSheetCurrentY ? { transform: `translateY(${jobSheetCurrentY}px)`, transition: 'none' } : {}}
+            >
+                <div 
+                    className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 pt-3 pb-2 flex justify-center border-b border-brand-100 lg:pt-4 lg:pb-4 cursor-pointer" 
+                    onClick={() => setSelectedJob(null)}
+                    onTouchStart={handleJobTouchStart}
+                    onTouchMove={handleJobTouchMove}
+                    onTouchEnd={handleJobTouchEnd}
+                >
+                    <div className="w-12 h-1.5 bg-brand-300 rounded-full lg:hidden opacity-80"></div>
                     <div className="hidden lg:flex w-full justify-between items-center px-5">
                         <span className="text-xs font-bold text-brand-500 tracking-widest">仕事・依頼 詳細</span>
                         <X className="w-5 h-5 text-brand-400 hover:text-brand-700" />
