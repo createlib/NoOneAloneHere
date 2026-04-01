@@ -54,7 +54,7 @@ export function EventParticipantsList({ eventId, isPublic, isOrganizer, refreshK
             <span className="text-xs font-bold text-brand-900 bg-[#f7f5f0] border border-brand-200 px-2 py-0.5 rounded-sm shadow-sm absolute right-0 -top-7 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">{uids.length} 名の参加予定</span>
             <div className="flex flex-wrap gap-1.5 justify-end w-full pl-6">
                 {users.map((u: any) => (
-                    <Link key={u.uid} href={`/user/${u.uid}`} title={u.name || 'User'} className="relative group/avatar cursor-pointer">
+                    <Link key={u.uid} href={`/user?uid=${u.uid}`} title={u.name || 'User'} className="relative group/avatar cursor-pointer">
                         {u.photoURL ? (
                             <img src={u.photoURL} alt={u.name || 'User'} className="w-8 h-8 rounded-sm border border-brand-300 object-cover shadow-sm bg-white group-hover/avatar:border-[#b8860b] group-hover/avatar:shadow-md transition-all z-0" />
                         ) : (
