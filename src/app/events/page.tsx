@@ -1045,13 +1045,19 @@ ${registerUrl}`;
                                 <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><Briefcase className="w-4 h-4 inline mr-1"/>業種カテゴリ</label>
                                 <select value={jobCategoryFilter} onChange={e=>setJobCategoryFilter(e.target.value)} className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:outline-none focus:border-brand-500 font-serif tracking-widest">
                                     <option value="">指定なし</option>
-                                    <option value="デザイン">デザイン</option>
-                                    <option value="エンジニア">エンジニア</option>
-                                    <option value="マーケティング">マーケティング</option>
-                                    <option value="営業">営業</option>
-                                    <option value="動画制作">動画制作</option>
-                                    <option value="ライティング">ライティング</option>
-                                    <option value="事務・サポート">事務・サポート</option>
+                                    <option value="デザイン">デザイン (仕事)</option>
+                                    <option value="エンジニア">エンジニア (仕事)</option>
+                                    <option value="マーケティング">マーケティング (仕事)</option>
+                                    <option value="営業">営業 (仕事)</option>
+                                    <option value="動画制作">動画制作・写真撮影 (仕事)</option>
+                                    <option value="ライティング">ライティング (仕事)</option>
+                                    <option value="事務・サポート">事務・サポート (仕事)</option>
+                                    <option value="各種相談・教えて">各種相談・教えて (カジュアル)</option>
+                                    <option value="作業手伝い・ボランティア">作業手伝い・ボランティア (カジュアル)</option>
+                                    <option value="おつかい・代行">おつかい・代行 (カジュアル)</option>
+                                    <option value="趣味・スキル交換">趣味・スキル交換 (カジュアル)</option>
+                                    <option value="あげる・譲る">不要品あげる・譲る (譲渡)</option>
+                                    <option value="譲ってほしい・貸して">譲ってほしい・貸して (譲受)</option>
                                     <option value="その他">その他</option>
                                 </select>
                             </div>
@@ -1217,11 +1223,15 @@ ${registerUrl}`;
                             <div className="space-y-4">
                                 {filteredJobs.map(job => (
                                     <div key={job.id} className="bg-white border text-brand-800 border-brand-200 rounded-sm p-4 hover:bg-brand-50 transition-colors shadow-sm cursor-pointer relative">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <span className="text-[10px] font-bold bg-brand-100 text-brand-700 px-2 py-0.5 rounded-sm tracking-widest border border-brand-200">
-                                                {job.listingType === 'casual_request' ? 'お手伝い' : (job.listingType === 'lending' ? '貸し借り' : (job.listingType === 'member' ? 'メンバー募集' : (job.type || '業務委託')))}
+                                        <div className="flex justify-between items-start mb-3">
+                                            <span className={`text-[10px] font-bold px-2.5 py-1.5 rounded-sm tracking-widest shadow-sm ${
+                                                job.listingType === 'casual_request' || job.listingType === 'lending' 
+                                                    ? 'bg-orange-50 text-orange-800 border border-orange-300' 
+                                                    : 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]'
+                                            }`}>
+                                                {job.listingType === 'casual_request' ? '🙋 カジュアル相談・依頼' : (job.listingType === 'lending' ? '🎁 貸し借り・譲渡' : (job.listingType === 'member' ? '🤝 メンバー募集' : `💼 ${job.type || '業務委託'}`))}
                                             </span>
-                                            {job.listingType === 'formal_job' && job.category && <span className="text-[10px] text-brand-400 tracking-widest font-medium"><Briefcase className="w-3 h-3 inline mr-1"/> {job.category}</span>}
+                                            {job.category && <span className="text-[10px] text-brand-500 font-bold tracking-widest bg-brand-50 border border-brand-200 px-2 py-1 rounded-sm"><Briefcase className="w-3 h-3 inline mr-1 text-brand-400"/> {job.category}</span>}
                                         </div>
                                         <h3 className="font-bold text-brand-900 text-base leading-tight mb-2 tracking-widest font-serif pr-16">{job.title}</h3>
                                         <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
@@ -1583,11 +1593,11 @@ ${registerUrl}`;
                         <div className="p-5 overflow-y-auto flex-1 space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">募集タイプ</label>
-                                <select value={jobFormData.listingType} onChange={e=>setJobFormData({...jobFormData, listingType: e.target.value})} className="w-full border border-brand-300 rounded-sm text-sm p-3 bg-brand-50 mb-2 font-bold text-brand-900 border-l-4 border-l-[#b8860b] shadow-sm tracking-widest">
-                                    <option value="formal_job">求人・業務委託</option>
-                                    <option value="casual_request">軽いお願い・お手伝い</option>
-                                    <option value="lending">モノや場所の貸し借り</option>
-                                    <option value="member">仲間・パートナー募集</option>
+                                <select value={jobFormData.listingType} onChange={e=>setJobFormData({...jobFormData, listingType: e.target.value, category: e.target.value === 'casual_request' ? '各種相談・教えて' : (e.target.value === 'lending' ? 'あげる・譲る' : 'デザイン')})} className="w-full border border-brand-300 rounded-sm text-sm p-3 bg-brand-50 mb-2 font-bold text-brand-900 border-l-4 border-l-[#b8860b] shadow-sm tracking-widest">
+                                    <option value="formal_job">💼 本格的な求人・業務委託</option>
+                                    <option value="casual_request">🙋 軽いお願い・日常の相談（インスタ教えて等）</option>
+                                    <option value="lending">🎁 不用品の譲渡・モノの貸し借り</option>
+                                    <option value="member">🤝 仲間・共同創業者募集</option>
                                 </select>
                                 <p className="text-[10px] text-brand-500 mb-1 font-bold">※選択したタイプに合わせて続く入力項目が最適化されます。</p>
                             </div>
@@ -1602,7 +1612,7 @@ ${registerUrl}`;
                                 <textarea value={jobFormData.desc} onChange={e=>setJobFormData({...jobFormData, desc: e.target.value})} rows={6} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white leading-relaxed" required></textarea>
                             </div>
 
-                            {jobFormData.listingType === 'formal_job' && (
+                            {jobFormData.listingType === 'formal_job' ? (
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
                                         <label className="block text-xs font-bold text-brand-700 mb-1">募集形式</label>
@@ -1621,19 +1631,39 @@ ${registerUrl}`;
                                             <option value="エンジニア">エンジニア</option>
                                             <option value="マーケティング">マーケティング</option>
                                             <option value="営業">営業</option>
-                                            <option value="動画制作">動画制作</option>
+                                            <option value="動画制作">動画制作・写真撮影</option>
                                             <option value="ライティング">ライティング</option>
                                             <option value="事務・サポート">事務・サポート</option>
                                             <option value="その他">その他</option>
                                         </select>
                                     </div>
                                 </div>
-                            )}
-
-                            {(jobFormData.listingType === 'formal_job' || jobFormData.listingType === 'member') && (
+                            ) : jobFormData.listingType === 'casual_request' ? (
                                 <div>
-                                    <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">必須・歓迎スキル</label>
-                                    <input type="text" value={jobFormData.skills} onChange={e=>setJobFormData({...jobFormData, skills: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder="例: Figma, React等の経験" />
+                                    <label className="block text-xs font-bold text-brand-700 mb-1">カテゴリ</label>
+                                    <select value={jobFormData.category} onChange={e=>setJobFormData({...jobFormData, category: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                        <option value="各種相談・教えて">各種相談・教えて (インスタ運用など)</option>
+                                        <option value="作業手伝い・ボランティア">作業手伝い・ボランティア</option>
+                                        <option value="おつかい・代行">おつかい・代行</option>
+                                        <option value="趣味・スキル交換">趣味・スキル交換</option>
+                                        <option value="その他">その他</option>
+                                    </select>
+                                </div>
+                            ) : jobFormData.listingType === 'lending' ? (
+                                <div>
+                                    <label className="block text-xs font-bold text-brand-700 mb-1">取引形態</label>
+                                    <select value={jobFormData.category} onChange={e=>setJobFormData({...jobFormData, category: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white">
+                                        <option value="あげる・譲る">不要品を無償で譲る・あげる</option>
+                                        <option value="譲ってほしい・貸して">譲ってほしい・探している</option>
+                                        <option value="有料で譲る・売る">有料で売る・提供する</option>
+                                    </select>
+                                </div>
+                            ) : null}
+
+                            {(jobFormData.listingType === 'formal_job' || jobFormData.listingType === 'member' || jobFormData.listingType === 'casual_request') && (
+                                <div>
+                                    <label className="block text-xs font-bold text-brand-700 mb-1 tracking-widest">{jobFormData.listingType === 'formal_job' ? '必須・歓迎スキル' : 'こんな人に来てほしい・求める条件'}</label>
+                                    <input type="text" value={jobFormData.skills} onChange={e=>setJobFormData({...jobFormData, skills: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" placeholder={jobFormData.listingType === 'formal_job' ? "例: Figma, React等の経験" : "例: インスタに強くて親切な人"} />
                                 </div>
                             )}
 
