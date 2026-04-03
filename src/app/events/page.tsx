@@ -40,6 +40,7 @@ type EventData = {
     visibilityMode?: string;
     allowedUsers?: string[];
     allowedUserDetails?: {uid: string, name: string}[];
+    chatJoinMode?: 'auto' | 'approval';
     createdAt?: any;
     updatedAt?: any;
 };
@@ -167,7 +168,8 @@ function EventsContent() {
     const [eventFormData, setEventFormData] = useState({
         title: '', price: '0', startDate: '', startTime: '', endDate: '', endTime: '', desc: '',
         isOnline: false, onlineTool: '', onlineUrl: '', locationName: '', locationQuery: '', participantPublic: true,
-        visibilityMode: 'public', allowedUsers: [] as string[], allowedUserDetails: [] as {uid: string, name: string}[]
+        visibilityMode: 'public', allowedUsers: [] as string[], allowedUserDetails: [] as {uid: string, name: string}[],
+        chatJoinMode: 'auto'
     });
     const [eventFiles, setEventFiles] = useState<{file: File, preview: string}[]>([]);
     const [eventOldImages, setEventOldImages] = useState<string[]>([]);
@@ -365,7 +367,8 @@ ${registerUrl}`;
                     participantPublic: ev.isParticipantsPublic ?? true,
                     visibilityMode: ev.visibilityMode || 'public',
                     allowedUsers: ev.allowedUsers || [],
-                    allowedUserDetails: ev.allowedUserDetails || []
+                    allowedUserDetails: ev.allowedUserDetails || [],
+                    chatJoinMode: ev.chatJoinMode || 'auto'
                 });
                 setEditingEventId(editEventId);
                 setEventSelectedTags(new Set(ev.tags || []));
@@ -658,7 +661,8 @@ ${registerUrl}`;
                     startTime: ev.startTime || '', endDate: ev.endDate || '', endTime: ev.endTime || '', desc: ev.description || '',
                     isOnline: !!ev.isOnline, onlineTool: ev.locationName?.replace('オンライン (', '')?.replace(')', '') || '',
                     onlineUrl: ev.onlineUrl || '', locationName: ev.locationName || '', locationQuery: '', participantPublic: ev.isParticipantsPublic !== false,
-                    visibilityMode: ev.visibilityMode || 'public', allowedUsers: ev.allowedUsers || [], allowedUserDetails: ev.allowedUserDetails || []
+                    visibilityMode: ev.visibilityMode || 'public', allowedUsers: ev.allowedUsers || [], allowedUserDetails: ev.allowedUserDetails || [],
+                    chatJoinMode: ev.chatJoinMode || 'auto'
                 });
                 setEventSelectedTags(new Set(ev.tags || []));
                 setEventOldImages(ev.imageUrls || (ev.thumbnailUrl ? [ev.thumbnailUrl] : []));
@@ -670,7 +674,8 @@ ${registerUrl}`;
             setEventFormData({
                 title: '', price: '0', startDate: new Date().toISOString().split('T')[0], startTime: '19:00', endDate: new Date().toISOString().split('T')[0], endTime: '21:00', desc: '',
                 isOnline: false, onlineTool: '', onlineUrl: '', locationName: '', locationQuery: '', participantPublic: true,
-                visibilityMode: 'public', allowedUsers: [], allowedUserDetails: []
+                visibilityMode: 'public', allowedUsers: [], allowedUserDetails: [],
+                chatJoinMode: 'auto'
             });
             setEventSelectedTags(new Set());
             setEventOldImages([]);
@@ -784,6 +789,7 @@ ${registerUrl}`;
                 evtData.createdAt = serverTimestamp();
                 evtData.participantCount = 0;
                 evtData.participants = [];
+                evtData.chatJoinMode = eventFormData.chatJoinMode;
             }
 
             if (eventFormData.isOnline) {
@@ -814,6 +820,22 @@ ${registerUrl}`;
                     });
                     await Promise.allSettled(promises);
                 } catch(e) { console.error("Event Notification Gen Failed:", e); }
+
+                // Create associated NoahChat event room (only if not editing, or handle creation)
+                try {
+                     const expDate = new Date(new Date(`${eventFormData.endDate}T${eventFormData.endTime}`).getTime() + 10 * 24 * 60 * 60 * 1000);
+                     await addDoc(collection(db, 'rooms'), {
+                         type: 'event',
+                         groupId: newDocRef.id,
+                         groupName: eventFormData.title,
+                         participants: [finalOrganizerId],
+                         createdAt: serverTimestamp(),
+                         updatedAt: serverTimestamp(),
+                         joinMode: eventFormData.chatJoinMode || 'auto',
+                         expiresAt: expDate.toISOString(),
+                         organizerId: finalOrganizerId,
+                     });
+                } catch(e) { console.error("Event Room Creation Failed:", e); }
 
                 alert('イベントを企画しました！');
             }
@@ -931,6 +953,22 @@ ${registerUrl}`;
                 const evtRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', evt.id);
                 try {
                     await updateDoc(evtRef, { participants: arrayUnion(user.uid), participantCount: (evt.participantCount || 0) + 1 });
+
+                    // Join NoahChat Event Room
+                    const joinMode = evt.chatJoinMode || 'auto';
+                    const roomsRef = collection(db, 'rooms');
+                    const qRooms = query(roomsRef, where('groupId', '==', evt.id), where('type', '==', 'event'));
+                    getDocs(qRooms).then(snap => {
+                       if (!snap.empty) {
+                          const roomDoc = snap.docs[0];
+                          if (joinMode === 'approval') {
+                             updateDoc(doc(db, 'rooms', roomDoc.id), { pendingParticipants: arrayUnion(user.uid) });
+                          } else {
+                             updateDoc(doc(db, 'rooms', roomDoc.id), { participants: arrayUnion(user.uid) });
+                          }
+                       }
+                    }).catch(console.error);
+
                 } catch(e) {}
 
                 setEventJoinStatusMap(prev => ({...prev, [evt.id]: true}));
@@ -1524,6 +1562,18 @@ ${registerUrl}`;
                                     <option value="following">フォロー中に公開 (Following)</option>
                                     <option value="private">選択した乗組員のみ (Private / Selected only)</option>
                                 </select>
+
+                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest border-t border-brand-200 pt-3">NoahChat 自動作成グループの参加設定</label>
+                                <div className="flex gap-4 mb-4">
+                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-800">
+                                        <input type="radio" checked={eventFormData.chatJoinMode === 'auto'} onChange={() => setEventFormData({...eventFormData, chatJoinMode: 'auto'})} className="text-brand-600 focus:ring-brand-500" />
+                                        自動参加（誰でも）
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-800">
+                                        <input type="radio" checked={eventFormData.chatJoinMode === 'approval'} onChange={() => setEventFormData({...eventFormData, chatJoinMode: 'approval'})} className="text-brand-600 focus:ring-brand-500" />
+                                        承認制（主催者が承認）
+                                    </label>
+                                </div>
 
                                 <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest border-t border-brand-200 pt-3">＋ 特定の乗組員を追加して公開</label>
                                 <div className="flex gap-2 mb-3">
