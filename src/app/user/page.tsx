@@ -240,33 +240,34 @@ function UserProfileContent() {
       } finally {
         setLoading(false);
       }
+      return targetId;
     }
     
-    async function loadUserMedia() {
-      if (!targetUid) return;
+    async function loadUserMedia(uid: string) {
+      if (!uid) return;
       setMediaLoading(true);
       try {
         const videosRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos');
-        const vq = query(videosRef, where('authorId', '==', targetUid));
+        const vq = query(videosRef, where('authorId', '==', uid));
         const vSnap = await getDocs(vq);
         const videos = vSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         videos.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         setUserVideos(videos);
 
         const podsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts');
-        const pq = query(podsRef, where('authorId', '==', targetUid));
+        const pq = query(podsRef, where('authorId', '==', uid));
         const pSnap = await getDocs(pq);
         const pods = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         pods.sort((a: any, b: any) => new Date(b.createdAt || b.updatedAt || 0).getTime() - new Date(a.createdAt || a.updatedAt || 0).getTime());
         setUserPodcasts(pods);
 
-        const playRef = collection(db, 'artifacts', APP_ID, 'users', targetUid, 'playlists');
+        const playRef = collection(db, 'artifacts', APP_ID, 'users', uid, 'playlists');
         const playSnap = await getDocs(playRef);
         const lists = playSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         lists.sort((a: any, b: any) => (b.updatedAt || b.createdAt || 0) - (a.createdAt || a.updatedAt || 0));
         setUserPlaylists(lists);
 
-        if (user && targetUid === user.uid) {
+        if (user && uid === user.uid) {
             const allVidSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos'));
             const lvPromises = allVidSnap.docs.map(async (d) => {
                 const lSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'videos', d.id, 'likes', user.uid));
@@ -294,13 +295,13 @@ function UserProfileContent() {
     }
 
     if (user || isMock) {
-        loadData().then(() => {
-            if (targetUid) loadUserMedia();
+        loadData().then((uid) => {
+            if (uid) loadUserMedia(uid);
         });
     } else if (!loading) {
         setLoading(false);
     }
-  }, [user, loading, uidParam, targetUid, mediaRefreshKey]);
+  }, [user, uidParam, mediaRefreshKey]);
 
   useEffect(() => {
       if (!targetUid) return;
