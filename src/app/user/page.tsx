@@ -128,6 +128,13 @@ function UserProfileContent() {
       if (!user && !isMock) return;
       
       let targetId = uidParam || (user?.uid || 'admin_mock');
+      
+      // Clear data if we are switching users to prevent old data from sticking around on error
+      if (targetId !== targetUid) {
+          setUserData(null);
+          setLoading(true);
+      }
+      
       setTargetUid(targetId);
       const selfViewing = targetId === (user?.uid || 'admin_mock');
       setIsSelf(selfViewing);
@@ -194,10 +201,14 @@ function UserProfileContent() {
            if (myAdmin) loadPrivData = true;
 
            if (loadPrivData) {
-             const privateRef = doc(db, 'artifacts', APP_ID, 'users', targetId, 'profile', 'data');
-             const privateSnap = await getDoc(privateRef);
-             if (privateSnap.exists()) {
-                 loadedData = { ...(loadedData || {}), ...privateSnap.data() };
+             try {
+               const privateRef = doc(db, 'artifacts', APP_ID, 'users', targetId, 'profile', 'data');
+               const privateSnap = await getDoc(privateRef);
+               if (privateSnap.exists()) {
+                   loadedData = { ...(loadedData || {}), ...privateSnap.data() };
+               }
+             } catch (privErr) {
+               console.warn("Private data access denied or failed", privErr);
              }
            }
            
@@ -212,13 +223,17 @@ function UserProfileContent() {
            }
         
         // Load Counts
-        const fowColl = collection(db, 'artifacts', APP_ID, 'users', targetId, 'following');
-        const countSnapFow = await getCountFromServer(fowColl);
-        setFollowingCount(countSnapFow.data().count);
-        
-        const flerColl = collection(db, 'artifacts', APP_ID, 'users', targetId, 'followers');
-        const countSnapFler = await getCountFromServer(flerColl);
-        setFollowersCount(countSnapFler.data().count);
+        try {
+          const fowColl = collection(db, 'artifacts', APP_ID, 'users', targetId, 'following');
+          const countSnapFow = await getCountFromServer(fowColl);
+          setFollowingCount(countSnapFow.data().count);
+          
+          const flerColl = collection(db, 'artifacts', APP_ID, 'users', targetId, 'followers');
+          const countSnapFler = await getCountFromServer(flerColl);
+          setFollowersCount(countSnapFler.data().count);
+        } catch (countErr) {
+          console.warn("Could not fetch user connection counts", countErr);
+        }
         
       } catch (e) {
         console.error("Error loading profile:", e);
