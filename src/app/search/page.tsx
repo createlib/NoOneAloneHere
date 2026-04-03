@@ -113,10 +113,8 @@ function SearchContent() {
                 let usersList: UserData[] = [];
                 snap.forEach(d => {
                     const data = d.data() as UserData;
-                    // Only exclude users explicitly marked as hidden, unless current user is admin
-                    if (data.isHidden !== true || adminFlag) {
-                        usersList.push({ ...data, id: d.id });
-                    }
+                    // We fetch all users, including hidden ones, to allow exact ID search.
+                    usersList.push({ ...data, id: d.id });
                 });
                 
                 // Sort by profileScore desc, then name
@@ -158,6 +156,14 @@ function SearchContent() {
                     ...safeArray(u.canOffer), ...safeArray(u.lookingFor)
                 ].join(' ').toLowerCase();
                 matchSearch = searchable.includes(query);
+            }
+
+            // Hidden users logic: If the user is hidden and the current visitor is not an admin,
+            // they should ONLY be visible if the search query exactly matches their userId.
+            if (u.isHidden && !isAdmin) {
+                if (!query || query !== String(u.userId).toLowerCase()) {
+                    return false; // Automatically filter out hidden users for regular searches
+                }
             }
 
             let matchArea = true;
