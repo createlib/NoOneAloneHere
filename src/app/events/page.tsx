@@ -1563,18 +1563,6 @@ ${registerUrl}`;
                                     <option value="private">選択した乗組員のみ (Private / Selected only)</option>
                                 </select>
 
-                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest border-t border-brand-200 pt-3">NoahChat 自動作成グループの参加設定</label>
-                                <div className="flex gap-4 mb-4">
-                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-800">
-                                        <input type="radio" checked={eventFormData.chatJoinMode === 'auto'} onChange={() => setEventFormData({...eventFormData, chatJoinMode: 'auto'})} className="text-brand-600 focus:ring-brand-500" />
-                                        自動参加（誰でも）
-                                    </label>
-                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-800">
-                                        <input type="radio" checked={eventFormData.chatJoinMode === 'approval'} onChange={() => setEventFormData({...eventFormData, chatJoinMode: 'approval'})} className="text-brand-600 focus:ring-brand-500" />
-                                        承認制（主催者が承認）
-                                    </label>
-                                </div>
-
                                 <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest border-t border-brand-200 pt-3">＋ 特定の乗組員を追加して公開</label>
                                 <div className="flex gap-2 mb-3">
                                     <input type="text" value={userSearchQuery} onChange={e=>setUserSearchQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); searchUsers(userSearchQuery); }}} placeholder="ユーザー名やIDで検索" className="flex-1 border border-brand-200 rounded-sm text-sm p-2 bg-white" />
@@ -1614,6 +1602,18 @@ ${registerUrl}`;
                                         ))}
                                     </div>
                                 )}
+
+                                <label className="block text-xs font-bold text-brand-700 mb-2 mt-4 tracking-widest border-t border-brand-200 pt-3">NoahChat 自動作成グループの参加設定</label>
+                                <div className="flex gap-4">
+                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-800">
+                                        <input type="radio" checked={eventFormData.chatJoinMode === 'auto'} onChange={() => setEventFormData({...eventFormData, chatJoinMode: 'auto'})} className="text-brand-600 focus:ring-brand-500" />
+                                        自動参加（誰でも）
+                                    </label>
+                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-800">
+                                        <input type="radio" checked={eventFormData.chatJoinMode === 'approval'} onChange={() => setEventFormData({...eventFormData, chatJoinMode: 'approval'})} className="text-brand-600 focus:ring-brand-500" />
+                                        承認制（主催者が承認）
+                                    </label>
+                                </div>
                             </div>
                             
                             {userData?.userId === 'admin' && (
