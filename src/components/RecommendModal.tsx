@@ -11,9 +11,10 @@ interface RecommendModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  defaultTargetUser?: any | null; // 追加: 特定のユーザーページから直接開く場合
 }
 
-export default function RecommendModal({ isOpen, onClose, onSuccess }: RecommendModalProps) {
+export default function RecommendModal({ isOpen, onClose, onSuccess, defaultTargetUser }: RecommendModalProps) {
   const { user } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
@@ -21,6 +22,17 @@ export default function RecommendModal({ isOpen, onClose, onSuccess }: Recommend
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (defaultTargetUser) {
+        setSelectedUser(defaultTargetUser);
+      } else {
+        setSelectedUser(null);
+      }
+      setContent('');
+    }
+  }, [isOpen, defaultTargetUser]);
 
   useEffect(() => {
     if (isOpen && user) {

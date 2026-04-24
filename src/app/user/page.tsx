@@ -463,8 +463,18 @@ function UserProfileContent() {
                                   </Link>
                               )}
                               {!isSelf && (
-                                  <button onClick={toggleFollow} className={`inline-flex items-center px-4 py-2 ${isFollowing ? 'border border-[#b8860b] text-[#3e2723] bg-[#fffdf9]' : 'border border-transparent bg-[#3e2723] text-[#f7f5f0] hover:bg-[#2a1a17]'} shadow-sm text-xs font-bold rounded-sm transition-colors tracking-widest font-serif`}>
-                                      {isFollowing ? 'フォロー中' : 'フォロー'}
+                                  <>
+                                      <button onClick={toggleFollow} className={`inline-flex items-center px-4 py-2 ${isFollowing ? 'border border-[#b8860b] text-[#3e2723] bg-[#fffdf9]' : 'border border-transparent bg-[#3e2723] text-[#f7f5f0] hover:bg-[#2a1a17]'} shadow-sm text-xs font-bold rounded-sm transition-colors tracking-widest font-serif`}>
+                                          {isFollowing ? 'フォロー中' : 'フォロー'}
+                                      </button>
+                                      <button onClick={() => setIsRecommendModalOpen(true)} className="inline-flex items-center px-4 py-2 border border-[#e8dfd1] text-[#725b3f] bg-[#fffdf9] hover:bg-[#f7f5f0] shadow-sm text-xs font-bold rounded-sm transition-colors tracking-widest font-serif">
+                                          おすすめする
+                                      </button>
+                                  </>
+                              )}
+                              {isSelf && (
+                                  <button onClick={() => setIsRecommendModalOpen(true)} className="inline-flex items-center px-4 py-2 border border-[#b8860b] text-[#3e2723] bg-[#fdfaf5] hover:bg-[#f7f5f0] shadow-sm text-xs font-bold rounded-sm transition-colors tracking-widest font-serif ml-2">
+                                      ⊕ おすすめを投稿
                                   </button>
                               )}
                           </div>
@@ -911,6 +921,13 @@ function UserProfileContent() {
           type={followModalType || 'followers'} 
           targetUid={targetUid || user?.uid || ''} 
           myUid={user?.uid} 
+      />
+
+      <RecommendModal 
+          isOpen={isRecommendModalOpen} 
+          onClose={() => setIsRecommendModalOpen(false)} 
+          onSuccess={() => setActiveTab('recommendations')}
+          defaultTargetUser={!isSelf && userData ? { uid: targetUid, ...userData } : null}
       />
 
       {isMemoOpen && !isSelf && targetUid && user && (
