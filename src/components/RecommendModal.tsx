@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Search, User, Check, Send } from 'lucide-react';
+import { X, Search, User, Check, Send, ImagePlus, Trash2 } from 'lucide-react';
 import { collection, query, getDocs } from 'firebase/firestore';
-import { db, APP_ID } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage, APP_ID } from '@/lib/firebase';
 import { createRecommendation } from '@/lib/recommendations';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -21,6 +22,8 @@ export default function RecommendModal({ isOpen, onClose, onSuccess, defaultTarg
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [content, setContent] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -31,6 +34,8 @@ export default function RecommendModal({ isOpen, onClose, onSuccess, defaultTarg
         setSelectedUser(null);
       }
       setContent('');
+      setFile(null);
+      setPreviewUrl(null);
     }
   }, [isOpen, defaultTargetUser]);
 
@@ -64,12 +69,23 @@ export default function RecommendModal({ isOpen, onClose, onSuccess, defaultTarg
     if (!user || !selectedUser || !content.trim()) return;
     setLoading(true);
     try {
+      let mediaUrl = '';
+      if (file) {
+        const ext = file.name.split('.').pop();
+        const storageRef = ref(storage, `profiles/${user.uid}/recommend_${Date.now()}.${ext}`);
+        const snap = await uploadBytes(storageRef, file);
+        mediaUrl = await getDownloadURL(snap.ref);
+      }
+
       await createRecommendation({
         authorId: user.uid,
         targetUserId: selectedUser.uid,
         content: content.trim(),
+        mediaUrl: mediaUrl || undefined,
       });
       setContent('');
+      setFile(null);
+      setPreviewUrl(null);
       setSelectedUser(null);
       if (onSuccess) onSuccess();
       onClose();
@@ -78,6 +94,15 @@ export default function RecommendModal({ isOpen, onClose, onSuccess, defaultTarg
       alert('投稿に失敗しました');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      const objUrl = URL.createObjectURL(selectedFile);
+      setPreviewUrl(objUrl);
     }
   };
 
@@ -149,10 +174,29 @@ export default function RecommendModal({ isOpen, onClose, onSuccess, defaultTarg
                 />
               </div>
 
-              <div className="bg-[#fffdf9] border border-dashed border-[#e8dfd1] p-4 text-center rounded-sm">
-                <p className="text-xs text-[#a09080] mb-2">背景にする画像/動画（オプション）</p>
-                <button disabled className="text-xs px-3 py-1 bg-[#f7f5f0] border border-[#e8dfd1] text-[#a09080] rounded-sm cursor-not-allowed">ファイルを選択</button>
-                <p className="text-[10px] text-[#c8b9a6] mt-2">※現在はテキストのみの投稿が可能です</p>
+              <div className="bg-[#fffdf9] border border-dashed border-[#e8dfd1] p-4 text-center rounded-sm relative">
+                <p className="text-xs font-bold text-[#725b3f] mb-3 tracking-widest">背景画像（任意）</p>
+                {previewUrl ? (
+                  <div className="relative inline-block w-full max-w-[200px] aspect-[3/4] mx-auto rounded-sm overflow-hidden border border-[#e8dfd1]">
+                    <img src={previewUrl} className="w-full h-full object-cover" />
+                    <button 
+                      onClick={() => { setFile(null); setPreviewUrl(null); }}
+                      className="absolute top-2 right-2 bg-black/60 text-white p-1.5 rounded-full hover:bg-black/80 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-[#f7f5f0] border border-[#e8dfd1] text-[#725b3f] font-bold text-xs tracking-widest rounded-sm hover:bg-[#fffdf9] hover:border-[#b8860b] transition-all shadow-sm">
+                      <ImagePlus size={16} className="text-[#b8860b]" /> 画像を選択する
+                      <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                    </label>
+                    <p className="text-[10px] text-[#c8b9a6] mt-3 tracking-widest leading-relaxed text-left max-w-xs mx-auto">
+                      ※設定しない場合は、テキストだけのシンプルなカードになります。縦長（3:4等）の画像が綺麗に表示されます。
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
