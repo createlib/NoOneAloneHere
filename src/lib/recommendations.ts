@@ -1,5 +1,5 @@
 import { collection, addDoc, getDocs, query, where, orderBy, doc, Timestamp, getDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, APP_ID } from './firebase';
 
 export interface Recommendation {
   id?: string;
@@ -11,12 +11,13 @@ export interface Recommendation {
   createdAt: Date;
 }
 
-const COLLECTION_NAME = 'recommendations';
+// 共通のコレクション参照取得関数
+const getRecommendationsCollection = () => collection(db, 'artifacts', APP_ID, 'public', 'data', 'recommendations');
 
 // おすすめを投稿する
 export const createRecommendation = async (data: Omit<Recommendation, 'id' | 'createdAt'>): Promise<string> => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+    const docRef = await addDoc(getRecommendationsCollection(), {
       ...data,
       createdAt: Timestamp.now(),
     });
@@ -31,7 +32,7 @@ export const createRecommendation = async (data: Omit<Recommendation, 'id' | 'cr
 export const getRecommendationsByAuthor = async (authorId: string): Promise<Recommendation[]> => {
   try {
     const q = query(
-      collection(db, COLLECTION_NAME),
+      getRecommendationsCollection(),
       where('authorId', '==', authorId),
       orderBy('createdAt', 'desc')
     );
@@ -51,7 +52,7 @@ export const getRecommendationsByAuthor = async (authorId: string): Promise<Reco
 export const getRecommendationsForUser = async (targetUserId: string): Promise<Recommendation[]> => {
   try {
     const q = query(
-      collection(db, COLLECTION_NAME),
+      getRecommendationsCollection(),
       where('targetUserId', '==', targetUserId),
       orderBy('createdAt', 'desc')
     );
