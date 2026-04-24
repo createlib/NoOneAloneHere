@@ -14,6 +14,8 @@ import FollowModal from '@/components/FollowModal';
 import KeyMemoModal from '@/components/KeyMemoModal';
 import PlaylistModal from '@/components/PlaylistModal';
 import PlaylistDetailModal from '@/components/PlaylistDetailModal';
+import RecommendModal from '@/components/RecommendModal';
+import RecommendationGrid from '@/components/RecommendationGrid';
 
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -112,7 +114,8 @@ function UserProfileContent() {
   const [mutualCount, setMutualCount] = useState(0);
   const [followModalType, setFollowModalType] = useState<'following'|'followers'|'mutual'|null>(null);
   
-  const [activeTab, setActiveTab] = useState<'profile' | 'media'>('profile');
+  const [isRecommendModalOpen, setIsRecommendModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'profile' | 'media' | 'recommendations'>('profile');
   const [mediaTab, setMediaTab] = useState<'videos' | 'podcasts' | 'playlists' | 'liked-videos' | 'liked-podcasts'>('videos');
 
   const [userVideos, setUserVideos] = useState<any[]>([]);
@@ -436,7 +439,7 @@ function UserProfileContent() {
 
                   <div className="px-6 relative">
                       <div className="-mt-12 flex justify-between items-end mb-4 relative">
-                          <div className={`h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20 flex items-center justify-center text-[#c8b9a6] ${isLive ? 'ring-4 ring-red-500 animate-pulse cursor-pointer' : ''}`} onClick={() => isLive && router.push(`/media/live_room?roomId=${targetUid}`)}>
+                          <div className={`h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20 flex items-center justify-center text-[#c8b9a6] ${(isLive && !isSelf) ? 'ring-4 ring-red-500 animate-pulse cursor-pointer' : ''} ${isSelf ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`} onClick={() => { if (isLive && !isSelf) router.push(`/media/live_room?roomId=${targetUid}`); else if (isSelf) setIsRecommendModalOpen(true); }}>
                               {userData.photoURL ? (
                                   <img src={userData.photoURL} alt="Profile" className="w-full h-full object-cover" />
                               ) : (
@@ -632,10 +635,13 @@ function UserProfileContent() {
                   <div className="flex justify-center sm:justify-start gap-6">
                       <button onClick={() => setActiveTab('profile')} className={`pb-3 border-b-[3px] font-bold tracking-widest text-sm transition-colors ${activeTab === 'profile' ? 'border-[#b8860b] text-[#b8860b]' : 'border-transparent text-[#a09080] hover:text-[#725b3f]'}`}>航海録 (プロフィール)</button>
                       <button onClick={() => setActiveTab('media')} className={`pb-3 border-b-[3px] font-bold tracking-widest text-sm transition-colors ${activeTab === 'media' ? 'border-[#b8860b] text-[#b8860b]' : 'border-transparent text-[#a09080] hover:text-[#725b3f]'}`}>MEDIA LOG</button>
+                      <button onClick={() => setActiveTab('recommendations')} className={`pb-3 border-b-[3px] font-bold tracking-widest text-sm transition-colors flex items-center gap-1 ${activeTab === 'recommendations' ? 'border-[#b8860b] text-[#b8860b]' : 'border-transparent text-[#a09080] hover:text-[#725b3f]'}`}><Heart size={14}/> RECOMMENDS</button>
                   </div>
               </div>
 
-              {activeTab === 'profile' ? (
+              {activeTab === 'recommendations' ? (
+                  <RecommendationGrid targetUid={targetUid || ''} />
+              ) : activeTab === 'profile' ? (
                   <div className="space-y-6 px-4 sm:px-0">
                       
                       {/* Message Section */}
@@ -902,7 +908,7 @@ function UserProfileContent() {
       <FollowModal 
           isOpen={followModalType !== null} 
           onClose={() => setFollowModalType(null)} 
-          type={followModalType} 
+          type={followModalType || 'followers'} 
           targetUid={targetUid || user?.uid || ''} 
           myUid={user?.uid} 
       />
