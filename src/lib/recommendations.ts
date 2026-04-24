@@ -33,15 +33,16 @@ export const getRecommendationsByAuthor = async (authorId: string): Promise<Reco
   try {
     const q = query(
       getRecommendationsCollection(),
-      where('authorId', '==', authorId),
-      orderBy('createdAt', 'desc')
+      where('authorId', '==', authorId)
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const results = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate(),
     } as Recommendation));
+    // orderByをクエリで行うとインデックスが必要になるため、ローカルでソート
+    return results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } catch (error) {
     console.error('Error getting recommendations by author:', error);
     return [];
@@ -53,15 +54,15 @@ export const getRecommendationsForUser = async (targetUserId: string): Promise<R
   try {
     const q = query(
       getRecommendationsCollection(),
-      where('targetUserId', '==', targetUserId),
-      orderBy('createdAt', 'desc')
+      where('targetUserId', '==', targetUserId)
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    const results = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate(),
     } as Recommendation));
+    return results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } catch (error) {
     console.error('Error getting recommendations for user:', error);
     return [];
