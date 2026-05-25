@@ -1,421 +1,452 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore';
-import { Anchor, User as UserIcon, ShieldHalf, Globe, Instagram, Twitter, Check, ArrowLeft, Gavel, Hammer, Home } from 'lucide-react';
+import { Anchor, User as UserIcon, ShieldHalf, Globe, Instagram, Twitter, Check, Gavel, Hammer, Home, MapPin, Briefcase, Play, Mic2 } from 'lucide-react';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
-const OS_THEMES: Record<string, { bg: string, main: string, sub: string }> = {
-  '甲': { bg: '#041208', main: '#10B981', sub: '#34D399' },
-  '乙': { bg: '#08140B', main: '#34D399', sub: '#6EE7B7' },
-  '丙': { bg: '#1A0808', main: '#EF4444', sub: '#FCA5A5' },
-  '丁': { bg: '#180B05', main: '#F97316', sub: '#FDBA74' },
-  '戊': { bg: '#171105', main: '#D97706', sub: '#FCD34D' },
-  '己': { bg: '#141208', main: '#B45309', sub: '#FDE047' },
-  '庚': { bg: '#080A0F', main: '#94A3B8', sub: '#CBD5E1' },
-  '辛': { bg: '#0B0D14', main: '#CBD5E1', sub: '#F1F5F9' },
-  '壬': { bg: '#050A14', main: '#3B82F6', sub: '#93C5FD' },
-  '癸': { bg: '#060913', main: '#C5A880', sub: '#3B82F6' }
-};
+// ── Design tokens ──────────────────────────────────────────────────────────────
+const SB    = '#1a3024';
+const SAGE  = '#4a7c59';
+const LIME  = '#8ecfb2';
+const AMBER = '#d4af37';
+const BG    = '#f5f3f0';
+const T1    = '#2a2520';
+const T2    = '#7a7068';
+const TM    = '#ada49c';
+const NEU_UP = '6px 6px 14px rgba(0,0,0,.09),-6px -6px 14px rgba(255,255,255,.85)';
+const NEU_SM = '3px 3px 8px rgba(0,0,0,.07),-3px -3px 8px rgba(255,255,255,.8)';
+const NEU_IN = 'inset 3px 3px 7px rgba(0,0,0,.07),inset -3px -3px 7px rgba(255,255,255,.75)';
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
 function formatText(text: string | undefined | null) {
     if (!text) return '';
     try {
         const textStr = String(text).replace(/__(.*?)__/g, '<u>$1</u>');
         const rawHtml = marked.parse(textStr, { breaks: true, gfm: true }) as string;
-        return DOMPurify.sanitize(rawHtml, { 
-            ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'h1', 'h2', 'h3', 'ul', 'ol', 'li', 'u', 'span', 'blockquote', 'code', 'pre'],
-            ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+        return DOMPurify.sanitize(rawHtml, {
+            ALLOWED_TAGS: ['p','br','b','i','em','strong','a','h1','h2','h3','ul','ol','li','u','span','blockquote','code','pre'],
+            ALLOWED_ATTR: ['href','target','rel','class','style']
         });
     } catch {
         return DOMPurify.sanitize(text.replace(/\n/g, '<br>'));
     }
 }
 
-function getRankBadge(rank: string) {
+// ── Rank badge ─────────────────────────────────────────────────────────────────
+function RankBadge({ rank }: { rank: string }) {
     const r = rank?.toLowerCase() || 'arrival';
-    if (r === 'covenant') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#d4af37]/20 text-[#8b6508] border border-[#d4af37]/50 tracking-widest"><ShieldHalf size={10} className="mr-1"/>COVENANT</span>;
-    if (r === 'guardian') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#3e2723]/10 text-[#3e2723] border border-[#3e2723]/30 tracking-widest"><Gavel size={10} className="mr-1"/>GUARDIAN</span>;
-    if (r === 'builder') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#8b6a4f]/10 text-[#8b6a4f] border border-[#8b6a4f]/30 tracking-widest"><Hammer size={10} className="mr-1"/>BUILDER</span>;
-    if (r === 'settler') return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c8b9a6]/20 text-[#725b3f] border border-[#c8b9a6]/50 tracking-widest"><Home size={10} className="mr-1"/>SETTLER</span>;
-    return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#f7f5f0] text-[#a09080] border border-[#e8dfd1] tracking-widest"><Anchor size={10} className="mr-1"/>ARRIVAL</span>;
-}
-
-function getMbtiBadge(mbti?: string | null) {
-    if (!mbti || mbti === '未設定') return null;
-    const analysts = ['INTJ', 'INTP', 'ENTJ', 'ENTP'];
-    const diplomats = ['INFJ', 'INFP', 'ENFJ', 'ENFP'];
-    const sentinels = ['ISTJ', 'ISFJ', 'ESTJ', 'ESFJ'];
-    const explorers = ['ISTP', 'ISFP', 'ESTP', 'ESFP'];
-    
-    const names: Record<string, string> = {
-        'INTJ': '建築家', 'INTP': '論理学者', 'ENTJ': '指揮官', 'ENTP': '討論者',
-        'INFJ': '提唱者', 'INFP': '仲介者', 'ENFJ': '主人公', 'ENFP': '運動家',
-        'ISTJ': '管理者', 'ISFJ': '擁護者', 'ESTJ': '幹部', 'ESFJ': '領事',
-        'ISTP': '巨匠', 'ISFP': '冒険家', 'ESTP': '起業家', 'ESFP': 'エンターテイナー'
+    const configs: Record<string, { label: string; icon: React.ReactNode; bg: string; color: string; border: string }> = {
+        covenant: { label:'COVENANT', icon:<ShieldHalf size={9}/>, bg:'rgba(212,175,55,.12)', color:'#9a7c10', border:'rgba(212,175,55,.35)' },
+        guardian: { label:'GUARDIAN', icon:<Gavel size={9}/>, bg:'rgba(74,124,89,.1)', color:SAGE, border:'rgba(74,124,89,.3)' },
+        builder:  { label:'BUILDER',  icon:<Hammer size={9}/>, bg:'rgba(100,80,60,.08)', color:'#7a6050', border:'rgba(100,80,60,.25)' },
+        settler:  { label:'SETTLER',  icon:<Home size={9}/>, bg:'rgba(173,164,156,.12)', color:T2, border:'rgba(173,164,156,.4)' },
+        arrival:  { label:'ARRIVAL',  icon:<Anchor size={9}/>, bg:'rgba(173,164,156,.08)', color:TM, border:'rgba(173,164,156,.3)' },
     };
-    
-    let colorClass = 'bg-[#f7f5f0] text-[#725b3f] border-[#e8dfd1]';
-    if (analysts.includes(mbti)) colorClass = 'bg-purple-50 text-purple-700 border-purple-200';
-    if (diplomats.includes(mbti)) colorClass = 'bg-green-50 text-green-700 border-green-200';
-    if (sentinels.includes(mbti)) colorClass = 'bg-blue-50 text-blue-700 border-blue-200';
-    if (explorers.includes(mbti)) colorClass = 'bg-yellow-50 text-yellow-700 border-yellow-200';
-
-    const displayName = names[mbti] ? `${mbti} (${names[mbti]})` : mbti;
-
-    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold border tracking-widest font-mono shadow-sm ${colorClass}`}>{displayName}</span>;
+    const c = configs[r] || configs.arrival;
+    return (
+        <span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 8px',borderRadius:20,fontSize:9,fontWeight:800,letterSpacing:'.1em',background:c.bg,color:c.color,border:`1px solid ${c.border}`}}>
+            {c.icon}{c.label}
+        </span>
+    );
 }
 
+// ── MBTI badge ─────────────────────────────────────────────────────────────────
+function MbtiBadge({ mbti }: { mbti?: string | null }) {
+    if (!mbti || mbti === '未設定') return null;
+    const names: Record<string,string> = {
+        'INTJ':'建築家','INTP':'論理学者','ENTJ':'指揮官','ENTP':'討論者',
+        'INFJ':'提唱者','INFP':'仲介者','ENFJ':'主人公','ENFP':'運動家',
+        'ISTJ':'管理者','ISFJ':'擁護者','ESTJ':'幹部','ESFJ':'領事',
+        'ISTP':'巨匠','ISFP':'冒険家','ESTP':'起業家','ESFP':'エンターテイナー'
+    };
+    const analysts  = ['INTJ','INTP','ENTJ','ENTP'];
+    const diplomats = ['INFJ','INFP','ENFJ','ENFP'];
+    const sentinels = ['ISTJ','ISFJ','ESTJ','ESFJ'];
+    let bg='rgba(173,164,156,.12)', color=T2, border='rgba(173,164,156,.3)';
+    if (analysts.includes(mbti))  { bg='rgba(139,92,246,.08)'; color='#7c3aed'; border='rgba(139,92,246,.25)'; }
+    if (diplomats.includes(mbti)) { bg='rgba(74,124,89,.08)';  color=SAGE;      border='rgba(74,124,89,.25)'; }
+    if (sentinels.includes(mbti)) { bg='rgba(59,130,246,.08)'; color='#2563eb'; border='rgba(59,130,246,.25)'; }
+    return (
+        <span style={{display:'inline-flex',alignItems:'center',padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:800,letterSpacing:'.06em',background:bg,color,border:`1px solid ${border}`,fontFamily:'monospace'}}>
+            {mbti}{names[mbti] ? ` (${names[mbti]})` : ''}
+        </span>
+    );
+}
+
+// ── Section card ───────────────────────────────────────────────────────────────
+function SectionCard({ title, accent, children }: { title: string; accent?: string; children: React.ReactNode }) {
+    return (
+        <div style={{background:BG,borderRadius:16,boxShadow:NEU_UP,padding:'20px 22px'}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14,paddingBottom:12,borderBottom:'1px solid rgba(0,0,0,.06)'}}>
+                {accent && <div style={{width:3,height:14,borderRadius:2,background:accent,flexShrink:0}}/>}
+                <h2 style={{fontSize:12,fontWeight:800,color:T1,letterSpacing:'.1em',margin:0}}>{title}</h2>
+            </div>
+            {children}
+        </div>
+    );
+}
+
+// ── Tag chip ───────────────────────────────────────────────────────────────────
+function Tag({ label }: { label: string }) {
+    return (
+        <span style={{display:'inline-flex',padding:'4px 10px',borderRadius:20,fontSize:11,fontWeight:600,color:T2,background:BG,boxShadow:NEU_SM,letterSpacing:'.04em'}}>
+            #{label}
+        </span>
+    );
+}
+
+// ── Main ───────────────────────────────────────────────────────────────────────
 function PublicProfileContent() {
     const searchParams = useSearchParams();
-    const router = useRouter();
     const targetUid = searchParams?.get('uid');
 
     const [userData, setUserData] = useState<any>(null);
-    const [osData, setOsData] = useState<any>(null);
     const [userVideos, setUserVideos] = useState<any[]>([]);
     const [userPodcasts, setUserPodcasts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!targetUid) {
-            // During Next.js static export hydration, useSearchParams might be null initially.
-            // Wait a brief moment before assuming the URL is genuinely missing the uid param.
-            const hydrationTimer = setTimeout(() => {
-                setLoading(false);
-            }, 800);
-            return () => clearTimeout(hydrationTimer);
+            const t = setTimeout(() => setLoading(false), 800);
+            return () => clearTimeout(t);
         }
-
         const loadData = async () => {
-            setLoading(true); // Re-assert loading state when targetUid resolves
+            setLoading(true);
             try {
-                console.log("Loading public profile for UID:", targetUid);
-                // Fetch User Profile Source Truth from PUBLIC subcollection
                 const userRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', targetUid);
                 let userSnap = await getDoc(userRef);
-
                 if (!userSnap.exists()) {
-                    // Fallback to basic users collection
-                    console.log("Not found in public/data/users, falling back to users/");
-                    const fallbackRef = doc(db, 'artifacts', APP_ID, 'users', targetUid);
-                    userSnap = await getDoc(fallbackRef);
-                    if (!userSnap.exists()) {
-                        setUserData(null);
-                        setLoading(false);
-                        return;
-                    }
+                    const fallback = doc(db, 'artifacts', APP_ID, 'users', targetUid);
+                    userSnap = await getDoc(fallback);
+                    if (!userSnap.exists()) { setUserData(null); setLoading(false); return; }
                 }
-
-                const loadedData = userSnap.data();
-                setUserData(loadedData);
-
-                // Fetch OS Background Truth
-                if (loadedData?.osNumber) {
-                    const osRef = doc(db, 'artifacts', APP_ID, 'os_blueprints', String(loadedData.osNumber));
-                    const osSnap = await getDoc(osRef);
-                    if (osSnap.exists()) {
-                        setOsData(osSnap.data());
-                    }
-                }
-
+                const d = userSnap.data();
+                setUserData(d);
                 try {
-                    const vQ = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos'), where('authorId', '==', targetUid));
-                    const vSnap = await getDocs(vQ);
-                    const vMap = vSnap.docs.map(d => ({id: d.id, ...d.data()}));
-                    vMap.sort((a:any,b:any) => new Date(b.createdAt||b.updatedAt||0).getTime() - new Date(a.createdAt||a.updatedAt||0).getTime());
+                    const vSnap = await getDocs(query(collection(db,'artifacts',APP_ID,'public','data','videos'), where('authorId','==',targetUid)));
+                    const vMap = vSnap.docs.map(x=>({id:x.id,...x.data()}));
+                    vMap.sort((a:any,b:any)=>new Date(b.createdAt||0).getTime()-new Date(a.createdAt||0).getTime());
                     setUserVideos(vMap);
-
-                    const pQ = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts'), where('authorId', '==', targetUid));
-                    const pSnap = await getDocs(pQ);
-                    const pMap = pSnap.docs.map(d => ({id: d.id, ...d.data()}));
-                    pMap.sort((a:any,b:any) => new Date(b.createdAt||b.updatedAt||0).getTime() - new Date(a.createdAt||a.updatedAt||0).getTime());
+                    const pSnap = await getDocs(query(collection(db,'artifacts',APP_ID,'public','data','podcasts'), where('authorId','==',targetUid)));
+                    const pMap = pSnap.docs.map(x=>({id:x.id,...x.data()}));
+                    pMap.sort((a:any,b:any)=>new Date(b.createdAt||0).getTime()-new Date(a.createdAt||0).getTime());
                     setUserPodcasts(pMap);
-                } catch(e) { console.error("Media fetch error", e); }
-            } catch (error) {
-                console.error("Error loading public profile:", error);
-            } finally {
-                setLoading(false);
-            }
+                } catch(e) { console.error('Media fetch error',e); }
+            } catch(e) { console.error(e); }
+            finally { setLoading(false); }
         };
-
         loadData();
     }, [targetUid]);
 
     if (loading) {
-        return <div className="text-center py-20 text-[#a09080] font-bold tracking-widest min-h-screen flex items-center justify-center bg-texture">Loading...</div>;
-    }
-
-    if (!userData) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-texture p-4">
-                <div className="bg-[#fffdf9] p-8 rounded-sm shadow-md border border-[#e8dfd1] text-center max-w-sm mx-auto w-full">
-                    <UserIcon className="w-12 h-12 text-[#c8b9a6] mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-[#3e2723] mb-2 font-serif tracking-widest">ユーザーが見つかりません</h3>
-                    <p className="text-[#a09080] text-sm mb-6">IDが間違っているか、存在しないページです。</p>
-                </div>
+            <div style={{minHeight:'100vh',background:BG,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
+                <div style={{width:36,height:36,borderRadius:'50%',border:`3px solid rgba(74,124,89,.15)`,borderTopColor:SAGE,animation:'spin .8s linear infinite'}}/>
+                <div style={{fontSize:11,color:TM,letterSpacing:'.1em'}}>プロフィールを読み込み中...</div>
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             </div>
         );
     }
 
-    const isProfileComplete = (userData.profileScore || 0) >= 100;
-    const showOSCover = isProfileComplete && userData.osNumber;
-    const STEM_LIST = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
-    const calculatedStem = userData.osNumber ? STEM_LIST[(Number(userData.osNumber) - 1) % 10] : '癸';
-    const osTheme = showOSCover ? OS_THEMES[calculatedStem] : OS_THEMES['癸'];
+    if (!userData) {
+        return (
+            <div style={{minHeight:'100vh',background:BG,display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
+                <div style={{background:BG,borderRadius:20,boxShadow:NEU_UP,padding:'48px 36px',textAlign:'center',maxWidth:360}}>
+                    <div style={{width:64,height:64,borderRadius:'50%',background:BG,boxShadow:NEU_SM,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',color:TM}}>
+                        <UserIcon size={26}/>
+                    </div>
+                    <div style={{fontSize:16,fontWeight:800,color:T1,marginBottom:8}}>ユーザーが見つかりません</div>
+                    <div style={{fontSize:12,color:T2,lineHeight:1.7}}>IDが間違っているか、存在しないページです。</div>
+                </div>
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            </div>
+        );
+    }
 
     const rank = userData.membershipRank || 'arrival';
 
     return (
-        <div className="min-h-screen bg-texture antialiased text-[#3e2723] font-serif break-words">
-            {/* Minimal Header (No system menus, no back jumps to generic routes if directly accessed) */}
-            <header className="bg-[#fffdf9] border-b border-[#e8dfd1] h-14 flex items-center px-4 fixed w-full top-0 z-50 shadow-sm">
-                <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      {window.history.length > 1 && (
-                          <button onClick={() => router.back()} className="text-[#a09080] hover:text-[#725b3f] transition-colors flex items-center gap-1.5 text-xs font-bold tracking-widest">
-                              <ArrowLeft size={14} /> 戻る
-                          </button>
-                      )}
-                    </div>
-                    <div className="text-sm font-black text-[#3e2723] tracking-[0.2em] flex items-center justify-center pointer-events-none opacity-50">
-                        PUBLIC PROFILE
-                    </div>
+        <div style={{minHeight:'100vh',background:BG,fontFamily:'sans-serif'}}>
+
+            {/* ── Topbar ── */}
+            <div style={{background:SB,height:48,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 12px rgba(0,0,0,.2)'}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,color:'#e8f4ec',fontSize:14,fontWeight:900,letterSpacing:'.22em'}}>
+                    <Anchor size={13} color={LIME}/> NOAH
                 </div>
-            </header>
+            </div>
 
-            <div className="max-w-7xl mx-auto pt-14 px-0 sm:px-6 lg:px-8 pb-20">
-                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-center -mt-8 sm:mt-0">
-                    
-                    {/* Sidebar Area */}
-                    <aside className="w-full lg:w-[360px] flex-shrink-0 animate-fade-in-up">
-                        <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border-x-0 sm:border border-[#e8dfd1] overflow-hidden relative">
-                            {/* Decorative corners */}
-                            <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-[#c8b9a6] z-10 m-2"></div>
-                            <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-[#c8b9a6] z-10 m-2"></div>
+            {/* ── Page body ── */}
+            <div style={{maxWidth:1080,margin:'0 auto',padding:'28px 16px 80px'}}>
+                <div className="pub-layout">
 
-                            <div className={`h-32 sm:h-40 w-full border-b border-[#e8dfd1] relative flex items-center justify-center overflow-hidden bg-gradient-to-tr from-[#f0ebdd] to-[#f8f5ed] ${showOSCover ? '' : ''}`}
-                                 style={showOSCover ? { borderColor: osTheme.main } : {}}
-                            >
-                                {showOSCover && (
-                                    <>
-                                        <div className="absolute inset-0 z-0" style={{ backgroundColor: osTheme.bg, backgroundImage: `radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, ${osTheme.bg} 100%)` }}></div>
-                                        <div className="z-10 flex flex-col items-center justify-center pt-2 sm:pt-4">
-                                            <div className="text-[10px] sm:text-xs tracking-[0.4em] font-eng font-bold mb-0.5 drop-shadow-md" style={{ color: osTheme.sub }}>{osData?.ruby || userData.osRuby || 'GENBAN'}</div>
-                                            <div className="text-3xl sm:text-4xl font-bold tracking-[0.15em] font-serif pl-2 text-white" style={{ textShadow: `0 0 15px ${osTheme.main}` }}>{osData?.kanji || userData.osKanji || '玄盤'}</div>
-                                        </div>
-                                    </>
+                    {/* ── Sidebar ── */}
+                    <aside className="pub-sidebar">
+                        <div style={{background:BG,borderRadius:20,boxShadow:NEU_UP,padding:'28px 22px',display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
+
+                            {/* Avatar — plain, no banner behind */}
+                            <div style={{width:96,height:96,borderRadius:'50%',overflow:'hidden',boxShadow:NEU_UP,display:'flex',alignItems:'center',justifyContent:'center',fontSize:34,fontWeight:700,color:AMBER,background:BG,flexShrink:0}}>
+                                {userData.photoURL
+                                    ? <img src={userData.photoURL} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                                    : (userData.name||'?')[0]
+                                }
+                            </div>
+
+                            {/* Name + badges */}
+                            <div style={{textAlign:'center'}}>
+                                <h1 style={{fontSize:18,fontWeight:800,color:T1,margin:'0 0 4px',letterSpacing:'.02em'}}>{userData.name || userData.userId || '名無し'}</h1>
+                                <div style={{fontSize:11,color:TM,fontFamily:'monospace',marginBottom:8}}>@{userData.userId||'unknown'}</div>
+                                <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:6}}>
+                                    <RankBadge rank={rank}/>
+                                    <MbtiBadge mbti={userData.mbti}/>
+                                </div>
+                            </div>
+
+                            <div style={{width:'100%',height:1,background:'rgba(0,0,0,.06)'}}/>
+
+                            {/* Info list */}
+                            <div style={{width:'100%',display:'flex',flexDirection:'column',gap:10}}>
+                                {userData.jobTitle && (
+                                    <div style={{display:'flex',alignItems:'flex-start',gap:8,fontSize:12,color:T2,lineHeight:1.5}}>
+                                        <Briefcase size={13} color={SAGE} style={{flexShrink:0,marginTop:1}}/>{userData.jobTitle}
+                                    </div>
+                                )}
+                                {userData.prefecture && (
+                                    <div style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:T2}}>
+                                        <MapPin size={13} color={SAGE} style={{flexShrink:0}}/>{userData.prefecture}
+                                    </div>
+                                )}
+                                {userData.birthplace && (
+                                    <div style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:T2}}>
+                                        <Home size={13} color={TM} style={{flexShrink:0}}/>{userData.birthplace}出身
+                                    </div>
                                 )}
                             </div>
 
-                            <div className="px-6 relative pb-6 border-b border-[#e8dfd1]">
-                                <div className="-mt-12 flex justify-between items-end mb-4">
-                                    <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-sm border-[3px] border-[#fffdf9] bg-[#fffdf9] shadow-sm overflow-hidden relative z-20 flex items-center justify-center text-[#c8b9a6]">
-                                        {userData.photoURL ? (
-                                            <img src={userData.photoURL} alt="Profile" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <Anchor size={40} />
+                            {/* SNS */}
+                            {(userData.websiteUrl || userData.snsInstagram || userData.snsX) && (
+                                <>
+                                    <div style={{width:'100%',height:1,background:'rgba(0,0,0,.06)'}}/>
+                                    <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+                                        {userData.websiteUrl && (
+                                            <a href={userData.websiteUrl} target="_blank" rel="noreferrer" style={{width:36,height:36,borderRadius:'50%',background:BG,boxShadow:NEU_SM,display:'flex',alignItems:'center',justifyContent:'center',color:T2,textDecoration:'none'}}>
+                                                <Globe size={14}/>
+                                            </a>
+                                        )}
+                                        {userData.snsInstagram && (
+                                            <a href={userData.snsInstagram.startsWith('http') ? userData.snsInstagram : 'https://instagram.com/'+userData.snsInstagram} target="_blank" rel="noreferrer" style={{width:36,height:36,borderRadius:'50%',background:BG,boxShadow:NEU_SM,display:'flex',alignItems:'center',justifyContent:'center',color:T2,textDecoration:'none'}}>
+                                                <Instagram size={14}/>
+                                            </a>
+                                        )}
+                                        {userData.snsX && (
+                                            <a href={userData.snsX.startsWith('http') ? userData.snsX : 'https://twitter.com/'+userData.snsX} target="_blank" rel="noreferrer" style={{width:36,height:36,borderRadius:'50%',background:BG,boxShadow:NEU_SM,display:'flex',alignItems:'center',justifyContent:'center',color:T2,textDecoration:'none'}}>
+                                                <Twitter size={14}/>
+                                            </a>
                                         )}
                                     </div>
-                                </div>
-
-                                <div className="mb-2 relative z-20">
-                                    <h1 className="text-2xl font-bold text-[#3e2723] leading-tight font-serif flex items-center flex-wrap gap-3">
-                                        <span>{userData.name || userData.userId || '名無し'}</span>
-                                    </h1>
-                                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                                        <p className="text-sm text-[#8b6a4f] font-mono font-medium tracking-wide">@{userData.userId || 'unknown'}</p>
-                                        {getRankBadge(rank)}
-                                        {getMbtiBadge(userData.mbti)}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="px-6 py-4 border-b border-[#e8dfd1] bg-[#fdfbf6]">
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3 text-sm text-[#725b3f] tracking-wide">
-                                        <span className="font-bold w-12 text-[#a09080]">職業</span>
-                                        <span className="font-medium">{userData.jobTitle || '未設定'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm text-[#725b3f] tracking-wide">
-                                        <span className="font-bold w-12 text-[#a09080]">出身</span>
-                                        <span className="font-medium">{userData.birthplace || '未設定'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-sm text-[#725b3f] tracking-wide">
-                                        <span className="font-bold w-12 text-[#a09080]">拠点</span>
-                                        <span className="font-medium">{userData.prefecture || '未設定'}</span>
-                                    </div>
-                                    
-                                    {(userData.websiteUrl || userData.snsInstagram || userData.snsX) && (
-                                        <div className="flex gap-3 pt-4 pb-2 border-t border-[#e8dfd1] mt-4">
-                                            {userData.websiteUrl && <a href={userData.websiteUrl} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full border border-[#e8dfd1] bg-[#fffdf9] flex items-center justify-center text-[#c8b9a6] hover:text-[#b8860b] hover:border-[#b8860b] hover:bg-[#fffdf9] transition-all shadow-sm"><Globe size={14} /></a>}
-                                            {userData.snsInstagram && <a href={userData.snsInstagram.startsWith('http') ? userData.snsInstagram : 'https://instagram.com/'+userData.snsInstagram} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full border border-[#e8dfd1] bg-[#fffdf9] flex items-center justify-center text-[#c8b9a6] hover:text-[#b8860b] hover:border-[#b8860b] hover:bg-[#fffdf9] transition-all shadow-sm"><Instagram size={14} /></a>}
-                                            {userData.snsX && <a href={userData.snsX.startsWith('http') ? userData.snsX : 'https://twitter.com/'+userData.snsX} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full border border-[#e8dfd1] bg-[#fffdf9] flex items-center justify-center text-[#c8b9a6] hover:text-[#b8860b] hover:border-[#b8860b] hover:bg-[#fffdf9] transition-all shadow-sm"><Twitter size={14} /></a>}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            
+                                </>
+                            )}
                         </div>
                     </aside>
 
-                    {/* Main Content Area */}
-                    <div className="flex-1 min-w-0 max-w-3xl space-y-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                        
-                        {/* Bio Section */}
+                    {/* ── Main content ── */}
+                    <main style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',gap:16}}>
+
                         {userData.bio && (
-                            <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border border-[#e8dfd1] p-6 sm:p-8 relative">
-                                <h2 className="text-lg font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#e8dfd1] font-serif tracking-widest">自己紹介</h2>
-                                <div className="prose prose-sm max-w-none text-[#5c4a3d] leading-relaxed" dangerouslySetInnerHTML={{ __html: formatText(userData.bio) }}></div>
-                            </div>
+                            <SectionCard title="自己紹介" accent={SAGE}>
+                                <div className="pub-prose" dangerouslySetInnerHTML={{__html: formatText(userData.bio)}}/>
+                            </SectionCard>
                         )}
 
-                        {/* Objectives / Goals */}
-                        {userData.goals && (
-                            <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border border-[#e8dfd1] p-6 sm:p-8 relative">
-                                <h2 className="text-lg font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#e8dfd1] font-serif tracking-widest">目標・ビジョン</h2>
-                                <div className="prose prose-sm max-w-none text-[#5c4a3d] leading-relaxed" dangerouslySetInnerHTML={{ __html: formatText(userData.goals) }}></div>
-                            </div>
-                        )}
-
-                        {/* Message */}
                         {userData.message && (
-                            <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border border-[#e8dfd1] p-6 sm:p-8 relative">
-                                <h2 className="text-lg font-bold text-[#3e2723] mb-4 pb-2 border-b border-[#e8dfd1] font-serif tracking-widest">想い・メッセージ</h2>
-                                <div className="prose prose-sm max-w-none text-[#5c4a3d] leading-relaxed" dangerouslySetInnerHTML={{ __html: formatText(userData.message) }}></div>
-                            </div>
+                            <SectionCard title="自分を表現する" accent={AMBER}>
+                                <div className="pub-prose" dangerouslySetInnerHTML={{__html: formatText(userData.message)}}/>
+                            </SectionCard>
                         )}
 
-                        {/* Offering & Looking For */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-[#fffdf9] rounded-sm p-6 border border-[#e8dfd1] shadow-md relative overflow-hidden group">
-                                <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest font-serif relative z-10 border-b border-[#e8dfd1] pb-2">提供できること</h3>
-                                <ul className="space-y-3 relative z-10">
-                                    {userData.canOffer?.length > 0 ? (
-                                        userData.canOffer.map((item: string, idx: number) => (
-                                            <li key={idx} className="text-[#5c4a3d] text-sm flex items-start gap-2"><Check className="w-4 h-4 text-[#d4af37] mt-0.5 shrink-0"/>{item}</li>
-                                        ))
-                                    ) : <li className="text-[#c8b9a6] italic text-sm">未設定</li>}
-                                </ul>
-                            </div>
-                            <div className="bg-[#fffdf9] rounded-sm p-6 border border-[#e8dfd1] shadow-md relative overflow-hidden group">
-                                <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest font-serif relative z-10 border-b border-[#e8dfd1] pb-2">求めていること</h3>
-                                <ul className="space-y-3 relative z-10">
-                                    {userData.lookingFor?.length > 0 ? (
-                                        userData.lookingFor.map((item: string, idx: number) => (
-                                            <li key={idx} className="text-[#5c4a3d] text-sm flex items-start gap-2"><Check className="w-4 h-4 text-[#d4af37] mt-0.5 shrink-0"/>{item}</li>
-                                        ))
-                                    ) : <li className="text-[#c8b9a6] italic text-sm">未設定</li>}
-                                </ul>
-                            </div>
-                        </div>
-
-                        {/* Skills and Hobbies */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="bg-[#fffdf9] rounded-sm p-6 border border-[#e8dfd1] shadow-md">
-                                <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest font-serif border-b border-[#e8dfd1] pb-2">スキル</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {userData.skills?.length > 0 ? userData.skills.map((tag: string, i: number) => (
-                                        <span key={i} className="bg-[#f7f5f0] border border-[#e8dfd1] text-[#725b3f] px-3 py-1.5 rounded-sm text-xs font-bold tracking-widest shadow-sm">#{tag}</span>
-                                    )) : <span className="text-sm text-[#c8b9a6] italic">未設定</span>}
-                                </div>
-                            </div>
-                            <div className="bg-[#fffdf9] rounded-sm p-6 border border-[#e8dfd1] shadow-md">
-                                <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest font-serif border-b border-[#e8dfd1] pb-2">趣味</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {userData.hobbies?.length > 0 ? userData.hobbies.map((tag: string, i: number) => (
-                                        <span key={i} className="bg-[#f7f5f0] border border-[#e8dfd1] text-[#725b3f] px-3 py-1.5 rounded-sm text-xs font-bold tracking-widest shadow-sm">#{tag}</span>
-                                    )) : <span className="text-sm text-[#c8b9a6] italic">未設定</span>}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Career Section */}
-                        {userData.career?.length > 0 && (
-                            <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border border-[#e8dfd1] p-6 sm:p-8 relative mt-6">
-                                <h2 className="text-lg font-bold text-[#3e2723] mb-6 pb-2 border-b border-[#e8dfd1] font-serif tracking-widest">主な経歴・活動史</h2>
-                                <div className="space-y-6 mt-4 relative">
-                                    <div className="absolute left-[7px] top-2 bottom-2 w-px bg-[#e8dfd1]"></div>
-                                    {userData.career.map((c: any, i: number) => (
-                                        <div key={i} className="relative pl-6 pb-2">
-                                            <div className="absolute left-[-5px] top-1.5 h-3 w-3 rounded-full bg-[#b8860b] ring-4 ring-[#fffdf9] z-10 shadow-sm border border-[#e8dfd1]"></div>
-                                            <h4 className="font-bold text-[#3e2723] text-base font-serif tracking-widest">{c.company || '会社名不明'}</h4>
-                                            <div className="flex items-center gap-2 mb-3 mt-1">
-                                                <span className="text-[10px] font-bold text-[#725b3f] bg-[#f7f5f0] px-2 py-0.5 rounded-sm tracking-widest border border-[#e8dfd1]">{c.role || '役割'}</span>
-                                                <span className="text-xs text-[#8b6a4f] font-medium tracking-widest">{c.start || '?'} 〜 {c.end || '現在'}</span>
-                                            </div>
-                                            <div className="prose prose-sm max-w-none text-[#5c4a3d] bg-[#fdfaf5] p-4 rounded-sm border border-[#e8dfd1] shadow-sm" dangerouslySetInnerHTML={{ __html: formatText(c.description || '') }}></div>
+                        {(userData.skills?.length > 0 || userData.hobbies?.length > 0) && (
+                            <div className="pub-pair">
+                                {userData.skills?.length > 0 && (
+                                    <SectionCard title="スキル" accent={SAGE}>
+                                        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                                            {userData.skills.map((s:string,i:number)=><Tag key={i} label={s}/>)}
                                         </div>
-                                    ))}
-                                </div>
+                                    </SectionCard>
+                                )}
+                                {userData.hobbies?.length > 0 && (
+                                    <SectionCard title="趣味・興味" accent={TM}>
+                                        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                                            {userData.hobbies.map((h:string,i:number)=><Tag key={i} label={h}/>)}
+                                        </div>
+                                    </SectionCard>
+                                )}
                             </div>
                         )}
 
-                        {/* Media Section */}
+                        {(userData.canOffer?.length > 0 || userData.lookingFor?.length > 0) && (
+                            <div className="pub-pair">
+                                {userData.canOffer?.length > 0 && (
+                                    <SectionCard title="提供できること" accent={SAGE}>
+                                        <ul style={{listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:8}}>
+                                            {userData.canOffer.map((item:string,i:number)=>(
+                                                <li key={i} style={{display:'flex',alignItems:'flex-start',gap:8,fontSize:13,color:T1,lineHeight:1.6}}>
+                                                    <Check size={13} color={SAGE} style={{flexShrink:0,marginTop:2}}/>{item}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </SectionCard>
+                                )}
+                                {userData.lookingFor?.length > 0 && (
+                                    <SectionCard title="求めていること" accent={AMBER}>
+                                        <ul style={{listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:8}}>
+                                            {userData.lookingFor.map((item:string,i:number)=>(
+                                                <li key={i} style={{display:'flex',alignItems:'flex-start',gap:8,fontSize:13,color:T1,lineHeight:1.6}}>
+                                                    <Check size={13} color={AMBER} style={{flexShrink:0,marginTop:2}}/>{item}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </SectionCard>
+                                )}
+                            </div>
+                        )}
+
+                        {userData.career?.length > 0 && (
+                            <SectionCard title="主な経歴・活動史" accent={T2}>
+                                <div style={{position:'relative',paddingLeft:20}}>
+                                    <div style={{position:'absolute',left:6,top:4,bottom:4,width:1,background:'rgba(0,0,0,.08)'}}/>
+                                    <div style={{display:'flex',flexDirection:'column',gap:20}}>
+                                        {userData.career.map((c:any,i:number)=>(
+                                            <div key={i} style={{position:'relative'}}>
+                                                <div style={{position:'absolute',left:-22,top:4,width:12,height:12,borderRadius:'50%',background:AMBER,border:`2px solid ${BG}`,boxShadow:NEU_SM}}/>
+                                                <div style={{fontSize:14,fontWeight:800,color:T1,marginBottom:4}}>{c.company||'会社名不明'}</div>
+                                                <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:8}}>
+                                                    <span style={{fontSize:10,fontWeight:700,color:SAGE,background:'rgba(74,124,89,.1)',border:'1px solid rgba(74,124,89,.2)',padding:'2px 8px',borderRadius:10}}>{c.role||'役割'}</span>
+                                                    <span style={{fontSize:10,color:TM}}>{c.start||'?'} 〜 {c.end||'現在'}</span>
+                                                </div>
+                                                {c.description && (
+                                                    <div style={{background:'rgba(0,0,0,.03)',borderRadius:10,padding:'10px 14px',boxShadow:NEU_IN}}>
+                                                        <div className="pub-prose" dangerouslySetInnerHTML={{__html: formatText(c.description)}}/>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </SectionCard>
+                        )}
+
                         {(userVideos.length > 0 || userPodcasts.length > 0) && (
-                            <div className="bg-[#fffdf9] sm:rounded-sm shadow-md border border-[#e8dfd1] p-6 sm:p-8 relative mt-6 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                                <h2 className="text-lg font-bold text-[#3e2723] mb-6 pb-2 border-b border-[#e8dfd1] font-serif tracking-widest flex justify-between items-center">
-                                    <span>メディア・発信録</span>
-                                </h2>
-                                
+                            <SectionCard title="メディア・発信録" accent={T2}>
                                 {userVideos.length > 0 && (
-                                    <div className="mb-6">
-                                        <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest border-b border-[#e8dfd1] pb-1">公開動画 ({userVideos.length})</h3>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {userVideos.map((v, i) => (
-                                                <a key={i} href={`/media/videos/detail?id=${v.id}`} target="_blank" rel="noreferrer" className="flex gap-3 bg-[#fdfaf5] p-2 border border-[#e8dfd1] rounded-sm hover:-translate-y-0.5 hover:shadow-md transition-all group">
-                                                    <div className="w-20 h-14 bg-black rounded-sm overflow-hidden relative flex-shrink-0 border border-[#e8dfd1]">
-                                                        <img src={v.thumbnailUrl || 'https://via.placeholder.com/120x80?text=VIDEO'} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform" alt=""/>
+                                    <div style={{marginBottom:20}}>
+                                        <div style={{fontSize:10,fontWeight:700,color:TM,letterSpacing:'.1em',marginBottom:10}}>公開動画 ({userVideos.length})</div>
+                                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:10}}>
+                                            {userVideos.map((v:any,i:number)=>(
+                                                <a key={i} href={`/media/videos/detail?id=${v.id}`} target="_blank" rel="noreferrer" style={{textDecoration:'none',display:'flex',gap:10,background:BG,boxShadow:NEU_SM,borderRadius:10,padding:8}}>
+                                                    <div style={{width:60,height:42,borderRadius:6,overflow:'hidden',flexShrink:0,background:'#111',position:'relative'}}>
+                                                        <img src={v.thumbnailUrl||'https://via.placeholder.com/120x80?text=VIDEO'} alt="" style={{width:'100%',height:'100%',objectFit:'cover',opacity:.85}}/>
+                                                        <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                                                            <Play size={11} color="#fff" fill="#fff"/>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                        <div className="text-xs font-bold text-[#3e2723] line-clamp-2 leading-tight group-hover:text-[#b8860b] transition-colors">{v.title}</div>
-                                                    </div>
+                                                    <div style={{flex:1,minWidth:0,fontSize:11,fontWeight:700,color:T1,lineHeight:1.4,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{v.title}</div>
                                                 </a>
                                             ))}
                                         </div>
                                     </div>
                                 )}
-
-                                    <div className="mt-8">
-                                        <h3 className="text-sm font-bold text-[#725b3f] mb-4 tracking-widest border-b border-[#e8dfd1] pb-1">公開ラジオ ({userPodcasts.length})</h3>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                            {userPodcasts.map((p, i) => {
-                                                const m = p.duration ? Math.floor(p.duration / 60) : 0;
-                                                const s = p.duration ? Math.floor(p.duration % 60) : 0;
-                                                const durStr = p.duration ? `${m}:${s < 10 ? '0'+s : s}` : '';
-                                                return (
-                                                    <a key={i} href={`/media/podcasts/detail?id=${p.id}`} target="_blank" rel="noreferrer" className="flex flex-col group block transition-all w-full">
-                                                        <div className="w-full aspect-square rounded-xl bg-[#e8dfd1] overflow-hidden relative shadow-sm mb-2 border border-[#e8dfd1]">
-                                                            <img src={p.thumbnailUrl || 'https://via.placeholder.com/300x300?text=CAST'} className="w-full h-full object-cover opacity-95 group-hover:scale-105 group-hover:opacity-100 transition-transform duration-500" alt={p.title} />
-                                                            {durStr && (
-                                                                <div className="absolute bottom-1.5 right-1.5 bg-black/70 backdrop-blur-sm text-white text-[9px] font-sans font-bold px-1.5 py-0.5 rounded tracking-widest leading-none shadow-sm">{durStr}</div>
-                                                            )}
-                                                        </div>
-                                                        <div className="px-0.5">
-                                                            <div className="text-xs sm:text-sm font-bold text-[#3e2723] line-clamp-2 leading-tight group-hover:text-[#b8860b] transition-colors mb-0.5 tracking-wide font-serif">{p.title || 'タイトルなし'}</div>
+                                {userPodcasts.length > 0 && (
+                                    <div>
+                                        <div style={{fontSize:10,fontWeight:700,color:TM,letterSpacing:'.1em',marginBottom:10}}>公開ラジオ ({userPodcasts.length})</div>
+                                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))',gap:10}}>
+                                            {userPodcasts.map((p:any,i:number)=>{
+                                                const m=p.duration?Math.floor(p.duration/60):0;
+                                                const s=p.duration?Math.floor(p.duration%60):0;
+                                                const dur=p.duration?`${m}:${s<10?'0'+s:s}`:'';
+                                                return(
+                                                    <a key={i} href={`/media/podcasts/detail?id=${p.id}`} target="_blank" rel="noreferrer" style={{textDecoration:'none'}}>
+                                                        <div style={{borderRadius:10,boxShadow:NEU_SM,background:BG,padding:6}}>
+                                                            <div style={{width:'100%',aspectRatio:'1',borderRadius:8,overflow:'hidden',position:'relative',marginBottom:6}}>
+                                                                <img src={p.thumbnailUrl||'https://via.placeholder.com/300x300?text=CAST'} alt={p.title} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                                                                <div style={{position:'absolute',bottom:4,right:4,display:'flex',gap:3,alignItems:'center',background:'rgba(0,0,0,.65)',borderRadius:4,padding:'2px 5px'}}>
+                                                                    <Mic2 size={8} color="#fff"/>
+                                                                    {dur && <span style={{fontSize:8,color:'#fff',fontWeight:700}}>{dur}</span>}
+                                                                </div>
+                                                            </div>
+                                                            <div style={{fontSize:10,fontWeight:700,color:T1,lineHeight:1.4,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden',padding:'0 2px'}}>{p.title||'タイトルなし'}</div>
                                                         </div>
                                                     </a>
                                                 );
                                             })}
                                         </div>
                                     </div>
-                            </div>
+                                )}
+                            </SectionCard>
                         )}
 
-                    </div>
+                        <div style={{textAlign:'center',paddingTop:8}}>
+                            <a href="/" style={{display:'inline-flex',alignItems:'center',gap:6,textDecoration:'none',color:TM,fontSize:10,letterSpacing:'.12em'}}>
+                                <Anchor size={10} color={SAGE}/> powered by NOAH
+                            </a>
+                        </div>
+                    </main>
                 </div>
             </div>
+
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg) } }
+
+                .pub-layout {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                }
+                .pub-sidebar { width: 100%; }
+                .pub-pair    { display: flex; flex-direction: column; gap: 16px; }
+
+                @media (min-width: 800px) {
+                    .pub-layout {
+                        flex-direction: row;
+                        align-items: flex-start;
+                        gap: 24px;
+                    }
+                    .pub-sidebar {
+                        width: 260px;
+                        flex-shrink: 0;
+                        position: sticky;
+                        top: 64px;
+                    }
+                    .pub-pair {
+                        flex-direction: row;
+                        gap: 16px;
+                    }
+                    .pub-pair > * { flex: 1; min-width: 0; }
+                }
+
+                .pub-prose { font-size: 13px; color: ${T2}; line-height: 1.75; }
+                .pub-prose p { margin: 0 0 8px; }
+                .pub-prose h1,.pub-prose h2,.pub-prose h3 { color: ${T1}; font-weight: 800; margin: 12px 0 6px; }
+                .pub-prose a { color: ${SAGE}; text-decoration: underline; }
+                .pub-prose ul,.pub-prose ol { padding-left: 18px; margin: 6px 0; }
+                .pub-prose blockquote { border-left: 3px solid ${SAGE}; padding-left: 10px; color: ${TM}; margin: 8px 0; }
+                .pub-prose code { background: rgba(0,0,0,.05); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+            `}</style>
         </div>
     );
 }
 
 export default function PublicProfilePageWrapper() {
     return (
-        <Suspense fallback={<div className="text-center py-20 text-[#a09080] font-bold tracking-widest min-h-screen flex items-center justify-center bg-texture">Loading...</div>}>
-            <PublicProfileContent />
+        <Suspense fallback={
+            <div style={{minHeight:'100vh',background:'#f5f3f0',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:16}}>
+                <div style={{width:36,height:36,borderRadius:'50%',borderTop:`3px solid #4a7c59`,borderRight:'3px solid transparent',animation:'spin .8s linear infinite'}}/>
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            </div>
+        }>
+            <PublicProfileContent/>
         </Suspense>
     );
 }

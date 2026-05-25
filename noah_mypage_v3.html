@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マイページ — NOAH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter','Noto Sans JP',system-ui,sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+:root{
+  --bg:#f8f6f3;
+  --sd:#dbd7d2;--sl:#ffffff;
+  --neu-up:6px 6px 20px #dbd7d2,-6px -6px 20px #ffffff;
+  --neu-in:inset 4px 4px 12px #dbd7d2,inset -4px -4px 12px #ffffff;
+  --neu-sm:3px 3px 10px #dbd7d2,-3px -3px 10px #ffffff;
+
+  --sb:#1a3024;--sb-b:#142219;--sb-t:#7aab88;--sb-th:#d4ead9;
+  --lime:#a3e635;--sage:#4a7c59;
+
+  --t1:#2a2520;--t2:#7a7068;--tm:#b0a89e;
+  --amber:#c2840a;--amber2:#d97706;
+  --indigo:#4f46e5;--rose:#be6f72;
+
+  --pub-bg:#dcfce7;--pub-t:#166534;
+  --mut-bg:#ede9fe;--mut-t:#5b21b6;
+  --sk-bg:#edf3ef;--sk-t:#2d5a3d;
+  --hb-bg:#fdf4e3;--hb-t:#7a4f1a;
+  --of-bg:#e8f4eb;--of-t:#1d5a2d;
+  --wt-bg:#fdedf0;--wt-t:#8b2635;
+
+  --r:10px;--r2:18px;--rf:100px;
+  --sb-w:220px;--pc-w:320px;
+}
+
+body{background:var(--bg);color:var(--t1)}
+.app{display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:var(--sb-w);background:var(--sb);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;height:100vh;z-index:50;
+  box-shadow:4px 0 24px rgba(0,0,0,.18)
+}
+.sb-logo{padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between}
+.sb-logo-text{}
+.sb-notif-btn{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#8ebf9e;position:relative;flex-shrink:0;transition:background .15s}
+.sb-notif-btn:hover{background:rgba(255,255,255,.12)}
+.sb-notif-dot{position:absolute;top:3px;right:3px;width:7px;height:7px;background:#ef4444;border-radius:50%;border:1.5px solid var(--sb)}
+.sb-logo-main{font-size:17px;font-weight:800;letter-spacing:.18em;color:#fff}
+.sb-logo-sub{font-size:10px;color:var(--sb-t);margin-top:3px;letter-spacing:.04em}
+.sb-nav{flex:1;padding:10px 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto}
+.sb-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:var(--r);color:var(--sb-t);cursor:pointer;transition:all .15s;
+  border:none;background:none;width:100%;text-align:left;font-size:13px;font-weight:500;
+  position:relative;text-decoration:none
+}
+.sb-item:hover{background:rgba(255,255,255,.06);color:var(--sb-th)}
+.sb-item.active{color:#fff}
+.sb-item.active::before{
+  content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;
+  border-radius:0 3px 3px 0;background:var(--lime)
+}
+.sb-item.active{background:rgba(163,230,53,.08)}
+.sb-item svg{flex-shrink:0;opacity:.7}
+.sb-item.active svg{opacity:1;color:var(--lime)}
+.sb-dot{width:6px;height:6px;background:#ef4444;border-radius:50%;position:absolute;right:12px;top:50%;transform:translateY(-50%)}
+.sb-foot{padding:14px;border-top:1px solid rgba(255,255,255,.07)}
+.sb-user{display:flex;align-items:center;gap:10px;padding:6px;border-radius:var(--r);cursor:pointer;transition:background .15s}
+.sb-user:hover{background:rgba(255,255,255,.06)}
+.sb-av{width:32px;height:32px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.sb-uname{font-size:12px;font-weight:600;color:#d4ead9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-handle{font-size:10px;color:var(--sb-t);margin-top:1px}
+
+/* ── Main ── */
+.main{margin-left:var(--sb-w);flex:1;display:grid;grid-template-columns:var(--pc-w) 1fr;min-height:100vh;align-items:start}
+.topbar{display:none}
+
+/* ── Profile Column ── */
+.profile-col{
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  padding:20px 16px;background:var(--bg);
+  border-right:2px solid rgba(0,0,0,.04);
+  scrollbar-width:thin;scrollbar-color:#c8c4bf transparent
+}
+.profile-col::-webkit-scrollbar{width:4px}
+.profile-col::-webkit-scrollbar-thumb{background:#c8c4bf;border-radius:2px}
+
+/* Neumorphic Profile Card */
+.p-card{
+  background:var(--bg);border-radius:var(--r2);
+  box-shadow:var(--neu-up);padding:20px;
+  position:relative
+}
+.p-av-wrap{
+  width:80px;height:80px;border-radius:50%;
+  box-shadow:var(--neu-in);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;flex-shrink:0;position:relative
+}
+.p-av{
+  width:68px;height:68px;border-radius:50%;
+  background:var(--bg);box-shadow:var(--neu-sm);
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;font-weight:700;color:var(--amber);font-family:'Noto Sans JP',sans-serif;
+  outline:2px solid var(--amber);outline-offset:2px
+}
+.edit-btn{
+  position:absolute;top:16px;right:16px;
+  font-size:11px;font-weight:600;padding:6px 12px;border-radius:var(--rf);
+  border:none;background:var(--bg);box-shadow:var(--neu-sm);
+  color:var(--t2);cursor:pointer;transition:box-shadow .15s
+}
+.edit-btn:hover{box-shadow:var(--neu-in)}
+.p-name{font-size:18px;font-weight:700;color:var(--t1);line-height:1.2}
+.p-furi{font-size:10px;color:var(--tm);margin-top:1px;font-family:'DM Mono',monospace;letter-spacing:.06em}
+.p-hand{font-size:12px;color:var(--t2);margin-top:4px}
+.p-ttl{font-size:12px;color:var(--t2);margin-top:4px;line-height:1.4}
+
+/* Glass rank badge */
+.rank-badge{
+  display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;
+  letter-spacing:.1em;padding:4px 12px 4px 10px;border-radius:var(--rf);
+  backdrop-filter:blur(12px);background:rgba(74,124,89,.12);
+  border:1px solid rgba(74,124,89,.3);color:var(--sage);margin-top:10px
+}
+
+/* Neumorphic Stats */
+.stats-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px
+}
+.stat-cell{
+  background:var(--bg);border-radius:var(--r);
+  box-shadow:var(--neu-in);
+  padding:12px 10px;cursor:pointer;transition:box-shadow .15s;text-decoration:none
+}
+.stat-cell:hover{box-shadow:var(--neu-sm)}
+.stat-num{font-size:22px;font-weight:700;color:var(--t1);line-height:1}
+.stat-lbl{font-size:9px;color:var(--tm);margin-top:3px;letter-spacing:.04em}
+
+/* Soul OS - Neumorphic raised */
+.os-card{
+  background:var(--bg);border-radius:var(--r2);
+  box-shadow:var(--neu-up);
+  padding:14px 16px;display:flex;align-items:center;gap:13px;
+  cursor:pointer;transition:box-shadow .15s;margin-top:14px
+}
+.os-card:hover{box-shadow:var(--neu-sm)}
+.os-seal{
+  width:52px;height:52px;border-radius:50%;
+  box-shadow:var(--neu-in);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;
+  background:var(--bg)
+}
+.os-num{font-size:18px;font-weight:800;color:var(--amber);line-height:1}
+.os-kj{font-size:8px;color:var(--t2);margin-top:1px;font-family:'Noto Sans JP'}
+.os-body{flex:1;min-width:0}
+.os-lbl{font-size:9px;color:var(--tm);letter-spacing:.1em;text-transform:uppercase}
+.os-name{font-size:14px;font-weight:700;color:var(--t1);margin-top:2px}
+.os-copy{font-size:11px;color:var(--t2);margin-top:2px;line-height:1.4}
+.os-arr{color:var(--tm)}
+
+/* Score */
+.score-wrap{margin-top:14px}
+.score-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.score-ttl{font-size:11px;color:var(--t2);font-weight:500}
+.score-pct{font-size:12px;font-weight:700;color:var(--amber)}
+.score-track{
+  height:6px;border-radius:4px;
+  box-shadow:var(--neu-in);
+  overflow:hidden;background:var(--bg)
+}
+.score-fill{height:100%;width:0;background:linear-gradient(90deg,var(--amber),var(--amber2));border-radius:4px;transition:width 1.2s cubic-bezier(.34,1.56,.64,1)}
+.miss-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.miss-chip{font-size:10px;padding:3px 9px;border-radius:var(--rf);background:rgba(190,111,114,.08);color:var(--rose);border:1px solid rgba(190,111,114,.2)}
+
+/* ── Content Column ── */
+.content-col{min-height:100vh;background:var(--bg)}
+
+/* Glass Tab Bar */
+.tabs-bar{
+  position:sticky;top:0;z-index:30;
+  backdrop-filter:blur(24px);
+  background:rgba(248,246,243,.88);
+  border-bottom:1px solid rgba(0,0,0,.06);
+  padding:0 24px;display:flex;align-items:center;gap:4px;height:50px
+}
+.tab-btn{
+  font-size:13px;font-weight:500;padding:7px 16px;border-radius:var(--rf);
+  border:none;background:none;color:var(--t2);cursor:pointer;transition:all .15s;white-space:nowrap
+}
+.tab-btn:hover{background:rgba(0,0,0,.04);color:var(--t1)}
+.tab-btn.active{background:var(--bg);box-shadow:var(--neu-sm);color:var(--t1);font-weight:700}
+
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Section */
+.section{padding:22px 24px 0}
+.section+.section{border-top:1px solid rgba(0,0,0,.04);margin-top:20px}
+.section:last-child{padding-bottom:40px}
+.sec-hd{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.sec-ttl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t2)}
+
+/* Visibility badges - glass */
+.vis{font-size:9px;font-weight:600;letter-spacing:.06em;padding:2px 8px;border-radius:var(--rf);backdrop-filter:blur(8px)}
+.vis-pub{background:var(--pub-bg);color:var(--pub-t)}
+.vis-mut{background:var(--mut-bg);color:var(--mut-t)}
+
+/* Markdown */
+.md{font-size:13.5px;line-height:1.85;color:var(--t1)}
+.md p{margin-bottom:10px}
+.md p:last-child{margin-bottom:0}
+.md strong{font-weight:700;color:var(--t1)}
+.md ul{padding-left:16px;list-style:disc;display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.md li{color:var(--t2)}
+
+/* Tags - neumorphic pressed */
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{
+  font-size:12px;font-weight:500;padding:5px 13px;border-radius:var(--rf);
+  white-space:nowrap;box-shadow:var(--neu-in)
+}
+.t-sk{background:var(--sk-bg);color:var(--sk-t)}
+.t-hb{background:var(--hb-bg);color:var(--hb-t)}
+.t-of{background:var(--of-bg);color:var(--of-t)}
+.t-wt{background:var(--wt-bg);color:var(--wt-t)}
+
+/* MBTI */
+.mbti-row{display:flex;align-items:center;gap:14px}
+.mbti-badge{
+  font-size:16px;font-weight:800;width:62px;height:62px;
+  border-radius:var(--r);box-shadow:var(--neu-in);
+  background:var(--bg);display:flex;align-items:center;justify-content:center;
+  color:var(--sage);letter-spacing:.05em;flex-shrink:0
+}
+.mbti-type{font-size:10px;color:var(--tm);letter-spacing:.1em;text-transform:uppercase}
+.mbti-name{font-size:15px;font-weight:700;color:var(--t1);margin-top:2px}
+.mbti-desc{font-size:12px;color:var(--t2);margin-top:3px;line-height:1.5}
+
+/* Match */
+.match-g+.match-g{margin-top:14px}
+.match-lbl{
+  display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 11px;border-radius:var(--rf);margin-bottom:9px;
+  box-shadow:var(--neu-sm)
+}
+.ml-of{background:var(--of-bg);color:var(--of-t)}
+.ml-wt{background:var(--wt-bg);color:var(--wt-t)}
+
+/* Info list */
+.info-list{display:flex;flex-direction:column}
+.info-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.05)}
+.info-row:last-child{border-bottom:none}
+.info-ico{font-size:15px;width:24px;text-align:center;flex-shrink:0}
+.info-lbl{font-size:10px;color:var(--tm);letter-spacing:.04em}
+.info-val{font-size:13px;font-weight:500;color:var(--t1);margin-top:1px}
+
+/* Career */
+.career-list{display:flex;flex-direction:column;position:relative;padding-left:22px}
+.career-list::before{content:'';position:absolute;left:6px;top:8px;bottom:8px;width:2px;background:rgba(74,124,89,.2);border-radius:2px}
+.career-item{position:relative;padding-bottom:20px}
+.career-item:last-child{padding-bottom:0}
+.c-dot{position:absolute;left:-19px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--bg);box-shadow:var(--neu-sm);z-index:1}
+.c-dot.cur{background:var(--sage);box-shadow:0 0 0 3px rgba(74,124,89,.2)}
+.c-per{font-size:10px;color:var(--tm);letter-spacing:.04em}
+.c-co{font-size:13px;font-weight:700;color:var(--t1);margin-top:2px}
+.c-role{font-size:12px;color:var(--t2);margin-top:1px}
+.c-desc{font-size:12px;color:var(--t2);margin-top:5px;line-height:1.5}
+
+/* SNS */
+.sns-list{display:flex;flex-direction:column;gap:6px}
+.sns-row{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;
+  border-radius:var(--r);text-decoration:none;background:var(--bg);
+  box-shadow:var(--neu-sm);transition:box-shadow .15s
+}
+.sns-row:hover{box-shadow:var(--neu-in)}
+.sns-ico{width:32px;height:32px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.sns-name{font-size:12px;font-weight:600;color:var(--t1)}
+.sns-hand{font-size:11px;color:var(--t2);margin-top:1px}
+
+/* Member row */
+.member-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r);background:var(--bg);box-shadow:var(--neu-sm);cursor:pointer;transition:box-shadow .15s}
+.member-row:hover{box-shadow:var(--neu-in)}
+.member-row+.member-row{margin-top:8px}
+.m-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;box-shadow:var(--neu-in)}
+.m-name{font-size:13px;font-weight:600;color:var(--t1)}
+.m-ttl{font-size:11px;color:var(--t2)}
+.m-rank{font-size:10px;padding:3px 10px;border-radius:var(--rf);font-weight:700;letter-spacing:.08em;box-shadow:var(--neu-sm)}
+
+
+/* Basic info strip (profile-col) */
+.info-strip{
+  display:flex;flex-wrap:wrap;gap:6px 14px;
+  padding:14px 0 4px;
+  border-top:1px solid rgba(0,0,0,.06);
+  margin-top:12px
+}
+.info-chip{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;color:var(--t2);white-space:nowrap
+}
+.info-chip svg{flex-shrink:0;opacity:.7}
+/* Bottom nav */
+.bottom-nav{display:none}
+
+/* Mobile */
+@media(max-width:1023px){
+  .sidebar{display:none}
+  .main{margin-left:0;grid-template-columns:1fr}
+  .content-col{min-height:0}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 16px;height:52px;background:var(--sb);
+    position:sticky;top:0;z-index:40;grid-column:1/-1;
+    box-shadow:0 2px 12px rgba(0,0,0,.18)
+  }
+  .tb-logo{font-size:16px;font-weight:800;letter-spacing:.18em;color:#fff}
+  .tb-acts{display:flex;gap:8px}
+  .icon-btn{
+    width:32px;height:32px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);
+    display:flex;align-items:center;justify-content:center;color:#d4ead9;cursor:pointer
+  }
+
+  .profile-col{
+    position:static;height:auto;padding:0;
+    border-right:none;background:var(--sb);
+  }
+  .p-card{
+    margin:0;border-radius:0;box-shadow:none;
+    background:transparent;padding:24px 20px 20px;position:relative
+  }
+  .p-av-wrap{box-shadow:none;outline:2px solid rgba(255,255,255,.1);outline-offset:2px;background:rgba(255,255,255,.05)}
+  .p-av{background:rgba(255,255,255,.06);box-shadow:none;color:var(--lime);outline-color:var(--lime)}
+  .edit-btn{
+    background:rgba(255,255,255,.08);box-shadow:none;border:1px solid rgba(255,255,255,.15);
+    color:#d4ead9;top:24px;right:20px
+  }
+  .edit-btn:hover{box-shadow:none;background:rgba(255,255,255,.14)}
+  .p-name{color:#e8f4ec;font-size:20px}
+  .p-furi{color:rgba(255,255,255,.35)}
+  .p-hand{color:var(--sb-t)}
+  .p-ttl{color:var(--sb-t)}
+  .rank-badge{background:rgba(163,230,53,.12);border-color:rgba(163,230,53,.3);color:var(--lime)}
+
+  .stats-grid{
+    display:flex;margin:0;gap:0;
+    border-top:1px solid rgba(255,255,255,.07);
+    border-bottom:1px solid rgba(255,255,255,.07)
+  }
+  .stat-cell{
+    flex:1;box-shadow:none;background:transparent;border-radius:0;
+    padding:14px 0;text-align:center;border-right:1px solid rgba(255,255,255,.07);border-bottom:none
+  }
+  .stat-cell:last-child{border-right:none}
+  .stat-cell:hover{box-shadow:none;background:rgba(255,255,255,.04)}
+  .stat-num{color:#e8f4ec;font-size:20px}
+  .stat-lbl{color:rgba(255,255,255,.4)}
+
+  .os-card{
+    margin:14px 16px;box-shadow:none;border-radius:14px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)
+  }
+  .os-card:hover{box-shadow:none;background:rgba(255,255,255,.1)}
+  .os-seal{box-shadow:none;background:rgba(255,255,255,.05);outline:2px solid var(--amber);outline-offset:-2px}
+  .os-name{color:#e8f4ec}
+  .os-copy{color:var(--sb-t)}
+  .os-lbl{color:rgba(255,255,255,.3)}
+  .os-arr{color:rgba(255,255,255,.25)}
+
+  .score-wrap{margin:0 16px 24px}
+  .score-ttl{color:var(--sb-t)}
+  .score-track{box-shadow:none;background:rgba(255,255,255,.1)}
+  .miss-chip{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:#f87171}
+
+  .content-col{border-top:2px solid var(--lime)}
+  .tabs-bar{background:rgba(248,246,243,.95);top:0}
+
+  .section{padding:20px 20px 0}
+  .section:last-child{padding-bottom:88px}
+
+
+  .info-strip{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    padding:14px 20px 12px;
+    margin:0;
+    border-top:1px solid rgba(255,255,255,.07);
+    gap:9px 12px;
+    background:transparent
+  }
+  .info-chip{color:var(--sb-t);font-size:11px;white-space:nowrap}
+  .info-chip svg{stroke:var(--sb-t);opacity:.6}
+
+  /* ── Dark Neumorphism for mobile hero ── */
+  :root{
+    --neu-dk-up: 5px 5px 16px rgba(0,0,0,.38), -5px -5px 14px rgba(255,255,255,.05);
+    --neu-dk-in: inset 4px 4px 12px rgba(0,0,0,.38), inset -4px -4px 10px rgba(255,255,255,.05);
+    --neu-dk-sm: 3px 3px 8px rgba(0,0,0,.3), -3px -3px 8px rgba(255,255,255,.04);
+  }
+
+  /* Avatar: dark neu raised socket + inner raised circle */
+  .p-av-wrap{
+    box-shadow: var(--neu-dk-in) !important;
+    background: var(--sb) !important;
+    outline: none !important;
+    width: 88px; height: 88px;
+  }
+  .p-av{
+    box-shadow: var(--neu-dk-up) !important;
+    background: rgba(255,255,255,.06) !important;
+    outline: 2px solid var(--lime) !important;
+    outline-offset: 2px !important;
+    width: 72px; height: 72px;
+  }
+
+  /* Rank badge: dark neu raised pill */
+  .rank-badge{
+    box-shadow: var(--neu-dk-sm) !important;
+    background: rgba(163,230,53,.08) !important;
+    border-color: rgba(163,230,53,.2) !important;
+  }
+
+  /* Stats cells: dark neu inset (pressed) */
+  .stat-cell{
+    box-shadow: var(--neu-dk-in) !important;
+    background: rgba(255,255,255,.02) !important;
+  }
+
+  /* Soul OS card: dark neu raised */
+  .os-card{
+    box-shadow: var(--neu-dk-up) !important;
+    background: rgba(255,255,255,.04) !important;
+    border: 1px solid rgba(255,255,255,.07) !important;
+  }
+  .os-seal{
+    box-shadow: var(--neu-dk-in) !important;
+    background: var(--sb) !important;
+    outline: 2px solid var(--amber) !important;
+    outline-offset: -2px !important;
+  }
+
+  /* Score track: dark neu inset */
+  .score-track{
+    box-shadow: var(--neu-dk-in) !important;
+    background: rgba(0,0,0,.2) !important;
+  }
+
+  /* Info strip: dark neu slightly raised card */
+  .info-strip{
+    box-shadow: var(--neu-dk-up) !important;
+    background: rgba(255,255,255,.03) !important;
+    border-radius: 14px !important;
+    border-top: none !important;
+    margin: 0 16px 16px !important;
+    padding: 14px 16px 12px !important;
+  }
+
+  /* Miss chips: dark neu raised */
+  .miss-chip{
+    box-shadow: var(--neu-dk-sm) !important;
+    background: rgba(239,68,68,.08) !important;
+    border-color: rgba(239,68,68,.15) !important;
+  }
+  .bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;
+    height:60px;background:var(--sb);
+    border-top:1px solid var(--sb-b);z-index:50;padding:0 8px;
+    box-shadow:0 -2px 12px rgba(0,0,0,.18)
+  }
+  .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--sb-t);transition:color .15s;text-decoration:none}
+  .bn-item.active{color:var(--lime)}
+  .bn-lbl{font-size:9px;font-weight:600;letter-spacing:.02em}
+  body{padding-bottom:100px}
+  .content-col .tab-panel.active:last-child{padding-bottom:80px}
+  .app{padding-bottom:80px}
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fi{animation:fadeUp .35s ease both}
+.fi:nth-child(1){animation-delay:.04s}.fi:nth-child(2){animation-delay:.09s}
+.fi:nth-child(3){animation-delay:.14s}.fi:nth-child(4){animation-delay:.19s}
+.fi:nth-child(5){animation-delay:.24s}.fi:nth-child(6){animation-delay:.29s}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-text">
+      <div class="sb-logo-main">NOAH</div>
+      <div class="sb-logo-sub">誰も一人にしない</div>
+    </div>
+    <button class="sb-notif-btn" title="通知">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="sb-notif-dot"></span>
+    </button>
+  </div>
+  <div class="sb-nav">
+    <a href="#" class="sb-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>甲板
+    </a>
+    <a href="#" class="sb-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>乗組員
+    </a>
+    <a href="#" class="sb-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>イベント
+    </a>
+    <a href="#" class="sb-item">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>航海記
+    </a>
+    <a href="#" class="sb-item active">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>船室
+    </a>
+  </div>
+  <div class="sb-foot">
+    <div class="sb-user">
+      <div class="sb-av">山</div>
+      <div><div class="sb-uname">山田 拓真</div><div class="sb-handle">@takuma_noah</div></div>
+    </div>
+  </div>
+</nav>
+
+<div class="main">
+  <!-- Mobile topbar -->
+  <div class="topbar">
+    <div class="tb-logo">NOAH</div>
+    <div class="tb-acts">
+      <button class="icon-btn" style="position:relative">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span style="position:absolute;top:4px;right:4px;width:6px;height:6px;background:#ef4444;border-radius:50%;border:1.5px solid var(--sb)"></span>
+      </button>
+      <button class="icon-btn"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+    </div>
+  </div>
+
+  <!-- PROFILE COLUMN -->
+  <div class="profile-col">
+    <div class="p-card fi">
+      <button class="edit-btn">プロフィール編集</button>
+      <div class="p-av-wrap">
+        <div class="p-av">山</div>
+      </div>
+      <div class="p-name">山田 拓真</div>
+      <div class="p-furi">やまだ たくま</div>
+      <div class="p-hand">@takuma_noah</div>
+      <div class="p-ttl">プロダクトデザイナー / スタートアップ創業者</div>
+      <div class="rank-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>COVENANT
+      </div>
+    </div>
+
+    <div class="stats-grid fi">
+      <a class="stat-cell"><div class="stat-num">248</div><div class="stat-lbl">フォロワー</div></a>
+      <a class="stat-cell"><div class="stat-num">91</div><div class="stat-lbl">フォロー中</div></a>
+      <a class="stat-cell"><div class="stat-num">14</div><div class="stat-lbl">イベント参加</div></a>
+      <a class="stat-cell"><div class="stat-num">6</div><div class="stat-lbl">投稿</div></a>
+    </div>
+
+    <div class="os-card fi">
+      <div class="os-seal"><div class="os-num">47</div><div class="os-kj">蒼嶺</div></div>
+      <div class="os-body">
+        <div class="os-lbl">Soul OS · 行動設計図</div>
+        <div class="os-name">蒼嶺</div>
+        <div class="os-copy">水脈を束ね大局を描く統合型構想者</div>
+      </div>
+      <div class="os-arr"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>
+
+    <div class="score-wrap fi">
+      <div class="score-hd"><span class="score-ttl">プロフィール充実度</span><span class="score-pct">90%</span></div>
+      <div class="score-track"><div class="score-fill" id="scoreBar"></div></div>
+      <div class="miss-wrap">
+        <span class="miss-chip">キャッチフレーズ未設定</span>
+        <span class="miss-chip">連絡先未設定</span>
+      </div>
+    </div>
+
+    <div class="info-strip fi">
+      <div class="info-chip"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span>東京都</span></div>
+      <div class="info-chip"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>神奈川県出身</span></div>
+      <div class="info-chip"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>1993年5月（32歳）</span></div>
+      <div class="info-chip"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>男性</span></div>
+    </div>
+  </div>
+
+  <!-- CONTENT COLUMN -->
+  <div class="content-col">
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab(this,'profile')">プロフィール</button>
+      <button class="tab-btn" onclick="switchTab(this,'activity')">活動</button>
+      <button class="tab-btn" onclick="switchTab(this,'media')">メディア</button>
+      <button class="tab-btn" onclick="switchTab(this,'connect')">つながり</button>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="tab-panel active" id="tab-profile">
+      <div class="section fi">
+        <div class="sec-hd"><span class="sec-ttl">自己紹介</span><span class="vis vis-pub">全員に公開</span></div>
+        <div class="md">
+          <p>NOAHでつながりながら、誰も一人にしない世界をつくる。プロダクトデザイナーとして10年以上のキャリアを持ち、現在はデザインスタジオの代表として活動中。</p>
+          <p>スタートアップの<strong>UX設計から資金調達支援</strong>まで幅広く対応。創業期の「仮説検証 → プロトタイプ → グロース」のサイクルを得意としています。</p>
+          <ul>
+            <li>デザイン思考を核にしたプロダクト開発</li>
+            <li>エンジニア・ビジネスチームとの橋渡し</li>
+            <li>資金調達デッキ・ピッチ資料の制作支援</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section fi">
+        <div class="sec-hd"><span class="sec-ttl">想い・メッセージ</span><span class="vis vis-mut">相互フォローのみ</span></div>
+        <div class="md">
+          <p>「誰も一人にしない」という言葉が、私のすべての原点です。デザインの力で、一人ひとりの可能性をつないでいきたい。</p>
+          <p>NOAHでは、<strong>つながりの質を大切にしたい</strong>。数よりも、同じ志を持った仲間とのリアルな関係を育てていきたい。</p>
+          <p>一緒に何かを作りたい、話してみたい——そう思った方はぜひメッセージをください。</p>
+        </div>
+      </div>
+
+      <div class="section fi">
+        <div class="sec-hd"><span class="sec-ttl">目標・ビジョン</span><span class="vis vis-mut">相互フォローのみ</span></div>
+        <div class="md">
+          <p><strong>2026年末までの目標：</strong></p>
+          <ul>
+            <li>NOAHコミュニティを通じてスタートアップのUI/UX設計を支援する</li>
+            <li>デザインスタジオの年商をスケールさせる</li>
+            <li>UI/UXをテーマにしたオンライン講座を開設する</li>
+          </ul>
+          <p><strong>長期ビジョン：</strong>日本のスタートアップエコシステムをデザインの力で強化し、世界に通用するプロダクトを増やしていく。</p>
+        </div>
+      </div>
+
+      <div class="section fi">
+        <div class="sec-hd"><span class="sec-ttl">パーソナリティ</span></div>
+        <div class="mbti-row">
+          <div class="mbti-badge">ENTJ</div>
+          <div>
+            <div class="mbti-type">分析家 · 指揮官</div>
+            <div class="mbti-name">ENTJ</div>
+            <div class="mbti-desc">論理的で決断力があり、長期的ビジョンで組織を動かす。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section fi">
+        <div class="sec-hd"><span class="sec-ttl">スキル</span></div>
+        <div class="tags">
+          <span class="tag t-sk">UI/UXデザイン</span><span class="tag t-sk">新規事業立案</span>
+          <span class="tag t-sk">事業戦略</span><span class="tag t-sk">起業</span>
+          <span class="tag t-sk">マーケティング</span><span class="tag t-sk">プレゼンテーション</span>
+          <span class="tag t-sk">Firebase</span>
+        </div>
+      </div>
+
+      <div class="section fi">
+        <div class="sec-hd"><span class="sec-ttl">趣味・興味</span></div>
+        <div class="tags">
+          <span class="tag t-hb">登山</span><span class="tag t-hb">写真撮影</span>
+          <span class="tag t-hb">読書</span><span class="tag t-hb">コーヒー</span>
+          <span class="tag t-hb">国内旅行</span><span class="tag t-hb">海外旅行</span><span class="tag t-hb">サウナ</span>
+        </div>
+      </div>
+
+      <div class="section fi">
+        <div class="sec-hd"><span class="sec-ttl">マッチング</span></div>
+        <div class="match-g">
+          <div class="match-lbl ml-of">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>提供できること
+          </div>
+          <div class="tags">
+            <span class="tag t-of">UI/UXレビュー</span><span class="tag t-of">ビジネスメンタリング</span>
+            <span class="tag t-of">資金調達アドバイス</span><span class="tag t-of">ピッチデッキ制作</span>
+          </div>
+        </div>
+        <div class="match-g">
+          <div class="match-lbl ml-wt">
+            <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>求めていること
+          </div>
+          <div class="tags">
+            <span class="tag t-wt">エンジニアリングパートナー</span>
+            <span class="tag t-wt">マーケティング支援</span><span class="tag t-wt">デザイナー仲間</span>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="section fi">
+        <div class="sec-hd"><span class="sec-ttl">経歴</span><span class="vis vis-mut">相互フォローのみ</span></div>
+        <div class="career-list">
+          <div class="career-item">
+            <div class="c-dot cur"></div>
+            <div class="c-per">2022.04 — 現在</div>
+            <div class="c-co">NOVA Design Studio</div>
+            <div class="c-role">代表取締役 / Head of Product</div>
+            <div class="c-desc">プロダクトデザインスタジオを創業。スタートアップ向けのUX設計と資金調達支援を幅広く提供。</div>
+          </div>
+          <div class="career-item">
+            <div class="c-dot"></div>
+            <div class="c-per">2019.04 — 2022.03</div>
+            <div class="c-co">Sansan株式会社</div>
+            <div class="c-role">プロダクトデザイナー</div>
+            <div class="c-desc">名刺管理SaaSのUIリデザインを主導。デザインシステムの構築と展開を担当。</div>
+          </div>
+          <div class="career-item">
+            <div class="c-dot"></div>
+            <div class="c-per">2015 — 2019</div>
+            <div class="c-co">慶應義塾大学</div>
+            <div class="c-role">総合政策学部 卒業</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section fi" style="padding-bottom:120px">
+        <div class="sec-hd"><span class="sec-ttl">リンク・SNS</span></div>
+        <div class="sns-list">
+          <a href="#" class="sns-row">
+            <div class="sns-ico" style="background:#f3f4f6;color:#111;font-size:13px;font-weight:800;">𝕏</div>
+            <div><div class="sns-name">X (Twitter)</div><div class="sns-hand">@takuma_design</div></div>
+          </a>
+          <a href="#" class="sns-row">
+            <div class="sns-ico" style="background:#fce7f3;font-size:16px;">📷</div>
+            <div><div class="sns-name">Instagram</div><div class="sns-hand">@takuma_ig</div></div>
+          </a>
+          <a href="#" class="sns-row">
+            <div class="sns-ico" style="background:#edf3ef;color:#2d5a3d;font-size:10px;font-weight:700;">WEB</div>
+            <div><div class="sns-name">ウェブサイト</div><div class="sns-hand">nova-design.jp</div></div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY TAB -->
+    <div class="tab-panel" id="tab-activity">
+      <div class="section" style="padding-bottom:88px">
+        <div class="sec-hd"><span class="sec-ttl">最近の活動</span></div>
+        <div class="info-list">
+          <div class="info-row"><div class="info-ico">📅</div><div><div class="info-lbl">2026.05.15 · イベント参加</div><div class="info-val">スタートアップ交流会 in 渋谷</div></div></div>
+          <div class="info-row"><div class="info-ico">🎙️</div><div><div class="info-lbl">2026.05.10 · ライブ登壇</div><div class="info-val">UI/UXデザインの現場から</div></div></div>
+          <div class="info-row"><div class="info-ico">📣</div><div><div class="info-lbl">2026.05.08 · イベント主催</div><div class="info-val">デザイナー × エンジニア 交流会</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDIA TAB -->
+    <div class="tab-panel" id="tab-media">
+      <div class="section" style="padding-bottom:88px">
+        <div class="sec-hd"><span class="sec-ttl">投稿コンテンツ</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:var(--bg);border-radius:var(--r2);box-shadow:var(--neu-up);overflow:hidden;cursor:pointer">
+            <div style="aspect-ratio:1;background:linear-gradient(135deg,#1e3a5f,#0d1f35);display:flex;align-items:center;justify-content:center;font-size:28px">🎙️</div>
+            <div style="padding:12px"><div style="font-size:9px;letter-spacing:.1em;color:var(--tm);font-weight:700">CAST</div><div style="font-size:12px;font-weight:600;color:var(--t1);margin-top:3px;line-height:1.3">資金調達の現場を語る ep.3</div></div>
+          </div>
+          <div style="background:var(--bg);border-radius:var(--r2);box-shadow:var(--neu-up);overflow:hidden;cursor:pointer">
+            <div style="aspect-ratio:1;background:linear-gradient(135deg,#3e1a1a,#1a0808);display:flex;align-items:center;justify-content:center;font-size:28px">🎬</div>
+            <div style="padding:12px"><div style="font-size:9px;letter-spacing:.1em;color:var(--tm);font-weight:700">THEATER</div><div style="font-size:12px;font-weight:600;color:var(--t1);margin-top:3px;line-height:1.3">Figmaプロトタイプ完全攻略</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONNECT TAB -->
+    <div class="tab-panel" id="tab-connect">
+      <div class="section" style="padding-bottom:88px">
+        <div class="sec-hd"><span class="sec-ttl">フォロワー（248）</span></div>
+        <div class="member-row">
+          <div class="m-av" style="background:var(--bg);color:var(--sage)">佐</div>
+          <div style="flex:1"><div class="m-name">佐藤 綾音</div><div class="m-ttl">@ayn_sato · UI Designer</div></div>
+          <span class="m-rank" style="background:var(--sk-bg);color:var(--sk-t)">SETTLER</span>
+        </div>
+        <div class="member-row">
+          <div class="m-av" style="background:var(--bg);color:var(--rose)">田</div>
+          <div style="flex:1"><div class="m-name">田中 航</div><div class="m-ttl">@wataru_t · CTO / Engineer</div></div>
+          <span class="m-rank" style="background:var(--mut-bg);color:var(--mut-t)">BUILDER</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Mobile Bottom Nav -->
+<nav class="bottom-nav">
+  <a class="bn-item" href="#"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span class="bn-lbl">甲板</span></a>
+  <a class="bn-item" href="#"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="bn-lbl">乗組員</span></a>
+  <a class="bn-item" href="#"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="bn-lbl">イベント</span></a>
+  <a class="bn-item active" href="#"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="bn-lbl">船室</span></a>
+</nav>
+</div><!-- /app -->
+
+<script>
+function switchTab(el,id){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+}
+window.addEventListener('load',()=>{
+  setTimeout(()=>{const b=document.getElementById('scoreBar');if(b)b.style.width='90%'},400);
+});
+</script>
+</body>
+</html>

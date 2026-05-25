@@ -31,7 +31,7 @@ interface PlaylistDetailModalProps {
 export default function PlaylistDetailModal({ isOpen, onClose, playlist, canEdit, onEdit }: PlaylistDetailModalProps) {
     if (!isOpen || !playlist) return null;
 
-    const coverUrl = playlist.coverImageUrl || (playlist.items && playlist.items.length > 0 && playlist.items[0].thumbnailUrl) || 'https://via.placeholder.com/640x360?text=No+Cover';
+    const coverUrl = playlist.coverImageUrl || (playlist.items && playlist.items.length > 0 && playlist.items[0].thumbnailUrl) || `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360"><rect width="640" height="360" fill="%231a3024"/><text x="50%" y="52%" text-anchor="middle" fill="%238ecfb2" font-size="32" font-weight="700" font-family="sans-serif">NOAH</text></svg>')}`;
     const itemCount = playlist.items?.length || 0;
 
     return (
@@ -108,7 +108,7 @@ export default function PlaylistDetailModal({ isOpen, onClose, playlist, canEdit
                                                 {index + 1}
                                             </div>
                                             <div className="w-24 md:w-32 aspect-video bg-black rounded-sm overflow-hidden flex-shrink-0 relative border border-brand-200/50 shadow-sm">
-                                                <img src={item.thumbnailUrl || 'https://via.placeholder.com/160x120?text=No+Image'} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" />
+                                                <img src={item.thumbnailUrl || `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120"><rect width="160" height="120" fill="%231a3024"/><text x="50%" y="54%" text-anchor="middle" fill="%238ecfb2" font-size="14" font-weight="700" font-family="sans-serif">NOAH</text></svg>')}`} className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" />
                                                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <Play size={16} className="text-white drop-shadow-md" fill="white" />
                                                 </div>

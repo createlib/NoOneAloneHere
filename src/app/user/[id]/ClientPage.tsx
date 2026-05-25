@@ -21,7 +21,7 @@ const THEME_COLORS: Record<string, { bg: string; main: string; sub: string }> = 
     '癸': { bg: '#060913', main: '#C5A880', sub: '#3B82F6' }
 };
 
-const DEFAULT_ICON = 'https://via.placeholder.com/150/f7f5f0/c8b9a6?text=U';
+const DEFAULT_ICON = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150"><rect width="150" height="150" rx="75" fill="%23f7f5f0"/><text x="50%" y="56%" text-anchor="middle" fill="%23c8b9a6" font-size="48" font-weight="700" font-family="sans-serif">U</text></svg>')}`;
 
 function decodeHtml(html: string) {
     if (!html) return '';

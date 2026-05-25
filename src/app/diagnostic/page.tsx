@@ -105,26 +105,39 @@ function DiagnosticContent() {
 
         const loadData = async () => {
             try {
-                const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data');
-                const snap = await getDoc(profileRef);
+                // --- Viewer's own rank (for locked content check) ---
+                const myProfileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data');
+                const mySnap = await getDoc(myProfileRef);
                 let rank = 'arrival';
+                if (mySnap.exists()) rank = mySnap.data().membershipRank || 'arrival';
+                if (localStorage.getItem('isAdminMock') === 'true' || rank === 'admin') rank = 'admin';
+                setUserRank(rank);
+
+                // --- Target user (may be someone else via ?uid=) ---
+                const targetUidParam = searchParams.get('uid');
                 let osId = searchParams.get('osId');
 
-                if (snap.exists()) {
-                    const profData = snap.data();
-                    rank = profData.membershipRank || 'arrival';
-                    if (!osId) osId = profData.osNumber ? String(profData.osNumber) : "50";
-                }
-                if (localStorage.getItem('isAdminMock') === 'true' || rank === 'admin') {
-                    rank = 'admin';
-                    if (!osId) osId = "50";
+                if (targetUidParam && targetUidParam !== user.uid) {
+                    // Viewing another user's OS — load their profile
+                    const targetRef = doc(db, 'artifacts', APP_ID, 'users', targetUidParam, 'profile', 'data');
+                    const targetSnap = await getDoc(targetRef);
+                    if (targetSnap.exists() && !osId) {
+                        const pd = targetSnap.data();
+                        osId = pd.osNumber ? String(pd.osNumber) : null;
+                    }
+                } else {
+                    // Own page
+                    if (mySnap.exists() && !osId) {
+                        const pd = mySnap.data();
+                        osId = pd.osNumber ? String(pd.osNumber) : '50';
+                    }
                 }
 
-                setUserRank(rank);
+                if (!osId) osId = '50';
 
                 const docRef = doc(db, 'artifacts', APP_ID, 'os_blueprints', String(osId));
                 const docSnap = await getDoc(docRef);
-                
+
                 let blueprintData;
                 if (docSnap.exists()) {
                     blueprintData = docSnap.data();

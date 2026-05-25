@@ -21,6 +21,10 @@ export default function Navbar() {
     }
   }
 
+  // AppShell を使うページでは Navbar を非表示（二重表示防止）
+  const APPSHELL_PAGES = ['/user', '/search', '/events', '/home', '/crew'];
+  if (APPSHELL_PAGES.some(p => pathname === p || pathname.startsWith(p + '/'))) return null;
+
   return (
     <>
       <nav className="glass-header border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm bg-texture backdrop-blur-md bg-opacity-90 bg-brand-50/90">
@@ -37,7 +41,7 @@ export default function Navbar() {
           {/* PC Navigation Links */}
           <div className="hidden lg:flex items-center gap-6 h-full">
             <Link href="/home" className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/home' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
-              <Ship size={16} /> 航海
+             <Ship size={16} /> 甲板
             </Link>
             <Link href="/events" className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/events' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
               <Hourglass size={16} /> イベント
@@ -47,12 +51,12 @@ export default function Navbar() {
               className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/search' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}
               onClick={(e) => { if (pathname === '/search') { e.preventDefault(); window.location.href = '/search'; } }}
             >
-              <Compass size={16} /> さがす
+              <Compass size={16} /> 乗組員
             </Link>
             
             <div className="relative group h-full flex items-center">
               <button className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide focus:outline-none border-b-[3px] ${pathname.includes('/media') ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}>
-                <Film size={16} /> メディア
+                <Film size={16} /> 航海記
               </button>
               <div className="absolute top-[calc(100%-0.5rem)] left-1/2 transform -translate-x-1/2 w-48 bg-brand-50 border border-brand-200 shadow-xl rounded-sm hidden group-hover:block transition-opacity overflow-hidden">
                 <Link href="/media/videos" className="flex items-center px-4 py-3 text-sm font-bold text-brand-800 hover:bg-white border-b border-brand-100 transition-colors tracking-widest group/item">
@@ -69,7 +73,7 @@ export default function Navbar() {
               className={`transition-colors flex items-center h-full gap-2 font-bold text-sm tracking-wide border-b-[3px] ${pathname === '/user' ? 'text-brand-600 border-brand-500' : 'text-brand-400 border-transparent hover:text-brand-600'}`}
               onClick={(e) => { if (pathname === '/user') { e.preventDefault(); window.location.href = '/user'; } }}
             >
-              <User size={16} /> マイページ
+              <User size={16} /> 船室
             </Link>
             {pathname === '/user' && (
               <>
@@ -98,11 +102,11 @@ export default function Navbar() {
       </nav>
 
       {/* Bottom Navigation (Mobile Only) */}
-      <nav className="fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <nav className="legacy-bottom-nav fixed bottom-0 w-full bg-[#fffdf9] border-t border-brand-200 lg:hidden z-[1900] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="flex justify-around items-center h-16">
           <Link href="/home" className={`flex flex-col items-center justify-center w-full h-full transition-colors ${pathname === '/home' ? 'text-brand-600 border-t-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
             <Ship size={20} className="mb-1" />
-            <span className={`text-[10px] tracking-widest ${pathname === '/home' ? 'font-bold' : 'font-medium'}`}>航海</span>
+            <span className={`text-[10px] tracking-widest ${pathname === '/home' ? 'font-bold' : 'font-medium'}`}>甲板</span>
           </Link>
           <Link href="/events" className={`flex flex-col items-center justify-center w-full h-full transition-colors ${pathname === '/events' ? 'text-brand-600 border-t-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
             <Hourglass size={20} className="mb-1" />
@@ -114,11 +118,11 @@ export default function Navbar() {
             onClick={(e) => { if (pathname === '/search') { e.preventDefault(); window.location.href = '/search'; } }}
           >
             <Compass size={20} className="mb-1" />
-            <span className={`text-[10px] tracking-widest ${pathname === '/search' ? 'font-bold' : 'font-medium'}`}>さがす</span>
+            <span className={`text-[10px] tracking-widest ${pathname === '/search' ? 'font-bold' : 'font-medium'}`}>乗組員</span>
           </Link>
           <button onClick={() => setIsTheaterOpen(true)} className={`flex flex-col items-center justify-center w-full h-full transition-colors focus:outline-none ${pathname.includes('/media') ? 'text-brand-600 border-t-2 border-brand-500 pt-[2px]' : 'text-brand-400 hover:text-brand-600'}`}>
             <Film size={20} className="mb-1" />
-            <span className={`text-[10px] tracking-widest ${pathname.includes('/media') ? 'font-bold' : 'font-medium'}`}>メディア</span>
+            <span className={`text-[10px] tracking-widest ${pathname.includes('/media') ? 'font-bold' : 'font-medium'}`}>航海記</span>
           </button>
           <Link 
             href="/user" 
@@ -126,7 +130,7 @@ export default function Navbar() {
             onClick={(e) => { if (pathname === '/user') { e.preventDefault(); window.location.href = '/user'; } }}
           >
             <User size={20} className="mb-1" />
-            <span className={`text-[10px] tracking-widest ${pathname === '/user' ? 'font-bold' : 'font-medium'}`}>マイページ</span>
+            <span className={`text-[10px] tracking-widest ${pathname === '/user' ? 'font-bold' : 'font-medium'}`}>船室</span>
           </Link>
         </div>
       </nav>

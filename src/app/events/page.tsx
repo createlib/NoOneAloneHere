@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { db, storage, APP_ID } from '@/lib/firebase';
 import { collection, query, orderBy, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, where, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import Navbar from '@/components/Navbar';
+import AppShell from '@/components/AppShell';
 import EventDetailSheet, { formatText } from '@/components/EventDetailSheet';
 import { Anchor, Compass, Hourglass, Ship, User, Image as ImageIcon, Check, MapPin, List, Briefcase, Sliders, X, CirclePlus, Tags, Lock, Building, DollarSign, Calendar, Search, Share2, Loader2 } from 'lucide-react';
 import Script from 'next/script';
@@ -441,15 +441,37 @@ ${registerUrl}`;
             if (eventPriceFilter === 'paid' && Number(e.price) <= 0) return false;
             if (eventFormatFilter === 'offline' && e.isOnline) return false;
             if (eventFormatFilter === 'online' && !e.isOnline) return false;
-            
+
+            // 過去イベントを常に除外（終了時刻ベース）
             if (e.endTimestamp) {
                 if (new Date(e.endTimestamp) < new Date()) return false;
             } else if (e.endDate && e.endTime) {
                 if (new Date(`${e.endDate}T${e.endTime}`) < new Date()) return false;
             }
 
+            // 開催時期フィルター（startDate基準）
+            if (eventDateFilter !== 'all') {
+                const now = new Date();
+                let startDt: Date | null = null;
+                if (e.startDate && e.startTime) startDt = new Date(`${e.startDate}T${e.startTime}`);
+                else if (e.startDate) startDt = new Date(`${e.startDate}T00:00:00`);
+
+                if (!startDt || isNaN(startDt.getTime())) return false;
+
+                const diffMs = startDt.getTime() - now.getTime();
+                if (eventDateFilter === 'today') {
+                    if (startDt.toDateString() !== now.toDateString()) return false;
+                } else if (eventDateFilter === 'week') {
+                    if (diffMs < 0 || diffMs > 7 * 24 * 60 * 60 * 1000) return false;
+                } else if (eventDateFilter === 'month') {
+                    if (diffMs < 0 || diffMs > 30 * 24 * 60 * 60 * 1000) return false;
+                }
+            }
+
             if (eventTagsFilter.size > 0) {
-                const hasTag = e.tags?.some(t => eventTagsFilter.has(t));
+                // タグ一致チェック：「オンライン」タグはisOnlineフラグも考慮
+                const hasTag = e.tags?.some((t: string) => eventTagsFilter.has(t)) ||
+                    (eventTagsFilter.has('オンライン') && e.isOnline);
                 if (!hasTag) return false;
             }
             
@@ -719,6 +741,30 @@ ${registerUrl}`;
         setJobModalOpen(true);
     };
 
+    // ── 削除処理 ──
+    const deleteEvent = async (evt: EventData) => {
+        if (!user) return;
+        try {
+            const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'events', evt.id);
+            await deleteDoc(ref);
+            setAllEvents(prev => prev.filter(e => e.id !== evt.id));
+        } catch (e) {
+            console.error('イベント削除エラー:', e);
+            alert('削除に失敗しました。');
+        }
+    };
+
+    const deleteJob = async (j: JobData) => {
+        if (!user) return;
+        try {
+            const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'jobs', j.id);
+            await deleteDoc(ref);
+            setAllJobs(prev => prev.filter(x => x.id !== j.id));
+        } catch (e) {
+            console.error('仕事削除エラー:', e);
+            alert('削除に失敗しました。');
+        }
+    };
     const submitEvent = async () => {
         if (!user) return;
         setSubmittingEvent(true);
@@ -991,139 +1037,119 @@ ${registerUrl}`;
         }
     };
 
-    return (
-        <div className="min-h-screen bg-texture flex flex-col pt-16 pb-20 lg:pb-0">
-            <Navbar />
+    // ── Design tokens ──
+    const BG='#f8f6f3', SB='#1a3024', LIME='#8ecfb2', SAGE='#4a7c59';
+    const T1='#2a2520', T2='#7a7068', TM='#b0a89e';
+    const NEU='4px 4px 12px #dbd7d2,-4px -4px 12px #ffffff';
+    const NEU_IN='inset 3px 3px 8px #e4e0db,inset -3px -3px 8px #ffffff';
+    const activeTab:React.CSSProperties={background:SB,color:LIME,borderRadius:10,padding:'8px 16px',fontSize:11,fontWeight:800,letterSpacing:'.06em',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:5,whiteSpace:'nowrap',transition:'all .2s'};
+    const inactiveTab:React.CSSProperties={background:'transparent',color:T2,borderRadius:10,padding:'8px 16px',fontSize:11,fontWeight:700,letterSpacing:'.06em',border:'none',cursor:'pointer',display:'flex',alignItems:'center',gap:5,whiteSpace:'nowrap',transition:'all .2s'};
 
-            {/* Top View Tabs */}
-            <div className="fixed top-16 w-full z-[40] bg-[#fffdf9]/95 backdrop-blur border-b border-brand-200 py-2 shadow-sm">
-                <div className="max-w-3xl mx-auto px-4 flex justify-between items-center">
-                    <div className="inline-flex bg-brand-50 border border-brand-200 rounded-sm p-1 shadow-inner w-full sm:w-auto">
-                        <button onClick={() => setViewMode('map')} className={`tab-btn flex-1 sm:flex-none px-2 sm:px-5 py-2 text-[11px] sm:text-xs font-bold rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 whitespace-nowrap ${viewMode === 'map' ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]' : 'text-brand-700 bg-[#fffdf9] border border-transparent'}`}>
-                            <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> マップ
+    const logoutFn = async () => {
+        const { auth: fireAuth } = await import('@/lib/firebase');
+        const { signOut } = await import('firebase/auth');
+        try { await signOut(fireAuth); router.push('/login'); } catch {}
+    };
+
+    return (
+        <AppShell
+            activeHref="/events"
+            currentUid={user?.uid || ''}
+            userName={userData?.name || user?.displayName || user?.email || undefined}
+            userIdStr={user?.email || undefined}
+            photoURL={userData?.photoURL || user?.photoURL || undefined}
+            hideTopbarOnMobile
+            onLogout={logoutFn}
+        >
+
+            {/* ── Top Tab Bar ── */}
+            <div style={{position:'sticky',top:0,width:'100%',zIndex:40,background:`${BG}f5`,backdropFilter:'blur(16px)',borderBottom:`1px solid rgba(0,0,0,.07)`,padding:'8px 0',boxShadow:'0 2px 12px rgba(0,0,0,.06)'}}>
+                <div style={{maxWidth:900,margin:'0 auto',padding:'0 16px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <div style={{display:'flex',background:BG,borderRadius:14,padding:4,boxShadow:NEU_IN,gap:2,flex:1}}>
+                        <button onClick={()=>setViewMode('map')} style={viewMode==='map'?activeTab:inactiveTab}>
+                            <MapPin size={13}/>マップ
                         </button>
-                        <button onClick={() => setViewMode('list-events')} className={`tab-btn flex-1 sm:flex-none px-2 sm:px-5 py-2 text-[11px] sm:text-xs font-bold rounded-sm transition-colors tracking-widest font-serif flex items-center justify-center gap-1 whitespace-nowrap ${viewMode === 'list-events' ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]' : 'text-brand-700 bg-[#fffdf9] border border-transparent'}`}>
-                            <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> イベント
+                        <button onClick={()=>setViewMode('list-events')} style={viewMode==='list-events'?activeTab:inactiveTab}>
+                            <List size={13}/>イベント
                         </button>
-                        <button onClick={() => setViewMode('list-jobs')} className={`tab-btn flex-1 sm:flex-none px-1 sm:px-5 py-2 text-[11px] sm:text-xs font-bold rounded-sm transition-colors tracking-[0.05em] sm:tracking-widest font-serif flex items-center justify-center gap-0.5 sm:gap-1 whitespace-nowrap ${viewMode === 'list-jobs' ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]' : 'text-brand-700 bg-[#fffdf9] border border-transparent'}`}>
-                            <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 仕事・依頼
+                        <button onClick={()=>setViewMode('list-jobs')} style={viewMode==='list-jobs'?activeTab:inactiveTab}>
+                            <Briefcase size={13}/>仕事・依頼
                         </button>
                     </div>
-                    {/* Filter Button */}
-                    <button onClick={() => setIsFilterOpen(true)} className="ml-3 p-2 bg-[#fffdf9] border border-brand-200 text-brand-600 hover:bg-brand-50 rounded-sm transition-colors relative shadow-sm flex-shrink-0" title="絞り込み">
-                        <Sliders className="w-4 h-4" />
+                    <button onClick={()=>setIsFilterOpen(true)} title="絞り込み"
+                        style={{marginLeft:10,width:38,height:38,borderRadius:10,border:'none',background:BG,boxShadow:NEU,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:SAGE,flexShrink:0}}>
+                        <Sliders size={16}/>
                     </button>
                 </div>
             </div>
 
-            {/* Filter Panel */}
-            <div className={`fixed top-0 left-0 w-full h-full bg-[#2a1a17]/50 z-[100] transition-opacity duration-300 backdrop-blur-sm ${isFilterOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <div className={`absolute right-0 top-0 h-full w-80 sm:w-96 bg-[#fffdf9] bg-texture shadow-2xl transform transition-transform duration-300 flex flex-col border-l border-brand-200 ${isFilterOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                    <div className="p-4 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] z-10 relative">
-                        <h3 className="font-bold text-lg flex items-center gap-2 text-brand-900 font-serif tracking-widest">
-                            <Sliders className="w-5 h-5 text-brand-500" /> {viewMode === 'list-jobs' ? '仕事・依頼の絞り込み' : 'イベントの絞り込み'}
+            {/* ── Filter Panel ── */}
+            <div style={{position:'fixed',inset:0,zIndex:100,background:'rgba(0,0,0,.4)',backdropFilter:'blur(4px)',transition:'opacity .3s',
+                opacity:isFilterOpen?1:0,pointerEvents:isFilterOpen?'auto':'none'}}>
+                <div style={{position:'absolute',right:0,top:0,height:'100%',width:320,background:BG,boxShadow:'-8px 0 40px rgba(0,0,0,.15)',
+                    transform:isFilterOpen?'translateX(0)':'translateX(100%)',transition:'transform .3s',display:'flex',flexDirection:'column'}}>
+                    {/* Header */}
+                    <div style={{padding:'16px 20px',borderBottom:`1px solid rgba(0,0,0,.07)`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                        <h3 style={{margin:0,fontSize:15,fontWeight:800,color:T1,display:'flex',alignItems:'center',gap:8}}>
+                            <Sliders size={16} color={SAGE}/>
+                            {viewMode==='list-jobs'?'仕事・依頼の絞り込み':'イベントの絞り込み'}
                         </h3>
-                        <button onClick={() => setIsFilterOpen(false)} className="p-2 text-brand-400 hover:text-brand-700 rounded-sm hover:bg-brand-50 transition-colors">
-                            <X className="w-5 h-5" />
+                        <button onClick={()=>setIsFilterOpen(false)}
+                            style={{width:32,height:32,borderRadius:8,border:'none',background:BG,boxShadow:NEU,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:T2}}>
+                            <X size={16}/>
                         </button>
                     </div>
-                    
-                    {viewMode !== 'list-jobs' ? (
-                        <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                            <div>
-                                <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><Calendar className="w-4 h-4 inline mr-1"/>開催時期</label>
-                                <select value={eventDateFilter} onChange={e=>setEventDateFilter(e.target.value)} className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:outline-none focus:border-brand-500 font-serif tracking-widest">
-                                    <option value="all">すべて</option>
-                                    <option value="today">今日</option>
-                                    <option value="week">1週間以内</option>
-                                    <option value="month">1ヶ月以内</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><MapPin className="w-4 h-4 inline mr-1"/>開催形式</label>
-                                <select value={eventFormatFilter} onChange={e=>setEventFormatFilter(e.target.value)} className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:outline-none focus:border-brand-500 font-serif tracking-widest">
-                                    <option value="all">すべて</option>
-                                    <option value="offline">オフライン（現地）のみ</option>
-                                    <option value="online">オンラインのみ</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><DollarSign className="w-4 h-4 inline mr-1"/>参加費</label>
-                                <select value={eventPriceFilter} onChange={e=>setEventPriceFilter(e.target.value)} className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:outline-none focus:border-brand-500 font-serif tracking-widest">
-                                    <option value="all">すべて</option>
-                                    <option value="free">無料のみ</option>
-                                    <option value="paid">有料のみ</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-3"><Tags className="w-4 h-4 inline mr-1"/>タグで絞り込み</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {PRESET_TAGS.map(tag => (
-                                        <label key={tag} className="cursor-pointer">
-                                            <input type="checkbox" checked={eventTagsFilter.has(tag)} onChange={() => toggleEventTagFilter(tag)} className="hidden bg-white" />
-                                            <div className={`px-2 py-1 rounded-sm border text-xs tracking-widest shadow-sm select-none transition-colors ${eventTagsFilter.has(tag) ? 'bg-[#3e2723] text-[#d4af37] border-[#b8860b]' : 'border-brand-200 text-brand-700 bg-white hover:bg-[#fffdf9]'}`}>{tag}</div>
-                                        </label>
-                                    ))}
+                    {/* Body */}
+                    <div style={{flex:1,overflowY:'auto',padding:20,display:'flex',flexDirection:'column',gap:20}}>
+                        {viewMode!=='list-jobs' ? (
+                            <>
+                                {[{label:'開催時期',val:eventDateFilter,set:setEventDateFilter,icon:<Calendar size={13} color={SAGE}/>,opts:[{v:'all',l:'すべて'},{v:'today',l:'今日'},{v:'week',l:'1週間以内'},{v:'month',l:'1ヶ月以内'}]},
+                                 {label:'開催形式',val:eventFormatFilter,set:setEventFormatFilter,icon:<MapPin size={13} color={SAGE}/>,opts:[{v:'all',l:'すべて'},{v:'offline',l:'オフラインのみ'},{v:'online',l:'オンラインのみ'}]},
+                                 {label:'参加費',val:eventPriceFilter,set:setEventPriceFilter,icon:<DollarSign size={13} color={SAGE}/>,opts:[{v:'all',l:'すべて'},{v:'free',l:'無料のみ'},{v:'paid',l:'有料のみ'}]}].map(({label,val,set,icon,opts})=>(
+                                    <div key={label}>
+                                        <label style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:700,color:T2,marginBottom:8}}>{icon}{label}</label>
+                                        <select value={val} onChange={e=>set(e.target.value)}
+                                            style={{width:'100%',boxSizing:'border-box',background:BG,border:'none',borderRadius:10,padding:'10px 14px',fontSize:13,color:T1,boxShadow:NEU_IN,outline:'none',cursor:'pointer'}}>
+                                            {opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                                        </select>
+                                    </div>
+                                ))}
+                                <div>
+                                    <label style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:700,color:T2,marginBottom:10}}><Tags size={13} color={SAGE}/>タグで絞り込み</label>
+                                    <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                                        {PRESET_TAGS.map(tag=>(
+                                            <button key={tag} type="button" onClick={()=>toggleEventTagFilter(tag)}
+                                                style={{padding:'6px 12px',borderRadius:20,border:'none',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all .2s',
+                                                    background:eventTagsFilter.has(tag)?SB:BG,
+                                                    color:eventTagsFilter.has(tag)?LIME:T2,
+                                                    boxShadow:eventTagsFilter.has(tag)?'0 4px 12px rgba(26,48,36,.3)':NEU}}>
+                                                {tag}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                            <div>
-                                <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><Briefcase className="w-4 h-4 inline mr-1"/>募集タイプ</label>
-                                <select value={jobTypeFilter} onChange={e=>setJobTypeFilter(e.target.value)} className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:outline-none focus:border-brand-500 font-serif tracking-widest">
-                                    <option value="">指定なし</option>
-                                    <option value="formal_job">求人・業務委託</option>
-                                    <option value="casual_request">軽いお願い・お手伝い</option>
-                                    <option value="lending">モノ・場所の貸し借り</option>
-                                    <option value="member">仲間・パートナー募集</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><Briefcase className="w-4 h-4 inline mr-1"/>業種カテゴリ</label>
-                                <select value={jobCategoryFilter} onChange={e=>setJobCategoryFilter(e.target.value)} className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:outline-none focus:border-brand-500 font-serif tracking-widest">
-                                    <option value="">指定なし</option>
-                                    <option value="デザイン">デザイン (仕事)</option>
-                                    <option value="エンジニア">エンジニア (仕事)</option>
-                                    <option value="マーケティング">マーケティング (仕事)</option>
-                                    <option value="営業">営業 (仕事)</option>
-                                    <option value="動画制作">動画制作・写真撮影 (仕事)</option>
-                                    <option value="ライティング">ライティング (仕事)</option>
-                                    <option value="事務・サポート">事務・サポート (仕事)</option>
-                                    <option value="各種相談・教えて">各種相談・教えて (カジュアル)</option>
-                                    <option value="作業手伝い・ボランティア">作業手伝い・ボランティア (カジュアル)</option>
-                                    <option value="おつかい・代行">おつかい・代行 (カジュアル)</option>
-                                    <option value="趣味・スキル交換">趣味・スキル交換 (カジュアル)</option>
-                                    <option value="あげる・譲る">不要品あげる・譲る (譲渡)</option>
-                                    <option value="譲ってほしい・貸して">譲ってほしい・貸して (譲受)</option>
-                                    <option value="その他">その他</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><Building className="w-4 h-4 inline mr-1"/>勤務形態</label>
-                                <select value={jobWorkstyleFilter} onChange={e=>setJobWorkstyleFilter(e.target.value)} className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:outline-none focus:border-brand-500 font-serif tracking-widest">
-                                    <option value="">指定なし</option>
-                                    <option value="フルリモート">フルリモート</option>
-                                    <option value="一部出社">一部出社</option>
-                                    <option value="出社必須">出社必須</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-[11px] font-bold text-brand-500 tracking-widest mb-2"><DollarSign className="w-4 h-4 inline mr-1"/>報酬形態</label>
-                                <select value={jobRewardFilter} onChange={e=>setJobRewardFilter(e.target.value)} className="w-full border border-brand-200 rounded-sm text-sm p-2.5 bg-[#fffdf9] focus:outline-none focus:border-brand-500 font-serif tracking-widest">
-                                    <option value="">指定なし</option>
-                                    <option value="固定報酬">固定報酬</option>
-                                    <option value="時給">時給</option>
-                                    <option value="月給">月給</option>
-                                    <option value="成果報酬">成果報酬</option>
-                                    <option value="無償・レベニューシェア">無償・レベニューシェア</option>
-                                </select>
-                            </div>
-                        </div>
-                    )}
-                    
-                    <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-10 sm:pb-4 relative z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                        <button onClick={() => setIsFilterOpen(false)} className="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723]">
+                            </>
+                        ) : (
+                            <>
+                                {[{label:'募集タイプ',val:jobTypeFilter,set:setJobTypeFilter,icon:<Briefcase size={13} color={SAGE}/>,opts:[{v:'',l:'指定なし'},{v:'formal_job',l:'求人・業務委託'},{v:'casual_request',l:'軽いお願い・アルバイト'},{v:'lending',l:'モノ・場所の貸し借り'},{v:'member',l:'仲間・パートナー募集'}]},
+                                 {label:'業種カテゴリ',val:jobCategoryFilter,set:setJobCategoryFilter,icon:<Briefcase size={13} color={SAGE}/>,opts:[{v:'',l:'指定なし'},{v:'デザイン',l:'デザイン'},{v:'エンジニア',l:'エンジニア'},{v:'マーケティング',l:'マーケティング'},{v:'営業',l:'営業'},{v:'動画制作',l:'動画制作'},{v:'ライティング',l:'ライティング'},{v:'事務・サポート',l:'事務・サポート'},{v:'その他',l:'その他'}]},
+                                 {label:'勤務形態',val:jobWorkstyleFilter,set:setJobWorkstyleFilter,icon:<Building size={13} color={SAGE}/>,opts:[{v:'',l:'指定なし'},{v:'フルリモート',l:'フルリモート'},{v:'一部出社',l:'一部出社'},{v:'出社必須',l:'出社必須'}]},
+                                 {label:'報酸形態',val:jobRewardFilter,set:setJobRewardFilter,icon:<DollarSign size={13} color={SAGE}/>,opts:[{v:'',l:'指定なし'},{v:'固定報酸',l:'固定報酸'},{v:'時給',l:'時給'},{v:'月給',l:'月給'},{v:'成果報酸',l:'成果報酸'},{v:'無償・レベニューシェア',l:'無償・レベニューシェア'}]}].map(({label,val,set,icon,opts})=>(
+                                    <div key={label}>
+                                        <label style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontWeight:700,color:T2,marginBottom:8}}>{icon}{label}</label>
+                                        <select value={val} onChange={e=>set(e.target.value)}
+                                            style={{width:'100%',boxSizing:'border-box',background:BG,border:'none',borderRadius:10,padding:'10px 14px',fontSize:13,color:T1,boxShadow:NEU_IN,outline:'none',cursor:'pointer'}}>
+                                            {opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                                        </select>
+                                    </div>
+                                ))}
+                            </>
+                        )}
+                    </div>
+                    {/* Footer */}
+                    <div className="filter-footer-pb" style={{padding:'12px 20px',paddingBottom:'calc(12px + 60px + env(safe-area-inset-bottom))',borderTop:`1px solid rgba(0,0,0,.07)`,flexShrink:0}}>
+                        <button onClick={()=>setIsFilterOpen(false)}
+                            style={{width:'100%',background:SB,color:LIME,border:'none',borderRadius:12,padding:'13px 0',fontWeight:800,fontSize:13,letterSpacing:'.05em',cursor:'pointer',boxShadow:'0 4px 16px rgba(26,48,36,.3)'}}>
                             絞り込みを適用
                         </button>
                     </div>
@@ -1131,33 +1157,37 @@ ${registerUrl}`;
             </div>
 
             {/* Main Content Area */}
-            <div className="mt-14 w-full flex-1 relative z-0">
+            <div style={{width:'100%',flex:1,position:'relative',zIndex:0}}>
                 {/* View 1: Map */}
-                <div className={`relative w-full h-[calc(100vh-120px)] ${viewMode === 'map' ? 'block' : 'hidden'}`}>
-                    {/* Floating Map Search Bar */}
-                    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[30] w-[90%] max-w-md pointer-events-none transition-opacity duration-300">
-                        <div className={`relative flex-1 shadow-lg rounded-sm pointer-events-auto border border-brand-200 text-brand-700 ${adjustMode ? 'hidden' : ''}`}>
-                            <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400" />
-                            <input 
-                                type="text"
-                                value={mapSearchText}
-                                onChange={(e) => setMapSearchText(e.target.value)}
-                                placeholder="イベント・仕事・場所を検索..."
-                                className="w-full bg-[#fffdf9]/95 backdrop-blur border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-sm font-serif tracking-widest"
-                            />
+                <div className="ev-map-height" style={{position:'relative',width:'100%',display:viewMode==='map'?'block':'none'}}>
+                    {/* Floating Map Search Bar — neumorphic style */}
+                    {!adjustMode && (
+                        <div style={{position:'absolute',top:12,left:'50%',transform:'translateX(-50%)',zIndex:30,width:'90%',maxWidth:440}}>
+                            <div style={{position:'relative',background:'rgba(248,246,243,.95)',borderRadius:12,boxShadow:'0 4px 24px rgba(0,0,0,.15)',backdropFilter:'blur(12px)'}}>
+                                <Search size={15} style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'#7a7068',pointerEvents:'none'}}/>
+                                <input
+                                    type="text"
+                                    value={mapSearchText}
+                                    onChange={(e) => setMapSearchText(e.target.value)}
+                                    placeholder="イベント・仕事・場所を検索..."
+                                    style={{width:'100%',boxSizing:'border-box',background:'transparent',border:'none',borderRadius:12,padding:'12px 14px 12px 40px',fontSize:13,color:'#2a2520',outline:'none'}}
+                                />
+                            </div>
                         </div>
-                    </div>
+                    )}
                     <div ref={mapRef} className="w-full h-full z-[10]" />
 
                     {adjustMode && (
-                        <div className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] lg:bottom-10 left-1/2 transform -translate-x-1/2 z-[90] w-[90%] max-w-sm pointer-events-auto">
-                            <div className="bg-[#fffdf9] p-5 rounded-sm shadow-2xl border-2 border-brand-500 text-center text-brand-900 font-serif">
-                                <p className="font-bold mb-3 tracking-widest text-sm"><MapPin className="text-red-500 w-5 h-5 inline mr-2"/>赤色のピンを動かして調整</p>
-                                <button onClick={() => {
-                                    if (adjustMode === 'event') setEventModalOpen(true);
-                                    if (adjustMode === 'job') setJobModalOpen(true);
+                        <div style={{position:'fixed',bottom:'calc(6rem + env(safe-area-inset-bottom))',left:'50%',transform:'translateX(-50%)',zIndex:90,width:'90%',maxWidth:360}}>
+                            <div style={{background:BG,padding:20,borderRadius:16,boxShadow:'0 8px 32px rgba(0,0,0,.2)',border:`2px solid ${LIME}`,textAlign:'center'}}>
+                                <p style={{fontWeight:800,marginBottom:12,fontSize:13,color:T1,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                                    <MapPin size={16} color='#e05050'/>赤色のピンを動かして調整
+                                </p>
+                                <button onClick={()=>{
+                                    if(adjustMode==='event')setEventModalOpen(true);
+                                    if(adjustMode==='job')setJobModalOpen(true);
                                     setAdjustMode(null);
-                                }} className="w-full bg-[#3e2723] text-[#d4af37] font-bold py-3 rounded-sm shadow-md tracking-widest text-sm hover:bg-[#2a1a17] border border-[#b8860b]">
+                                }} style={{width:'100%',background:SB,color:LIME,border:'none',borderRadius:10,padding:'12px 0',fontWeight:800,fontSize:13,cursor:'pointer',letterSpacing:'.04em'}}>
                                     位置を決定して戻る
                                 </button>
                             </div>
@@ -1165,147 +1195,143 @@ ${registerUrl}`;
                     )}
                 </div>
 
-                {/* View 2: List Events */}
-                <div className={`max-w-4xl mx-auto px-4 pt-6 ${viewMode === 'list-events' ? 'block' : 'hidden'}`}>
-                    {/* Event List Search Bar */}
-                    <div className="mb-6 relative shadow-sm rounded-sm border border-brand-200 bg-white">
-                        <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400" />
-                        <input 
-                            type="text"
-                            value={mapSearchText}
-                            onChange={(e) => setMapSearchText(e.target.value)}
-                            placeholder="イベント・場所を検索..." 
-                            className="w-full bg-transparent border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none font-serif tracking-widest"
-                        />
+                {/* ── View 2: List Events ── */}
+                <div style={{maxWidth:768,margin:'0 auto',padding:'0 16px 16px',display:viewMode==='list-events'?'block':'none'}}>
+                    {/* Search bar */}
+                    <div style={{margin:'16px 0',position:'relative'}}>
+                        <Search size={15} style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:TM,pointerEvents:'none'}}/>
+                        <input type="text" value={mapSearchText} onChange={e=>setMapSearchText(e.target.value)}
+                            placeholder="イベント・場所を検索..."
+                            style={{width:'100%',boxSizing:'border-box',background:BG,border:'none',borderRadius:12,padding:'12px 14px 12px 40px',fontSize:13,color:T1,boxShadow:NEU_IN,outline:'none'}}/>
                     </div>
-                    
-                    <div className="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
-                        <h2 className="text-xl font-bold text-brand-900 font-serif tracking-widest">イベント一覧</h2>
-                        <span className="text-xs text-brand-500 tracking-widest">{userLocation ? '現在地から近い順' : '新着順'}</span>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,paddingBottom:10,borderBottom:`1px solid rgba(0,0,0,.07)`}}>
+                        <h2 style={{fontSize:16,fontWeight:800,color:T1,letterSpacing:'.04em',margin:0}}>イベント一覧</h2>
+                        <span style={{fontSize:11,color:TM,fontWeight:600}}>{userLocation?'現在地から近い順':'新着順'}</span>
                     </div>
                     {isLoading ? (
-                        <div className="text-center py-10 text-brand-400">
-                            <Compass className="w-10 h-10 animate-spin mx-auto mb-3 opacity-70" />
-                            <p className="text-xs tracking-widest font-bold">航海図を読み込み中...</p>
+                        <div style={{textAlign:'center',padding:'40px 0'}}>
+                            <Compass size={36} style={{color:LIME,margin:'0 auto 12px',animation:'spin 1.2s linear infinite',display:'block'}}/>
+                            <p style={{fontSize:12,color:T2,fontWeight:700,letterSpacing:'.06em'}}>読み込み中...</p>
                         </div>
-                    ) : (
-                        filteredEvents.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {filteredEvents.map(ev => (
-                                    <div key={ev.id} onClick={() => setSelectedEvent(ev)} className="bg-white border text-brand-800 border-brand-200 rounded-sm overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer flex h-24">
-                                        <div className="w-24 shrink-0 bg-brand-100 relative overflow-hidden">
-                                            {ev.thumbnailUrl ? (
-                                                <img src={ev.thumbnailUrl} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6 text-brand-300 opacity-50" /></div>
-                                            )}
-                                            <div className="absolute top-1 left-1 flex flex-col gap-1">
-                                                {ev.isOnline && <span className="bg-brand-800 text-white text-[8px] px-1.5 py-0.5 rounded-sm font-bold tracking-widest shadow-sm text-center">オンライン</span>}
-                                                {Number(ev.price) === 0 && <span className="bg-[#b8860b] text-[#fffdf9] text-[8px] px-1.5 py-0.5 rounded-sm font-bold tracking-widest shadow-sm text-center">無料</span>}
-                                            </div>
+                    ) : filteredEvents.length > 0 ? (
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:14}}>
+                            {filteredEvents.map(ev => (
+                                <div key={ev.id} onClick={()=>setSelectedEvent(ev)}
+                                    style={{background:BG,borderRadius:16,boxShadow:NEU,cursor:'pointer',display:'flex',overflow:'hidden',height:96,transition:'box-shadow .2s'}}>
+                                    {/* Thumbnail */}
+                                    <div style={{width:90,flexShrink:0,background:SB,position:'relative',overflow:'hidden'}}>
+                                        {ev.thumbnailUrl
+                                            ? <img src={ev.thumbnailUrl} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                                            : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}><Anchor size={22} color={`${LIME}66`}/></div>}
+                                        <div style={{position:'absolute',top:4,left:4,display:'flex',flexDirection:'column',gap:3}}>
+                                            {ev.isOnline && <span style={{background:SB,color:LIME,fontSize:8,padding:'2px 5px',borderRadius:4,fontWeight:800,letterSpacing:'.04em'}}>オンライン</span>}
+                                            {Number(ev.price)===0 && <span style={{background:LIME,color:SB,fontSize:8,padding:'2px 5px',borderRadius:4,fontWeight:800}}>無料</span>}
                                         </div>
-                                        <div className="p-2 flex-1 flex flex-col justify-between min-w-0">
-                                            <h3 className="font-bold text-brand-900 line-clamp-2 text-sm leading-tight tracking-widest">{ev.title}</h3>
-                                            <div>
-                                                <div className="flex items-center text-[10px] text-brand-500 gap-1 truncate">
-                                                    <Calendar className="w-3 h-3 shrink-0"/> {ev.startDate} <span className="hidden sm:inline">{ev.startTime} 〜</span>
+                                    </div>
+                                    {/* Info */}
+                                    <div style={{padding:'10px 12px',flex:1,display:'flex',flexDirection:'column',justifyContent:'space-between',minWidth:0}}>
+                                        <h3 style={{fontSize:13,fontWeight:800,color:T1,margin:0,lineHeight:1.3,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical'}}>{ev.title}</h3>
+                                        <div>
+                                            <div style={{display:'flex',alignItems:'center',gap:4,fontSize:10,color:T2,marginBottom:2}}>
+                                                <Calendar size={10} color={LIME}/>{ev.startDate}
+                                            </div>
+                                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                                                <div style={{display:'flex',alignItems:'center',gap:4,fontSize:10,color:T2,overflow:'hidden',flex:1}}>
+                                                    <MapPin size={10} color={LIME} style={{flexShrink:0}}/>
+                                                    <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ev.isOnline?ev.locationName:(ev.locationName||'未設定')}</span>
                                                 </div>
-                                                <div className="flex items-center justify-between mt-0.5">
-                                                    <div className="flex items-center text-[10px] text-brand-500 gap-1 truncate max-w-[70%]">
-                                                        <MapPin className="w-3 h-3 shrink-0"/> {ev.isOnline ? ev.locationName : (ev.locationName || '未設定')}
-                                                    </div>
-                                                    {!ev.isOnline && ev.lat && ev.lng && userLocation && (
-                                                        <span className="text-brand-600 px-1 py-0.5 rounded-sm text-[9px] font-bold shadow-sm whitespace-nowrap bg-brand-50">
-                                                            <Compass className="w-2.5 h-2.5 inline mr-0.5" />{calculateDistance(userLocation.lat, userLocation.lng, ev.lat, ev.lng).toFixed(1)}km
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                {!ev.isOnline&&ev.lat&&ev.lng&&userLocation&&(
+                                                    <span style={{fontSize:9,color:SAGE,fontWeight:700,whiteSpace:'nowrap',marginLeft:4}}>
+                                                        {calculateDistance(userLocation.lat,userLocation.lng,ev.lat,ev.lng).toFixed(1)}km
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-10 text-brand-400">
-                                <p className="text-sm font-bold tracking-widest">条件に合うイベントが見つかりません。</p>
-                            </div>
-                        )
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div style={{textAlign:'center',padding:'48px 0',color:TM}}>
+                            <Anchor size={32} style={{margin:'0 auto 12px',opacity:.3,display:'block'}}/>
+                            <p style={{fontSize:13,fontWeight:700}}>条件に合うイベントが見つかりません。</p>
+                        </div>
                     )}
                 </div>
 
-                {/* View 3: List Jobs */}
-                <div className={`max-w-4xl mx-auto px-4 pt-6 ${viewMode === 'list-jobs' ? 'block' : 'hidden'}`}>
-                    {/* Job List Search Bar */}
-                    <div className="mb-6 relative shadow-sm rounded-sm border border-brand-200 bg-white">
-                        <Search className="w-4 h-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400" />
-                        <input 
-                            type="text"
-                            value={mapSearchText}
-                            onChange={(e) => setMapSearchText(e.target.value)}
-                            placeholder="仕事・依頼を検索..." 
-                            className="w-full bg-transparent border-none rounded-sm py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none font-serif tracking-widest"
-                        />
+                {/* ── View 3: List Jobs ── */}
+                <div style={{maxWidth:768,margin:'0 auto',padding:'0 16px 16px',display:viewMode==='list-jobs'?'block':'none'}}>
+                    <div style={{margin:'16px 0',position:'relative'}}>
+                        <Search size={15} style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:TM,pointerEvents:'none'}}/>
+                        <input type="text" value={mapSearchText} onChange={e=>setMapSearchText(e.target.value)}
+                            placeholder="仕事・依頼を検索..."
+                            style={{width:'100%',boxSizing:'border-box',background:BG,border:'none',borderRadius:12,padding:'12px 14px 12px 40px',fontSize:13,color:T1,boxShadow:NEU_IN,outline:'none'}}/>
                     </div>
-
-                    <div className="flex justify-between items-end mb-6 border-b border-brand-200 pb-2">
-                        <h2 className="text-xl font-bold text-brand-900 font-serif tracking-widest">仕事・依頼一覧</h2>
-                        <span className="text-xs text-brand-500 tracking-widest">新着順</span>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,paddingBottom:10,borderBottom:`1px solid rgba(0,0,0,.07)`}}>
+                        <h2 style={{fontSize:16,fontWeight:800,color:T1,letterSpacing:'.04em',margin:0}}>仕事・依頼一覧</h2>
+                        <span style={{fontSize:11,color:TM,fontWeight:600}}>新着順</span>
                     </div>
                     {isLoading ? (
-                        <div className="text-center py-10 text-brand-400">
-                            <Compass className="w-10 h-10 animate-spin mx-auto mb-3 opacity-70" />
-                            <p className="text-xs tracking-widest font-bold">依頼書を探しています...</p>
+                        <div style={{textAlign:'center',padding:'40px 0'}}>
+                            <Compass size={36} style={{color:LIME,margin:'0 auto 12px',animation:'spin 1.2s linear infinite',display:'block'}}/>
+                            <p style={{fontSize:12,color:T2,fontWeight:700}}>読み込み中...</p>
+                        </div>
+                    ) : filteredJobs.length > 0 ? (
+                        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                            {filteredJobs.map(job => (
+                                <div key={job.id} onClick={()=>setSelectedJob(job)}
+                                    style={{background:BG,borderRadius:16,boxShadow:NEU,padding:'14px 16px',cursor:'pointer',transition:'box-shadow .2s'}}>
+                                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                                        <span style={{fontSize:10,fontWeight:800,padding:'3px 8px',borderRadius:6,letterSpacing:'.04em',
+                                            background: (job.listingType==='casual_request'||job.listingType==='lending') ? 'rgba(78,170,120,.15)' : SB,
+                                            color: (job.listingType==='casual_request'||job.listingType==='lending') ? SAGE : LIME}}>
+                                            {job.listingType==='casual_request'?'🙋 カジュアル相談・依頼':(job.listingType==='lending'?'🎁 貸し借り・譲渡':(job.listingType==='member'?'🤝 メンバー募集':`💼 ${job.type||'業務委託'}`))}
+                                        </span>
+                                        {job.category && <span style={{fontSize:10,color:T2,fontWeight:600}}>{job.category}</span>}
+                                    </div>
+                                    <h3 style={{fontSize:14,fontWeight:800,color:T1,margin:'0 0 8px',lineHeight:1.4}}>{job.title}</h3>
+                                    <div style={{display:'flex',flexWrap:'wrap',gap:'4px 12px'}}>
+                                        {job.listingType!=='lending'&&job.rewardType&&(
+                                            <span style={{fontSize:11,color:SAGE,fontWeight:700}}>💰 {job.rewardType}：{job.rewardAmount||'応相談'}</span>
+                                        )}
+                                        {(job.listingType==='formal_job'||job.listingType==='member')&&job.workStyle&&(
+                                            <span style={{fontSize:10,color:T2}}>🏢 {job.workStyle}</span>
+                                        )}
+                                        <span style={{fontSize:10,color:T2}}>🗓 {job.period||'単発'}</span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     ) : (
-                        filteredJobs.length > 0 ? (
-                            <div className="space-y-4">
-                                {filteredJobs.map(job => (
-                                    <div key={job.id} className="bg-white border text-brand-800 border-brand-200 rounded-sm p-4 hover:bg-brand-50 transition-colors shadow-sm cursor-pointer relative">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <span className={`text-[10px] font-bold px-2.5 py-1.5 rounded-sm tracking-widest shadow-sm ${
-                                                job.listingType === 'casual_request' || job.listingType === 'lending' 
-                                                    ? 'bg-orange-50 text-orange-800 border border-orange-300' 
-                                                    : 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b]'
-                                            }`}>
-                                                {job.listingType === 'casual_request' ? '🙋 カジュアル相談・依頼' : (job.listingType === 'lending' ? '🎁 貸し借り・譲渡' : (job.listingType === 'member' ? '🤝 メンバー募集' : `💼 ${job.type || '業務委託'}`))}
-                                            </span>
-                                            {job.category && <span className="text-[10px] text-brand-500 font-bold tracking-widest bg-brand-50 border border-brand-200 px-2 py-1 rounded-sm"><Briefcase className="w-3 h-3 inline mr-1 text-brand-400"/> {job.category}</span>}
-                                        </div>
-                                        <h3 className="font-bold text-brand-900 text-base leading-tight mb-2 tracking-widest font-serif pr-16">{job.title}</h3>
-                                        <div className="flex flex-wrap gap-x-4 gap-y-1 mb-3">
-                                            {job.listingType !== 'lending' && job.rewardType && (
-                                                <div className="flex items-center text-[11px] text-brand-600 font-bold bg-green-50 px-1 py-0.5"><DollarSign className="w-3 h-3 mr-1 text-green-600"/> <span className="text-green-700">{job.rewardType}：{job.rewardAmount || '応相談'}</span></div>
-                                            )}
-                                            {(job.listingType === 'formal_job' || job.listingType === 'member') && job.workStyle && (
-                                                <div className="flex items-center text-[10px] text-brand-500"><Building className="w-3 h-3 mr-1"/> {job.workStyle}</div>
-                                            )}
-                                            <div className="flex items-center text-[10px] text-brand-500"><Calendar className="w-3 h-3 mr-1"/> {job.period || '単発'}</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-10 text-brand-400">
-                                <p className="text-sm font-bold tracking-widest">条件に合う仕事・依頼が見つかりません。</p>
-                            </div>
-                        )
+                        <div style={{textAlign:'center',padding:'48px 0',color:TM}}>
+                            <Briefcase size={32} style={{margin:'0 auto 12px',opacity:.3,display:'block'}}/>
+                            <p style={{fontSize:13,fontWeight:700}}>条件に合う仕事・依頼が見つかりません。</p>
+                        </div>
                     )}
                 </div>
             </div>
 
-            {/* Create FAB & Menu */}
-            <div className={`fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-10 right-5 z-[50] flex flex-col items-end ${adjustMode ? 'hidden' : ''}`}>
-                <div className={`mb-3 bg-[#fffdf9] border border-brand-300 shadow-xl rounded-sm p-2 flex flex-col gap-1 w-48 transition-all origin-bottom-right ${isCreateMenuOpen ? 'scale-100 opacity-100' : 'scale-75 opacity-0 pointer-events-none'}`}>
-                    <button onClick={() => openEventModal()} className="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest border-b border-brand-100 flex items-center gap-2">
-                        <ImageIcon className="text-brand-500 w-5 h-5" /> <span>イベントを企画</span>
+            {/* ── Create FAB ── */}
+            <div style={{position:'fixed',bottom:'calc(5.5rem + env(safe-area-inset-bottom))',right:20,zIndex:50,display:adjustMode?'none':'flex',flexDirection:'column',alignItems:'flex-end'}}>
+                {/* Menu */}
+                <div style={{marginBottom:12,background:BG,borderRadius:16,boxShadow:NEU,padding:8,display:'flex',flexDirection:'column',gap:4,width:200,
+                    transformOrigin:'bottom right',transform:isCreateMenuOpen?'scale(1)':'scale(.75)',opacity:isCreateMenuOpen?1:0,
+                    pointerEvents:isCreateMenuOpen?'auto':'none',transition:'all .2s'}}>
+                    <button onClick={()=>openEventModal()}
+                        style={{textAlign:'left',padding:'10px 14px',background:'transparent',border:'none',borderRadius:10,fontSize:13,fontWeight:800,color:T1,cursor:'pointer',display:'flex',alignItems:'center',gap:10,borderBottom:`1px solid rgba(0,0,0,.06)`}}>
+                        <Anchor size={16} color={LIME}/> イベントを企画
                     </button>
-                    <button onClick={() => openJobModal()} className="text-left px-3 py-3 hover:bg-brand-50 rounded-sm text-sm font-bold text-brand-900 tracking-widest flex items-center gap-2 group">
-                        <Briefcase className="text-blue-500 w-5 h-5" /> <span className="flex-1">仕事・依頼を掲載</span>
-                        <span title="BUILDER以上限定" className="flex items-center justify-center"><Lock className="text-brand-300 w-3 h-3 group-hover:text-brand-500" /></span>
+                    <button onClick={()=>openJobModal()}
+                        style={{textAlign:'left',padding:'10px 14px',background:'transparent',border:'none',borderRadius:10,fontSize:13,fontWeight:800,color:T1,cursor:'pointer',display:'flex',alignItems:'center',gap:10}}>
+                        <Briefcase size={16} color={SAGE}/>
+                        <span style={{flex:1}}>仕事・依頼を掲載</span>
+                        <Lock size={11} color={TM}/>
                     </button>
                 </div>
-                <button onClick={() => setIsCreateMenuOpen(!isCreateMenuOpen)} className="w-14 h-14 bg-[#3e2723] text-[#d4af37] rounded-full shadow-2xl flex items-center justify-center hover:bg-[#2a1a17] hover:scale-105 transition-all border-2 border-[#b8860b]">
-                    <CirclePlus className={`w-8 h-8 transition-transform duration-300 ${isCreateMenuOpen ? 'rotate-45' : ''}`} />
+                {/* FAB */}
+                <button onClick={()=>setIsCreateMenuOpen(!isCreateMenuOpen)}
+                    style={{width:54,height:54,background:SB,color:LIME,borderRadius:'50%',border:`2px solid ${LIME}44`,boxShadow:'0 8px 24px rgba(26,48,36,.4)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'transform .2s',transform:isCreateMenuOpen?'rotate(45deg)':'rotate(0)'}}>
+                    <CirclePlus size={26}/>
                 </button>
             </div>
 
@@ -1354,8 +1380,8 @@ ${registerUrl}`;
             )}
 
             {/* Event Detail Sheet component */}
-            <EventDetailSheet 
-                event={selectedEvent} 
+            <EventDetailSheet
+                event={selectedEvent}
                 onClose={() => setSelectedEvent(null)}
                 adjustMode={adjustMode === 'event'}
                 setFullImageUrl={setFullImageUrl}
@@ -1365,160 +1391,190 @@ ${registerUrl}`;
                 isJoined={selectedEvent ? eventJoinStatusMap[selectedEvent.id] : false}
                 toggleParticipate={toggleParticipate}
                 openEditModal={openEventModal}
+                onDelete={(evt) => {
+                    if (window.confirm(`「${evt.title}」を削除しますか？この操作は元に戻せません。`)) {
+                        deleteEvent(evt);
+                    }
+                }}
                 onShare={(evt: any) => shareItem(evt, 'event')}
                 hideEventLink={true}
             />
 
-            {/* Job Detail Sheet (placeholder) */}
-            <div className={`detail-sheet fixed bottom-0 left-0 w-full z-[80] bg-[#fffdf9] border-t border-brand-300 rounded-t-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] pb-24 max-h-[90dvh] overflow-y-auto lg:top-16 lg:bottom-auto lg:left-auto lg:right-0 lg:w-[450px] lg:h-[calc(100vh-64px)] lg:max-h-none lg:rounded-none lg:border-t-0 lg:border-l lg:pb-0 bg-texture transition-transform duration-300 ${selectedJob && !adjustMode ? 'translate-y-0 lg:translate-x-0' : 'translate-y-full lg:translate-x-full'}`}>
-                <div className="sticky top-0 bg-[#fffdf9]/95 backdrop-blur z-20 border-b border-brand-100 flex items-center justify-between px-5 py-3 lg:py-4">
-                    <span className="text-xs font-bold text-brand-500 tracking-widest">仕事・依頼 詳細</span>
-                    <button onClick={() => setSelectedJob(null)} className="p-1.5 bg-[#f7f5f0] border border-brand-200 text-brand-600 rounded-full hover:bg-brand-100 transition-colors shadow-sm cursor-pointer" aria-label="閉じる">
-                        <X className="w-5 h-5" />
+            {/* ── Job Detail Sheet ── */}
+            <div style={{
+                position:'fixed',bottom:0,left:'50%',transform:selectedJob&&!adjustMode?'translateX(-50%) translateY(0)':'translateX(-50%) translateY(110%)',
+                width:'100%',maxWidth:600,zIndex:80,background:BG,
+                borderRadius:'20px 20px 0 0',boxShadow:'0 -8px 40px rgba(0,0,0,.15)',
+                paddingBottom:'calc(80px + env(safe-area-inset-bottom))',
+                maxHeight:'90dvh',overflowY:'auto',
+                transition:'transform .3s'
+            }}>
+                {/* Sticky header */}
+                <div style={{position:'sticky',top:0,background:`${BG}f8`,backdropFilter:'blur(12px)',zIndex:20,
+                    borderBottom:`1px solid rgba(0,0,0,.06)`,display:'flex',alignItems:'center',justifyContent:'space-between',
+                    padding:'14px 20px',borderRadius:'20px 20px 0 0'}}>
+                    <span style={{fontSize:11,fontWeight:800,color:T2,letterSpacing:'.06em',display:'flex',alignItems:'center',gap:6}}>
+                        <Briefcase size={13} color={SAGE}/>仕事・依頼 詳細
+                    </span>
+                    <button onClick={()=>setSelectedJob(null)}
+                        style={{width:30,height:30,borderRadius:'50%',border:'none',background:BG,boxShadow:NEU,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:T2}}>
+                        <X size={15}/>
                     </button>
                 </div>
-                <div className="px-5 pb-20 lg:pb-8 pt-4">
+                <div style={{padding:'16px 20px 24px'}}>
                     {selectedJob && (
                         <div>
-                            <div className="flex justify-between items-start mb-3">
-                                <span className="text-[10px] font-bold bg-brand-100 text-brand-700 px-2.5 py-1 rounded-sm tracking-widest border border-brand-200">{selectedJob.type}</span>
-                                <span className="text-xs text-brand-500 font-bold tracking-widest"><Briefcase className="w-3.5 h-3.5 inline mr-1"/>{selectedJob.category}</span>
+                            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+                                <span style={{fontSize:10,fontWeight:800,padding:'4px 10px',borderRadius:6,background:SB,color:LIME}}>{selectedJob.type}</span>
+                                <span style={{fontSize:11,color:T2,fontWeight:600,display:'flex',alignItems:'center',gap:4}}><Briefcase size={12} color={TM}/>{selectedJob.category}</span>
                             </div>
-                            
-                            <h2 className="text-xl sm:text-2xl font-bold text-brand-900 font-serif mb-4 tracking-widest leading-tight">{selectedJob.title}</h2>
-                            
-                            <div className="bg-brand-50 border border-brand-100 p-4 rounded-sm space-y-3 mb-6">
-                                <div className="flex justify-between items-start border-b border-brand-200 pb-2">
-                                    <span className="text-xs font-bold text-brand-500 tracking-widest"><Building className="w-4 h-4 inline mr-1 text-brand-400"/>勤務形態</span>
-                                    <span className="text-sm font-bold text-brand-900 text-right">{selectedJob.workStyle} <span className="block text-brand-400 text-xs font-normal mt-0.5">{selectedJob.location}</span></span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-brand-200 pb-2">
-                                    <span className="text-xs font-bold text-brand-500 tracking-widest"><DollarSign className="w-4 h-4 inline mr-1 text-green-500"/>報酬</span>
-                                    <span className="text-sm font-bold text-green-700">{selectedJob.rewardType}：{selectedJob.rewardAmount || '応相談'}</span>
-                                </div>
-                                <div className="flex justify-between items-center border-b border-brand-200 pb-2">
-                                    <span className="text-xs font-bold text-brand-500 tracking-widest"><Calendar className="w-4 h-4 inline mr-1 text-brand-400"/>期間・納期</span>
-                                    <span className="text-sm font-bold text-brand-900">{selectedJob.period}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold text-brand-500 tracking-widest"><User className="w-4 h-4 inline mr-1 text-brand-400"/>投稿者</span>
-                                    <Link href={`/user?uid=${selectedJob.organizerId}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">{selectedJob.organizerName}</Link>
-                                </div>
+                            <h2 style={{fontSize:20,fontWeight:800,color:T1,margin:'0 0 16px',lineHeight:1.3}}>{selectedJob.title}</h2>
+                            {/* Info grid */}
+                            <div style={{background:BG,boxShadow:NEU_IN,borderRadius:14,padding:'4px 0',marginBottom:20}}>
+                                {[{icon:<Building size={14} color={TM}/>,label:'勤務形態',val:`${selectedJob.workStyle}  ${selectedJob.location||''}`,green:false},
+                                  {icon:<DollarSign size={14} color={SAGE}/>,label:'報酸',val:`${selectedJob.rewardType}：${selectedJob.rewardAmount||'応相談'}`,green:true},
+                                  {icon:<Calendar size={14} color={TM}/>,label:'期間・納期',val:selectedJob.period,green:false},
+                                  {icon:<User size={14} color={TM}/>,label:'投稿者',val:selectedJob.organizerName,green:false,link:`/user?uid=${selectedJob.organizerId}`}
+                                ].map(({icon,label,val,green,link})=>(
+                                    <div key={label} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 16px',borderBottom:`1px solid rgba(0,0,0,.05)`}}>
+                                        <span style={{fontSize:12,fontWeight:700,color:T2,display:'flex',alignItems:'center',gap:6}}>{icon}{label}</span>
+                                        {link
+                                            ? <Link href={link} style={{fontSize:13,fontWeight:700,color:SAGE,textDecoration:'none'}}>{val}</Link>
+                                            : <span style={{fontSize:13,fontWeight:700,color:green?SAGE:T1}}>{val}</span>}
+                                    </div>
+                                ))}
                             </div>
-
-                            <div className="mb-6">
-                                <h3 className="text-sm font-bold text-brand-800 mb-2 tracking-widest border-l-2 border-blue-500 pl-2 font-serif">業務詳細</h3>
-                                <div className="text-brand-700 text-sm leading-relaxed whitespace-pre-wrap markdown-body" dangerouslySetInnerHTML={{ __html: formatText(selectedJob.desc) }} />
+                            <div style={{marginBottom:20}}>
+                                <h3 style={{fontSize:13,fontWeight:800,color:T1,margin:'0 0 8px',paddingLeft:10,borderLeft:`3px solid ${LIME}`}}>業務詳細</h3>
+                                <div className="markdown-body" style={{fontSize:14,color:T2,lineHeight:1.7}} dangerouslySetInnerHTML={{__html:formatText(selectedJob.desc)}}/>
                             </div>
-
-                            {(selectedJob.skills || selectedJob.flow || selectedJob.company || selectedJob.url) && (
-                                <div className="mb-6 space-y-4 border-t border-brand-200 pt-5">
-                                    {selectedJob.skills && (
-                                        <div>
-                                            <h4 className="text-xs font-bold text-brand-500 mb-1 tracking-widest">必須・歓迎スキル</h4>
-                                            <p className="text-sm text-brand-800 whitespace-pre-wrap">{selectedJob.skills}</p>
-                                        </div>
-                                    )}
-                                    {selectedJob.flow && (
-                                        <div>
-                                            <h4 className="text-xs font-bold text-brand-500 mb-1 tracking-widest">選考フロー</h4>
-                                            <p className="text-sm text-brand-800 whitespace-pre-wrap">{selectedJob.flow}</p>
-                                        </div>
-                                    )}
-                                    {selectedJob.url && (
-                                        <div>
-                                            <h4 className="text-xs font-bold text-brand-500 mb-1 tracking-widest">関連URL</h4>
-                                            <a href={selectedJob.url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:text-blue-800 underline break-all">{selectedJob.url}</a>
-                                        </div>
-                                    )}
+                            {(selectedJob.skills||selectedJob.flow||selectedJob.url)&&(
+                                <div style={{borderTop:`1px solid rgba(0,0,0,.07)`,paddingTop:16,display:'flex',flexDirection:'column',gap:12}}>
+                                    {selectedJob.skills&&<div><h4 style={{fontSize:11,fontWeight:700,color:T2,margin:'0 0 4px'}}>必須・歓迎スキル</h4><p style={{fontSize:13,color:T1,margin:0}}>{selectedJob.skills}</p></div>}
+                                    {selectedJob.flow&&<div><h4 style={{fontSize:11,fontWeight:700,color:T2,margin:'0 0 4px'}}>選考フロー</h4><p style={{fontSize:13,color:T1,margin:0}}>{selectedJob.flow}</p></div>}
+                                    {selectedJob.url&&<div><h4 style={{fontSize:11,fontWeight:700,color:T2,margin:'0 0 4px'}}>関連URL</h4><a href={selectedJob.url} target="_blank" rel="noopener noreferrer" style={{fontSize:13,color:SAGE,wordBreak:'break-all'}}>{selectedJob.url}</a></div>}
                                 </div>
                             )}
-
-                            <div className="mt-6 flex flex-col gap-3">
-                                {selectedJob.organizerId !== user?.uid && (
-                                    <button disabled className="w-full py-3.5 bg-[#4a6b8c] text-white rounded-sm text-sm font-bold tracking-widest shadow-md border border-[#304860] opacity-50 cursor-not-allowed text-center">
+                            <div style={{marginTop:20,display:'flex',flexDirection:'column',gap:10}}>
+                                {selectedJob.organizerId!==user?.uid&&(
+                                    <button disabled style={{width:'100%',padding:'13px 0',background:`${SB}44`,color:LIME,border:'none',borderRadius:12,fontSize:13,fontWeight:800,cursor:'not-allowed',opacity:.5}}>
                                         応募・連絡する (準備中)
                                     </button>
                                 )}
-                                {(userData?.userId === 'admin' || userData?.uid === selectedJob.organizerId) && (
-                                    <button onClick={() => { setSelectedJob(null); openJobModal(selectedJob.id); }} className="w-full py-2.5 bg-[#f7f5f0] border border-brand-300 text-brand-700 rounded-sm text-xs font-bold tracking-widest hover:bg-white transition-colors shadow-sm">募集内容を編集する</button>
+                                {(userData?.userId==='admin'||userData?.uid===selectedJob.organizerId)&&(
+                                    <div style={{display:'flex',gap:8}}>
+                                        <button onClick={()=>{setSelectedJob(null);openJobModal(selectedJob.id);}}
+                                            style={{flex:1,padding:'11px 0',background:BG,boxShadow:NEU,border:'none',borderRadius:12,fontSize:12,fontWeight:700,color:T2,cursor:'pointer'}}>
+                                            募集内容を編集する
+                                        </button>
+                                        <button onClick={()=>{
+                                            if (window.confirm(`「${selectedJob.title}」を削除しますか？この操作は元に戻せません。`)) {
+                                                deleteJob(selectedJob);
+                                                setSelectedJob(null);
+                                            }
+                                        }} style={{flex:1,padding:'11px 0',background:BG,boxShadow:NEU,border:'1px solid rgba(217,112,112,.3)',borderRadius:12,fontSize:12,fontWeight:700,color:'#d97070',cursor:'pointer'}}>
+                                            削除する
+                                        </button>
+                                    </div>
                                 )}
-                                <button onClick={() => shareItem(selectedJob, 'job')} className="w-full mt-2 py-2.5 bg-brand-50 border border-brand-200 text-brand-600 rounded-sm text-xs font-bold tracking-widest hover:bg-brand-100 transition-colors shadow-sm flex justify-center items-center gap-2"><Share2 className="w-4 h-4" />募集を共有する (リンクコピー)</button>
+                                <button onClick={()=>shareItem(selectedJob,'job')}
+                                    style={{width:'100%',padding:'11px 0',background:BG,boxShadow:NEU,border:'none',borderRadius:12,fontSize:12,fontWeight:700,color:SAGE,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                                    <Share2 size={14}/>募集を共有する (リンクコピー)
+                                </button>
                             </div>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Event Modal */}
+            {/* ── Event Modal ── */}
             {eventModalOpen && (
-                <div className="fixed inset-0 z-[120] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
-                    <div className="bg-[#fffdf9] bg-texture w-full sm:w-[600px] h-[90dvh] sm:h-[90vh] rounded-t-sm sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
-                        <div className="p-4 border-b border-brand-200 flex justify-between items-center flex-shrink-0 bg-[#fffdf9]">
-                            <h3 className="font-bold text-lg text-brand-900 font-serif tracking-widest">{editingEventId ? 'イベントを編集' : 'イベントを企画'}</h3>
-                            <button onClick={() => setEventModalOpen(false)} className="p-2 text-brand-400 hover:text-brand-700"><X className="w-5 h-5" /></button>
+                <div style={{position:'fixed',inset:0,zIndex:2100,background:'rgba(0,0,0,.5)',backdropFilter:'blur(6px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
+                    <div style={{background:BG,width:'100%',maxWidth:600,height:'90dvh',borderRadius:'20px 20px 0 0',boxShadow:'0 -12px 48px rgba(0,0,0,.2)',display:'flex',flexDirection:'column'}}>
+                        {/* Header */}
+                        <div style={{padding:'16px 20px',borderBottom:`1px solid rgba(0,0,0,.07)`,display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0,borderRadius:'20px 20px 0 0',background:BG}}>
+                            <h3 style={{margin:0,fontSize:16,fontWeight:800,color:T1,display:'flex',alignItems:'center',gap:8}}>
+                                <Anchor size={16} color={LIME}/>{editingEventId?'イベントを編集':'イベントを企画'}
+                            </h3>
+                            <button onClick={()=>setEventModalOpen(false)}
+                                style={{width:30,height:30,borderRadius:'50%',border:'none',background:BG,boxShadow:NEU,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',color:T2}}>
+                                <X size={15}/>
+                            </button>
                         </div>
-                        <div className="p-5 overflow-y-auto flex-1 space-y-6">
-                            <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">画像 (最大5枚)</label>
-                                <input type="file" multiple accept="image/*" onChange={(e) => {
-                                    if (e.target.files) {
-                                        const newFiles = Array.from(e.target.files).slice(0, 5 - eventFiles.length - eventOldImages.length);
-                                        const previewMapped = newFiles.map(f => ({ file: f, preview: URL.createObjectURL(f) }));
-                                        setEventFiles(prev => [...prev, ...previewMapped]);
+                        <div style={{padding:'0 20px 8px',overflowY:'auto',flex:1,display:'flex',flexDirection:'column',gap:18}}>
+                            <div style={{paddingTop:16}}>
+                                <label style={{display:'block',fontSize:11,fontWeight:700,color:T2,marginBottom:8}}>画像 (最大攀5枚)</label>
+                                <input type="file" multiple accept="image/*" onChange={e=>{
+                                    if(e.target.files){
+                                        const newFiles=Array.from(e.target.files).slice(0,5-eventFiles.length-eventOldImages.length);
+                                        setEventFiles(prev=>[...prev,...newFiles.map(f=>({file:f,preview:URL.createObjectURL(f)}))]);
                                     }
-                                }} className="mb-3 text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-[#3e2723] file:text-[#d4af37] hover:file:bg-[#2a1a17]" />
-                                <div className="flex gap-2 flex-wrap mb-2">
-                                    {eventOldImages.map((url, i) => (
-                                        <div key={`old-${i}`} className="relative w-16 h-16 border rounded-sm overflow-hidden shadow-sm">
-                                            <img src={url} className="w-full h-full object-cover" />
-                                            <button onClick={() => setEventOldImages(prev => prev.filter((_, idx) => idx !== i))} type="button" className="absolute top-0 right-0 bg-red-500/90 hover:bg-red-600 text-white rounded-bl-sm p-1 backdrop-blur-sm"><X className="w-3 h-3"/></button>
+                                }} style={{width:'100%',fontSize:12,marginBottom:8}}/>
+                                <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                                    {eventOldImages.map((url,i)=>(
+                                        <div key={`old-${i}`} style={{position:'relative',width:60,height:60,borderRadius:8,overflow:'hidden',boxShadow:NEU}}>
+                                            <img src={url} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                                            <button onClick={()=>setEventOldImages(prev=>prev.filter((_,idx)=>idx!==i))} type="button" style={{position:'absolute',top:0,right:0,background:'rgba(220,50,50,.9)',color:'white',border:'none',borderRadius:'0 0 0 6px',padding:'2px 4px',cursor:'pointer'}}><X size={10}/></button>
                                         </div>
                                     ))}
-                                    {eventFiles.map((item, i) => (
-                                        <div key={`new-${i}`} className="relative w-16 h-16 border rounded-sm overflow-hidden shadow-sm">
-                                            <img src={item.preview} className="w-full h-full object-cover" />
-                                            <button onClick={() => setEventFiles(prev => prev.filter((_, idx) => idx !== i))} type="button" className="absolute top-0 right-0 bg-red-500/90 hover:bg-red-600 text-white rounded-bl-sm p-1 backdrop-blur-sm"><X className="w-3 h-3"/></button>
+                                    {eventFiles.map((item,i)=>(
+                                        <div key={`new-${i}`} style={{position:'relative',width:60,height:60,borderRadius:8,overflow:'hidden',boxShadow:NEU}}>
+                                            <img src={item.preview} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                                            <button onClick={()=>setEventFiles(prev=>prev.filter((_,idx)=>idx!==i))} type="button" style={{position:'absolute',top:0,right:0,background:'rgba(220,50,50,.9)',color:'white',border:'none',borderRadius:'0 0 0 6px',padding:'2px 4px',cursor:'pointer'}}><X size={10}/></button>
                                         </div>
                                     ))}
                                 </div>
                             </div>
+                            {/* イベント名 */}
                             <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">イベント名 <span className="text-red-500">*</span></label>
-                                <input type="text" value={eventFormData.title} onChange={e=>setEventFormData({...eventFormData, title: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white" placeholder="例: 週末朝活コーヒー会" required />
+                                <label style={{display:'block',fontSize:11,fontWeight:700,color:T2,marginBottom:8}}>イベント名 <span style={{color:'#e05050'}}>*</span></label>
+                                <input type="text" value={eventFormData.title} onChange={e=>setEventFormData({...eventFormData,title:e.target.value})}
+                                    placeholder="例: 週末朝活コーヒー会"
+                                    style={{width:'100%',boxSizing:'border-box',background:BG,border:'none',borderRadius:10,padding:'11px 14px',fontSize:13,color:T1,boxShadow:NEU_IN,outline:'none'}}/>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">参加費 (円)</label>
-                                    <input type="number" value={eventFormData.price} onChange={e=>setEventFormData({...eventFormData, price: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-3 bg-white" placeholder="0で無料" min="0" step="100" />
-                                </div>
-                            </div>
+                            {/* 参加費 */}
                             <div>
-                                <label className="block text-xs font-bold text-brand-700 mb-2 tracking-widest">関連タグ</label>
-                                <div className="flex flex-wrap gap-2 mb-3">
-                                    {PRESET_TAGS.map(tag => (
-                                        <button key={tag} type="button" onClick={() => {
-                                            const newTags = new Set(eventSelectedTags);
-                                            if (newTags.has(tag)) newTags.delete(tag);
-                                            else newTags.add(tag);
-                                            setEventSelectedTags(newTags);
-                                        }} className={`px-3 py-1.5 rounded-sm text-xs border transition-colors shadow-sm ${eventSelectedTags.has(tag) ? 'bg-[#3e2723] text-[#d4af37] border-[#b8860b] font-bold' : 'bg-white text-brand-600 border-brand-200 hover:bg-brand-50'}`}>
+                                <label style={{display:'block',fontSize:11,fontWeight:700,color:T2,marginBottom:8}}>参加費 (円)</label>
+                                <input type="number" value={eventFormData.price} onChange={e=>setEventFormData({...eventFormData,price:e.target.value})}
+                                    placeholder="0で無料" min="0" step="100"
+                                    style={{width:'100%',boxSizing:'border-box',background:BG,border:'none',borderRadius:10,padding:'11px 14px',fontSize:13,color:T1,boxShadow:NEU_IN,outline:'none'}}/>
+                            </div>
+                            {/* タグ */}
+                            <div>
+                                <label style={{display:'block',fontSize:11,fontWeight:700,color:T2,marginBottom:10}}>関連タグ</label>
+                                <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:10}}>
+                                    {PRESET_TAGS.map(tag=>(
+                                        <button key={tag} type="button" onClick={()=>{
+                                            const n=new Set(eventSelectedTags);
+                                            if(n.has(tag))n.delete(tag);else n.add(tag);
+                                            setEventSelectedTags(n);
+                                        }} style={{padding:'6px 12px',borderRadius:20,border:'none',fontSize:12,fontWeight:700,cursor:'pointer',transition:'all .2s',
+                                            background:eventSelectedTags.has(tag)?SB:BG,
+                                            color:eventSelectedTags.has(tag)?LIME:T2,
+                                            boxShadow:eventSelectedTags.has(tag)?'0 4px 12px rgba(26,48,36,.3)':NEU}}>
                                             {tag}
                                         </button>
                                     ))}
                                 </div>
-                                <input type="text" value={eventCustomTags} onChange={e=>setEventCustomTags(e.target.value)} className="w-full border border-brand-200 rounded-sm text-xs p-3 bg-white" placeholder="独自のカスタムタグ (カンマ区切り)" />
+                                <input type="text" value={eventCustomTags} onChange={e=>setEventCustomTags(e.target.value)}
+                                    placeholder="独自のカスタムタグ (カンマ区切り)"
+                                    style={{width:'100%',boxSizing:'border-box',background:BG,border:'none',borderRadius:10,padding:'10px 14px',fontSize:12,color:T1,boxShadow:NEU_IN,outline:'none'}}/>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 bg-brand-50 p-4 rounded-sm border border-brand-200">
+                            {/* 日時 */}
+                            <div style={{background:BG,boxShadow:NEU_IN,borderRadius:12,padding:'14px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                                 <div>
-                                    <span className="block text-xs font-bold text-brand-500 mb-2">開始 <span className="text-red-500">*</span></span>
-                                    <input type="date" value={eventFormData.startDate} onChange={e=>setEventFormData({...eventFormData, startDate: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white mb-2" required />
-                                    <input type="time" value={eventFormData.startTime} onChange={e=>setEventFormData({...eventFormData, startTime: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" required />
+                                    <span style={{display:'block',fontSize:11,fontWeight:700,color:T2,marginBottom:6}}>開始 <span style={{color:'#e05050'}}>*</span></span>
+                                    <input type="date" value={eventFormData.startDate} onChange={e=>setEventFormData({...eventFormData,startDate:e.target.value})}
+                                        style={{width:'100%',boxSizing:'border-box',background:BG,border:`1px solid rgba(0,0,0,.1)`,borderRadius:8,padding:'8px 10px',fontSize:13,color:T1,outline:'none',marginBottom:6}}/>
+                                    <input type="time" value={eventFormData.startTime} onChange={e=>setEventFormData({...eventFormData,startTime:e.target.value})}
+                                        style={{width:'100%',boxSizing:'border-box',background:BG,border:`1px solid rgba(0,0,0,.1)`,borderRadius:8,padding:'8px 10px',fontSize:13,color:T1,outline:'none'}}/>
                                 </div>
                                 <div>
-                                    <span className="block text-xs font-bold text-brand-500 mb-2">終了 <span className="text-red-500">*</span></span>
-                                    <input type="date" value={eventFormData.endDate} onChange={e=>setEventFormData({...eventFormData, endDate: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white mb-2" required />
-                                    <input type="time" value={eventFormData.endTime} onChange={e=>setEventFormData({...eventFormData, endTime: e.target.value})} className="w-full border border-brand-200 rounded-sm text-sm p-2 bg-white" required />
+                                    <span style={{display:'block',fontSize:11,fontWeight:700,color:T2,marginBottom:6}}>終了 <span style={{color:'#e05050'}}>*</span></span>
+                                    <input type="date" value={eventFormData.endDate} onChange={e=>setEventFormData({...eventFormData,endDate:e.target.value})}
+                                        style={{width:'100%',boxSizing:'border-box',background:BG,border:`1px solid rgba(0,0,0,.1)`,borderRadius:8,padding:'8px 10px',fontSize:13,color:T1,outline:'none',marginBottom:6}}/>
+                                    <input type="time" value={eventFormData.endTime} onChange={e=>setEventFormData({...eventFormData,endTime:e.target.value})}
+                                        style={{width:'100%',boxSizing:'border-box',background:BG,border:`1px solid rgba(0,0,0,.1)`,borderRadius:8,padding:'8px 10px',fontSize:13,color:T1,outline:'none'}}/>
                                 </div>
                             </div>
                             <div className="flex gap-4">
@@ -1623,9 +1679,11 @@ ${registerUrl}`;
                                 </div>
                             )}
                         </div>
-                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-24 sm:pb-4 flex-shrink-0">
-                            <button onClick={submitEvent} disabled={submittingEvent} className="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#b8860b] disabled:opacity-50">
-                                {submittingEvent ? '保存中...' : (editingEventId ? '更新する' : '企画する')}
+                        <div className="modal-footer-pb" style={{padding:'12px 16px',borderTop:`1px solid rgba(0,0,0,.08)`,background:BG,paddingBottom:'calc(12px + 60px + env(safe-area-inset-bottom))',flexShrink:0}}>
+                            <button onClick={submitEvent} disabled={submittingEvent}
+                                style={{width:'100%',background:submittingEvent?SAGE:SB,color:LIME,border:'none',borderRadius:12,padding:'13px 0',fontWeight:800,fontSize:13,letterSpacing:'.05em',cursor:'pointer',opacity:submittingEvent?.7:1,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                                {submittingEvent && <Loader2 size={15} style={{animation:'spin 1s linear infinite'}}/>}
+                                {submittingEvent?'保存中...':(editingEventId?'更新する':'企画する')}
                             </button>
                         </div>
                     </div>
@@ -1634,7 +1692,7 @@ ${registerUrl}`;
 
             {/* Job Modal */}
             {jobModalOpen && (
-                <div className="fixed inset-0 z-[120] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center">
+                <div style={{position:'fixed',inset:0,zIndex:2100,background:'rgba(42,26,23,.6)',backdropFilter:'blur(4px)',display:'flex',alignItems:'flex-end',justifyContent:'center'}}>
                     <div className="bg-[#fffdf9] bg-texture w-full sm:w-[650px] h-[90dvh] sm:h-[90vh] rounded-t-sm sm:rounded-sm shadow-2xl flex flex-col border border-brand-300">
                         <div className="p-4 border-b border-brand-200 flex justify-between items-center flex-shrink-0 bg-[#fffdf9]">
                             <h3 className="font-bold text-lg text-brand-900 font-serif tracking-widest">{editingJobId ? '仕事・依頼を編集' : '仕事・依頼を掲載'}</h3>
@@ -1838,26 +1896,36 @@ ${registerUrl}`;
                                 )}
                             </div>
                         </div>
-                        <div className="p-4 border-t border-brand-200 bg-[#f7f5f0] pb-24 sm:pb-4 flex-shrink-0">
-                            <button onClick={submitJob} disabled={submittingJob} className="w-full bg-[#3e2723] text-[#f7f5f0] font-bold py-3.5 rounded-sm hover:bg-[#2a1a17] transition-colors shadow-md tracking-widest border border-[#3e2723] disabled:opacity-50">
-                                {submittingJob ? '保存中...' : (editingJobId ? '更新する' : '掲載する')}
+                        <div className="modal-footer-pb" style={{padding:'12px 16px',borderTop:`1px solid rgba(0,0,0,.08)`,background:BG,paddingBottom:'calc(12px + 60px + env(safe-area-inset-bottom))',flexShrink:0}}>
+                            <button onClick={submitJob} disabled={submittingJob}
+                                style={{width:'100%',background:submittingJob?SAGE:SB,color:LIME,border:'none',borderRadius:12,padding:'13px 0',fontWeight:800,fontSize:13,letterSpacing:'.05em',cursor:'pointer',opacity:submittingJob?.7:1,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                                {submittingJob && <Loader2 size={15} style={{animation:'spin 1s linear infinite'}}/>}
+                                {submittingJob?'保存中...':(editingJobId?'更新する':'掲載する')}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-        </div>
+            {/* 旧Navbarのボトムナビを完全に非表示（SPA遷移後のゴースト対策） */}
+            <style>{`
+                /* events ページで旧Navbarのボトムナビを強制非表示 */
+                .fixed.bottom-0.w-full.lg\\:hidden[class*="z-\\[1900\\]"],
+                nav.fixed.bottom-0.w-full.lg\\:hidden {
+                    display: none !important;
+                }
+            `}</style>
+
+        </AppShell>
     );
 }
 
 export default function EventsPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-texture pb-20 flex flex-col">
-                <div className="flex-1 flex items-center justify-center pt-20">
-                    <Compass className="w-10 h-10 animate-spin text-brand-400 opacity-70" />
-                </div>
+            <div style={{minHeight:'100vh',background:'#f8f6f3',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <Compass style={{width:40,height:40,animation:'spin .8s linear infinite',color:'#4a7c59',opacity:.7}}/>
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             </div>
         }>
             <EventsContent />

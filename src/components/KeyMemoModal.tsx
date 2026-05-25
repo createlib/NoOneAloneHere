@@ -1,9 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Key, X, Pen, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Key, X, Pen, Trash2, Plus, NotebookPen } from 'lucide-react';
 import { db, APP_ID } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+
+// ── Design tokens (matches user/page.tsx) ──
+const BG   = '#f8f6f3';
+const T1   = '#2d2925';
+const T2   = '#7a7166';
+const TM   = '#a09590';
+const SAGE = '#4a7c59';
+const NEU_UP = '6px 6px 14px #e4e0db, -6px -6px 14px #ffffff';
+const NEU_IN = 'inset 3px 3px 8px #e4e0db, inset -3px -3px 8px #ffffff';
+const NEU_SM = '3px 3px 8px #e4e0db, -3px -3px 8px #ffffff';
+const AMBER  = '#b8860b';
 
 interface MemoEntry {
     id: string;
@@ -21,157 +32,243 @@ interface KeyMemoModalProps {
 }
 
 export default function KeyMemoModal({ isOpen, onClose, currentUserId, targetUserId, targetUserName }: KeyMemoModalProps) {
-    const [memos, setMemos] = useState<MemoEntry[]>([]);
-    const [newMemo, setNewMemo] = useState('');
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editContent, setEditContent] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
+    const [memos, setMemos]         = useState<MemoEntry[]>([]);
+    const [newMemo, setNewMemo]     = useState('');
+    const [editingId, setEditingId]       = useState<string | null>(null);
+    const [editContent, setEditContent]   = useState('');
+    const [isLoading, setIsLoading]       = useState(true);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+    const [visible, setVisible]     = useState(false);
+    const overlayRef = useRef<HTMLDivElement>(null);
 
+    // Animate in/out
+    useEffect(() => {
+        if (isOpen) { setTimeout(() => setVisible(true), 10); }
+        else { setVisible(false); }
+    }, [isOpen]);
+
+    // Fetch memos
     useEffect(() => {
         if (!isOpen) return;
-        
         const fetchMemos = async () => {
             setIsLoading(true);
             try {
                 const memoRef = doc(db, 'artifacts', APP_ID, 'users', currentUserId, 'private_memos', targetUserId);
                 const snap = await getDoc(memoRef);
-                if (snap.exists() && snap.data().logs) {
-                    setMemos(snap.data().logs);
-                } else {
-                    setMemos([]);
-                }
-            } catch (error) {
-                console.error("Error fetching private memos:", error);
-            } finally {
-                setIsLoading(false);
-            }
+                setMemos(snap.exists() && snap.data().logs ? snap.data().logs : []);
+            } catch (e) { console.error(e); }
+            finally { setIsLoading(false); }
         };
-
         fetchMemos();
     }, [isOpen, currentUserId, targetUserId]);
 
-    const saveMemosToDB = async (updatedMemos: MemoEntry[]) => {
+    const saveMemosToDB = async (updated: MemoEntry[]) => {
         const memoRef = doc(db, 'artifacts', APP_ID, 'users', currentUserId, 'private_memos', targetUserId);
-        await setDoc(memoRef, { logs: updatedMemos }, { merge: true });
-        setMemos(updatedMemos);
+        await setDoc(memoRef, { logs: updated }, { merge: true });
+        setMemos(updated);
     };
 
     const handleAddMemo = async () => {
         if (!newMemo.trim()) return;
-        
-        const newEntry: MemoEntry = {
+        const entry: MemoEntry = {
             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-            content: newMemo,
+            content: newMemo.trim(),
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
         };
-
-        const updatedMemos = [...memos, newEntry];
-        await saveMemosToDB(updatedMemos);
+        await saveMemosToDB([...memos, entry]);
         setNewMemo('');
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('このメモを削除してもよろしいですか？')) return;
-        const updatedMemos = memos.filter(m => m.id !== id);
-        await saveMemosToDB(updatedMemos);
+        await saveMemosToDB(memos.filter(m => m.id !== id));
+        setConfirmDeleteId(null);
     };
 
-    const startEdit = (memo: MemoEntry) => {
-        setEditingId(memo.id);
-        setEditContent(memo.content);
-    };
-
-    const saveEdit = async (id: string) => {
+    const startEdit = (memo: MemoEntry) => { setEditingId(memo.id); setEditContent(memo.content); };
+    const saveEdit  = async (id: string) => {
         if (!editContent.trim()) return;
-        const updatedMemos = memos.map(m => {
-            if (m.id === id) {
-                return { ...m, content: editContent, updatedAt: new Date().toISOString() };
-            }
-            return m;
-        });
-        await saveMemosToDB(updatedMemos);
+        await saveMemosToDB(memos.map(m => m.id === id ? { ...m, content: editContent.trim(), updatedAt: new Date().toISOString() } : m));
         setEditingId(null);
     };
 
     if (!isOpen) return null;
 
-    const sortedMemos = [...memos].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    const sorted = [...memos].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+    const fmtDate = (iso: string) =>
+        new Date(iso).toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 
     return (
-        <div className="fixed inset-0 z-[6000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-[#fffdf9] bg-texture w-full max-w-lg rounded-md shadow-2xl flex flex-col border border-brand-300 transform transition-all animate-fade-in-up">
-                <div className="p-4 sm:p-5 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] rounded-t-md">
-                    <h3 className="font-bold text-brand-900 font-serif tracking-widest flex items-center">
-                        <Key className="text-[#8b6a4f] mr-2" size={18} />
-                        鍵メモ <span className="text-xs font-sans text-brand-500 ml-2 font-normal">({targetUserName}さん)</span>
-                    </h3>
-                    <button onClick={onClose} className="text-brand-400 hover:text-brand-700 transition-colors w-8 h-8 flex items-center justify-center rounded-sm bg-brand-50 border border-brand-100">
-                        <X size={18} />
+        <div
+            ref={overlayRef}
+            onClick={e => { if (e.target === overlayRef.current) onClose(); }}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 6000,
+                background: 'rgba(0,0,0,.32)', backdropFilter: 'blur(4px)',
+                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                transition: 'opacity .25s',
+                opacity: visible ? 1 : 0,
+            }}
+        >
+            <div style={{
+                width: '100%', maxWidth: 560,
+                background: BG, borderRadius: '20px 20px 0 0',
+                boxShadow: '0 -8px 40px rgba(0,0,0,.18)',
+                display: 'flex', flexDirection: 'column',
+                maxHeight: '85vh',
+                transform: visible ? 'translateY(0)' : 'translateY(30px)',
+                transition: 'transform .3s cubic-bezier(.34,1.56,.64,1)',
+            }}>
+                {/* Drag handle */}
+                <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12 }}>
+                    <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(0,0,0,.12)' }} />
+                </div>
+
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: BG, boxShadow: NEU_SM, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Key size={14} color={AMBER} />
+                        </div>
+                        <div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: T1, letterSpacing: '.04em' }}>鍵メモ</div>
+                            <div style={{ fontSize: 10, color: TM, marginTop: 1 }}>{targetUserName}さんへのプライベートメモ</div>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        style={{ width: 30, height: 30, borderRadius: '50%', border: 'none', background: BG, boxShadow: NEU_SM, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: T2 }}
+                    >
+                        <X size={14} />
                     </button>
                 </div>
 
-                <div className="p-4 sm:p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
-                    <div className="mb-6">
-                        <textarea 
-                            value={newMemo}
-                            onChange={(e) => setNewMemo(e.target.value)}
-                            rows={3} 
-                            className="w-full border border-brand-300 rounded-sm text-sm p-3 bg-white leading-relaxed focus:ring-brand-500 shadow-sm placeholder-brand-300 outline-none" 
-                            placeholder="例：2/25の名古屋のイベントで挨拶。Webデザインに興味があるとのこと。"
-                        ></textarea>
-                        <div className="flex justify-end mt-2">
-                            <button 
+                {/* Divider */}
+                <div style={{ height: 1, background: 'rgba(0,0,0,.06)', margin: '0 20px' }} />
+
+                {/* Body (scrollable) */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 24px' }}>
+
+                    {/* Input area */}
+                    <div style={{ marginBottom: 16 }}>
+                        <div style={{ position: 'relative' }}>
+                            <textarea
+                                value={newMemo}
+                                onChange={e => setNewMemo(e.target.value)}
+                                rows={3}
+                                placeholder="例：2/25の名古屋のイベントで挨拶。Webデザインに興味あり。"
+                                onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleAddMemo(); }}
+                                style={{
+                                    width: '100%', boxSizing: 'border-box',
+                                    padding: '12px 14px', borderRadius: 12,
+                                    border: 'none', background: BG,
+                                    boxShadow: NEU_IN,
+                                    resize: 'none', fontSize: 12, color: T1,
+                                    lineHeight: 1.7, outline: 'none',
+                                    fontFamily: 'inherit',
+                                }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                            <button
                                 onClick={handleAddMemo}
                                 disabled={!newMemo.trim()}
-                                className="bg-[#3e2723] hover:bg-[#2a1a17] disabled:opacity-50 disabled:cursor-not-allowed text-[#d4af37] px-4 py-2 rounded-sm text-xs font-bold shadow-md transition-colors tracking-widest border border-[#b8860b] flex items-center gap-1"
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 5,
+                                    padding: '7px 16px', borderRadius: 100, border: 'none',
+                                    background: newMemo.trim() ? SAGE : BG,
+                                    boxShadow: newMemo.trim() ? 'none' : NEU_SM,
+                                    color: newMemo.trim() ? '#fff' : TM,
+                                    fontSize: 11, fontWeight: 700, cursor: newMemo.trim() ? 'pointer' : 'not-allowed',
+                                    transition: 'all .15s',
+                                }}
                             >
-                                <Pen size={12} /> 追加する
+                                <Plus size={11} />追加する
                             </button>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
+                    {/* Memo list */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {isLoading ? (
-                            <div className="text-center text-sm text-brand-400 py-4">読み込み中...</div>
-                        ) : sortedMemos.length === 0 ? (
-                            <div className="text-center text-sm text-brand-400 py-8 border border-dashed border-brand-200 rounded-sm bg-brand-50/50">
-                                まだメモはありません。
+                            <div style={{ textAlign: 'center', padding: '24px 0', fontSize: 12, color: TM }}>読み込み中…</div>
+                        ) : sorted.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '32px 0', fontSize: 12, color: TM }}>
+                                <NotebookPen size={24} color={TM} style={{ margin: '0 auto 8px', display: 'block', opacity: .5 }} />
+                                まだメモはありません
                             </div>
-                        ) : (
-                            sortedMemos.map(memo => (
-                                <div key={memo.id} className="bg-brand-50 border border-brand-200 p-4 rounded-sm shadow-sm">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="text-[10px] text-brand-400 font-mono tracking-wider">
-                                            {new Date(memo.updatedAt).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => startEdit(memo)} className="text-brand-400 hover:text-brand-700 transition-colors px-1"><Pen size={12} /></button>
-                                            <button onClick={() => handleDelete(memo.id)} className="text-brand-400 hover:text-red-600 transition-colors px-1"><Trash2 size={12} /></button>
+                        ) : sorted.map(memo => (
+                            <div key={memo.id} style={{
+                                background: BG, borderRadius: 12, boxShadow: NEU_UP,
+                                padding: '12px 14px',
+                            }}>
+                                {/* Meta row */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                                    <span style={{ fontSize: 10, color: TM, fontFamily: "'DM Mono',monospace", letterSpacing: '.04em' }}>
+                                        {fmtDate(memo.updatedAt)}
+                                    </span>
+                                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                        {confirmDeleteId === memo.id ? (
+                                            <>
+                                                <span style={{ fontSize: 10, color: '#ef4444', marginRight: 2 }}>削除しますか？</span>
+                                                <button
+                                                    onClick={() => handleDelete(memo.id)}
+                                                    style={{ padding: '3px 10px', borderRadius: 100, border: 'none', background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
+                                                >削除</button>
+                                                <button
+                                                    onClick={() => setConfirmDeleteId(null)}
+                                                    style={{ padding: '3px 10px', borderRadius: 100, border: 'none', background: BG, boxShadow: NEU_SM, color: T2, fontSize: 10, fontWeight: 600, cursor: 'pointer' }}
+                                                >取消</button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => startEdit(memo)}
+                                                    style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: BG, boxShadow: NEU_SM, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: T2 }}
+                                                ><Pen size={10} /></button>
+                                                <button
+                                                    onClick={() => setConfirmDeleteId(memo.id)}
+                                                    style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: BG, boxShadow: NEU_SM, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ef4444' }}
+                                                ><Trash2 size={10} /></button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Content or edit */}
+                                {editingId === memo.id ? (
+                                    <div>
+                                        <textarea
+                                            value={editContent}
+                                            onChange={e => setEditContent(e.target.value)}
+                                            rows={3}
+                                            style={{
+                                                width: '100%', boxSizing: 'border-box',
+                                                padding: '10px 12px', borderRadius: 10,
+                                                border: 'none', background: BG, boxShadow: NEU_IN,
+                                                resize: 'none', fontSize: 12, color: T1,
+                                                lineHeight: 1.6, outline: 'none', fontFamily: 'inherit', marginBottom: 8,
+                                            }}
+                                        />
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                                            <button
+                                                onClick={() => setEditingId(null)}
+                                                style={{ padding: '5px 12px', borderRadius: 100, border: 'none', background: BG, boxShadow: NEU_SM, color: T2, fontSize: 10, fontWeight: 600, cursor: 'pointer' }}
+                                            >キャンセル</button>
+                                            <button
+                                                onClick={() => saveEdit(memo.id)}
+                                                style={{ padding: '5px 14px', borderRadius: 100, border: 'none', background: SAGE, color: '#fff', fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
+                                            >保存</button>
                                         </div>
                                     </div>
-                                    
-                                    {editingId === memo.id ? (
-                                        <div className="mt-2 text-sm text-brand-800 whitespace-pre-wrap leading-relaxed">
-                                            <textarea 
-                                                value={editContent}
-                                                onChange={(e) => setEditContent(e.target.value)}
-                                                rows={3} 
-                                                className="w-full border border-brand-300 rounded-sm text-xs p-2 bg-white leading-relaxed focus:ring-brand-500 shadow-sm mb-2 outline-none"
-                                            ></textarea>
-                                            <div className="flex justify-end gap-2">
-                                                <button onClick={() => setEditingId(null)} className="text-[10px] text-brand-500 hover:text-brand-800 px-2 py-1 tracking-widest font-bold">キャンセル</button>
-                                                <button onClick={() => saveEdit(memo.id)} className="bg-brand-600 hover:bg-brand-800 text-white px-4 py-1.5 rounded-sm text-[10px] font-bold shadow-sm transition-colors tracking-widest">保存</button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="mt-2 text-sm text-brand-800 whitespace-pre-wrap leading-relaxed break-words">
-                                            {memo.content}
-                                        </div>
-                                    )}
-                                </div>
-                            ))
-                        )}
+                                ) : (
+                                    <div style={{ fontSize: 12, color: T1, lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                                        {memo.content}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>

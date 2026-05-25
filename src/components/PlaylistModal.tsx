@@ -181,7 +181,7 @@ export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onS
                                         {playlistItems.map(item => (
                                             <div key={item.id} className="flex items-center gap-2 bg-[#fffdf9] p-2 rounded-sm border border-brand-200">
                                                 <div className="w-8 h-8 rounded-sm bg-black overflow-hidden flex-shrink-0 relative">
-                                                    <img src={item.thumbnailUrl || 'https://via.placeholder.com/80x80'} className="w-full h-full object-cover opacity-80" />
+                                                    <img src={item.thumbnailUrl || `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%231a3024"/><text x="50%" y="54%" text-anchor="middle" fill="%238ecfb2" font-size="9" font-weight="700" font-family="sans-serif">NOAH</text></svg>')}`} className="w-full h-full object-cover opacity-80" />
                                                 </div>
                                                 <div className="text-xs font-bold text-brand-800 line-clamp-1 flex-1">{item.title}</div>
                                                 <button onClick={() => toggleItem(item)} className="p-1 text-red-500 hover:bg-red-50 rounded-sm"><X size={14} /></button>
@@ -221,7 +221,7 @@ export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onS
                                             className={`flex items-center gap-3 p-3 rounded-sm border cursor-pointer transition-all ${isSelected ? 'border-[#b8860b] bg-[#fdfaf5]' : 'border-brand-200 hover:border-[#b8860b] hover:bg-[#fffdf9]'} group`}
                                         >
                                             <div className="w-16 h-12 bg-black rounded-sm overflow-hidden flex-shrink-0 relative border border-brand-200">
-                                                <img src={item.thumbnailUrl || 'https://via.placeholder.com/160x120'} className="w-full h-full object-cover opacity-80" />
+                                                <img src={item.thumbnailUrl || `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120"><rect width="160" height="120" fill="%231a3024"/><text x="50%" y="54%" text-anchor="middle" fill="%238ecfb2" font-size="14" font-weight="700" font-family="sans-serif">NOAH</text></svg>')}`} className="w-full h-full object-cover opacity-80" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className={`text-sm font-bold line-clamp-1 font-serif ${isSelected ? 'text-brand-900' : 'text-brand-700'}`}>{item.title}</h4>

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/contexts/AuthContext";
 import PWASetup from "@/components/PWASetup";
 import PWANotifications from "@/components/PWANotifications";
+import GlobalBottomNav from "@/components/GlobalBottomNav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,8 +32,10 @@ export default function RootLayout({
           <PWASetup />
           <PWANotifications />
           {children}
+          <GlobalBottomNav />
         </AuthProvider>
       </body>
     </html>
   );
 }
+

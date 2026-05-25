@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap');
 @import "tailwindcss";
 
 .markdown-content h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--color-brand-900); }
@@ -26,12 +26,24 @@
   --font-serif: "Noto Serif JP", serif;
   --font-sans: "Zen Kaku Gothic New", sans-serif;
   --font-cinzel: "Cinzel", serif;
+  /* NOAH Forest Green Design System */
+  --noah-sb: #1a3024;
+  --noah-sb-dark: #111e18;
+  --noah-lime: #8ecfb2;
+  --noah-warm: #f5f3f0;
 }
 
 @layer utilities {
   .bg-texture {
     background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
   }
+  /* Neumorphic utilities — light surface */
+  .neu-up  { box-shadow: 5px 5px 14px rgba(0,0,0,.08), -5px -5px 14px rgba(255,255,255,.85); }
+  .neu-in  { box-shadow: inset 3px 3px 8px rgba(0,0,0,.08), inset -3px -3px 8px rgba(255,255,255,.85); }
+  /* Neumorphic utilities — dark forest green surface */
+  .neu-dk-up { box-shadow: 5px 5px 16px rgba(0,0,0,.38), -5px -5px 14px rgba(255,255,255,.05); }
+  .neu-dk-in { box-shadow: inset 4px 4px 12px rgba(0,0,0,.38), inset -4px -4px 10px rgba(255,255,255,.05); }
+  .neu-dk-sm { box-shadow: 3px 3px 8px rgba(0,0,0,.3), -3px -3px 8px rgba(255,255,255,.04); }
 }
 
 @layer base {

@@ -190,19 +190,25 @@ function ProfileEditContent() {
 
   useEffect(() => {
      // Calculate Live Score
+     // 合計100%の内訳:
+     // 基本情報（必須）: 画像8 + 表示名4 + 本名4 + ふりがな4 + 肩書4 + 活動地域4 + 出身地4 + 性別4 + 生年月日4 = 40%
+     // テキスト: 自己紹介10 + 想い10 + 目標10 = 30%
+     // マッチング: 提供5 + 求め5 = 10%
+     // スキル5 + 趣味5 = 10%
+     // 経歴5 + SNS5 = 10%
      let curScore = 0;
      let missing = [];
      
      const hasPhoto = !!photoURL || !!photoFile;
      if (hasPhoto) curScore += 8; else missing.push('プロフィール画像の設定 (8%)');
      if (name) curScore += 4; else missing.push('表示名 (4%)');
-     if (realName) curScore += 4; else missing.push('本名 (4%)');
-     if (furigana) curScore += 4; else missing.push('ふりがな (4%)');
+     if (realName) curScore += 4; else missing.push('本名 (4%) ※必須');
+     if (furigana) curScore += 4; else missing.push('ふりがな (4%) ※必須');
      if (jobTitle) curScore += 4; else missing.push('職業・肩書 (4%)');
-     if (prefecture) curScore += 4; else missing.push('活動拠点 (4%)');
-     if (birthplace) curScore += 4; else missing.push('出身地 (4%)');
-     if (gender && gender !== '無回答') curScore += 4; else missing.push('性別 (4%)');
-     if (birthDate) curScore += 4; else missing.push('生年月日 (4%)');
+     if (prefecture) curScore += 4; else missing.push('活動地域 (4%) ※必須');
+     if (birthplace) curScore += 4; else missing.push('出身地 (4%) ※必須');
+     if (gender && gender !== '無回答') curScore += 4; else missing.push('性別 (4%) ※必須');
+     if (birthDate) curScore += 4; else missing.push('生年月日 (4%) ※必須');
      
      if (bio && bio.length >= 150) curScore += 10; else missing.push('自己紹介150字以上 (10%)');
      if (message && message.length >= 150) curScore += 10; else missing.push('想い・メッセージ150字以上 (10%)');
@@ -227,9 +233,9 @@ function ProfileEditContent() {
      setMissingItems(missing);
 
   }, [
-      photoURL, photoFile, name, realName, furigana, jobTitle, prefecture, birthplace, 
-      gender, birthDate, birthVisibility, mbti, bio, message, goals, canOfferStr, lookingForStr, 
-      selectedSkills, customSkillsStr, selectedHobbies, customHobbiesStr, 
+      photoURL, photoFile, name, realName, furigana, jobTitle, prefecture, birthplace,
+      gender, birthDate, bio, message, goals, canOfferStr, lookingForStr,
+      selectedSkills, customSkillsStr, selectedHobbies, customHobbiesStr,
       careerList, websiteUrl, snsInstagram, snsX, contactEmail
   ]);
 
@@ -417,25 +423,26 @@ function ProfileEditContent() {
                             <input type="text" value={jobTitle} onChange={e=>setJobTitle(e.target.value)} className="w-full border-[#e8dfd1] rounded-sm text-sm p-3 bg-[#f7f5f0]" placeholder="例: UI/UXデザイナー" />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-[#5c4a3d] mb-1.5 tracking-widest">活動拠点 (都道府県)</label>
-                            <select value={prefecture} onChange={e=>setPrefecture(e.target.value)} className="w-full border-[#e8dfd1] rounded-sm text-sm p-3 bg-[#f7f5f0]">
+                            <label className="block text-xs font-bold text-[#5c4a3d] mb-1.5 tracking-widest">活動拠点 (都道府県) <span className="text-red-500">*</span></label>
+                            <select value={prefecture} onChange={e=>setPrefecture(e.target.value)} required className="w-full border-[#e8dfd1] rounded-sm text-sm p-3 bg-[#f7f5f0]">
                                 <option value="">選択してください</option>
                                 {PREFECTURES.map(p=><option key={p} value={p}>{p}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-[#5c4a3d] mb-1.5 tracking-widest">出身地</label>
-                            <select value={birthplace} onChange={e=>setBirthplace(e.target.value)} className="w-full border-[#e8dfd1] rounded-sm text-sm p-3 bg-[#f7f5f0]">
+                            <label className="block text-xs font-bold text-[#5c4a3d] mb-1.5 tracking-widest">出身地 <span className="text-red-500">*</span></label>
+                            <select value={birthplace} onChange={e=>setBirthplace(e.target.value)} required className="w-full border-[#e8dfd1] rounded-sm text-sm p-3 bg-[#f7f5f0]">
                                 <option value="">選択してください</option>
                                 {PREFECTURES.map(p=><option key={p} value={p}>{p}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-[#5c4a3d] mb-1.5 tracking-widest">性別</label>
-                            <select value={gender} onChange={e=>setGender(e.target.value)} className="w-full border-[#e8dfd1] rounded-sm text-sm p-3 bg-[#f7f5f0]">
-                                <option value="無回答">無回答</option>
+                            <label className="block text-xs font-bold text-[#5c4a3d] mb-1.5 tracking-widest">性別 <span className="text-red-500">*</span></label>
+                            <select value={gender} onChange={e=>setGender(e.target.value)} required className="w-full border-[#e8dfd1] rounded-sm text-sm p-3 bg-[#f7f5f0]">
+                                <option value="">選択してください</option>
                                 <option value="男性">男性</option>
                                 <option value="女性">女性</option>
+                                <option value="ノンバイナリー">ノンバイナリー</option>
                                 <option value="その他">その他</option>
                             </select>
                         </div>
@@ -472,15 +479,11 @@ function ProfileEditContent() {
                     </div>
 
                     <div className="bg-[#f0ebdd] p-4 rounded-sm border border-[#e8dfd1] mt-2">
-                        <label className="block text-xs font-bold text-[#5c4a3d] mb-3 tracking-widest">生年月日と公開設定</label>
+                        <label className="block text-xs font-bold text-[#5c4a3d] mb-3 tracking-widest">生年月日 <span className="text-red-500">*</span></label>
                         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                            <input type="date" value={birthDate} onChange={e=>setBirthDate(e.target.value)} className="w-full sm:w-auto flex-1 border-[#e8dfd1] rounded-sm text-sm p-2.5 bg-white" />
-                            <select value={birthVisibility} onChange={e=>setBirthVisibility(e.target.value)} className="w-full sm:w-auto border-[#e8dfd1] rounded-sm text-sm p-2.5 bg-white">
-                                <option value="full">全体に公開 (年/月/日)</option>
-                                <option value="monthDay">月日のみ公開 (月/日)</option>
-                                <option value="none">非公開</option>
-                            </select>
+                            <input type="date" value={birthDate} onChange={e=>setBirthDate(e.target.value)} required className="w-full sm:w-auto flex-1 border-[#e8dfd1] rounded-sm text-sm p-2.5 bg-white" />
                         </div>
+                        <p className="text-[10px] text-[#a09080] mt-2 tracking-widest">公開範囲は設定画面（⚙️）から変更できます</p>
                     </div>
                 </div>
 
