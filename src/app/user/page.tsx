@@ -848,7 +848,7 @@ function UserProfileContent() {
   const SAGE = '#4a7c59';
 
   return (
-    <div style={{display:'flex',minHeight:'100dvh',background:BG,fontFamily:"'Inter','Noto Sans JP',system-ui,sans-serif",fontSize:14,lineHeight:1.5,WebkitFontSmoothing:'antialiased'}}>
+    <div style={{display:'flex',minHeight:'100dvh',background:BG,fontFamily:"'Inter','Noto Sans JP',system-ui,sans-serif",fontSize:14,lineHeight:1.5,WebkitFontSmoothing:'antialiased',overflowX:'hidden',maxWidth:'100vw'}}>
 
       {/* ── PC Sidebar ── */}
       <nav className="hidden lg:flex" style={{width:220,flexShrink:0,position:'fixed',top:0,left:0,height:'100vh',flexDirection:'column',background:SB,boxShadow:'4px 0 24px rgba(0,0,0,.18)',zIndex:50}}>
@@ -992,21 +992,29 @@ function UserProfileContent() {
                     <span>{userData.jobTitle}</span>
                   </div>}
                   {/* ── 基本情報チップ（@IDの直下、bioの前） ── */}
-                  {(userData.prefecture||userData.birthplace||userData.gender||(userData.birthDate&&userData.birthVisibility&&userData.birthVisibility!=='none'))&&(
+                  {(()=>{
+                    // プライバシー可視性ヘルパー
+                    const canSee=(vis:string)=>isSelf||vis==='public'||(vis==='mutual'&&isMutual);
+                    const showPref=userData.prefecture&&canSee(userData.activityAreaVisibility||'public');
+                    const showBP=userData.birthplace&&canSee(userData.hometownVisibility||'public');
+                    const showGender=userData.gender&&canSee(userData.genderVisibility||'public');
+                    const showBirth=userData.birthDate&&userData.birthVisibility&&userData.birthVisibility!=='none'&&canSee(userData.birthVisibility==='none'?'private':'public');
+                    if(!showPref&&!showBP&&!showGender&&!showBirth)return null;
+                    return(
                     <div className="p-info-chips" style={{display:'flex',flexWrap:'wrap',gap:'6px 12px',margin:'10px 0',padding:'10px 0',borderTop:'1px solid rgba(0,0,0,.07)',borderBottom:'1px solid rgba(0,0,0,.07)',color:T2}}>
-                      {userData.prefecture&&<div style={{display:'flex',alignItems:'center',gap:5,fontSize:11}}>
+                      {showPref&&<div style={{display:'flex',alignItems:'center',gap:5,fontSize:11}}>
                         <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                         <span>{userData.prefecture}</span>
                       </div>}
-                      {userData.birthplace&&<div style={{display:'flex',alignItems:'center',gap:5,fontSize:11}}>
+                      {showBP&&<div style={{display:'flex',alignItems:'center',gap:5,fontSize:11}}>
                         <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                         <span>{userData.birthplace}出身</span>
                       </div>}
-                      {userData.gender&&<div style={{display:'flex',alignItems:'center',gap:5,fontSize:11}}>
+                      {showGender&&<div style={{display:'flex',alignItems:'center',gap:5,fontSize:11}}>
                         <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         <span>{userData.gender}</span>
                       </div>}
-                      {userData.birthDate&&userData.birthVisibility&&userData.birthVisibility!=='none'&&(()=>{
+                      {showBirth&&(()=>{
                         const p=userData.birthDate.split('-');if(p.length<2)return null;
                         const vis=userData.birthVisibility;let label='';
                         if(vis==='monthDay'){if(!p[1]||!p[2])return null;label=`${parseInt(p[1],10)}月${parseInt(p[2],10)}日`;}
@@ -1017,7 +1025,8 @@ function UserProfileContent() {
                         </div>);
                       })()}
                     </div>
-                  )}
+                    );
+                  })()}
                   {userData.bio&&<div className="p-bio" style={{fontSize:12,color:T2,marginTop:6,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:formatText(userData.bio)}}/>}
 
                   <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginTop:8}}>
@@ -1170,7 +1179,7 @@ function UserProfileContent() {
 
 
         {/* ── Content Column ── */}
-        <div className="content-col-wrap lg:border-t-0" style={{minHeight:'100vh',background:BG}}>
+        <div className="content-col-wrap lg:border-t-0" style={{minHeight:'100vh',background:BG,overflow:'hidden'}}>
           <style>{`
             .content-col-tabs{border-top:none!important}
             @media(max-width:1023px){
@@ -1844,6 +1853,7 @@ function UserProfileContent() {
 
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+        html,body{overflow-x:hidden;max-width:100vw}
 
         /* PC ではフロートナビの余白をリセット */
         @media(min-width:1024px){body{padding-bottom:0}}
