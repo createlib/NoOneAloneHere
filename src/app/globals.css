@@ -10,6 +10,17 @@ html, body {
   box-sizing: border-box;
 }
 
+/* ── Mobile: hide scrollbar (native app feel) ──────────── */
+@media (max-width: 1023px) {
+  body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  body::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .markdown-content h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; color: var(--color-brand-900); }
 .markdown-content h2 { font-size: 1.25rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.75rem; color: var(--color-brand-800); }
 .markdown-content h3 { font-size: 1.125rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; color: var(--color-brand-700); }
