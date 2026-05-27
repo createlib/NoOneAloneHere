@@ -848,7 +848,7 @@ function UserProfileContent() {
   const SAGE = '#4a7c59';
 
   return (
-    <div style={{display:'flex',minHeight:'100dvh',background:BG,fontFamily:"'Inter','Noto Sans JP',system-ui,sans-serif",fontSize:14,lineHeight:1.5,WebkitFontSmoothing:'antialiased',overflowX:'hidden',maxWidth:'100vw'}}>
+    <div style={{display:'flex',minHeight:'100dvh',background:BG,fontFamily:"'Inter','Noto Sans JP',system-ui,sans-serif",fontSize:14,lineHeight:1.5,WebkitFontSmoothing:'antialiased',overflowX:'hidden',width:'100%',maxWidth:'100vw'}}>
 
       {/* ── PC Sidebar ── */}
       <nav className="hidden lg:flex" style={{width:220,flexShrink:0,position:'fixed',top:0,left:0,height:'100vh',flexDirection:'column',background:SB,boxShadow:'4px 0 24px rgba(0,0,0,.18)',zIndex:50}}>
@@ -902,8 +902,8 @@ function UserProfileContent() {
       </nav>
 
       {/* ── Main ── */}
-      <div className="lg:ml-[220px]" style={{flex:1,display:'grid',gridTemplateColumns:'1fr',minHeight:'100vh',alignItems:'start'}} >
-        <div className="lg:grid" style={{gridTemplateColumns:'320px 1fr'} as any}>
+      <div className="lg:ml-[220px]" style={{flex:1,display:'grid',gridTemplateColumns:'1fr',minHeight:'100vh',alignItems:'start',minWidth:0,width:'100%',maxWidth:'100%',overflowX:'hidden'}} >
+        <div className="lg:grid" style={{gridTemplateColumns:'320px 1fr',width:'100%',maxWidth:'100%',overflowX:'hidden'} as any}>
 
         {/* ── Mobile Topbar (hidden on PC via CSS) ── */}
         <div className="mob-topbar" style={{alignItems:'center',justifyContent:'space-between',padding:'0 16px',height:52,background:SB,position:'sticky',top:0,zIndex:40,gridColumn:'1/-1',boxShadow:'0 2px 12px rgba(0,0,0,.18)'}}>
@@ -1179,7 +1179,7 @@ function UserProfileContent() {
 
 
         {/* ── Content Column ── */}
-        <div className="content-col-wrap lg:border-t-0" style={{minHeight:'100vh',background:BG,overflow:'hidden'}}>
+        <div className="content-col-wrap lg:border-t-0" style={{minHeight:'100vh',background:BG,overflow:'hidden',minWidth:0,maxWidth:'100%',boxSizing:'border-box'}}>
           <style>{`
             .content-col-tabs{border-top:none!important}
             @media(max-width:1023px){
@@ -1632,7 +1632,7 @@ function UserProfileContent() {
 
           {/* ── Activity Tab ── */}
           {activeTab==='activity'&&(
-            <div style={{padding:'20px 24px 88px'}}>
+            <div style={{padding:'20px 24px 88px',minWidth:0,maxWidth:'100%',boxSizing:'border-box',overflowX:'hidden'}}>
               {/* ── 自分ビュー ── */}
               {isSelf&&(
                 <div>
@@ -1853,10 +1853,18 @@ function UserProfileContent() {
 
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-        html,body{overflow-x:hidden;max-width:100vw}
+        html,body{overflow-x:hidden!important;max-width:100vw!important}
+        *{box-sizing:border-box}
 
         /* PC ではフロートナビの余白をリセット */
         @media(min-width:1024px){body{padding-bottom:0}}
+
+        /* モバイル: すべての要素が画面幅内に収まるように */
+        @media(max-width:1023px){
+          .profile-col-wrap,.content-col-wrap{
+            width:100%!important;max-width:100vw!important;overflow-x:hidden!important;
+          }
+        }
 
         /* Mobile hero: dark green profile column dark→light text */
         @media(max-width:1023px){
