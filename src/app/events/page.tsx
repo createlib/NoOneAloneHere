@@ -1063,7 +1063,7 @@ ${registerUrl}`;
         >
 
             {/* ── Top Tab Bar ── */}
-            <div style={{position:'sticky',top:0,width:'100%',zIndex:40,background:`${BG}f5`,backdropFilter:'blur(16px)',borderBottom:`1px solid rgba(0,0,0,.07)`,padding:'8px 0',boxShadow:'0 2px 12px rgba(0,0,0,.06)'}}>
+            <div className="ev-top-tab-bar" style={{position:'sticky',top:0,width:'100%',zIndex:40,background:`${BG}f5`,backdropFilter:'blur(16px)',borderBottom:`1px solid rgba(0,0,0,.07)`,padding:'8px 0',boxShadow:'0 2px 12px rgba(0,0,0,.06)'}}>
                 <div style={{maxWidth:900,margin:'0 auto',padding:'0 16px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                     <div style={{display:'flex',background:BG,borderRadius:14,padding:4,boxShadow:NEU_IN,gap:2,flex:1}}>
                         <button onClick={()=>setViewMode('map')} style={viewMode==='map'?activeTab:inactiveTab}>
@@ -1913,6 +1913,12 @@ ${registerUrl}`;
                 .fixed.bottom-0.w-full.lg\\:hidden[class*="z-\\[1900\\]"],
                 nav.fixed.bottom-0.w-full.lg\\:hidden {
                     display: none !important;
+                }
+                /* モバイル: ヘッダー上部に安全マージン */
+                @media(max-width:1023px) {
+                    .ev-top-tab-bar {
+                        padding-top: calc(env(safe-area-inset-top, 8px) + 12px) !important;
+                    }
                 }
             `}</style>
 

@@ -233,7 +233,7 @@ function UserProfileContent() {
   const [mutualCount, setMutualCount] = useState(0);
   const [followModalType, setFollowModalType] = useState<'following'|'followers'|'mutual'|null>(null);
   
-  const [activeTab, setActiveTab] = useState<'profile' | 'media' | 'activity' | 'connect'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'media' | 'activity'>('profile');
   const [mediaTab, setMediaTab] = useState<'videos' | 'podcasts' | 'playlists' | 'liked-videos' | 'liked-podcasts'>('videos');
 
   // ── 活動タブ用 state ──────────────────────────────────────────
@@ -303,7 +303,7 @@ function UserProfileContent() {
   };
 
   // ── タブ切替ハンドラ（活動タブのみ遅延ロード）───────────────
-  const handleTabChange = (tab: 'profile'|'media'|'activity'|'connect') => {
+  const handleTabChange = (tab: 'profile'|'media'|'activity') => {
     setActiveTab(tab);
     if (tab==='activity' && !activityLoaded && targetUid && userData)
       loadActivityData(targetUid, userData.userId || targetUid);
@@ -909,6 +909,9 @@ function UserProfileContent() {
         <div className="mob-topbar" style={{alignItems:'center',justifyContent:'space-between',padding:'0 16px',height:52,background:SB,position:'sticky',top:0,zIndex:40,gridColumn:'1/-1',boxShadow:'0 2px 12px rgba(0,0,0,.18)'}}>
           <div style={{fontSize:16,fontWeight:800,letterSpacing:'.18em',color:'#fff'}}>NOAH</div>
           <div style={{display:'flex',gap:8}}>
+            <Link href="/search" style={{width:32,height:32,borderRadius:'50%',border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',display:'flex',alignItems:'center',justifyContent:'center',color:'#d4ead9',cursor:'pointer'}}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </Link>
             <button type="button" onClick={()=>setShowNotificationModal(true)} style={{width:32,height:32,borderRadius:'50%',border:'1px solid rgba(255,255,255,.15)',background:'rgba(255,255,255,.08)',display:'flex',alignItems:'center',justifyContent:'center',color:'#d4ead9',cursor:'pointer',position:'relative'}}>
               <Bell size={14}/><span style={{position:'absolute',top:4,right:4,width:6,height:6,background:'#ef4444',borderRadius:'50%',border:'1.5px solid '+SB}}/>
             </button>
@@ -1188,7 +1191,7 @@ function UserProfileContent() {
           `}</style>
           {/* Tab Bar - glassmorphism */}
           <div style={{position:'sticky',top:0,zIndex:30,backdropFilter:'blur(24px)',background:'rgba(248,246,243,.88)',borderBottom:'1px solid rgba(0,0,0,.06)',padding:'0 24px',display:'flex',alignItems:'center',gap:4,height:50}}>
-            {[['profile','プロフィール'],['media','メディア'],['activity','活動'],['connect','つながり']].map(([id,label])=>{
+            {[['profile','プロフィール'],['media','メディア'],['activity','活動']].map(([id,label])=>{
               const active=activeTab===id;
               return(
                 <button key={id} onClick={()=>handleTabChange(id as any)}
@@ -1797,26 +1800,7 @@ function UserProfileContent() {
             </div>
           )}
 
-          {/* ── Connect Tab ── */}
-          {activeTab==='connect'&&(
-            <div style={{padding:'22px 24px 88px'}}>
-              <div style={{fontSize:10,fontWeight:700,letterSpacing:'.12em',color:T2,marginBottom:14}}>フォロワー（{followersCount}）</div>
-              {followersList.length===0
-                ?<div style={{textAlign:'center',padding:'32px 0',color:TM,fontSize:13}}>まだフォロワーはいません</div>
-                :<div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {followersList.map((u:any)=>(
-                    <Link key={u.uid} href={`/user?uid=${u.uid}`} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:10,background:BG,boxShadow:NEU_SM,cursor:'pointer',textDecoration:'none',transition:'box-shadow .15s'}} onMouseEnter={e=>(e.currentTarget.style.boxShadow=NEU_IN)} onMouseLeave={e=>(e.currentTarget.style.boxShadow=NEU_SM)}>
-                      <div style={{width:40,height:40,borderRadius:'50%',background:BG,boxShadow:NEU_IN,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,fontWeight:700,flexShrink:0,overflow:'hidden'}}>
-                        {u.photoURL?<img src={u.photoURL} style={{width:'100%',height:'100%',objectFit:'cover'}} alt=""/>:(u.name||'?')[0]}
-                      </div>
-                      <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:T1}}>{u.name||u.userId}</div><div style={{fontSize:11,color:T2,marginTop:1}}>@{u.userId}</div></div>
-                      {u.membershipRank&&<span style={{fontSize:10,padding:'3px 10px',borderRadius:100,fontWeight:700,letterSpacing:'.08em',boxShadow:NEU_SM,background:'#edf3ef',color:'#2d5a3d'}}>{(u.membershipRank||'').toUpperCase()}</span>}
-                    </Link>
-                  ))}
-                </div>
-              }
-            </div>
-          )}
+
         </div>{/* /content-col */}
 
         </div>{/* /lg:grid */}

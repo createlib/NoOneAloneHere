@@ -27,7 +27,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Settings, Bell } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Settings, Bell, Search } from 'lucide-react';
 import NotificationModal from '@/components/NotificationModal';
 import SettingsModal from '@/components/SettingsModal';
 
@@ -48,7 +49,7 @@ const PC_NAV = [
 // ── モバイルボトムナビアイテム（20pxアイコン）─────────────────────────────────
 const BOTTOM_NAV = [
     { href: '/home',    label: '甲板',    icon: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
-    { href: '/search',  label: '乗組員',  icon: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> },
+    { href: '/media/podcasts', label: 'メディア', icon: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg> },
     { href: '/events',  label: 'イベント', icon: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> },
     { href: '/user',    label: '船室',    icon: <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> },
 ];
@@ -241,7 +242,10 @@ export default function AppShell({
                             }}
                         >
                             <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: '.18em', color: '#fff' }}>NOAH</div>
-                            <div style={{ display: 'flex', gap: 8 }}>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                                <Link href="/search" className="mob-topbar-btn" style={{ width:32, height:32, borderRadius:'50%', border:'1px solid rgba(255,255,255,.15)', background:'rgba(255,255,255,.08)', display:'flex', alignItems:'center', justifyContent:'center', color:'#d4ead9', cursor:'pointer' }}>
+                                    <Search size={14}/>
+                                </Link>
                                 {bellBtn(32, 6)}
                                 {settingsBtn(32)}
                             </div>

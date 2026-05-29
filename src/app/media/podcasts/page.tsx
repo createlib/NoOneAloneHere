@@ -1,244 +1,443 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { collection, getDocs, onSnapshot, query, where, orderBy, getDoc, doc } from 'firebase/firestore';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { collection, getDocs, onSnapshot, query, where, getDoc, doc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import { Podcast, Search, Users, Sparkles, X, ChevronRight, Radio, Mic, Play, Plus } from 'lucide-react';
+import AppShell from '@/components/AppShell';
+import MediaPostModal from '@/components/MediaPostModal';
+import {
+    Mic, Film, FileText, Search, Users, Sparkles, X, ChevronRight,
+    Radio, Play, Plus, SlidersHorizontal, Loader2, Anchor, BookOpen
+} from 'lucide-react';
 
-interface PodcastData {
-    id: string;
-    title: string;
-    description: string;
-    tags: string[];
-    authorId: string;
-    authorName: string;
-    authorIcon: string;
-    thumbnailUrl: string;
-    duration: number; // in seconds
-    createdAt: string | any;
-    updatedAt: string | any;
+/* ══════════════════════════════════════════════════════════════════ *
+ *  Design tokens  (neumorphic palette — same as crew/event pages)
+ * ══════════════════════════════════════════════════════════════════ */
+const BG   = '#f8f6f3';
+const SB   = '#1a3024';
+const SAGE = '#4a7c59';
+const LIME = '#8ecfb2';
+const T1   = '#2a2520';
+const T2   = '#7a7068';
+const TM   = '#b0a89e';
+const AMBER = '#d4a24a';
+const NEU  = '6px 6px 16px #dbd7d2,-6px -6px 16px #ffffff';
+const NEU_SM = '3px 3px 10px #dbd7d2,-3px -3px 10px #ffffff';
+const NEU_IN = 'inset 3px 3px 8px #dbd7d2,inset -3px -3px 8px #ffffff';
+
+/* ══════════════════════════════════════════════════════════════════ *
+ *  Types
+ * ══════════════════════════════════════════════════════════════════ */
+interface PodcastData { id:string; title:string; description:string; tags:string[]; authorId:string; authorName:string; authorIcon:string; thumbnailUrl:string; duration:number; createdAt:any; updatedAt:any; }
+interface VideoData   { id:string; title:string; description:string; tags:string[]; authorId:string; authorName:string; authorIcon:string; thumbnailUrl:string; createdAt:string; }
+interface LiveRoomData { id:string; hostName:string; hostIcon:string; title:string; status:string; startedAt:any; }
+interface ArticleData { id:string; title:string; body:string; bodyText?:string; authorId:string; authorName:string; authorIcon:string; thumbnailUrl?:string; coverImageUrl?:string; tags:string[]; createdAt:any; status?:string; visibility?:string; allowedUserIds?:string[]; allowedListIds?:string[]; }
+
+type TabKey = 'cast' | 'theater' | 'article';
+
+/* ══════════════════════════════════════════════════════════════════ *
+ *  Tag presets per tab
+ * ══════════════════════════════════════════════════════════════════ */
+const CAST_TAGS   = ['','対談・インタビュー','ひとり語り','ノウハウ共有','活動報告'];
+const THEATER_TAGS = ['','ピッチ・資金調達','ビジネスパートナー募集','PR・宣伝','活動記録','ノウハウ共有'];
+const ARTICLE_TAGS = ['','ノウハウ','体験記','お知らせ','コラム'];
+const TAG_LABELS: Record<string,string> = { '':'すべて', 'ビジネスパートナー募集':'パートナー募集' };
+
+/* helper */
+const fmtDur = (s:number|undefined) => {
+    if(!s||isNaN(s)||!isFinite(s)) return '';
+    const m=Math.floor(s/60), sec=Math.floor(s%60);
+    return `${m}:${sec<10?'0'+sec:sec}`;
+};
+const fmtDate = (d:any) => {
+    try { const dt = d?.toDate ? d.toDate() : new Date(d); return `${dt.getFullYear()}/${dt.getMonth()+1}/${dt.getDate()}`; }
+    catch { return ''; }
+};
+
+/* ══════════════════════════════════════════════════════════════════ *
+ *  MAIN COMPONENT
+ * ══════════════════════════════════════════════════════════════════ */
+export default function MediaPage() {
+    return (
+        <Suspense fallback={null}>
+            <MediaPageInner />
+        </Suspense>
+    );
 }
 
-interface LiveRoomData {
-    id: string;
-    hostName: string;
-    hostIcon: string;
-    title: string;
-    status: string;
-    startedAt: any;
-}
-
-const presetTags = [
-    { label: 'すべて', value: '' },
-    { label: '対談・インタビュー', value: '対談・インタビュー' },
-    { label: 'ひとり語り', value: 'ひとり語り' },
-    { label: 'ノウハウ共有', value: 'ノウハウ共有' },
-    { label: '活動報告', value: '活動報告' }
-];
-
-export default function PodcastsPage() {
+function MediaPageInner() {
     const { user, loading } = useAuth();
-    
-    const [allPodcasts, setAllPodcasts] = useState<PodcastData[]>([]);
-    const [followingIds, setFollowingIds] = useState<string[]>([]);
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const initialTab = (searchParams.get('tab') as TabKey) || 'cast';
+    const [tab, setTab] = useState<TabKey>(['cast','theater','article'].includes(initialTab) ? initialTab : 'cast');
+    const [searchQ, setSearchQ] = useState('');
+    const [tagQ, setTagQ] = useState('');
+
+    const [podcasts, setPodcasts] = useState<PodcastData[]>([]);
+    const [videos, setVideos] = useState<VideoData[]>([]);
+    const [articles, setArticles] = useState<ArticleData[]>([]);
     const [liveRooms, setLiveRooms] = useState<LiveRoomData[]>([]);
-    
-    const [searchQuery, setSearchQuery] = useState('');
-    const [currentTag, setCurrentTag] = useState('');
-    
-    const [showMoreModal, setShowMoreModal] = useState<{ isOpen: boolean; type: 'following' | 'recommended' | null }>({ isOpen: false, type: null });
-
-    const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const [followingIds, setFollowingIds] = useState<string[]>([]);
     const [canPost, setCanPost] = useState(false);
+    const [dataLoaded, setDataLoaded] = useState(false);
+    const [myProfile, setMyProfile] = useState<any>(null);
+    const [postModalOpen, setPostModalOpen] = useState(false);
 
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalTitle, setModalTitle] = useState('');
+    const [modalItems, setModalItems] = useState<any[]>([]);
+    const [modalType, setModalType] = useState<TabKey>('cast');
+
+    /* ── Data fetch ──────────────────────────────────────────────── */
     useEffect(() => {
         if (loading) return;
-
-        const fetchData = async () => {
+        const go = async () => {
             try {
                 if (user && !user.isAnonymous) {
-                    const mySnap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data'));
+                    const mySnap = await getDoc(doc(db,'artifacts',APP_ID,'users',user.uid,'profile','data'));
                     if (mySnap.exists()) {
-                        const rank = mySnap.data().membershipRank || 'arrival';
-                        if (rank !== 'arrival' || mySnap.data().userId === 'admin') {
-                            setCanPost(true);
-                        }
+                        const d = mySnap.data();
+                        setMyProfile(d);
+                        const rank = d.membershipRank||'arrival';
+                        if (rank!=='arrival'||d.userId==='admin') setCanPost(true);
                     }
-
-                    const followsSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', user.uid, 'following'));
-                    setFollowingIds(followsSnap.docs.map(d => d.id));
+                    const fSnap = await getDocs(collection(db,'artifacts',APP_ID,'users',user.uid,'following'));
+                    setFollowingIds(fSnap.docs.map(d=>d.id));
                 }
 
-                const podRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts');
-                const pSnap = await getDocs(podRef);
+                // podcasts
+                const pSnap = await getDocs(collection(db,'artifacts',APP_ID,'public','data','podcasts'));
                 const pods: PodcastData[] = [];
-                pSnap.forEach(d => {
-                    pods.push({ id: d.id, ...d.data() } as PodcastData);
-                });
-                
-                pods.sort((a, b) => {
-                    const tA = new Date(a.createdAt || a.updatedAt || 0).getTime();
-                    const tB = new Date(b.createdAt || b.updatedAt || 0).getTime();
-                    return tB - tA;
-                });
-                
-                setAllPodcasts(pods);
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setIsDataLoaded(true);
-            }
-        };
+                pSnap.forEach(d=>pods.push({id:d.id,...d.data()} as PodcastData));
+                pods.sort((a,b)=> new Date(b.createdAt||b.updatedAt||0).getTime() - new Date(a.createdAt||a.updatedAt||0).getTime());
+                setPodcasts(pods);
 
-        fetchData();
-        
-        // Live rooms listener
-        const liveRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'live_rooms');
-        const q = query(liveRef, where('status', '==', 'live'));
-        const unsubscribeLive = onSnapshot(q, (snap) => {
+                // videos
+                const vSnap = await getDocs(collection(db,'artifacts',APP_ID,'public','data','videos'));
+                const vids: VideoData[] = [];
+                vSnap.forEach(d=>vids.push({id:d.id,...d.data()} as VideoData));
+                vids.sort((a,b)=> new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                setVideos(vids);
+
+                // articles
+                const aSnap = await getDocs(collection(db,'artifacts',APP_ID,'public','data','articles'));
+                const allArts: ArticleData[] = [];
+                aSnap.forEach(d=>{
+                    const data = d.data();
+                    if(data.status === 'published') allArts.push({id:d.id,...data} as ArticleData);
+                });
+                // Use local variable since state update is async
+                let myFollowingIds: string[] = [];
+                if (user && !user.isAnonymous) {
+                    const fSnap2 = await getDocs(collection(db,'artifacts',APP_ID,'users',user.uid,'following'));
+                    myFollowingIds = fSnap2.docs.map(d=>d.id);
+                }
+                const arts = allArts.filter(a => {
+                    // Own articles always visible
+                    if (user && a.authorId === user.uid) return true;
+                    const vis = a.visibility || 'public';
+                    // 'public' or legacy 'members'/'paid' → show to all
+                    if (vis === 'public' || vis === 'members' || vis === 'paid') return true;
+                    if (!user || user.isAnonymous) return false;
+
+                    if (vis === 'followers' || vis === 'mutual') {
+                        return myFollowingIds.includes(a.authorId);
+                    }
+                    if (vis === 'custom') {
+                        if (a.allowedUserIds?.includes(user.uid)) return true;
+                        return false;
+                    }
+                    return true;
+                });
+
+                arts.sort((a,b)=> {
+                    const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt||0).getTime();
+                    const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt||0).getTime();
+                    return tB-tA;
+                });
+                setArticles(arts);
+            } catch(e){ console.error(e); }
+            finally { setDataLoaded(true); }
+        };
+        go();
+
+        // live rooms
+        const lRef = collection(db,'artifacts',APP_ID,'public','data','live_rooms');
+        const q = query(lRef, where('status','==','live'));
+        const unsub = onSnapshot(q, snap => {
             const rooms: LiveRoomData[] = [];
-            snap.forEach(d => rooms.push({ id: d.id, ...d.data() } as LiveRoomData));
-            rooms.sort((a, b) => {
-                const tA = a.startedAt?.toMillis ? a.startedAt.toMillis() : 0;
-                const tB = b.startedAt?.toMillis ? b.startedAt.toMillis() : 0;
-                return tB - tA;
-            });
+            snap.forEach(d=>rooms.push({id:d.id,...d.data()} as LiveRoomData));
+            rooms.sort((a,b)=>(b.startedAt?.toMillis?.()||0)-(a.startedAt?.toMillis?.()||0));
             setLiveRooms(rooms);
         });
-
-        return () => unsubscribeLive();
+        return ()=>unsub();
     }, [user, loading]);
 
-    const formatDuration = (sec: number | undefined) => {
-        if (!sec || isNaN(sec) || !isFinite(sec)) return "";
-        const m = Math.floor(sec / 60);
-        const s = Math.floor(sec % 60);
-        return `${m}:${s < 10 ? '0'+s : s}`;
+    /* ── Tab change resets filter ──────────────────────────────── */
+    const switchTab = (t:TabKey) => {
+        setTab(t); setSearchQ(''); setTagQ('');
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', t);
+        window.history.replaceState({}, '', url.toString());
     };
 
-    const isFiltering = searchQuery !== '' || currentTag !== '';
+    /* ── Filtering helpers ────────────────────────────────────── */
+    const currentTags = tab==='cast'?CAST_TAGS:tab==='theater'?THEATER_TAGS:ARTICLE_TAGS;
+    const allItems = tab==='cast'?podcasts:tab==='theater'?videos:articles;
+    const isFiltering = searchQ!==''||tagQ!=='';
 
-    let filteredPodcasts = allPodcasts;
-    if (isFiltering) {
-        filteredPodcasts = allPodcasts.filter(p => {
-            const matchTag = currentTag === '' || (p.tags && p.tags.includes(currentTag));
-            const matchSearch = searchQuery === '' ||
-                (p.title && p.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
-            return matchTag && matchSearch;
-        });
-    }
+    const filtered = allItems.filter((item:any) => {
+        const matchTag = !tagQ || (item.tags && item.tags.includes(tagQ));
+        const matchSearch = !searchQ ||
+            (item.title||'').toLowerCase().includes(searchQ.toLowerCase()) ||
+            (item.description||item.body||'').toLowerCase().includes(searchQ.toLowerCase());
+        return matchTag && matchSearch;
+    });
+    const following = allItems.filter((i:any)=>followingIds.includes(i.authorId));
+    let recommended = allItems.filter((i:any)=>!followingIds.includes(i.authorId));
+    if(!recommended.length && allItems.length) recommended = [...allItems];
 
-    const followingPodcasts = allPodcasts.filter(p => followingIds.includes(p.authorId));
-    let recommendedPodcasts = allPodcasts.filter(p => !followingIds.includes(p.authorId));
-    if (recommendedPodcasts.length === 0 && allPodcasts.length > 0) {
-        recommendedPodcasts = [...allPodcasts];
-    }
-    
-    // shuffle recommended for default view (simple randomization)
-    const shuffledRecommended = isDataLoaded ? [...recommendedPodcasts].sort(() => 0.5 - Math.random()) : [];
-
-    const getDisplayPodcasts = () => {
-        if (showMoreModal.type === 'following') return followingPodcasts;
-        if (showMoreModal.type === 'recommended') return recommendedPodcasts;
-        return [];
+    /* ── Open full-list modal ─────────────────────────────────── */
+    const openModal = (title:string, items:any[], type:TabKey) => {
+        setModalTitle(title); setModalItems(items); setModalType(type); setModalOpen(true);
     };
 
-    const PodcastCard = ({ p, isScrollMode = false }: { p: PodcastData, isScrollMode?: boolean }) => {
-        const durationStr = formatDuration(p.duration);
+    /* ── Post label ──────────────────────────────────── */
+    const postLabel = tab==='cast'?'音声を投稿':tab==='theater'?'動画を投稿':tab==='article'?'記事を書く':'';
+    const canOpenPost = canPost && postLabel;
 
-        return (
-            <Link href={`/media/podcasts/detail?id=${p.id}`} className={`flex flex-col group block transition-all ${isScrollMode ? 'w-36 sm:w-44 shrink-0 snap-start' : 'w-full'}`}>
-                <div className="w-full aspect-square rounded-xl bg-[#e8dfd1] overflow-hidden relative shadow-sm mb-3">
-                    <img src={p.thumbnailUrl || 'https://via.placeholder.com/300x300?text=CAST'} className="w-full h-full object-cover opacity-95 group-hover:scale-105 group-hover:opacity-100 transition-transform duration-500" alt={p.title} />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <Play className="text-white w-10 h-10 sm:w-12 sm:h-12 opacity-0 group-hover:opacity-100 transition-transform duration-300 drop-shadow-lg fill-white transform scale-90 group-hover:scale-100" />
+    /* ══════════════════════════════════════════════════════════════ *
+     *  CARDS
+     * ══════════════════════════════════════════════════════════════ */
+    const PodcastCard = ({p,scroll}:{p:PodcastData;scroll?:boolean}) => (
+        <Link href={`/media/podcasts/detail?id=${p.id}`}
+            style={{
+                display:'flex', flexDirection:'column', gap:8,
+                width: scroll?148:'100%', flexShrink: scroll?0:undefined,
+                textDecoration:'none', color:T1,
+            }}>
+            <div style={{
+                width:'100%', aspectRatio:'1', borderRadius:14, overflow:'hidden',
+                background:BG, boxShadow:NEU_SM, position:'relative',
+            }}>
+                <img src={p.thumbnailUrl||'/default_podcast.png'} alt={p.title}
+                    style={{ width:'100%',height:'100%',objectFit:'cover' }}
+                    onError={e=>{(e.target as HTMLImageElement).src='/default_podcast.png';}} />
+                {fmtDur(p.duration) && (
+                    <span style={{
+                        position:'absolute',bottom:6,right:6,background:'rgba(0,0,0,.7)',
+                        color:'#fff',fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:6,
+                        fontFamily:'monospace',letterSpacing:'.08em',
+                    }}>{fmtDur(p.duration)}</span>
+                )}
+            </div>
+            <div>
+                <div style={{ fontSize:12, fontWeight:700, lineHeight:1.4, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{p.title||'タイトルなし'}</div>
+                <div style={{ fontSize:10, color:TM, marginTop:2 }}>{p.authorName||'名無し'}</div>
+            </div>
+        </Link>
+    );
+
+    const VideoCard = ({v,scroll}:{v:VideoData;scroll?:boolean}) => (
+        <Link href={`/media/videos/detail?id=${v.id}`}
+            style={{
+                display:'flex', flexDirection:'column',
+                width: scroll?240:'100%', flexShrink: scroll?0:undefined,
+                textDecoration:'none', color:T1, borderRadius:14, overflow:'hidden',
+                background:BG, boxShadow:NEU_SM,
+            }}>
+            <div style={{ width:'100%', aspectRatio:'16/9', background:'#000', overflow:'hidden', position:'relative' }}>
+                <img src={v.thumbnailUrl||'/default_video.png'} alt={v.title}
+                    style={{ width:'100%',height:'100%',objectFit:'cover' }}
+                    onError={e=>{(e.target as HTMLImageElement).src='/default_video.png';}} />
+                <div style={{
+                    position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',
+                    background:'rgba(0,0,0,.15)',
+                }}>
+                    <div style={{ width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,.2)',backdropFilter:'blur(4px)',display:'flex',alignItems:'center',justifyContent:'center' }}>
+                        <Play size={16} color="#fff" fill="#fff" />
                     </div>
-                    {durationStr && (
-                        <div className="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-sans font-bold px-1.5 py-0.5 rounded tracking-widest leading-none shadow-sm">{durationStr}</div>
-                    )}
                 </div>
-                <div className="px-0.5">
-                    <h3 className="text-sm sm:text-[15px] font-bold text-brand-900 leading-tight line-clamp-2 font-serif group-hover:text-[#b8860b] transition-colors mb-1">{p.title || 'タイトルなし'}</h3>
-                    <p className="text-[11px] sm:text-xs text-brand-500 line-clamp-1 truncate tracking-wide font-medium">{p.authorName || '名無し'}</p>
+            </div>
+            <div style={{ padding:'10px 12px', display:'flex', gap:8 }}>
+                <img src={v.authorIcon||'/default_avatar.png'} alt=""
+                    style={{ width:28,height:28,borderRadius:'50%',objectFit:'cover',flexShrink:0,border:`2px solid ${BG}`,boxShadow:NEU_SM }}
+                    onError={e=>{(e.target as HTMLImageElement).src='/default_avatar.png';}} />
+                <div style={{ minWidth:0, flex:1 }}>
+                    <div style={{ fontSize:11, fontWeight:700, lineHeight:1.4, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{v.title}</div>
+                    <div style={{ fontSize:10, color:TM, marginTop:2 }}>{v.authorName||'名無し'} · {fmtDate(v.createdAt)}</div>
                 </div>
-            </Link>
-        );
+            </div>
+        </Link>
+    );
+
+    const ArticleCard = ({a,scroll}:{a:ArticleData;scroll?:boolean}) => (
+        <Link href={`/media/articles/view?id=${a.id}`} style={{ textDecoration:'none', color:'inherit', display:'block', width: scroll?200:'100%', flexShrink: scroll?0:undefined }}>
+        <div style={{
+            display:'flex', flexDirection: scroll?'column':'row',
+            gap: scroll?8:12,
+            width:'100%',
+            background:BG, borderRadius:14, boxShadow:NEU_SM,
+            overflow:'hidden', cursor:'pointer',
+        }}>
+            {(a.coverImageUrl || a.thumbnailUrl) && (
+                <div style={{ width: scroll?'100%':100, height: scroll?120:80, flexShrink:0, overflow:'hidden', borderRadius: scroll?'14px 14px 0 0':'14px 0 0 14px' }}>
+                    <img src={a.coverImageUrl||a.thumbnailUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }}
+                        onError={e=>{(e.target as HTMLImageElement).style.display='none';}} />
+                </div>
+            )}
+            <div style={{ padding: scroll?'0 12px 12px':'12px', flex:1, minWidth:0 }}>
+                <div style={{ fontSize: scroll?12:13, fontWeight:700, lineHeight:1.4, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', color:T1 }}>{a.title||'タイトルなし'}</div>
+                <div style={{ fontSize:9, color:TM, marginTop:6, display:'flex', alignItems:'center', gap:4 }}>
+                    <BookOpen size={9} /> {a.authorName||'名無し'} · {fmtDate(a.createdAt)}
+                </div>
+            </div>
+        </div>
+        </Link>
+    );
+
+    /* ── Render card based on tab ─────────────────────────────── */
+    const renderCard = (item:any, scroll?:boolean) => {
+        if(tab==='cast') return <PodcastCard key={item.id} p={item} scroll={scroll} />;
+        if(tab==='theater') return <VideoCard key={item.id} v={item} scroll={scroll} />;
+        return <ArticleCard key={item.id} a={item} scroll={scroll} />;
     };
 
+    /* ══════════════════════════════════════════════════════════════ *
+     *  RENDER
+     * ══════════════════════════════════════════════════════════════ */
     return (
-        <div className="antialiased min-h-screen bg-texture body-pb-nav lg:pb-0 pt-16">
-            <Navbar />
-            <main className="w-full max-w-[1600px] mx-auto pt-4 px-4 sm:px-6 lg:px-8">
-                
-                {/* Hero Header */}
-                <div className="flex justify-between items-center mb-8 relative z-10 pt-4">
-                    <h1 className="text-3xl font-bold font-serif text-brand-900 tracking-widest flex items-center gap-3">
-                        <Podcast className="text-brand-300" size={32} /> NOAH CAST
-                    </h1>
-                    {canPost && (
-                        <Link href="/media/podcasts/new" className="inline-flex items-center px-4 py-2 bg-[#8b6a4f] text-[#fffdf9] text-xs font-bold rounded-sm shadow-md hover:bg-[#725b3f] transition-colors border border-[#725b3f] tracking-widest">
-                            <Plus size={14} className="mr-1" /> 音声を投稿
-                        </Link>
-                    )}
-                </div>
-                
-                <div className="pb-8 md:pb-12 flex flex-col items-center text-center relative max-w-4xl mx-auto">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.05)_0%,transparent_70%)] pointer-events-none"></div>
+        <AppShell
+            activeHref="/media/podcasts"
+            currentUid={user?.uid || ''}
+            userName={user?.displayName || user?.email || undefined}
+            userIdStr={user?.email || undefined}
+            photoURL={user?.photoURL || undefined}
+            hideTopbarOnMobile
+            onLogout={async () => {
+                const { auth: fireAuth } = await import('@/lib/firebase');
+                const { signOut } = await import('firebase/auth');
+                try { await signOut(fireAuth); router.push('/login'); } catch {}
+            }}
+        >
+            <div style={{ minHeight:'100vh', background:BG, paddingBottom:100 }}>
 
+                {/* ── Tab bar ─────────────────────────────────────── */}
+                <div style={{
+                    display:'flex', gap:4, padding:'12px 16px 0',
+                    borderBottom:'1px solid rgba(0,0,0,.06)',
+                    background:BG,
+                }}>
+                    {([
+                        { key:'cast' as TabKey, label:'CAST', icon:<Mic size={13}/> },
+                        { key:'theater' as TabKey, label:'THEATER', icon:<Film size={13}/> },
+                        { key:'article' as TabKey, label:'記事', icon:<FileText size={13}/> },
+                    ]).map(t => {
+                        const active = tab===t.key;
+                        return (
+                            <button key={t.key} onClick={()=>switchTab(t.key)}
+                                style={{
+                                    flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:5,
+                                    padding:'10px 0', border:'none', cursor:'pointer',
+                                    fontSize:11, fontWeight:800, letterSpacing:'.08em',
+                                    color: active?SAGE:TM,
+                                    background:'transparent',
+                                    borderBottom: active?`2px solid ${SAGE}`:'2px solid transparent',
+                                    transition:'all .2s',
+                                }}
+                            >
+                                {t.icon} {t.label}
+                            </button>
+                        );
+                    })}
                 </div>
 
-                {/* Search & Tags */}
-                <div className="mb-8 sticky top-16 z-30 glass-bar py-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:bg-transparent sm:backdrop-blur-none sm:border-none">
-                    <div className="flex flex-col xl:flex-row gap-4 mb-4 items-center justify-between">
-                        <div className="relative w-full xl:w-96 group shrink-0">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-brand-400 group-focus-within:text-brand-600 transition-colors" size={16} />
-                            <input 
-                                type="text" 
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                placeholder="タイトルや内容で検索..." 
-                                className="w-full pl-11 pr-4 py-3 rounded-full border border-brand-200 shadow-sm text-sm focus:ring-brand-500 focus:border-brand-500 bg-[#fffdf9] transition-shadow hover:shadow-md outline-none" 
+                {/* ── Search + Tags + Post btn ────────────────────── */}
+                <div style={{ padding:'12px 16px', display:'flex', flexDirection:'column', gap:10 }}>
+                    {/* Row: search + post btn */}
+                    <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                        <div style={{ flex:1, position:'relative' }}>
+                            <Search size={13} color={TM} style={{ position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',pointerEvents:'none' }} />
+                            <input
+                                type="text" value={searchQ} onChange={e=>setSearchQ(e.target.value)}
+                                placeholder="タイトルや内容で検索..."
+                                style={{
+                                    width:'100%', padding:'9px 12px 9px 34px', border:'none',
+                                    borderRadius:12, background:BG, boxShadow:NEU_IN,
+                                    fontSize:12, color:T1, outline:'none', boxSizing:'border-box',
+                                }}
                             />
                         </div>
-                        
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 w-full pb-2">
-                            {presetTags.map(tag => (
-                                <button 
-                                    key={tag.value}
-                                    onClick={() => setCurrentTag(tag.value)} 
-                                    className={`whitespace-nowrap px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm transform hover:scale-105 shrink-0
-                                        ${currentTag === tag.value ? 'bg-[#3e2723] text-[#d4af37] border border-[#b8860b] scale-105' : 'bg-[#fffdf9] text-brand-600 border border-brand-200 hover:bg-brand-50 hover:border-[#b8860b]'}
-                                    `}
-                                >
-                                    {tag.label}
-                                </button>
-                            ))}
-                        </div>
+                        {canOpenPost && (tab==='article' ? (
+                            <Link href="/media/articles/edit" style={{
+                                display:'flex', alignItems:'center', gap:4,
+                                padding:'8px 14px', borderRadius:12, border:'none',
+                                background:SB, color:LIME, fontSize:10, fontWeight:700,
+                                textDecoration:'none', whiteSpace:'nowrap', boxShadow:'0 2px 8px rgba(0,0,0,.2)',
+                            }}>
+                                <Plus size={12} /> {postLabel}
+                            </Link>
+                        ) : (
+                            <button onClick={()=>setPostModalOpen(true)} style={{
+                                display:'flex', alignItems:'center', gap:4,
+                                padding:'8px 14px', borderRadius:12, border:'none',
+                                background:SB, color:LIME, fontSize:10, fontWeight:700,
+                                cursor:'pointer', whiteSpace:'nowrap', boxShadow:'0 2px 8px rgba(0,0,0,.2)',
+                            }}>
+                                <Plus size={12} /> {postLabel}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Tags */}
+                    <div style={{ display:'flex', gap:6, overflowX:'auto', paddingBottom:4, scrollbarWidth:'none' }}>
+                        {currentTags.map(t => (
+                            <button key={t} onClick={()=>setTagQ(t)}
+                                style={{
+                                    flexShrink:0, padding:'5px 14px', borderRadius:100,
+                                    border:'none', fontSize:10, fontWeight:700, cursor:'pointer',
+                                    background: tagQ===t?SB:BG,
+                                    color: tagQ===t?LIME:T2,
+                                    boxShadow: tagQ===t?'none':NEU_SM,
+                                    transition:'all .15s',
+                                }}
+                            >
+                                {TAG_LABELS[t]||t||'すべて'}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                {/* Live Now Section */}
-                {!isFiltering && liveRooms.length > 0 && (
-                    <div className="mb-8 border-b border-brand-200 pb-8">
-                        <h2 className="font-bold text-red-600 text-sm md:text-base font-serif tracking-widest mb-5 flex items-center px-1 sm:px-0">
-                            <Radio className="animate-pulse mr-2 w-5 h-5" />配信中の SIGNAL CAST
-                        </h2>
-                        <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-4 pt-1 no-scrollbar snap-x px-1 sm:px-0">
+                {/* ── Live rooms (cast tab only) ──────────────────── */}
+                {tab==='cast' && !isFiltering && liveRooms.length>0 && (
+                    <div style={{ padding:'0 16px 16px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
+                            <Radio size={14} color="#dc2626" style={{ animation:'pulse 1.5s infinite' }} />
+                            <span style={{ fontSize:12, fontWeight:800, color:'#dc2626', letterSpacing:'.06em' }}>配信中の SIGNAL CAST</span>
+                        </div>
+                        <div style={{ display:'flex', gap:14, overflowX:'auto', paddingBottom:8, scrollbarWidth:'none' }}>
                             {liveRooms.map(r => (
-                                <Link key={r.id} href={`/media/live_room?roomId=${r.id}`} className="flex flex-col items-center gap-2 group w-[72px] sm:w-[88px] shrink-0 snap-start">
-                                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full p-[2px] bg-gradient-to-tr from-red-500 via-orange-400 to-[#b8860b] shadow-md group-hover:scale-105 transition-transform">
-                                        <div className="w-full h-full bg-[#fffdf9] rounded-full p-[2px]">
-                                            <img src={r.hostIcon || 'https://via.placeholder.com/150?text=U'} className="w-full h-full rounded-full object-cover" alt={r.hostName} />
+                                <Link key={r.id} href={`/media/live_room?roomId=${r.id}`}
+                                    style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, width:72, flexShrink:0, textDecoration:'none' }}>
+                                    <div style={{
+                                        width:60, height:60, borderRadius:'50%', padding:2,
+                                        background:'linear-gradient(135deg,#dc2626,#f97316,#d4a24a)',
+                                        boxShadow:'0 2px 12px rgba(220,38,38,.3)',
+                                    }}>
+                                        <div style={{ width:'100%',height:'100%',borderRadius:'50%',overflow:'hidden',border:`2px solid ${BG}` }}>
+                                            <img src={r.hostIcon||'/default_avatar.png'} alt=""
+                                                style={{ width:'100%',height:'100%',objectFit:'cover' }}
+                                                onError={e=>{(e.target as HTMLImageElement).src='/default_avatar.png';}} />
                                         </div>
-                                        <div className="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-sm tracking-widest border border-red-800 shadow-sm whitespace-nowrap z-10">LIVE</div>
                                     </div>
-                                    <div className="text-center w-full mt-1 px-1">
-                                        <p className="text-xs sm:text-sm font-bold text-brand-900 truncate group-hover:text-red-600 transition-colors tracking-wide">{r.hostName || '名無し'}</p>
-                                        <p className="text-[9px] sm:text-[10px] text-brand-500 truncate mt-0.5">{r.title}</p>
+                                    <div style={{ textAlign:'center', width:'100%' }}>
+                                        <div style={{ fontSize:10, fontWeight:700, color:T1, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{r.hostName||'名無し'}</div>
+                                        <div style={{ fontSize:8, color:'#dc2626', fontWeight:800, marginTop:1 }}>● LIVE</div>
                                     </div>
                                 </Link>
                             ))}
@@ -246,88 +445,147 @@ export default function PodcastsPage() {
                     </div>
                 )}
 
-                <div className="pb-12">
-                    {isFiltering ? (
+                {/* ── Content area ────────────────────────────────── */}
+                <div style={{ padding:'0 16px' }}>
+                    {!dataLoaded ? (
+                        <div style={{ textAlign:'center', padding:'60px 0' }}>
+                            <Loader2 size={24} color={SAGE} style={{ animation:'spin .8s linear infinite', margin:'0 auto' }} />
+                            <div style={{ fontSize:12, color:TM, marginTop:10 }}>読み込み中...</div>
+                            <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}`}</style>
+                        </div>
+                    ) : isFiltering ? (
+                        /* ── Search results ─────────────────────────── */
                         <div>
-                            <h2 className="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest mb-6 flex items-center border-b border-brand-200 pb-2">
-                                <Search className="text-brand-400 mr-3" />検索結果
-                            </h2>
-                            {filteredPodcasts.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200">
-                                    <Mic className="text-4xl w-12 h-12 mb-3 text-brand-200" />
-                                    <p>該当する配信がありません。</p>
+                            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:14, paddingBottom:8, borderBottom:'1px solid rgba(0,0,0,.06)' }}>
+                                <Search size={13} color={SAGE} />
+                                <span style={{ fontSize:13, fontWeight:700, color:T1 }}>検索結果</span>
+                                <span style={{ fontSize:10, color:TM }}>({filtered.length}件)</span>
+                            </div>
+                            {filtered.length===0 ? (
+                                <div style={{ textAlign:'center', padding:'50px 20px', background:BG, borderRadius:18, boxShadow:NEU_SM }}>
+                                    <Anchor size={28} color={TM} style={{ margin:'0 auto 10px' }} />
+                                    <div style={{ fontSize:13, fontWeight:700, color:T2 }}>該当するコンテンツがありません</div>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-                                    {filteredPodcasts.map(p => <PodcastCard key={p.id} p={p} />)}
+                                <div style={{
+                                    display:'grid',
+                                    gridTemplateColumns: tab==='theater'?'repeat(auto-fill,minmax(260px,1fr))':tab==='article'?'1fr':'repeat(auto-fill,minmax(140px,1fr))',
+                                    gap:14,
+                                }}>
+                                    {filtered.map((i:any) => renderCard(i))}
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <div className="space-y-12">
-                            {/* Following Section */}
-                            {followingPodcasts.length > 0 && (
-                                <div>
-                                    <div className="flex justify-between items-end mb-4 border-b border-brand-200 pb-2">
-                                        <h2 className="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest flex items-center">
-                                            <Users className="text-brand-400 mr-3" />フォロー中の新着
-                                        </h2>
-                                        <button onClick={() => setShowMoreModal({ isOpen: true, type: 'following' })} className="text-[10px] sm:text-xs font-bold text-brand-500 hover:text-brand-800 transition-colors tracking-widest flex items-center bg-brand-50 px-3 py-1.5 rounded-sm border border-brand-200 shadow-sm">
-                                            すべて見る <ChevronRight size={14} className="ml-1" />
+                        /* ── Default: Following + Recommended ──────── */
+                        <div style={{ display:'flex', flexDirection:'column', gap:28 }}>
+                            {/* Following */}
+                            {following.length>0 && (
+                                <section>
+                                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12, paddingBottom:8, borderBottom:'1px solid rgba(0,0,0,.06)' }}>
+                                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                                            <Users size={13} color={SAGE} />
+                                            <span style={{ fontSize:13, fontWeight:700, color:T1 }}>フォロー中の新着</span>
+                                        </div>
+                                        <button onClick={()=>openModal('フォロー中の新着',following,tab)}
+                                            style={{ display:'flex', alignItems:'center', gap:3, padding:'4px 10px', borderRadius:8, border:'none', background:BG, boxShadow:NEU_SM, fontSize:10, fontWeight:600, color:T2, cursor:'pointer' }}>
+                                            すべて見る <ChevronRight size={12} />
                                         </button>
                                     </div>
-                                    <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-2 no-scrollbar snap-x snap-mandatory px-1">
-                                        {followingPodcasts.slice(0, 25).map(p => <PodcastCard key={p.id} p={p} isScrollMode={true} />)}
+                                    <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:8, scrollbarWidth:'none' }}>
+                                        {following.slice(0,20).map((i:any) => renderCard(i,true))}
                                     </div>
-                                </div>
+                                </section>
                             )}
 
-                            {/* Recommended Section */}
-                            <div>
-                                <div className="flex justify-between items-end mb-4 border-b border-brand-200 pb-2">
-                                    <h2 className="font-bold text-brand-900 text-lg md:text-xl font-serif tracking-widest flex items-center">
-                                        <Sparkles className="text-[#b8860b] mr-3" />おすすめ
-                                    </h2>
-                                    <button onClick={() => setShowMoreModal({ isOpen: true, type: 'recommended' })} className="text-[10px] sm:text-xs font-bold text-brand-500 hover:text-brand-800 transition-colors tracking-widest flex items-center bg-brand-50 px-3 py-1.5 rounded-sm border border-brand-200 shadow-sm">
-                                        すべて見る <ChevronRight size={14} className="ml-1" />
+                            {/* Recommended */}
+                            <section>
+                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12, paddingBottom:8, borderBottom:'1px solid rgba(0,0,0,.06)' }}>
+                                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                                        <Sparkles size={13} color={AMBER} />
+                                        <span style={{ fontSize:13, fontWeight:700, color:T1 }}>おすすめ</span>
+                                    </div>
+                                    <button onClick={()=>openModal('おすすめ',recommended,tab)}
+                                        style={{ display:'flex', alignItems:'center', gap:3, padding:'4px 10px', borderRadius:8, border:'none', background:BG, boxShadow:NEU_SM, fontSize:10, fontWeight:600, color:T2, cursor:'pointer' }}>
+                                        すべて見る <ChevronRight size={12} />
                                     </button>
                                 </div>
-                                <div className="flex overflow-x-auto gap-4 sm:gap-6 pb-6 pt-2 no-scrollbar snap-x snap-mandatory px-1">
-                                    {!isDataLoaded ? (
-                                        <div className="w-full flex-col flex items-center justify-center text-center py-12 text-brand-400">音声を読み込み中...</div>
-                                    ) : shuffledRecommended.length === 0 ? (
-                                        <div className="w-full flex flex-col items-center justify-center text-brand-400 py-20 bg-[#fffdf9] rounded-sm border border-dashed border-brand-200">
-                                            <Mic className="text-4xl w-12 h-12 mb-3 text-brand-200" />
-                                            <p>まだ配信がありません。</p>
-                                        </div>
-                                    ) : (
-                                        shuffledRecommended.slice(0, 25).map(p => <PodcastCard key={p.id} p={p} isScrollMode={true} />)
-                                    )}
-                                </div>
-                            </div>
+                                {recommended.length===0 ? (
+                                    <div style={{ textAlign:'center', padding:'50px 20px', background:BG, borderRadius:18, boxShadow:NEU_SM }}>
+                                        <Anchor size={28} color={TM} style={{ margin:'0 auto 10px' }} />
+                                        <div style={{ fontSize:13, fontWeight:700, color:T2 }}>まだコンテンツがありません</div>
+                                    </div>
+                                ) : (
+                                    <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:8, scrollbarWidth:'none' }}>
+                                        {recommended.slice(0,20).map((i:any) => renderCard(i,true))}
+                                    </div>
+                                )}
+                            </section>
                         </div>
                     )}
                 </div>
-            </main>
+            </div>
 
-            {/* "See All" Modal */}
-            {showMoreModal.isOpen && (
-                <div className="fixed inset-0 z-[6000] bg-[#2a1a17]/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 p-0">
-                    <div className="bg-[#fffdf9] bg-texture w-full sm:max-w-5xl h-[90vh] sm:h-[85vh] rounded-t-xl sm:rounded-md shadow-2xl flex flex-col border border-brand-300">
-                        <div className="p-4 sm:p-6 border-b border-brand-200 flex justify-between items-center bg-[#fffdf9] shrink-0 rounded-t-md">
-                            <h3 className="font-bold text-brand-900 font-serif tracking-widest flex items-center text-base sm:text-lg">
-                                {showMoreModal.type === 'following' ? <><Users className="text-brand-400 mr-2" />フォロー中の新着</> : <><Sparkles className="text-[#b8860b] mr-2" />おすすめ</>}
-                            </h3>
-                            <button onClick={() => setShowMoreModal({ isOpen: false, type: null })} className="text-brand-400 hover:text-brand-700 bg-brand-50 rounded-sm w-8 h-8 flex items-center justify-center transition-colors border border-brand-200 shadow-sm"><X size={16} /></button>
+            {/* ── "See All" Modal ─────────────────────────────────── */}
+            {modalOpen && (
+                <div style={{
+                    position:'fixed', inset:0, zIndex:6000,
+                    background:'rgba(26,48,36,.5)', backdropFilter:'blur(6px)',
+                    display:'flex', alignItems:'flex-end', justifyContent:'center',
+                }}
+                    onClick={e=>{ if(e.target===e.currentTarget) setModalOpen(false); }}
+                >
+                    <div style={{
+                        width:'100%', maxWidth:900, maxHeight:'88vh',
+                        background:BG, borderRadius:'20px 20px 0 0',
+                        boxShadow:'0 -8px 40px rgba(0,0,0,.2)',
+                        display:'flex', flexDirection:'column', overflow:'hidden',
+                    }}>
+                        {/* Modal header */}
+                        <div style={{
+                            display:'flex', alignItems:'center', justifyContent:'space-between',
+                            padding:'16px 20px', borderBottom:'1px solid rgba(0,0,0,.06)', flexShrink:0,
+                        }}>
+                            <span style={{ fontSize:14, fontWeight:800, color:T1 }}>{modalTitle}</span>
+                            <button onClick={()=>setModalOpen(false)}
+                                style={{ width:32,height:32,borderRadius:'50%',border:'none',background:BG,boxShadow:NEU_SM,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:T2 }}>
+                                <X size={14} />
+                            </button>
                         </div>
-                        <div className="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar bg-texture">
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
-                                {getDisplayPodcasts().map(p => <PodcastCard key={p.id} p={p} />)}
+                        {/* Modal body */}
+                        <div style={{ flex:1, overflowY:'auto', padding:'16px 20px 40px' }}>
+                            <div style={{
+                                display:'grid',
+                                gridTemplateColumns: modalType==='theater'?'repeat(auto-fill,minmax(260px,1fr))':modalType==='article'?'1fr':'repeat(auto-fill,minmax(140px,1fr))',
+                                gap:14,
+                            }}>
+                                {modalItems.map((i:any) => {
+                                    if(modalType==='cast') return <PodcastCard key={i.id} p={i} />;
+                                    if(modalType==='theater') return <VideoCard key={i.id} v={i} />;
+                                    return <ArticleCard key={i.id} a={i} />;
+                                })}
                             </div>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+
+            {/* ── Post Modal ──────────────────────────────────── */}
+            {tab!=='article' && (
+                <MediaPostModal
+                    type={tab as 'cast'|'theater'}
+                    isOpen={postModalOpen}
+                    onClose={()=>setPostModalOpen(false)}
+                    userId={user?.uid||''}
+                    userProfile={myProfile}
+                />
+            )}
+
+            <style>{`
+                @media(max-width:767px){
+                    .mob-topbar { display:flex !important; }
+                }
+            `}</style>
+        </AppShell>
     );
 }

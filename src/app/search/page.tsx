@@ -347,93 +347,99 @@ function SearchContent() {
                 try { await signOut(fireAuth); router.push('/login'); } catch {}
             }}
         >
-            {/* ── Sticky filter / search bar ── */}
-            <div style={{ position:'sticky', top:0, zIndex:30, backdropFilter:'blur(24px)', background:'rgba(248,246,243,.92)', borderBottom:'1px solid rgba(0,0,0,.06)', padding:'0 20px', display:'flex', alignItems:'center', gap:10, height:50 }}>
-                <Compass size={15} color={SAGE} style={{ flexShrink:0 }} />
-                <span style={{ fontSize:13, fontWeight:700, color:T1, flex:1, letterSpacing:'.02em' }}>乗組員</span>
-                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                    <span style={{ background:BG, boxShadow:NEU_SM, borderRadius:20, padding:'4px 12px', fontSize:11, color:T2, display:'flex', alignItems:'center', gap:4 }}>
-                        <Users size={11} color={SAGE}/> <strong style={{ color:T1 }}>{filteredUsers.length}</strong>{hasFilter ? '件' : '名'}
-                    </span>
-                    <button
-                        onClick={() => setIsFilterOpen(o => !o)}
-                        style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:100, border:'none', background:isFilterOpen ? SB : BG, boxShadow:isFilterOpen ? 'none' : NEU_SM, color:isFilterOpen ? LIME : T2, fontSize:11, fontWeight:700, cursor:'pointer', transition:'all .18s' }}
-                    >
-                        <SlidersHorizontal size={12}/> {isFilterOpen ? '▲ 閉じる' : '▼ 絞り込み'}
-                        {hasFilter && !isFilterOpen && <span style={{ background:SAGE, color:'#fff', borderRadius:100, padding:'0 5px', fontSize:9 }}>ON</span>}
-                    </button>
-                </div>
-            </div>
-
-            {/* ── Filter panel (slides in below sticky bar) ── */}
-            <div style={{ overflow:'hidden', maxHeight:isFilterOpen ? 500 : 0, opacity:isFilterOpen ? 1 : 0, transition:'max-height .3s ease, opacity .25s ease', background:'rgba(248,246,243,.97)', borderBottom: isFilterOpen ? '1px solid rgba(0,0,0,.06)' : 'none', backdropFilter:'blur(16px)' }}>
-                <div style={{ padding:'16px 20px 12px' }}>
-
-                    {/* Access restriction */}
-                    {!hasAccess && (
-                        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, background:BG, boxShadow:NEU_SM, marginBottom:12, borderLeft:`3px solid ${AMBER}` }}>
-                            <Lock size={14} color={AMBER} />
-                            <div style={{ flex:1 }}>
-                                <div style={{ fontSize:11, fontWeight:700, color:T1 }}>SETTLER以上の会員限定</div>
-                                <div style={{ fontSize:10, color:T2 }}>絞り込み・フリー検索はアップグレードで利用可能</div>
-                            </div>
-                            <Link href="/upgrade" style={{ padding:'6px 12px', borderRadius:8, background:AMBER, color:'#fff', fontSize:10, fontWeight:700, textDecoration:'none', whiteSpace:'nowrap' }}>
-                                <ShieldHalf size={10} style={{ display:'inline', marginRight:3 }}/>アップグレード
-                            </Link>
-                        </div>
-                    )}
-
-                    {/* Free word */}
-                    <div style={{ marginBottom:10 }}>
-                        <div style={{ fontSize:9, fontWeight:700, color:TM, letterSpacing:'.1em', marginBottom:4 }}>フリーワード</div>
-                        <div style={{ position:'relative' }}>
-                            <SearchIcon size={12} color={TM} style={{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }} />
-                            <input type="text" placeholder="名前、職業、スキルで検索..." value={searchQ} onChange={e => setSearchQ(e.target.value)}
-                                disabled={!hasAccess} style={{ ...inputBase, paddingLeft:30, opacity:hasAccess ? 1 : .5 }} />
-                        </div>
-                    </div>
-
-                    {/* Filter selects */}
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))', gap:8, marginBottom:10 }}>
-                        <div>
-                            <div style={{ fontSize:9, fontWeight:700, color:TM, letterSpacing:'.1em', marginBottom:4 }}>OS No. (1〜60)</div>
-                            <div style={{ position:'relative' }}>
-                                <Dna size={10} color={TM} style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }} />
-                                <input type="number" placeholder="例: 42" min="1" max="60" value={osQ} onChange={e => setOsQ(e.target.value)}
-                                    disabled={!hasAccess} style={{ ...inputBase, paddingLeft:26, opacity:hasAccess ? 1 : .5 }} />
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ fontSize:9, fontWeight:700, color:TM, letterSpacing:'.1em', marginBottom:4 }}>エリア</div>
-                            <select value={areaQ} onChange={e => setAreaQ(e.target.value)} disabled={!hasAccess}
-                                style={{ ...inputBase, cursor:'pointer', opacity:hasAccess ? 1 : .5 }}>
-                                <option value="">全てのエリア</option>
-                                {PREFECTURES.map(p => <option key={p} value={p}>{p}</option>)}
-                            </select>
-                        </div>
-                        <div>
-                            <div style={{ fontSize:9, fontWeight:700, color:TM, letterSpacing:'.1em', marginBottom:4 }}>MBTI</div>
-                            <select value={mbtiQ} onChange={e => setMbtiQ(e.target.value)} disabled={!hasAccess}
-                                style={{ ...inputBase, cursor:'pointer', opacity:hasAccess ? 1 : .5, fontFamily:'monospace' }}>
-                                <option value="">すべて</option>
-                                <optgroup label="分析家"><option value="INTJ">INTJ</option><option value="INTP">INTP</option><option value="ENTJ">ENTJ</option><option value="ENTP">ENTP</option></optgroup>
-                                <optgroup label="外交官"><option value="INFJ">INFJ</option><option value="INFP">INFP</option><option value="ENFJ">ENFJ</option><option value="ENFP">ENFP</option></optgroup>
-                                <optgroup label="番人"><option value="ISTJ">ISTJ</option><option value="ISFJ">ISFJ</option><option value="ESTJ">ESTJ</option><option value="ESFJ">ESFJ</option></optgroup>
-                                <optgroup label="探検家"><option value="ISTP">ISTP</option><option value="ISFP">ISFP</option><option value="ESTP">ESTP</option><option value="ESFP">ESFP</option></optgroup>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingTop:8, borderTop:'1px solid rgba(0,0,0,.05)' }}>
-                        <span style={{ fontSize:10, color:TM }}>※非公開ユーザーは表示されません</span>
-                        <button onClick={() => { setSearchQ(''); setOsQ(''); setAreaQ(''); setMbtiQ(''); router.replace('/search'); }}
-                            disabled={!hasAccess || !hasFilter}
-                            style={{ display:'flex', alignItems:'center', gap:4, padding:'6px 12px', borderRadius:8, border:'none', background:BG, boxShadow:(!hasAccess||!hasFilter)?'none':NEU_SM, color:(!hasAccess||!hasFilter)?TM:T2, fontSize:11, fontWeight:600, cursor:(!hasAccess||!hasFilter)?'not-allowed':'pointer', opacity:(!hasAccess||!hasFilter)?.5:1 }}>
-                            <X size={10}/> 条件クリア
+            {/* ── Fixed header + filter (stays on screen always) ── */}
+            <div className="crew-sticky-header" style={{ position:'fixed', top:0, left:0, right:0, zIndex:50, backdropFilter:'blur(24px)', background:'rgba(248,246,243,.92)' }}>
+                {/* Title bar */}
+                <div style={{ display:'flex', alignItems:'center', gap:10, padding:'0 20px', height:50, borderBottom:'1px solid rgba(0,0,0,.06)' }}>
+                    <Compass size={15} color={SAGE} style={{ flexShrink:0 }} />
+                    <span style={{ fontSize:13, fontWeight:700, color:T1, flex:1, letterSpacing:'.02em' }}>乗組員</span>
+                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                        <span style={{ background:BG, boxShadow:NEU_SM, borderRadius:20, padding:'4px 12px', fontSize:11, color:T2, display:'flex', alignItems:'center', gap:4 }}>
+                            <Users size={11} color={SAGE}/> <strong style={{ color:T1 }}>{filteredUsers.length}</strong>{hasFilter ? '件' : '名'}
+                        </span>
+                        <button
+                            onClick={() => setIsFilterOpen(o => !o)}
+                            style={{ display:'flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:100, border:'none', background:isFilterOpen ? SB : BG, boxShadow:isFilterOpen ? 'none' : NEU_SM, color:isFilterOpen ? LIME : T2, fontSize:11, fontWeight:700, cursor:'pointer', transition:'all .18s' }}
+                        >
+                            <SlidersHorizontal size={12}/> {isFilterOpen ? '▲ 閉じる' : '▼ 絞り込み'}
+                            {hasFilter && !isFilterOpen && <span style={{ background:SAGE, color:'#fff', borderRadius:100, padding:'0 5px', fontSize:9 }}>ON</span>}
                         </button>
                     </div>
                 </div>
+
+                {/* Filter panel (expands inside fixed header) */}
+                <div style={{ overflow:'hidden', maxHeight:isFilterOpen ? 500 : 0, opacity:isFilterOpen ? 1 : 0, transition:'max-height .3s ease, opacity .25s ease', background:'rgba(248,246,243,.97)', borderBottom: isFilterOpen ? '1px solid rgba(0,0,0,.06)' : 'none' }}>
+                    <div style={{ padding:'16px 20px 12px' }}>
+
+                        {/* Access restriction */}
+                        {!hasAccess && (
+                            <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px', borderRadius:12, background:BG, boxShadow:NEU_SM, marginBottom:12, borderLeft:`3px solid ${AMBER}` }}>
+                                <Lock size={14} color={AMBER} />
+                                <div style={{ flex:1 }}>
+                                    <div style={{ fontSize:11, fontWeight:700, color:T1 }}>SETTLER以上の会員限定</div>
+                                    <div style={{ fontSize:10, color:T2 }}>絞り込み・フリー検索はアップグレードで利用可能</div>
+                                </div>
+                                <Link href="/upgrade" style={{ padding:'6px 12px', borderRadius:8, background:AMBER, color:'#fff', fontSize:10, fontWeight:700, textDecoration:'none', whiteSpace:'nowrap' }}>
+                                    <ShieldHalf size={10} style={{ display:'inline', marginRight:3 }}/>アップグレード
+                                </Link>
+                            </div>
+                        )}
+
+                        {/* Free word */}
+                        <div style={{ marginBottom:10 }}>
+                            <div style={{ fontSize:9, fontWeight:700, color:TM, letterSpacing:'.1em', marginBottom:4 }}>フリーワード</div>
+                            <div style={{ position:'relative' }}>
+                                <SearchIcon size={12} color={TM} style={{ position:'absolute', left:11, top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }} />
+                                <input type="text" placeholder="名前、職業、スキルで検索..." value={searchQ} onChange={e => setSearchQ(e.target.value)}
+                                    disabled={!hasAccess} style={{ ...inputBase, paddingLeft:30, opacity:hasAccess ? 1 : .5 }} />
+                            </div>
+                        </div>
+
+                        {/* Filter selects */}
+                        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))', gap:8, marginBottom:10 }}>
+                            <div>
+                                <div style={{ fontSize:9, fontWeight:700, color:TM, letterSpacing:'.1em', marginBottom:4 }}>OS No. (1〜60)</div>
+                                <div style={{ position:'relative' }}>
+                                    <Dna size={10} color={TM} style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }} />
+                                    <input type="number" placeholder="例: 42" min="1" max="60" value={osQ} onChange={e => setOsQ(e.target.value)}
+                                        disabled={!hasAccess} style={{ ...inputBase, paddingLeft:26, opacity:hasAccess ? 1 : .5 }} />
+                                </div>
+                            </div>
+                            <div>
+                                <div style={{ fontSize:9, fontWeight:700, color:TM, letterSpacing:'.1em', marginBottom:4 }}>エリア</div>
+                                <select value={areaQ} onChange={e => setAreaQ(e.target.value)} disabled={!hasAccess}
+                                    style={{ ...inputBase, cursor:'pointer', opacity:hasAccess ? 1 : .5 }}>
+                                    <option value="">全てのエリア</option>
+                                    {PREFECTURES.map(p => <option key={p} value={p}>{p}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <div style={{ fontSize:9, fontWeight:700, color:TM, letterSpacing:'.1em', marginBottom:4 }}>MBTI</div>
+                                <select value={mbtiQ} onChange={e => setMbtiQ(e.target.value)} disabled={!hasAccess}
+                                    style={{ ...inputBase, cursor:'pointer', opacity:hasAccess ? 1 : .5, fontFamily:'monospace' }}>
+                                    <option value="">すべて</option>
+                                    <optgroup label="分析家"><option value="INTJ">INTJ</option><option value="INTP">INTP</option><option value="ENTJ">ENTJ</option><option value="ENTP">ENTP</option></optgroup>
+                                    <optgroup label="外交官"><option value="INFJ">INFJ</option><option value="INFP">INFP</option><option value="ENFJ">ENFJ</option><option value="ENFP">ENFP</option></optgroup>
+                                    <optgroup label="番人"><option value="ISTJ">ISTJ</option><option value="ISFJ">ISFJ</option><option value="ESTJ">ESTJ</option><option value="ESFJ">ESFJ</option></optgroup>
+                                    <optgroup label="探検家"><option value="ISTP">ISTP</option><option value="ISFP">ISFP</option><option value="ESTP">ESTP</option><option value="ESFP">ESFP</option></optgroup>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', paddingTop:8, borderTop:'1px solid rgba(0,0,0,.05)' }}>
+                            <span style={{ fontSize:10, color:TM }}>※非公開ユーザーは表示されません</span>
+                            <button onClick={() => { setSearchQ(''); setOsQ(''); setAreaQ(''); setMbtiQ(''); router.replace('/search'); }}
+                                disabled={!hasAccess || !hasFilter}
+                                style={{ display:'flex', alignItems:'center', gap:4, padding:'6px 12px', borderRadius:8, border:'none', background:BG, boxShadow:(!hasAccess||!hasFilter)?'none':NEU_SM, color:(!hasAccess||!hasFilter)?TM:T2, fontSize:11, fontWeight:600, cursor:(!hasAccess||!hasFilter)?'not-allowed':'pointer', opacity:(!hasAccess||!hasFilter)?.5:1 }}>
+                                <X size={10}/> 条件クリア
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            {/* Spacer to push content below fixed header */}
+            <div style={{ height: 50 }} />
 
             {/* ── Error ── */}
             {fetchError && (
@@ -486,6 +492,16 @@ function SearchContent() {
                     }
                     .crew-row-item:not(:last-child) {
                         border-bottom: 1px solid rgba(0,0,0,.06);
+                    }
+                    /* モバイル: ヘッダー上部に安全マージン */
+                    .crew-sticky-header {
+                        padding-top: calc(env(safe-area-inset-top, 8px) + 12px) !important;
+                    }
+                }
+                /* PC: fixed header はサイドバー分オフセット */
+                @media(min-width:1024px) {
+                    .crew-sticky-header {
+                        left: 220px !important;
                     }
                 }
             `}</style>

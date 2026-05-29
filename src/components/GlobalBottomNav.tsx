@@ -26,21 +26,27 @@ const UserIcon = ({ active }: { active: boolean }) => (
     </svg>
 );
 
+const MediaIcon = ({ active }: { active: boolean }) => (
+    <svg width="21" height="21" viewBox="0 0 24 24" fill={active ? '#fff' : 'rgba(255,255,255,.55)'} stroke="none">
+        <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3zM19 10v2a7 7 0 01-14 0v-2h2v2a5 5 0 0010 0v-2h2zM11 19.93V22h-3v2h8v-2h-3v-2.07A9 9 0 0021 12h-2a7 7 0 01-14 0H3a9 9 0 008 7.93z"/>
+    </svg>
+);
+
 const NAV_ITEMS = [
     { href: '/home',   label: '甲板',     Icon: HomeIcon },
-    { href: '/search', label: '乗組員',   Icon: SearchIcon },
+    { href: '/media/podcasts', label: 'メディア', Icon: MediaIcon },
     { href: '/events', label: 'イベント',  Icon: CalendarIcon },
     { href: '/user',   label: '船室',     Icon: UserIcon },
 ];
 
 // Pages where the nav should NOT appear
-const HIDDEN_PATHS = ['/login', '/register', '/contact', '/terms', '/tokusho'];
+const HIDDEN_PATHS = ['/', '/login', '/register', '/contact', '/terms', '/tokusho', '/media/articles/edit'];
 
 export default function GlobalBottomNav() {
     const pathname = usePathname();
 
     // Hide on certain pages
-    if (HIDDEN_PATHS.some(p => pathname.startsWith(p))) return null;
+    if (pathname === '/' || HIDDEN_PATHS.some(p => p !== '/' && pathname.startsWith(p))) return null;
 
     return (
         <>

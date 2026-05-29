@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import EventComments from '@/components/EventComments';
 import Link from 'next/link';
 import { X, Calendar, MapPin, User, Share2, CalendarPlus, Loader2, ExternalLink } from 'lucide-react';
 import { db, APP_ID } from '@/lib/firebase';
@@ -400,6 +401,18 @@ export default function EventDetailSheet({
                             </Link>
                         )}
                     </div>{/* /actions */}
+
+                    {/* ── Comments section ── */}
+                    {currentUserId && (
+                        <EventComments
+                            eventId={event.id}
+                            currentUserId={currentUserId}
+                            currentUserName={userData?.name || '匿名'}
+                            currentUserPhoto={userData?.photoURL}
+                            organizerId={event.organizerId || ''}
+                            isOrganizer={isOrganizerOrAdmin}
+                        />
+                    )}
                 </div>{/* /padding body */}
                 </div>{/* /scrollable body */}
             </div>{/* /sheet */}
