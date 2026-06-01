@@ -43,7 +43,7 @@ type TabKey = 'cast' | 'theater' | 'article';
  * ══════════════════════════════════════════════════════════════════ */
 const CAST_TAGS   = ['','対談・インタビュー','ひとり語り','ノウハウ共有','活動報告'];
 const THEATER_TAGS = ['','ピッチ・資金調達','ビジネスパートナー募集','PR・宣伝','活動記録','ノウハウ共有'];
-const ARTICLE_TAGS = ['','ノウハウ','体験記','お知らせ','コラム'];
+const ARTICLE_TAGS = ['','ノウハウ','体験記','お知らせ','コラム','インタビュー','イベントレポート'];
 const TAG_LABELS: Record<string,string> = { '':'すべて', 'ビジネスパートナー募集':'パートナー募集' };
 
 /* helper */
@@ -192,7 +192,7 @@ function MediaPageInner() {
     const isFiltering = searchQ!==''||tagQ!=='';
 
     const filtered = allItems.filter((item:any) => {
-        const matchTag = !tagQ || (item.tags && item.tags.includes(tagQ));
+        const matchTag = !tagQ || (item.tags && item.tags.includes(tagQ)) || (item.category && item.category === tagQ);
         const matchSearch = !searchQ ||
             (item.title||'').toLowerCase().includes(searchQ.toLowerCase()) ||
             (item.description||item.body||'').toLowerCase().includes(searchQ.toLowerCase());
@@ -453,30 +453,67 @@ function MediaPageInner() {
                             <div style={{ fontSize:12, color:TM, marginTop:10 }}>読み込み中...</div>
                             <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}`}</style>
                         </div>
-                    ) : isFiltering ? (
-                        /* ── Search results ─────────────────────────── */
+                    ) : isFiltering ? (() => {
+                        /* ── Filtered: same layout as default ──────── */
+                        const filteredFollowing = filtered.filter((i:any) => followingIds.includes(i.authorId));
+                        const filteredOther = filtered.filter((i:any) => !followingIds.includes(i.authorId));
+                        if (!filteredOther.length && filtered.length) filteredOther.push(...filtered);
+                        const hasResults = filtered.length > 0;
+                        return (
                         <div>
                             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:14, paddingBottom:8, borderBottom:'1px solid rgba(0,0,0,.06)' }}>
                                 <Search size={13} color={SAGE} />
                                 <span style={{ fontSize:13, fontWeight:700, color:T1 }}>検索結果</span>
                                 <span style={{ fontSize:10, color:TM }}>({filtered.length}件)</span>
                             </div>
-                            {filtered.length===0 ? (
+                            {!hasResults ? (
                                 <div style={{ textAlign:'center', padding:'50px 20px', background:BG, borderRadius:18, boxShadow:NEU_SM }}>
                                     <Anchor size={28} color={TM} style={{ margin:'0 auto 10px' }} />
                                     <div style={{ fontSize:13, fontWeight:700, color:T2 }}>該当するコンテンツがありません</div>
                                 </div>
                             ) : (
-                                <div style={{
-                                    display:'grid',
-                                    gridTemplateColumns: tab==='theater'?'repeat(auto-fill,minmax(260px,1fr))':tab==='article'?'1fr':'repeat(auto-fill,minmax(140px,1fr))',
-                                    gap:14,
-                                }}>
-                                    {filtered.map((i:any) => renderCard(i))}
+                                <div style={{ display:'flex', flexDirection:'column', gap:28 }}>
+                                    {filteredFollowing.length > 0 && (
+                                        <section>
+                                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12, paddingBottom:8, borderBottom:'1px solid rgba(0,0,0,.06)' }}>
+                                                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                                                    <Users size={13} color={SAGE} />
+                                                    <span style={{ fontSize:13, fontWeight:700, color:T1 }}>フォロー中の新着</span>
+                                                </div>
+                                                {filteredFollowing.length > 20 && (
+                                                    <button onClick={() => openModal('フォロー中の新着', filteredFollowing, tab)}
+                                                        style={{ display:'flex', alignItems:'center', gap:3, padding:'4px 10px', borderRadius:8, border:'none', background:BG, boxShadow:NEU_SM, fontSize:10, fontWeight:600, color:T2, cursor:'pointer' }}>
+                                                        すべて見る <ChevronRight size={12} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:8, scrollbarWidth:'none' }}>
+                                                {filteredFollowing.slice(0,20).map((i:any) => renderCard(i, true))}
+                                            </div>
+                                        </section>
+                                    )}
+                                    <section>
+                                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12, paddingBottom:8, borderBottom:'1px solid rgba(0,0,0,.06)' }}>
+                                            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                                                <Sparkles size={13} color={AMBER} />
+                                                <span style={{ fontSize:13, fontWeight:700, color:T1 }}>{filteredFollowing.length > 0 ? 'おすすめ' : '結果'}</span>
+                                            </div>
+                                            {filteredOther.length > 20 && (
+                                                <button onClick={() => openModal(filteredFollowing.length > 0 ? 'おすすめ' : '検索結果', filteredOther, tab)}
+                                                    style={{ display:'flex', alignItems:'center', gap:3, padding:'4px 10px', borderRadius:8, border:'none', background:BG, boxShadow:NEU_SM, fontSize:10, fontWeight:600, color:T2, cursor:'pointer' }}>
+                                                    すべて見る <ChevronRight size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:8, scrollbarWidth:'none' }}>
+                                            {filteredOther.slice(0,20).map((i:any) => renderCard(i, true))}
+                                        </div>
+                                    </section>
                                 </div>
                             )}
                         </div>
-                    ) : (
+                        );
+                    })() : (
                         /* ── Default: Following + Recommended ──────── */
                         <div style={{ display:'flex', flexDirection:'column', gap:28 }}>
                             {/* Following */}

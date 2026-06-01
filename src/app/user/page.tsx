@@ -7,7 +7,7 @@ import { db, storage, APP_ID } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy, onSnapshot, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, LogOut, Camera, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home, SatelliteDish, CalendarHeart, Bell, CalendarDays } from 'lucide-react';
+import { Anchor, LogOut, Camera, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home, SatelliteDish, CalendarHeart, Bell, CalendarDays, Repeat2, Hash, AtSign } from 'lucide-react';
 
 import FollowModal from '@/components/FollowModal';
 import KeyMemoModal from '@/components/KeyMemoModal';
@@ -17,6 +17,7 @@ import NotificationModal from '@/components/NotificationModal';
 import SettingsModal from '@/components/SettingsModal';
 import EventsCalendarModal from '@/components/EventsCalendarModal';
 import EventDetailSheet from '@/components/EventDetailSheet';
+import { PostImageGrid } from '@/components/ImageLightbox';
 
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
@@ -233,8 +234,8 @@ function UserProfileContent() {
   const [mutualCount, setMutualCount] = useState(0);
   const [followModalType, setFollowModalType] = useState<'following'|'followers'|'mutual'|null>(null);
   
-  const [activeTab, setActiveTab] = useState<'profile' | 'media' | 'activity'>('profile');
-  const [mediaTab, setMediaTab] = useState<'videos' | 'podcasts' | 'playlists' | 'liked-videos' | 'liked-podcasts'>('videos');
+  const [activeTab, setActiveTab] = useState<'profile' | 'media' | 'activity' | 'threads'>('profile');
+  const [mediaTab, setMediaTab] = useState<'videos' | 'podcasts' | 'articles' | 'playlists' | 'liked'>('videos');
 
   // ── 活動タブ用 state ──────────────────────────────────────────
   const [activityJoined,  setActivityJoined]  = useState<any[]>([]);
@@ -248,10 +249,15 @@ function UserProfileContent() {
 
   const [userVideos, setUserVideos] = useState<any[]>([]);
   const [userPodcasts, setUserPodcasts] = useState<any[]>([]);
+  const [userArticles, setUserArticles] = useState<any[]>([]);
   const [userPlaylists, setUserPlaylists] = useState<any[]>([]);
-  const [likedVideos, setLikedVideos] = useState<any[]>([]);
-  const [likedPodcasts, setLikedPodcasts] = useState<any[]>([]);
+  const [likedItems, setLikedItems] = useState<any[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
+
+  // ── スレッドタブ用 state ──────────────────────────────────────
+  const [userThreads, setUserThreads] = useState<any[]>([]);
+  const [threadsLoading, setThreadsLoading] = useState(false);
+  const [threadsLoaded, setThreadsLoaded] = useState(false);
 
   // ── 活動タブ: データ取得 ─────────────────────────────────────
   const loadActivityData = async (uid: string, profId: string) => {
@@ -302,11 +308,37 @@ function UserProfileContent() {
     setPinSaving(null);
   };
 
-  // ── タブ切替ハンドラ（活動タブのみ遅延ロード）───────────────
-  const handleTabChange = (tab: 'profile'|'media'|'activity') => {
+  // ── スレッドデータ取得 ────────────────────────────────────────
+  const loadThreadsData = async (uid: string) => {
+    if (threadsLoaded || threadsLoading) return;
+    setThreadsLoading(true);
+    try {
+      const postsSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'posts'));
+      const posts: any[] = [];
+      postsSnap.forEach(d => {
+        const data = d.data();
+        if (data.authorId === uid && (data.parentId === null || data.parentId === undefined)) {
+          posts.push({ id: d.id, ...data });
+        }
+      });
+      posts.sort((a, b) => {
+        const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
+        const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt || 0).getTime();
+        return tB - tA;
+      });
+      setUserThreads(posts);
+      setThreadsLoaded(true);
+    } catch (e) { console.error('loadThreadsData error', e); }
+    finally { setThreadsLoading(false); }
+  };
+
+  // ── タブ切替ハンドラ ─────────────────────────────────────────
+  const handleTabChange = (tab: 'profile'|'media'|'activity'|'threads') => {
     setActiveTab(tab);
     if (tab==='activity' && !activityLoaded && targetUid && userData)
       loadActivityData(targetUid, userData.userId || targetUid);
+    if (tab==='threads' && !threadsLoaded && targetUid)
+      loadThreadsData(targetUid);
   };
 
     useEffect(() => {
@@ -434,6 +466,7 @@ function UserProfileContent() {
       if (!uid) return;
       setMediaLoading(true);
       try {
+        // Videos
         const videosRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos');
         const vq = query(videosRef, where('authorId', '==', uid));
         const vSnap = await getDocs(vq);
@@ -441,6 +474,7 @@ function UserProfileContent() {
         videos.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
         setUserVideos(videos);
 
+        // Podcasts
         const podsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts');
         const pq = query(podsRef, where('authorId', '==', uid));
         const pSnap = await getDocs(pq);
@@ -448,30 +482,72 @@ function UserProfileContent() {
         pods.sort((a: any, b: any) => new Date(b.createdAt || b.updatedAt || 0).getTime() - new Date(a.createdAt || a.updatedAt || 0).getTime());
         setUserPodcasts(pods);
 
+        // Articles
+        const artSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'articles'));
+        const arts: any[] = [];
+        artSnap.forEach(d => {
+          const data = d.data();
+          if (data.authorId === uid && data.status === 'published') {
+            arts.push({ id: d.id, ...data });
+          }
+        });
+        arts.sort((a, b) => {
+          const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
+          const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt || 0).getTime();
+          return tB - tA;
+        });
+        setUserArticles(arts);
+
+        // Playlists
         const playRef = collection(db, 'artifacts', APP_ID, 'users', uid, 'playlists');
         const playSnap = await getDocs(playRef);
         const lists = playSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         lists.sort((a: any, b: any) => (b.updatedAt || b.createdAt || 0) - (a.createdAt || a.updatedAt || 0));
         setUserPlaylists(lists);
 
+        // Liked items (self only)
         if (user && uid === user.uid) {
-            const allVidSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos'));
-            const lvPromises = allVidSnap.docs.map(async (d) => {
-                const lSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'videos', d.id, 'likes', user.uid));
-                if (lSnap.exists()) return { id: d.id, ...d.data() };
-                return null;
-            });
-            const lvResults = await Promise.all(lvPromises);
-            setLikedVideos(lvResults.filter(v => v !== null));
+          const allLiked: any[] = [];
+          // Liked videos
+          const allVidSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos'));
+          const lvPromises = allVidSnap.docs.map(async (d) => {
+            const lSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'videos', d.id, 'likes', user.uid));
+            if (lSnap.exists()) return { id: d.id, ...d.data(), _likeType: 'video' as const };
+            return null;
+          });
+          const lvResults = (await Promise.all(lvPromises)).filter(Boolean);
+          allLiked.push(...lvResults);
 
-            const allPodSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts'));
-            const lpPromises = allPodSnap.docs.map(async (d) => {
-                const lSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', d.id, 'likes', user.uid));
-                if (lSnap.exists()) return { id: d.id, ...d.data() };
-                return null;
-            });
-            const lpResults = await Promise.all(lpPromises);
-            setLikedPodcasts(lpResults.filter(p => p !== null));
+          // Liked podcasts
+          const allPodSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts'));
+          const lpPromises = allPodSnap.docs.map(async (d) => {
+            const lSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', d.id, 'likes', user.uid));
+            if (lSnap.exists()) return { id: d.id, ...d.data(), _likeType: 'podcast' as const };
+            return null;
+          });
+          const lpResults = (await Promise.all(lpPromises)).filter(Boolean);
+          allLiked.push(...lpResults);
+
+          // Liked articles
+          const allArtSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'articles'));
+          const laPromises = allArtSnap.docs.map(async (d) => {
+            const data = d.data();
+            if (data.status !== 'published') return null;
+            try {
+              const lSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'articles', d.id, 'likes', user.uid));
+              if (lSnap.exists()) return { id: d.id, ...data, _likeType: 'article' as const };
+            } catch {}
+            return null;
+          });
+          const laResults = (await Promise.all(laPromises)).filter(Boolean);
+          allLiked.push(...laResults);
+
+          allLiked.sort((a: any, b: any) => {
+            const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
+            const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt || 0).getTime();
+            return tB - tA;
+          });
+          setLikedItems(allLiked);
         }
 
       } catch (e) {
@@ -629,7 +705,6 @@ function UserProfileContent() {
   const rank = userData.membershipRank || 'arrival';
 
   // Derived
-  const mediaItems = [...(userVideos||[]).map((v:any)=>({...v,type:'video' as const})), ...(userPodcasts||[]).map((p:any)=>({...p,type:'podcast' as const}))];
   const playlists = userPlaylists || [];
 
 
@@ -1191,7 +1266,7 @@ function UserProfileContent() {
           `}</style>
           {/* Tab Bar - glassmorphism */}
           <div style={{position:'sticky',top:0,zIndex:30,backdropFilter:'blur(24px)',background:'rgba(248,246,243,.88)',borderBottom:'1px solid rgba(0,0,0,.06)',padding:'0 24px',display:'flex',alignItems:'center',gap:4,height:50}}>
-            {[['profile','プロフィール'],['media','メディア'],['activity','活動']].map(([id,label])=>{
+            {[['profile','プロフィール'],['threads','スレッド'],['media','メディア'],['activity','活動']].map(([id,label])=>{
               const active=activeTab===id;
               return(
                 <button key={id} onClick={()=>handleTabChange(id as any)}
@@ -1565,69 +1640,346 @@ function UserProfileContent() {
 
           {/* ── Media Tab ── */}
           {activeTab==='media'&&(
-            <div style={{padding:'22px 24px 88px'}}>
-              {mediaItems.length===0&&!hasPlaylistPermission&&(
-                <div style={{textAlign:'center',padding:'48px 0',color:TM,fontSize:13}}>
-                  <Film size={32} style={{margin:'0 auto 12px',opacity:.3}}/>まだメディアはありません
-                </div>
-              )}
-              {/* Videos */}
-              {mediaItems.filter((m:any)=>m.type==='video').length>0&&(
-                <div style={{marginBottom:24}}>
-                  <div style={{fontSize:10,fontWeight:700,letterSpacing:'.12em',color:T2,marginBottom:12}}>THEATER</div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                    {mediaItems.filter((m:any)=>m.type==='video').map((m:any)=>(
-                      <Link key={m.id} href={`/media/videos/${m.id}`} style={{background:BG,borderRadius:18,boxShadow:NEU_UP,overflow:'hidden',cursor:'pointer',textDecoration:'none',display:'block'}}>
-                        <div style={{aspectRatio:'16/9',background:'linear-gradient(135deg,#3e1a1a,#1a0808)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
-                          {m.thumbnailURL?<img src={m.thumbnailURL} alt="" style={{width:'100%',height:'100%',objectFit:'cover',position:'absolute',inset:0}}/>:<Film size={28} color="#6b5a50"/>}
+            <div style={{padding:'0 0 88px'}}>
+              {/* Sub-tab bar */}
+              <div style={{display:'flex',borderBottom:'1px solid rgba(0,0,0,.06)',padding:'0 24px',gap:0}}>
+                {([
+                  {key:'videos'  as const, icon:<Film size={15}/>,       label:'動画',     count:userVideos.length},
+                  {key:'podcasts'as const, icon:<Headphones size={15}/>, label:'音声',     count:userPodcasts.length},
+                  {key:'articles'as const, icon:<FileText size={15}/>,   label:'記事',     count:userArticles.length},
+                  {key:'playlists'as const,icon:<List size={15}/>,       label:'リスト',   count:playlists.length},
+                  ...(isSelf ? [{key:'liked' as const, icon:<Heart size={15}/>, label:'いいね', count:likedItems.length}] : []),
+                ] as const).map(t=>{
+                  const active = mediaTab===t.key;
+                  return (
+                    <button key={t.key} onClick={()=>setMediaTab(t.key as any)}
+                      style={{
+                        flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3,
+                        padding:'12px 4px 10px', border:'none', cursor:'pointer',
+                        background:'transparent', position:'relative',
+                        color: active ? SAGE : TM, transition:'color .15s',
+                      }}>
+                      {t.icon}
+                      <span style={{fontSize:9,fontWeight:700,letterSpacing:'.06em'}} className="media-tab-label">{t.label}</span>
+                      {t.count > 0 && <span style={{fontSize:8,fontWeight:700,color:active?SAGE:TM,opacity:.7}}>{t.count}</span>}
+                      {active && <div style={{position:'absolute',bottom:0,left:'20%',right:'20%',height:2,background:SAGE,borderRadius:2}}/>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Tab content */}
+              <div style={{padding:'16px 24px'}}>
+                {mediaLoading ? (
+                  <div style={{textAlign:'center',padding:'50px 0'}}>
+                    <div style={{width:22,height:22,border:`2px solid ${SAGE}`,borderTopColor:'transparent',borderRadius:'50%',margin:'0 auto',animation:'spin .8s linear infinite'}}/>
+                    <div style={{fontSize:12,color:TM,marginTop:10}}>読み込み中...</div>
+                  </div>
+                ) : (
+                  <>
+                    {/* ── Videos ─────────────────────────── */}
+                    {mediaTab==='videos' && (
+                      userVideos.length===0 ? (
+                        <div style={{textAlign:'center',padding:'50px 20px'}}>
+                          <Film size={32} color={TM} style={{margin:'0 auto 10px',opacity:.4}}/>
+                          <div style={{fontSize:13,fontWeight:600,color:T2}}>動画はまだありません</div>
                         </div>
-                        <div style={{padding:12}}>
-                          <div style={{fontSize:9,letterSpacing:'.1em',color:TM,fontWeight:700}}>THEATER</div>
-                          <div style={{fontSize:12,fontWeight:600,color:T1,marginTop:3,lineHeight:1.3}}>{m.title}</div>
+                      ) : (
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:14}}>
+                          {userVideos.map((m:any)=>(
+                            <Link key={m.id} href={`/media/videos/detail?id=${m.id}`} style={{textDecoration:'none',color:'inherit',display:'block'}}>
+                              <div style={{borderRadius:14,overflow:'hidden',background:BG,boxShadow:NEU_SM,transition:'transform .15s,box-shadow .15s'}}
+                                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 6px 20px rgba(0,0,0,.12)';}}
+                                onMouseLeave={e=>{e.currentTarget.style.transform='';e.currentTarget.style.boxShadow=NEU_SM;}}>
+                                <div style={{aspectRatio:'16/9',background:'linear-gradient(135deg,#1a3024,#0d1f14)',position:'relative',overflow:'hidden'}}>
+                                  {(m.thumbnailUrl||m.thumbnailURL) ? (
+                                    <img src={m.thumbnailUrl||m.thumbnailURL} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+                                  ) : (
+                                    <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}><Film size={24} color="rgba(255,255,255,.3)"/></div>
+                                  )}
+                                  <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.1)'}}>
+                                    <div style={{width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,.2)',backdropFilter:'blur(4px)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                                      <Play size={14} color="#fff" fill="#fff"/>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div style={{padding:'10px 12px'}}>
+                                  <div style={{fontSize:12,fontWeight:700,color:T1,lineHeight:1.4,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' as any,overflow:'hidden'}}>{m.title||'無題'}</div>
+                                  <div style={{fontSize:10,color:TM,marginTop:4}}>{m.createdAt ? new Date(m.createdAt).toLocaleDateString('ja-JP',{month:'short',day:'numeric'}) : ''}</div>
+                                </div>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      )
+                    )}
+
+                    {/* ── Podcasts ────────────────────────── */}
+                    {mediaTab==='podcasts' && (
+                      userPodcasts.length===0 ? (
+                        <div style={{textAlign:'center',padding:'50px 20px'}}>
+                          <Headphones size={32} color={TM} style={{margin:'0 auto 10px',opacity:.4}}/>
+                          <div style={{fontSize:13,fontWeight:600,color:T2}}>音声はまだありません</div>
+                        </div>
+                      ) : (
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:14}}>
+                          {userPodcasts.map((m:any)=>(
+                            <Link key={m.id} href={`/media/podcasts/detail?id=${m.id}`} style={{textDecoration:'none',color:'inherit',display:'block'}}>
+                              <div style={{borderRadius:14,overflow:'hidden',background:BG,boxShadow:NEU_SM,transition:'transform .15s'}}
+                                onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';}}
+                                onMouseLeave={e=>{e.currentTarget.style.transform='';}}>
+                                <div style={{aspectRatio:'1',background:'linear-gradient(135deg,#1a3024,#2d5a3e)',position:'relative',overflow:'hidden'}}>
+                                  {(m.thumbnailUrl||m.thumbnailURL) ? (
+                                    <img src={m.thumbnailUrl||m.thumbnailURL} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+                                  ) : (
+                                    <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}><Headphones size={24} color="rgba(255,255,255,.3)"/></div>
+                                  )}
+                                  {m.duration && !isNaN(m.duration) && isFinite(m.duration) && (
+                                    <span style={{position:'absolute',bottom:6,right:6,background:'rgba(0,0,0,.7)',color:'#fff',fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:6,fontFamily:'monospace'}}>
+                                      {Math.floor(m.duration/60)}:{String(Math.floor(m.duration%60)).padStart(2,'0')}
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{padding:'10px 12px'}}>
+                                  <div style={{fontSize:12,fontWeight:700,color:T1,lineHeight:1.4,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' as any,overflow:'hidden'}}>{m.title||'無題'}</div>
+                                  <div style={{fontSize:10,color:TM,marginTop:4}}>{m.authorName||''}</div>
+                                </div>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      )
+                    )}
+
+                    {/* ── Articles ────────────────────────── */}
+                    {mediaTab==='articles' && (
+                      userArticles.length===0 ? (
+                        <div style={{textAlign:'center',padding:'50px 20px'}}>
+                          <FileText size={32} color={TM} style={{margin:'0 auto 10px',opacity:.4}}/>
+                          <div style={{fontSize:13,fontWeight:600,color:T2}}>記事はまだありません</div>
+                          {isSelf && (
+                            <Link href="/media/articles/edit" style={{display:'inline-flex',alignItems:'center',gap:5,marginTop:14,padding:'7px 18px',borderRadius:100,background:SB,color:LIME,fontSize:11,fontWeight:700,textDecoration:'none'}}>
+                              <Plus size={12}/> 記事を書く
+                            </Link>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                          {userArticles.map((a:any)=>{
+                            const artDate = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt||0);
+                            return (
+                              <Link key={a.id} href={`/media/articles/view?id=${a.id}`} style={{textDecoration:'none',color:'inherit',display:'block'}}>
+                                <div style={{display:'flex',gap:12,padding:12,borderRadius:14,background:BG,boxShadow:NEU_SM,transition:'transform .15s'}}
+                                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)';}}
+                                  onMouseLeave={e=>{e.currentTarget.style.transform='';}}>
+                                  {(a.coverImageUrl||a.thumbnailUrl) && (
+                                    <div style={{width:80,height:80,borderRadius:10,overflow:'hidden',flexShrink:0,background:'#eee'}}>
+                                      <img src={a.coverImageUrl||a.thumbnailUrl} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+                                    </div>
+                                  )}
+                                  <div style={{flex:1,minWidth:0}}>
+                                    <div style={{fontSize:13,fontWeight:700,color:T1,lineHeight:1.4,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' as any,overflow:'hidden'}}>{a.title||'無題'}</div>
+                                    <div style={{display:'flex',alignItems:'center',gap:6,marginTop:6,flexWrap:'wrap'}}>
+                                      {a.category && (
+                                        <span style={{fontSize:9,fontWeight:600,padding:'2px 8px',borderRadius:100,background:'rgba(74,124,89,.08)',color:SAGE}}>{a.category}</span>
+                                      )}
+                                      {a.readingTime && <span style={{fontSize:10,color:TM}}>約{a.readingTime}分</span>}
+                                    </div>
+                                    <div style={{fontSize:10,color:TM,marginTop:4}}>{artDate.toLocaleDateString('ja-JP',{year:'numeric',month:'short',day:'numeric'})}</div>
+                                  </div>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )
+                    )}
+
+                    {/* ── Playlists ───────────────────────── */}
+                    {mediaTab==='playlists' && (
+                      <>
+                        {isSelf && hasPlaylistPermission && (
+                          <div style={{marginBottom:16}}>
+                            <button onClick={()=>setIsPlaylistModalOpen(true)}
+                              style={{display:'flex',alignItems:'center',gap:6,padding:'9px 18px',borderRadius:100,border:'none',background:SB,color:LIME,fontSize:11,fontWeight:700,cursor:'pointer',boxShadow:'0 2px 8px rgba(0,0,0,.2)'}}>
+                              <Plus size={13}/> 新規プレイリスト
+                            </button>
+                          </div>
+                        )}
+                        {playlists.length===0 ? (
+                          <div style={{textAlign:'center',padding:'50px 20px'}}>
+                            <List size={32} color={TM} style={{margin:'0 auto 10px',opacity:.4}}/>
+                            <div style={{fontSize:13,fontWeight:600,color:T2}}>プレイリストはまだありません</div>
+                          </div>
+                        ) : (
+                          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:14}}>
+                            {playlists.map((pl:any)=>{
+                              const itemCount = pl.items?.length || 0;
+                              const isPaid = pl.access === 'paid';
+                              return (
+                                <div key={pl.id} onClick={()=>{setSelectedPlaylist(pl);setIsPlaylistDetailOpen(true);}}
+                                  style={{borderRadius:14,overflow:'hidden',background:BG,boxShadow:NEU_SM,cursor:'pointer',transition:'transform .15s'}}
+                                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';}}
+                                  onMouseLeave={e=>{e.currentTarget.style.transform='';}}>
+                                  <div style={{aspectRatio:'16/9',background:'linear-gradient(135deg,#2d5a3e,#1a3024)',position:'relative',overflow:'hidden'}}>
+                                    {pl.coverImageUrl ? (
+                                      <img src={pl.coverImageUrl} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+                                    ) : (
+                                      <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}><List size={28} color="rgba(255,255,255,.25)"/></div>
+                                    )}
+                                    {/* Price badge */}
+                                    <span style={{
+                                      position:'absolute',top:8,right:8,
+                                      padding:'3px 10px',borderRadius:100,
+                                      fontSize:9,fontWeight:800,letterSpacing:'.04em',
+                                      background: isPaid ? 'rgba(212,162,74,.9)' : 'rgba(0,0,0,.5)',
+                                      color: isPaid ? '#1a3024' : '#fff',
+                                      backdropFilter:'blur(4px)',
+                                    }}>
+                                      {isPaid ? `¥${(pl.price||0).toLocaleString()}` : '無料'}
+                                    </span>
+                                  </div>
+                                  <div style={{padding:'10px 12px'}}>
+                                    <div style={{fontSize:12,fontWeight:700,color:T1,lineHeight:1.3}}>{pl.name||pl.title||'無題'}</div>
+                                    <div style={{fontSize:10,color:TM,marginTop:4,display:'flex',alignItems:'center',gap:6}}>
+                                      <span>{itemCount}件のコンテンツ</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* ── Liked ───────────────────────────── */}
+                    {mediaTab==='liked' && isSelf && (
+                      likedItems.length===0 ? (
+                        <div style={{textAlign:'center',padding:'50px 20px'}}>
+                          <Heart size={32} color={TM} style={{margin:'0 auto 10px',opacity:.4}}/>
+                          <div style={{fontSize:13,fontWeight:600,color:T2}}>いいねしたコンテンツはありません</div>
+                        </div>
+                      ) : (
+                        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                          {likedItems.map((item:any)=>{
+                            const likeType = item._likeType || 'video';
+                            const href = likeType==='video' ? `/media/videos/detail?id=${item.id}`
+                              : likeType==='podcast' ? `/media/podcasts/detail?id=${item.id}`
+                              : `/media/articles/view?id=${item.id}`;
+                            const typeIcon = likeType==='video' ? <Film size={12}/> : likeType==='podcast' ? <Headphones size={12}/> : <FileText size={12}/>;
+                            const typeLabel = likeType==='video' ? 'THEATER' : likeType==='podcast' ? 'CAST' : '記事';
+                            const thumbUrl = item.thumbnailUrl || item.thumbnailURL || item.coverImageUrl;
+                            return (
+                              <Link key={`${likeType}-${item.id}`} href={href} style={{textDecoration:'none',color:'inherit',display:'block'}}>
+                                <div style={{display:'flex',gap:12,padding:10,borderRadius:12,background:BG,boxShadow:NEU_SM,transition:'transform .1s'}}
+                                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)';}}
+                                  onMouseLeave={e=>{e.currentTarget.style.transform='';}}>
+                                  <div style={{width:56,height:56,borderRadius:10,overflow:'hidden',flexShrink:0,background:'linear-gradient(135deg,#1a3024,#2d5a3e)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                                    {thumbUrl ? (
+                                      <img src={thumbUrl} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+                                    ) : typeIcon}
+                                  </div>
+                                  <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column',justifyContent:'center'}}>
+                                    <div style={{fontSize:12,fontWeight:700,color:T1,lineHeight:1.3,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' as any,overflow:'hidden'}}>{item.title||'無題'}</div>
+                                    <div style={{display:'flex',alignItems:'center',gap:5,marginTop:4}}>
+                                      <span style={{display:'inline-flex',alignItems:'center',gap:3,fontSize:9,fontWeight:600,padding:'2px 7px',borderRadius:100,background:'rgba(74,124,89,.08)',color:SAGE}}>
+                                        {typeIcon} {typeLabel}
+                                      </span>
+                                      <span style={{fontSize:10,color:TM}}>{item.authorName||''}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Threads Tab ── */}
+          {activeTab==='threads'&&(
+            <div style={{padding:'20px 24px 88px',minWidth:0,maxWidth:'100%',boxSizing:'border-box',overflowX:'hidden'}}>
+              {threadsLoading ? (
+                <div style={{textAlign:'center',padding:'60px 0'}}>
+                  <div style={{width:24,height:24,border:`2px solid ${SAGE}`,borderTopColor:'transparent',borderRadius:'50%',margin:'0 auto',animation:'spin .8s linear infinite'}}/>
+                  <div style={{fontSize:12,color:TM,marginTop:10}}>読み込み中...</div>
+                </div>
+              ) : userThreads.length === 0 ? (
+                <div style={{textAlign:'center',padding:'60px 20px'}}>
+                  <AtSign size={36} color={TM} style={{margin:'0 auto 12px'}}/>
+                  <div style={{fontSize:14,fontWeight:700,color:T2,marginBottom:6}}>まだスレッドがありません</div>
+                  <div style={{fontSize:12,color:TM}}>{isSelf ? '甲板から最初の投稿をしてみましょう' : 'このユーザーはまだ投稿していません'}</div>
+                  {isSelf && (
+                    <Link href="/home" style={{display:'inline-flex',alignItems:'center',gap:6,marginTop:16,padding:'8px 20px',borderRadius:100,border:'none',background:SB,color:LIME,fontSize:12,fontWeight:700,textDecoration:'none',boxShadow:'0 2px 8px rgba(0,0,0,.2)'}}>
+                      <Plus size={14}/> 投稿する
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div style={{display:'flex',flexDirection:'column',gap:0}}>
+                  {userThreads.map((p:any) => {
+                    const ts = p.createdAt?.toDate ? p.createdAt.toDate() : new Date(p.createdAt||0);
+                    const ago = (() => {
+                      const s = Math.floor((Date.now()-ts.getTime())/1000);
+                      if (s<60) return `${s}秒前`;
+                      if (s<3600) return `${Math.floor(s/60)}分前`;
+                      if (s<86400) return `${Math.floor(s/3600)}時間前`;
+                      return ts.toLocaleDateString('ja-JP',{month:'short',day:'numeric'});
+                    })();
+                    return (
+                      <Link key={p.id} href={`/home/post?id=${p.id}`} style={{textDecoration:'none',color:'inherit'}}>
+                        <div style={{padding:'16px 0',borderBottom:'1px solid rgba(0,0,0,.06)'}}>
+                          <div style={{display:'flex',gap:12}}>
+                            {/* Avatar */}
+                            <div style={{width:40,height:40,borderRadius:'50%',overflow:'hidden',background:SAGE,boxShadow:NEU_SM,flexShrink:0}}>
+                              {(p.authorIcon || userData?.photoURL) ? (
+                                <img src={p.authorIcon || userData?.photoURL} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}
+                                  onError={(e:any)=>{e.target.src='/default_avatar.png';}}/>
+                              ) : (
+                                <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:16,fontWeight:700}}>{(userData?.name||'?')[0]}</div>
+                              )}
+                            </div>
+                            {/* Content */}
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
+                                <span style={{fontSize:13,fontWeight:700,color:T1}}>{p.authorName || userData?.name || '名無し'}</span>
+                                <span style={{fontSize:11,color:TM}}>@{p.authorUserId || userData?.userId || ''}</span>
+                                <span style={{fontSize:11,color:TM}}>· {ago}</span>
+                              </div>
+                              {/* Topic tag */}
+                              {p.topicTag && (
+                                <span style={{display:'inline-flex',alignItems:'center',gap:3,padding:'2px 8px',borderRadius:100,fontSize:9,fontWeight:600,background:'rgba(74,124,89,.08)',color:SAGE,marginBottom:6}}>
+                                  <Hash size={8}/> {p.topicTag}
+                                </span>
+                              )}
+                              {/* Text */}
+                              <p style={{fontSize:14,lineHeight:1.7,color:T1,whiteSpace:'pre-wrap',wordBreak:'break-word',margin:'2px 0 0'}}>{p.text}</p>
+                              {/* Images */}
+                              <PostImageGrid images={p.images || []} />
+                              {/* Engagement */}
+                              <div style={{display:'flex',gap:18,marginTop:10}}>
+                                <span style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:TM}}>
+                                  <MessageCircle size={13}/> {p.replyCount||0}
+                                </span>
+                                <span style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:TM}}>
+                                  <Repeat2 size={13}/> {p.repostCount||0}
+                                </span>
+                                <span style={{display:'flex',alignItems:'center',gap:4,fontSize:11,color:TM}}>
+                                  <Heart size={13}/> {p.likeCount||0}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Podcasts */}
-              {mediaItems.filter((m:any)=>m.type==='podcast').length>0&&(
-                <div style={{marginBottom:24}}>
-                  <div style={{fontSize:10,fontWeight:700,letterSpacing:'.12em',color:T2,marginBottom:12}}>CAST</div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                    {mediaItems.filter((m:any)=>m.type==='podcast').map((m:any)=>(
-                      <Link key={m.id} href={`/media/podcasts/${m.id}`} style={{background:BG,borderRadius:18,boxShadow:NEU_UP,overflow:'hidden',cursor:'pointer',textDecoration:'none',display:'block'}}>
-                        <div style={{aspectRatio:'1',background:'linear-gradient(135deg,#1e3a5f,#0d1f35)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
-                          {m.thumbnailURL?<img src={m.thumbnailURL} alt="" style={{width:'100%',height:'100%',objectFit:'cover',position:'absolute',inset:0}}/>:<Headphones size={28} color="#6b5a50"/>}
-                        </div>
-                        <div style={{padding:12}}>
-                          <div style={{fontSize:9,letterSpacing:'.1em',color:TM,fontWeight:700}}>CAST</div>
-                          <div style={{fontSize:12,fontWeight:600,color:T1,marginTop:3,lineHeight:1.3}}>{m.title}</div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Playlists */}
-              {hasPlaylistPermission&&(
-                <div>
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-                    <div style={{fontSize:10,fontWeight:700,letterSpacing:'.12em',color:T2}}>プレイリスト</div>
-                    {isSelf&&<button onClick={()=>setIsPlaylistModalOpen(true)} style={{display:'flex',alignItems:'center',gap:4,fontSize:11,padding:'4px 12px',borderRadius:100,background:BG,boxShadow:NEU_SM,color:T2,cursor:'pointer',border:'none',fontWeight:600}}><Plus size={12}/>新規作成</button>}
-                  </div>
-                  {playlists.length===0
-                    ?<div style={{textAlign:'center',padding:'32px 0',color:TM,fontSize:13}}>プレイリストはまだありません</div>
-                    :<div style={{display:'flex',flexDirection:'column',gap:8}}>
-                      {playlists.map((pl:any)=>(
-                        <div key={pl.id} onClick={()=>{setSelectedPlaylist(pl);setIsPlaylistDetailOpen(true);}} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:10,background:BG,boxShadow:NEU_SM,cursor:'pointer',transition:'box-shadow .15s'}} onMouseEnter={e=>(e.currentTarget.style.boxShadow=NEU_IN)} onMouseLeave={e=>(e.currentTarget.style.boxShadow=NEU_SM)}>
-                          <div style={{width:40,height:40,borderRadius:8,background:BG,boxShadow:NEU_IN,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><List size={18} color={TM}/></div>
-                          <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600,color:T1}}>{pl.title}</div><div style={{fontSize:11,color:T2,marginTop:1}}>{pl.description||''}</div></div>
-                          <ChevronRight size={14} color={TM}/>
-                        </div>
-                      ))}
-                    </div>
-                  }
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1811,8 +2163,8 @@ function UserProfileContent() {
       {/* Modals */}
       {followModalType&&<FollowModal isOpen={!!followModalType} targetUid={targetUid||""} myUid={user?.uid||""} type={followModalType} onClose={()=>setFollowModalType(null)}/>}
       {isMemoOpen&&!isSelf&&<KeyMemoModal isOpen={isMemoOpen} onClose={()=>setIsMemoOpen(false)} currentUserId={user?.uid||""} targetUserId={targetUid||""} targetUserName={userData?.name||""}/>}
-      {isPlaylistModalOpen&&isSelf&&<PlaylistModal isOpen={isPlaylistModalOpen} onClose={()=>setIsPlaylistModalOpen(false)} userId={user?.uid||""} onSaved={()=>setIsPlaylistModalOpen(false)}/>}
-      {selectedPlaylist&&<PlaylistDetailModal isOpen={isPlaylistDetailOpen} playlist={selectedPlaylist} onClose={()=>{setIsPlaylistDetailOpen(false);setSelectedPlaylist(null);}} canEdit={isSelf} onEdit={()=>{setIsPlaylistDetailOpen(false);router.push('/user/edit');}}/>}
+      {isPlaylistModalOpen&&isSelf&&<PlaylistModal isOpen={isPlaylistModalOpen} onClose={()=>{setIsPlaylistModalOpen(false);setEditingPlaylistId(null);}} userId={user?.uid||""} playlistId={editingPlaylistId} onSaved={()=>{setIsPlaylistModalOpen(false);setEditingPlaylistId(null);setMediaRefreshKey(k=>k+1);}}/>}
+      {selectedPlaylist&&<PlaylistDetailModal isOpen={isPlaylistDetailOpen} playlist={selectedPlaylist} onClose={()=>{setIsPlaylistDetailOpen(false);setSelectedPlaylist(null);}} canEdit={isSelf} onEdit={()=>{setIsPlaylistDetailOpen(false);setEditingPlaylistId(selectedPlaylist.id);setIsPlaylistModalOpen(true);}}/>}
       <NotificationModal isOpen={showNotificationModal} onClose={()=>setShowNotificationModal(false)} currentUid={user?.uid||""}/>    
       {isSelf && <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} currentUid={user?.uid||""} onLogout={handleLogout}/>}
       {isSelf && <EventsCalendarModal

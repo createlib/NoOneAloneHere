@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { db, APP_ID } from '@/lib/firebase';
-import { collection, query, orderBy, getDocs, doc, setDoc, deleteDoc, serverTimestamp, where, getDoc } from 'firebase/firestore';
-import { X, Search, Plus, Save, Trash2, Mic, Play, FolderOpen, Check } from 'lucide-react';
+import { collection, query, getDocs, doc, setDoc, deleteDoc, serverTimestamp, where, getDoc } from 'firebase/firestore';
+import { X, Plus, Save, Trash2, Film, Headphones, Check, FolderOpen, List } from 'lucide-react';
+
+/* ── Design tokens (matching profile page) ──────────── */
+const BG   = '#f8f6f3';
+const SB   = '#1a3024';
+const SAGE = '#4a7c59';
+const LIME = '#8ecfb2';
+const T1   = '#2a2520';
+const T2   = '#7a7068';
+const TM   = '#b0a89e';
+const NEU  = '6px 6px 16px #dbd7d2,-6px -6px 16px #ffffff';
+const NEU_SM = '3px 3px 10px #dbd7d2,-3px -3px 10px #ffffff';
+const NEU_IN = 'inset 3px 3px 8px #dbd7d2,inset -3px -3px 8px #ffffff';
 
 interface MediaItem {
     id: string;
@@ -21,7 +33,10 @@ interface PlaylistModalProps {
 
 export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onSaved }: PlaylistModalProps) {
     const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
     const [coverUrl, setCoverUrl] = useState('');
+    const [access, setAccess] = useState<'free'|'paid'>('free');
+    const [price, setPrice] = useState<number>(0);
     const [filterType, setFilterType] = useState<'video'|'podcast'>('video');
     const [availableMedia, setAvailableMedia] = useState<MediaItem[]>([]);
     const [playlistItems, setPlaylistItems] = useState<MediaItem[]>([]);
@@ -31,56 +46,50 @@ export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onS
     useEffect(() => {
         if (!isOpen) return;
         setName('');
+        setDescription('');
         setCoverUrl('');
+        setAccess('free');
+        setPrice(0);
         setFilterType('video');
         setPlaylistItems([]);
 
         const fetchAvailableMedia = async () => {
             setLoading(true);
             try {
-                // Fetch user's videos
                 const vQ = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'videos'), where('authorId', '==', userId));
                 const vSnap = await getDocs(vQ);
                 const videos = vSnap.docs.map(d => ({
-                    id: d.id,
-                    type: 'video' as const,
-                    title: d.data().title || '',
-                    thumbnailUrl: d.data().thumbnailUrl || '',
+                    id: d.id, type: 'video' as const,
+                    title: d.data().title || '', thumbnailUrl: d.data().thumbnailUrl || '',
                     createdAt: new Date(d.data().createdAt || 0).getTime()
                 }));
-
-                // Fetch user's podcasts
                 const pQ = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts'), where('authorId', '==', userId));
                 const pSnap = await getDocs(pQ);
                 const podcasts = pSnap.docs.map(d => ({
-                    id: d.id,
-                    type: 'podcast' as const,
-                    title: d.data().title || '',
-                    thumbnailUrl: d.data().thumbnailUrl || '',
+                    id: d.id, type: 'podcast' as const,
+                    title: d.data().title || '', thumbnailUrl: d.data().thumbnailUrl || '',
                     createdAt: new Date(d.data().createdAt || 0).getTime()
                 }));
-
-                const allItems = [...videos, ...podcasts].sort((a,b) => b.createdAt - a.createdAt);
-                setAvailableMedia(allItems);
+                setAvailableMedia([...videos, ...podcasts].sort((a,b) => b.createdAt - a.createdAt));
 
                 if (playlistId) {
-                    const plRef = doc(db, 'artifacts', APP_ID, 'users', userId, 'playlists', playlistId);
-                    const plSnap = await getDoc(plRef);
+                    const plSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'playlists', playlistId));
                     if (plSnap.exists()) {
                         const data = plSnap.data();
                         setName(data.name || '');
+                        setDescription(data.description || '');
                         setCoverUrl(data.coverImageUrl || '');
+                        setAccess(data.access || 'free');
+                        setPrice(data.price || 0);
                         setPlaylistItems(data.items || []);
                     }
                 }
-
             } catch (error) {
                 console.error("Error fetching media for playlist:", error);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchAvailableMedia();
     }, [isOpen, userId, playlistId]);
 
@@ -100,25 +109,18 @@ export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onS
         setSaving(true);
         try {
             const pid = playlistId || crypto.randomUUID();
-            const payload = {
-                name: name.trim(),
-                coverImageUrl: coverUrl.trim(),
-                items: playlistItems,
-                authorId: userId,
+            await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'playlists', pid), {
+                name: name.trim(), description: description.trim(),
+                coverImageUrl: coverUrl.trim(), access,
+                price: access === 'paid' ? price : 0,
+                items: playlistItems, authorId: userId,
                 updatedAt: serverTimestamp(),
-                createdAt: playlistId ? undefined : serverTimestamp(),
-            };
-            
-            // Wait, what's undefined is ignored by setDoc if merge is false, but we use merge:true
-            await setDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'playlists', pid), payload, { merge: true });
+                ...(playlistId ? {} : { createdAt: serverTimestamp() }),
+            }, { merge: true });
             if (onSaved) onSaved();
             onClose();
-        } catch (e) {
-            console.error(e);
-            alert("保存に失敗しました");
-        } finally {
-            setSaving(false);
-        }
+        } catch (e) { console.error(e); alert("保存に失敗しました"); }
+        finally { setSaving(false); }
     };
 
     const handleDelete = async () => {
@@ -129,137 +131,259 @@ export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onS
             await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', userId, 'playlists', playlistId));
             if (onSaved) onSaved();
             onClose();
-        } catch (e) {
-            console.error(e);
-            alert("削除に失敗しました");
-        } finally {
-            setSaving(false);
-        }
+        } catch (e) { console.error(e); alert("削除に失敗しました"); }
+        finally { setSaving(false); }
     };
 
+    const inputStyle: React.CSSProperties = {
+        width:'100%', padding:'10px 14px', borderRadius:10,
+        border:'none', background:BG, boxShadow:NEU_IN,
+        fontSize:13, color:T1, outline:'none',
+    };
+    const labelStyle: React.CSSProperties = {
+        display:'block', fontSize:10, fontWeight:700, letterSpacing:'.08em', color:T2, marginBottom:6,
+    };
+
+    const filtered = availableMedia.filter(m => m.type === filterType);
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="bg-[#fffdf9] w-full max-w-4xl max-h-[90vh] rounded-md shadow-2xl relative flex flex-col overflow-hidden border border-brand-200 animate-scale-in">
+        <div style={{ position:'fixed', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+            {/* Backdrop */}
+            <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.55)', backdropFilter:'blur(6px)' }} onClick={onClose}/>
+
+            {/* Modal */}
+            <div style={{
+                position:'relative', width:'100%', maxWidth:720, maxHeight:'88vh',
+                background:BG, borderRadius:20, boxShadow:NEU,
+                display:'flex', flexDirection:'column', overflow:'hidden',
+            }}>
                 {/* Header */}
-                <div className="h-14 flex items-center justify-between px-6 border-b border-brand-200 bg-[#fdfaf5]">
-                    <h2 className="text-lg font-bold text-brand-900 font-serif tracking-widest flex items-center gap-2">
-                        {playlistId ? <FolderOpen className="text-[#b8860b]" size={20} /> : <Plus className="text-[#b8860b]" size={20} />}
-                        {playlistId ? 'プレイリスト編集' : 'プレイリスト作成'}
-                    </h2>
-                    <button onClick={onClose} className="p-2 text-brand-400 hover:text-brand-900 hover:bg-brand-100 rounded-full transition-colors">
-                        <X size={20} />
-                    </button>
-                </div>
-                
-                {/* Body Content */}
-                <div className="flex-1 flex flex-col md:flex-row min-h-0">
-                    
-                    {/* Left: Input details */}
-                    <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-brand-200 p-6 bg-texture overflow-y-auto">
-                        <div className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-bold text-brand-700 tracking-widest mb-2 font-serif">プレイリスト名 <span className="text-red-500">*</span></label>
-                                <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="例: お気に入り動画" className="w-full bg-[#fdfaf5] border border-brand-300 rounded-sm px-4 py-3 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all font-serif" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-brand-700 tracking-widest mb-2 font-serif">カバー画像URL (任意)</label>
-                                <input type="text" value={coverUrl} onChange={e => setCoverUrl(e.target.value)} placeholder="https://..." className="w-full bg-[#fdfaf5] border border-brand-300 rounded-sm px-4 py-3 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-xs" />
-                                {coverUrl && (
-                                    <div className="mt-3 aspect-video bg-black rounded-sm overflow-hidden border border-brand-200 relative">
-                                        <img src={coverUrl} alt="Cover preview" className="w-full h-full object-cover" onError={() => setCoverUrl('')} />
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="pt-4 mt-6 border-t border-brand-200 space-y-4">
-                                <div className="text-sm font-bold text-brand-700 font-serif tracking-widest">現在の項目 ({playlistItems.length})</div>
-                                {playlistItems.length === 0 ? (
-                                    <div className="text-xs text-brand-400 italic">右のリストからコンテンツを選択してください</div>
-                                ) : (
-                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                        {playlistItems.map(item => (
-                                            <div key={item.id} className="flex items-center gap-2 bg-[#fffdf9] p-2 rounded-sm border border-brand-200">
-                                                <div className="w-8 h-8 rounded-sm bg-black overflow-hidden flex-shrink-0 relative">
-                                                    <img src={item.thumbnailUrl || `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%231a3024"/><text x="50%" y="54%" text-anchor="middle" fill="%238ecfb2" font-size="9" font-weight="700" font-family="sans-serif">NOAH</text></svg>')}`} className="w-full h-full object-cover opacity-80" />
-                                                </div>
-                                                <div className="text-xs font-bold text-brand-800 line-clamp-1 flex-1">{item.title}</div>
-                                                <button onClick={() => toggleItem(item)} className="p-1 text-red-500 hover:bg-red-50 rounded-sm"><X size={14} /></button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                <div style={{
+                    display:'flex', alignItems:'center', justifyContent:'space-between',
+                    padding:'16px 22px', borderBottom:'1px solid rgba(0,0,0,.06)',
+                }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <div style={{ width:32, height:32, borderRadius:10, background:SB, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                            {playlistId ? <FolderOpen size={15} color={LIME}/> : <Plus size={15} color={LIME}/>}
                         </div>
+                        <span style={{ fontSize:15, fontWeight:800, color:T1, letterSpacing:'.04em' }}>
+                            {playlistId ? 'プレイリスト編集' : '新規プレイリスト'}
+                        </span>
                     </div>
+                    <button onClick={onClose} style={{
+                        width:32, height:32, borderRadius:'50%', border:'none', background:BG, boxShadow:NEU_SM,
+                        display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:TM,
+                    }}><X size={16}/></button>
+                </div>
 
-                    {/* Right: Selectable Media */}
-                    <div className="w-full md:w-2/3 flex flex-col bg-[#fffdf9] p-6 min-h-0">
-                        <div className="flex gap-2 mb-4">
-                            <button onClick={() => setFilterType('video')} className={`flex-1 py-2 text-xs font-bold tracking-widest rounded-sm border transition-all ${filterType === 'video' ? 'bg-[#b8860b] text-[#fffdf9] border-[#b8860b]' : 'bg-[#f7f5f0] text-brand-600 border-brand-200 hover:bg-[#fffdf9]'}`}>
-                                動画から選択
-                            </button>
-                            <button onClick={() => setFilterType('podcast')} className={`flex-1 py-2 text-xs font-bold tracking-widest rounded-sm border transition-all ${filterType === 'podcast' ? 'bg-[#b8860b] text-[#fffdf9] border-[#b8860b]' : 'bg-[#f7f5f0] text-brand-600 border-brand-200 hover:bg-[#fffdf9]'}`}>
-                                音声から選択
-                            </button>
+                {/* Body — scrollable */}
+                <div style={{ flex:1, overflowY:'auto', padding:'20px 22px 10px' }}>
+                    {/* Info section */}
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr', gap:14, marginBottom:20 }}>
+                        <div>
+                            <label style={labelStyle}>プレイリスト名 <span style={{color:'#ef4444'}}>*</span></label>
+                            <input type="text" value={name} onChange={e=>setName(e.target.value)} placeholder="例: お気に入り動画" style={inputStyle}/>
                         </div>
-                        
-                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
-                            {loading ? (
-                                <div className="text-center py-10 text-brand-400 font-bold tracking-widest text-sm">読み込み中...</div>
-                            ) : availableMedia.filter(m => m.type === filterType).length === 0 ? (
-                                <div className="text-center py-10 text-brand-400 font-bold tracking-widest text-sm border border-dashed border-brand-200 rounded-sm bg-brand-50/50">
-                                    選択可能なコンテンツがありません
+                        <div>
+                            <label style={labelStyle}>説明文（任意）</label>
+                            <textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="プレイリストの説明..." rows={2}
+                                style={{...inputStyle, resize:'none' as const, lineHeight:1.6}}/>
+                        </div>
+                        <div>
+                            <label style={labelStyle}>カバー画像URL（任意）</label>
+                            <input type="text" value={coverUrl} onChange={e=>setCoverUrl(e.target.value)} placeholder="https://..." style={{...inputStyle, fontSize:11}}/>
+                            {coverUrl && (
+                                <div style={{ marginTop:8, aspectRatio:'16/9', borderRadius:10, overflow:'hidden', background:'#111' }}>
+                                    <img src={coverUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} onError={()=>setCoverUrl('')}/>
                                 </div>
-                            ) : (
-                                availableMedia.filter(m => m.type === filterType).map(item => {
-                                    const isSelected = playlistItems.some(p => p.id === item.id);
-                                    return (
-                                        <div 
-                                            key={item.id} 
-                                            onClick={() => toggleItem(item)}
-                                            className={`flex items-center gap-3 p-3 rounded-sm border cursor-pointer transition-all ${isSelected ? 'border-[#b8860b] bg-[#fdfaf5]' : 'border-brand-200 hover:border-[#b8860b] hover:bg-[#fffdf9]'} group`}
-                                        >
-                                            <div className="w-16 h-12 bg-black rounded-sm overflow-hidden flex-shrink-0 relative border border-brand-200">
-                                                <img src={item.thumbnailUrl || `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="120" viewBox="0 0 160 120"><rect width="160" height="120" fill="%231a3024"/><text x="50%" y="54%" text-anchor="middle" fill="%238ecfb2" font-size="14" font-weight="700" font-family="sans-serif">NOAH</text></svg>')}`} className="w-full h-full object-cover opacity-80" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className={`text-sm font-bold line-clamp-1 font-serif ${isSelected ? 'text-brand-900' : 'text-brand-700'}`}>{item.title}</h4>
-                                                <div className="text-[10px] text-brand-400 font-mono mt-1">{new Date(item.createdAt).toLocaleDateString()}</div>
-                                            </div>
-                                            <div className="flex-shrink-0 pl-2">
-                                                {isSelected ? (
-                                                    <div className="w-6 h-6 rounded-full bg-[#b8860b] text-white flex items-center justify-center shadow-sm">
-                                                        <Check size={14} className="ml-px" />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-6 h-6 rounded-full border-2 border-brand-300 text-brand-300 group-hover:border-[#b8860b] group-hover:text-[#b8860b] flex items-center justify-center transition-colors">
-                                                        <Plus size={14} />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })
+                            )}
+                        </div>
+
+                        {/* Access toggle */}
+                        <div>
+                            <label style={labelStyle}>公開設定</label>
+                            <div style={{ display:'flex', gap:8 }}>
+                                {(['free','paid'] as const).map(v=>(
+                                    <button key={v} onClick={()=>setAccess(v)} style={{
+                                        flex:1, padding:'9px 0', borderRadius:10, border:'none', cursor:'pointer',
+                                        fontSize:11, fontWeight:700, letterSpacing:'.06em', transition:'all .15s',
+                                        background: access===v ? (v==='free' ? SB : '#d4a24a') : BG,
+                                        color: access===v ? (v==='free' ? LIME : SB) : TM,
+                                        boxShadow: access===v ? '0 2px 8px rgba(0,0,0,.15)' : NEU_SM,
+                                    }}>
+                                        {v==='free' ? '無料公開' : '有料コンテンツ'}
+                                    </button>
+                                ))}
+                            </div>
+                            {access==='paid' && (
+                                <div style={{ marginTop:10, display:'flex', alignItems:'center', gap:8 }}>
+                                    <span style={{ fontSize:14, fontWeight:800, color:T2 }}>¥</span>
+                                    <input type="number" value={price||''} onChange={e=>setPrice(Math.max(0,parseInt(e.target.value)||0))} placeholder="500"
+                                        style={{...inputStyle, width:140, fontFamily:'monospace', fontSize:14, fontWeight:700}}/>
+                                    <span style={{ fontSize:9, color:TM }}>決済連携後に有効</span>
+                                </div>
                             )}
                         </div>
                     </div>
 
+                    {/* Divider */}
+                    <div style={{ height:1, background:'rgba(0,0,0,.06)', margin:'0 -22px 16px' }}/>
+
+                    {/* Current items */}
+                    <div style={{ marginBottom:18 }}>
+                        <label style={{...labelStyle, marginBottom:10}}>追加済み ({playlistItems.length})</label>
+                        {playlistItems.length===0 ? (
+                            <div style={{ textAlign:'center', padding:'16px 0', fontSize:12, color:TM }}>
+                                下のリストからコンテンツを追加してください
+                            </div>
+                        ) : (
+                            <div style={{ display:'flex', gap:8, overflowX:'auto', paddingBottom:4 }}>
+                                {playlistItems.map(item => (
+                                    <div key={item.id} style={{
+                                        flexShrink:0, width:100, borderRadius:12, background:BG, boxShadow:NEU_SM,
+                                        overflow:'hidden', position:'relative',
+                                    }}>
+                                        <div style={{ aspectRatio:'1', background:SB, overflow:'hidden' }}>
+                                            {item.thumbnailUrl ? (
+                                                <img src={item.thumbnailUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                                            ) : (
+                                                <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                                    {item.type==='video' ? <Film size={18} color="rgba(255,255,255,.3)"/> : <Headphones size={18} color="rgba(255,255,255,.3)"/>}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{ padding:'6px 8px' }}>
+                                            <div style={{ fontSize:10, fontWeight:600, color:T1, lineHeight:1.3, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' as any, overflow:'hidden' }}>{item.title}</div>
+                                        </div>
+                                        {/* Remove button */}
+                                        <button onClick={()=>toggleItem(item)} style={{
+                                            position:'absolute', top:4, right:4,
+                                            width:20, height:20, borderRadius:'50%',
+                                            background:'rgba(239,68,68,.85)', border:'none',
+                                            display:'flex', alignItems:'center', justifyContent:'center',
+                                            cursor:'pointer', color:'#fff',
+                                        }}>
+                                            <X size={10}/>
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Divider */}
+                    <div style={{ height:1, background:'rgba(0,0,0,.06)', margin:'0 -22px 16px' }}/>
+
+                    {/* Available media */}
+                    <div>
+                        <label style={{...labelStyle, marginBottom:10}}>コンテンツを追加</label>
+                        {/* Filter tabs */}
+                        <div style={{ display:'flex', gap:6, marginBottom:14 }}>
+                            {([{key:'video' as const, icon:<Film size={13}/>, label:'動画'},{key:'podcast' as const, icon:<Headphones size={13}/>, label:'音声'}]).map(t=>(
+                                <button key={t.key} onClick={()=>setFilterType(t.key)} style={{
+                                    display:'flex', alignItems:'center', gap:5,
+                                    padding:'7px 16px', borderRadius:100, border:'none', cursor:'pointer',
+                                    fontSize:11, fontWeight:700, transition:'all .15s',
+                                    background: filterType===t.key ? SB : BG,
+                                    color: filterType===t.key ? LIME : TM,
+                                    boxShadow: filterType===t.key ? '0 2px 8px rgba(0,0,0,.2)' : NEU_SM,
+                                }}>
+                                    {t.icon} {t.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Media list */}
+                        {loading ? (
+                            <div style={{ textAlign:'center', padding:'30px 0' }}>
+                                <div style={{ width:20, height:20, border:`2px solid ${SAGE}`, borderTopColor:'transparent', borderRadius:'50%', margin:'0 auto', animation:'spin .8s linear infinite' }}/>
+                                <div style={{ fontSize:11, color:TM, marginTop:8 }}>読み込み中...</div>
+                            </div>
+                        ) : filtered.length===0 ? (
+                            <div style={{ textAlign:'center', padding:'30px 0', fontSize:12, color:TM }}>
+                                選択可能なコンテンツがありません
+                            </div>
+                        ) : (
+                            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                                {filtered.map(item => {
+                                    const isSelected = playlistItems.some(p => p.id === item.id);
+                                    return (
+                                        <div key={item.id} onClick={()=>toggleItem(item)} style={{
+                                            display:'flex', alignItems:'center', gap:12,
+                                            padding:10, borderRadius:12, cursor:'pointer',
+                                            background:BG, transition:'all .15s',
+                                            boxShadow: isSelected ? `inset 0 0 0 2px ${SAGE}` : NEU_SM,
+                                        }}
+                                        onMouseEnter={e=>{if(!isSelected) e.currentTarget.style.boxShadow=`0 0 0 2px ${SAGE}`;}}
+                                        onMouseLeave={e=>{if(!isSelected) e.currentTarget.style.boxShadow=NEU_SM;}}
+                                        >
+                                            {/* Thumbnail */}
+                                            <div style={{ width:52, height:40, borderRadius:8, overflow:'hidden', flexShrink:0, background:SB, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                                {item.thumbnailUrl ? (
+                                                    <img src={item.thumbnailUrl} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                                                ) : (
+                                                    item.type==='video' ? <Film size={16} color="rgba(255,255,255,.3)"/> : <Headphones size={16} color="rgba(255,255,255,.3)"/>
+                                                )}
+                                            </div>
+                                            {/* Title */}
+                                            <div style={{ flex:1, minWidth:0 }}>
+                                                <div style={{ fontSize:12, fontWeight:700, color:T1, lineHeight:1.3, display:'-webkit-box', WebkitLineClamp:1, WebkitBoxOrient:'vertical' as any, overflow:'hidden' }}>{item.title}</div>
+                                                <div style={{ fontSize:9, color:TM, marginTop:2, fontFamily:'monospace' }}>{new Date(item.createdAt).toLocaleDateString('ja-JP')}</div>
+                                            </div>
+                                            {/* Check */}
+                                            <div style={{
+                                                width:24, height:24, borderRadius:'50%', flexShrink:0,
+                                                display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s',
+                                                background: isSelected ? SAGE : BG,
+                                                color: isSelected ? '#fff' : TM,
+                                                boxShadow: isSelected ? '0 2px 6px rgba(74,124,89,.3)' : NEU_SM,
+                                            }}>
+                                                {isSelected ? <Check size={13}/> : <Plus size={13}/>}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Footer */}
-                <div className="h-16 border-t border-brand-200 bg-[#fdfaf5] flex justify-end items-center px-6 gap-3">
+                <div style={{
+                    display:'flex', alignItems:'center', gap:10,
+                    padding:'14px 22px', borderTop:'1px solid rgba(0,0,0,.06)',
+                }}>
                     {playlistId && (
-                        <button onClick={handleDelete} disabled={saving} className="mr-auto px-4 py-2 text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-sm text-sm font-bold tracking-widest transition-colors flex items-center gap-1.5 disabled:opacity-50">
-                            <Trash2 size={16} /> 削除
+                        <button onClick={handleDelete} disabled={saving} style={{
+                            marginRight:'auto', display:'flex', alignItems:'center', gap:5,
+                            padding:'8px 14px', borderRadius:10, border:'none',
+                            background:'rgba(239,68,68,.08)', color:'#ef4444',
+                            fontSize:11, fontWeight:700, cursor: saving ? 'not-allowed' : 'pointer',
+                            opacity: saving ? .5 : 1,
+                        }}>
+                            <Trash2 size={13}/> 削除
                         </button>
                     )}
-                    <button onClick={onClose} disabled={saving} className="px-6 py-2 border border-brand-300 bg-[#fffdf9] text-brand-700 hover:bg-brand-50 rounded-sm text-sm font-bold shadow-sm tracking-widest disabled:opacity-50">キャンセル</button>
-                    <button onClick={handleSave} disabled={saving || !name.trim()} className="px-6 py-2 bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] border border-[#b8860b] rounded-sm text-sm font-bold shadow-md tracking-widest transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <Save size={16} /> {saving ? '保存中...' : '保存'}
+                    <div style={{ flex: playlistId ? 0 : 1 }}/>
+                    <button onClick={onClose} disabled={saving} style={{
+                        padding:'9px 20px', borderRadius:10, border:'none',
+                        background:BG, boxShadow:NEU_SM, color:T2,
+                        fontSize:12, fontWeight:700, cursor:'pointer',
+                    }}>キャンセル</button>
+                    <button onClick={handleSave} disabled={saving || !name.trim()} style={{
+                        display:'flex', alignItems:'center', gap:6,
+                        padding:'9px 22px', borderRadius:10, border:'none',
+                        background: (!name.trim() || saving) ? TM : SB,
+                        color: LIME, fontSize:12, fontWeight:700,
+                        cursor: (!name.trim() || saving) ? 'not-allowed' : 'pointer',
+                        boxShadow:'0 2px 8px rgba(0,0,0,.2)', opacity: saving ? .7 : 1,
+                    }}>
+                        <Save size={13}/> {saving ? '保存中...' : '保存'}
                     </button>
                 </div>
             </div>
+
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
     );
 }

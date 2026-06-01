@@ -12,6 +12,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import AppShell from '@/components/AppShell';
+import { PostImageGrid } from '@/components/ImageLightbox';
 import {
     Heart, MessageCircle, Repeat2, Quote, Send, Image as ImageIcon,
     X, Loader2, MoreHorizontal, Trash2, Hash, Plus, ChevronDown,
@@ -376,24 +377,7 @@ export default function DeckPage() {
                             )}
 
                             {/* Images */}
-                            {p.images?.length > 0 && (
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: p.images.length === 1 ? '1fr' : 'repeat(2, 1fr)',
-                                    gap: 4, marginTop: 10, borderRadius: 14, overflow: 'hidden',
-                                }}>
-                                    {p.images.map((url, i) => (
-                                        <div key={i} style={{
-                                            aspectRatio: p.images.length === 1 ? '16/9' : '1',
-                                            overflow: 'hidden',
-                                            gridRow: p.images.length === 3 && i === 0 ? 'span 2' : undefined,
-                                        }}>
-                                            <img src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}
-                                                onError={e => { (e.target as HTMLImageElement).style.display='none'; }} />
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                            <PostImageGrid images={p.images || []} />
                         </Link>
 
                         {/* Quoted post preview */}

@@ -13,6 +13,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import AppShell from '@/components/AppShell';
+import { PostImageGrid } from '@/components/ImageLightbox';
 import {
     Heart, MessageCircle, Repeat2, Quote, ArrowLeft, Send,
     Image as ImageIcon, X, Loader2, MoreHorizontal, Trash2, Hash,
@@ -335,19 +336,7 @@ function PostDetailPage() {
                     </p>
 
                     {/* Images */}
-                    {post.images?.length > 0 && (
-                        <div style={{
-                            display:'grid',
-                            gridTemplateColumns: post.images.length === 1 ? '1fr' : 'repeat(2, 1fr)',
-                            gap:4, marginTop:12, borderRadius:14, overflow:'hidden',
-                        }}>
-                            {post.images.map((url, i) => (
-                                <div key={i} style={{ aspectRatio: post.images.length===1?'16/9':'1', overflow:'hidden' }}>
-                                    <img src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <PostImageGrid images={post.images || []} />
 
                     {/* Quoted post */}
                     {quotedPost && (
@@ -422,13 +411,7 @@ function PostDetailPage() {
                                     )}
                                 </div>
                                 <p style={{ fontSize:13, lineHeight:1.6, color:T1, whiteSpace:'pre-wrap', wordBreak:'break-word' }}>{r.text}</p>
-                                {r.images?.length > 0 && (
-                                    <div style={{ display:'flex', gap:4, marginTop:8, borderRadius:10, overflow:'hidden', flexWrap:'wrap' }}>
-                                        {r.images.map((url, i) => (
-                                            <img key={i} src={url} alt="" style={{ width:120, height:90, objectFit:'cover', borderRadius:8 }} />
-                                        ))}
-                                    </div>
-                                )}
+                                <PostImageGrid images={r.images || []} />
                             </div>
                         </div>
                     </div>
