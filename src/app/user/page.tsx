@@ -7,7 +7,7 @@ import { db, storage, APP_ID } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, getDoc, collection, getDocs, getCountFromServer, query, where, setDoc, deleteDoc, serverTimestamp, addDoc, orderBy, onSnapshot, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
-import { Anchor, LogOut, Camera, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home, SatelliteDish, CalendarHeart, Bell, CalendarDays, Repeat2, Hash, AtSign } from 'lucide-react';
+import { Anchor, LogOut, Camera, CheckCircle, XCircle, AlertCircle, Globe, Instagram, Twitter, MessageCircle, Heart, Share, ShieldHalf, LayoutDashboard, Crown, User as UserIcon, Settings, Lock, FileText, Compass, Settings2, Pencil, Copy, Image, Film, Play, Headphones, Dna, Unlock, ChevronRight, Check, Key, Plus, List, Gavel, Hammer, Home, SatelliteDish, CalendarHeart, Bell, CalendarDays, Repeat2, Hash, AtSign, MoreHorizontal, Trash2 } from 'lucide-react';
 
 import FollowModal from '@/components/FollowModal';
 import KeyMemoModal from '@/components/KeyMemoModal';
@@ -258,6 +258,7 @@ function UserProfileContent() {
   const [userThreads, setUserThreads] = useState<any[]>([]);
   const [threadsLoading, setThreadsLoading] = useState(false);
   const [threadsLoaded, setThreadsLoaded] = useState(false);
+  const [threadMenuId, setThreadMenuId] = useState<string|null>(null);
 
   // ── 活動タブ: データ取得 ─────────────────────────────────────
   const loadActivityData = async (uid: string, profId: string) => {
@@ -1812,39 +1813,43 @@ function UserProfileContent() {
                             <div style={{fontSize:13,fontWeight:600,color:T2}}>プレイリストはまだありません</div>
                           </div>
                         ) : (
-                          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:14}}>
+                          <div style={{display:'flex',flexDirection:'column',gap:8}}>
                             {playlists.map((pl:any)=>{
                               const itemCount = pl.items?.length || 0;
                               const isPaid = pl.access === 'paid';
+                              const coverThumb = pl.coverImageUrl || (pl.items?.[0]?.thumbnailUrl) || '';
                               return (
                                 <div key={pl.id} onClick={()=>{setSelectedPlaylist(pl);setIsPlaylistDetailOpen(true);}}
-                                  style={{borderRadius:14,overflow:'hidden',background:BG,boxShadow:NEU_SM,cursor:'pointer',transition:'transform .15s'}}
-                                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';}}
+                                  style={{display:'flex',alignItems:'center',gap:12,padding:10,borderRadius:12,background:BG,boxShadow:NEU_SM,cursor:'pointer',transition:'transform .1s'}}
+                                  onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-1px)';}}
                                   onMouseLeave={e=>{e.currentTarget.style.transform='';}}>
-                                  <div style={{aspectRatio:'16/9',background:'linear-gradient(135deg,#2d5a3e,#1a3024)',position:'relative',overflow:'hidden'}}>
-                                    {pl.coverImageUrl ? (
-                                      <img src={pl.coverImageUrl} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+                                  {/* Cover thumbnail */}
+                                  <div style={{width:56,height:56,borderRadius:10,overflow:'hidden',flexShrink:0,background:`linear-gradient(135deg,${SB},#2d5a3e)`,display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
+                                    {coverThumb ? (
+                                      <img src={coverThumb} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
                                     ) : (
-                                      <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}><List size={28} color="rgba(255,255,255,.25)"/></div>
+                                      <List size={20} color="rgba(255,255,255,.3)"/>
                                     )}
-                                    {/* Price badge */}
-                                    <span style={{
-                                      position:'absolute',top:8,right:8,
-                                      padding:'3px 10px',borderRadius:100,
-                                      fontSize:9,fontWeight:800,letterSpacing:'.04em',
-                                      background: isPaid ? 'rgba(212,162,74,.9)' : 'rgba(0,0,0,.5)',
-                                      color: isPaid ? '#1a3024' : '#fff',
-                                      backdropFilter:'blur(4px)',
-                                    }}>
-                                      {isPaid ? `¥${(pl.price||0).toLocaleString()}` : '無料'}
-                                    </span>
                                   </div>
-                                  <div style={{padding:'10px 12px'}}>
-                                    <div style={{fontSize:12,fontWeight:700,color:T1,lineHeight:1.3}}>{pl.name||pl.title||'無題'}</div>
-                                    <div style={{fontSize:10,color:TM,marginTop:4,display:'flex',alignItems:'center',gap:6}}>
-                                      <span>{itemCount}件のコンテンツ</span>
+                                  {/* Info */}
+                                  <div style={{flex:1,minWidth:0}}>
+                                    <div style={{fontSize:13,fontWeight:700,color:T1,lineHeight:1.3,display:'-webkit-box',WebkitLineClamp:1,WebkitBoxOrient:'vertical' as any,overflow:'hidden'}}>{pl.name||pl.title||'無題'}</div>
+                                    <div style={{fontSize:10,color:TM,marginTop:3,display:'flex',alignItems:'center',gap:6}}>
+                                      <List size={10}/>
+                                      <span>{itemCount}件</span>
+                                      {pl.description && <span style={{opacity:.6}}>·</span>}
+                                      {pl.description && <span style={{display:'-webkit-box',WebkitLineClamp:1,WebkitBoxOrient:'vertical' as any,overflow:'hidden',flex:1}}>{pl.description}</span>}
                                     </div>
                                   </div>
+                                  {/* Price badge */}
+                                  <span style={{
+                                    flexShrink:0,padding:'3px 10px',borderRadius:100,
+                                    fontSize:9,fontWeight:800,letterSpacing:'.04em',
+                                    background: isPaid ? 'rgba(212,162,74,.15)' : 'rgba(74,124,89,.1)',
+                                    color: isPaid ? '#b8860b' : SAGE,
+                                  }}>
+                                    {isPaid ? `¥${(pl.price||0).toLocaleString()}` : '無料'}
+                                  </span>
                                 </div>
                               );
                             })}
@@ -1951,6 +1956,23 @@ function UserProfileContent() {
                                 <span style={{fontSize:13,fontWeight:700,color:T1}}>{p.authorName || userData?.name || '名無し'}</span>
                                 <span style={{fontSize:11,color:TM}}>@{p.authorUserId || userData?.userId || ''}</span>
                                 <span style={{fontSize:11,color:TM}}>· {ago}</span>
+                                <div style={{flex:1}}/>
+                                {isSelf && (
+                                  <div style={{position:'relative'}} onClick={e=>{e.preventDefault();e.stopPropagation();}}>
+                                    <button onClick={()=>setThreadMenuId(threadMenuId===p.id?null:p.id)}
+                                      style={{border:'none',background:'transparent',cursor:'pointer',color:TM,padding:2,display:'flex'}}>
+                                      <MoreHorizontal size={16}/>
+                                    </button>
+                                    {threadMenuId===p.id && (
+                                      <div style={{position:'absolute',right:0,top:22,background:BG,borderRadius:10,boxShadow:'0 4px 20px rgba(0,0,0,.15)',padding:4,zIndex:10,minWidth:100}}>
+                                        <button onClick={async()=>{if(!window.confirm('このスレッドを削除しますか？'))return;try{await deleteDoc(doc(db,'artifacts',APP_ID,'public','data','posts',p.id));setUserThreads(prev=>prev.filter((t:any)=>t.id!==p.id));setThreadMenuId(null);}catch(e){console.error(e);alert('削除に失敗しました');}}}
+                                          style={{display:'flex',alignItems:'center',gap:6,width:'100%',padding:'8px 12px',border:'none',background:'transparent',cursor:'pointer',fontSize:12,fontWeight:600,color:'#ef4444',borderRadius:8}}>
+                                          <Trash2 size={12}/> 削除
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                               {/* Topic tag */}
                               {p.topicTag && (

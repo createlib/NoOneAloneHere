@@ -147,7 +147,7 @@ export default function PlaylistModal({ isOpen, onClose, userId, playlistId, onS
     const filtered = availableMedia.filter(m => m.type === filterType);
 
     return (
-        <div style={{ position:'fixed', inset:0, zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
+        <div style={{ position:'fixed', inset:0, zIndex:2500, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
             {/* Backdrop */}
             <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.55)', backdropFilter:'blur(6px)' }} onClick={onClose}/>
 

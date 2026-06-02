@@ -51,9 +51,9 @@ export default function PlaylistDetailModal({ isOpen, onClose, playlist, canEdit
     const isPaid = playlist.access === 'paid';
 
     return (
-        <div style={{ position:'fixed', inset:0, zIndex:2000, display:'flex', alignItems:'flex-end', justifyContent:'center' }}>
+        <div style={{ position:'fixed', inset:0, zIndex:2500, display:'flex', alignItems:'flex-end', justifyContent:'center' }}>
             {/* Backdrop */}
-            <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.5)', backdropFilter:'blur(6px)' }} onClick={onClose}/>
+            <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,.75)', backdropFilter:'blur(8px)' }} onClick={onClose}/>
 
             {/* Sheet */}
             <div style={{
