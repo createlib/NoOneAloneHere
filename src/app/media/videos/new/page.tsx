@@ -7,7 +7,8 @@ import { ref, uploadBytesResumable, uploadBytes, getDownloadURL } from 'firebase
 import { db, storage, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import { ArrowLeft, Film, Video, Image as ImageIcon, Tags, MessageSquare, Crown, CloudUpload } from 'lucide-react';
+import { ArrowLeft, Film, Video, Image as ImageIcon, Tags, MessageSquare, Crown, CloudUpload, Globe } from 'lucide-react';
+import VisibilityPicker, { VisibilityMode } from '@/components/VisibilityPicker';
 
 function VideoPostContent() {
     const { user, loading } = useAuth();
@@ -34,6 +35,9 @@ function VideoPostContent() {
     const [customTags, setCustomTags] = useState('');
 
     const [allowComments, setAllowComments] = useState(true);
+    const [visibility, setVisibility] = useState<VisibilityMode>('public');
+    const [allowedUserIds, setAllowedUserIds] = useState<string[]>([]);
+    const [allowedListIds, setAllowedListIds] = useState<string[]>([]);
     const [overrideUserId, setOverrideUserId] = useState('');
 
     const [isSaving, setIsSaving] = useState(false);
@@ -103,6 +107,9 @@ function VideoPostContent() {
                 }
 
                 setAllowComments(data.allowComments !== false);
+                setVisibility(data.visibility || 'public');
+                setAllowedUserIds(data.allowedUserIds || []);
+                setAllowedListIds(data.allowedListIds || []);
 
                 const tags = data.tags || [];
                 const presetValues = presetTags.map(p => p.value);
@@ -290,6 +297,20 @@ function VideoPostContent() {
             const cTags = customTags.split(',').map(t => t.trim()).filter(Boolean);
             const tags = Array.from(new Set([...selectedTags, ...cTags]));
 
+            // カスタム公開: リストメンバー + 個別指定を展開
+            let resolvedAllowedUserIds: string[] = [];
+            if (visibility === 'custom') {
+                const uidSet = new Set(allowedUserIds);
+                for (const lid of allowedListIds) {
+                    try {
+                        const lSnap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'audience_lists', lid));
+                        if (lSnap.exists()) (lSnap.data().memberIds || []).forEach((uid: string) => uidSet.add(uid));
+                    } catch {}
+                }
+                uidSet.delete(user.uid);
+                resolvedAllowedUserIds = Array.from(uidSet);
+            }
+
             const docId = editVid || Date.now().toString();
             const videoDataPayload = {
                 authorId: finalAuthorId,
@@ -303,6 +324,9 @@ function VideoPostContent() {
                 description,
                 tags,
                 allowComments,
+                visibility,
+                allowedUserIds: visibility === 'custom' ? resolvedAllowedUserIds : [],
+                allowedListIds: visibility === 'custom' ? allowedListIds : [],
                 updatedAt: new Date().toISOString(),
                 ...(!editVid && { createdAt: new Date().toISOString() })
             };
@@ -311,19 +335,29 @@ function VideoPostContent() {
 
             if (!editVid) {
                 try {
-                    const followersSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', finalAuthorId, 'followers'));
-                    const notifyPromises = followersSnap.docs.map(fDoc => {
-                        return addDoc(collection(db, 'artifacts', APP_ID, 'users', fDoc.id, 'notifications'), {
+                    let notifyUids: string[] = [];
+                    if (visibility === 'public' || visibility === 'followers') {
+                        const fSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', finalAuthorId, 'followers'));
+                        notifyUids = fSnap.docs.map(f => f.id);
+                    } else if (visibility === 'mutual') {
+                        const fSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', finalAuthorId, 'followers'));
+                        const followingSnap = await getDocs(collection(db, 'artifacts', APP_ID, 'users', finalAuthorId, 'following'));
+                        const followingIds = new Set(followingSnap.docs.map(d => d.id));
+                        notifyUids = fSnap.docs.filter(f => followingIds.has(f.id)).map(f => f.id);
+                    } else if (visibility === 'custom') {
+                        notifyUids = resolvedAllowedUserIds;
+                    }
+                    await Promise.all(notifyUids.map(uid =>
+                        addDoc(collection(db, 'artifacts', APP_ID, 'users', uid, 'notifications'), {
                             type: 'new_video',
                             fromUid: finalAuthorId,
                             contentId: docId,
                             createdAt: serverTimestamp(),
                             isRead: false
-                        });
-                    });
-                    await Promise.all(notifyPromises);
+                        })
+                    ));
                 } catch (err) {
-                    console.error("Notifications err:", err);
+                    console.error('Notifications err:', err);
                 }
             }
 
@@ -462,6 +496,22 @@ function VideoPostContent() {
                                     <input type="radio" checked={!allowComments} onChange={() => setAllowComments(false)} className="text-brand-400 focus:ring-brand-400" /> 許可しない
                                 </label>
                             </div>
+                        </div>
+
+                        {/* 公開設定 */}
+                        <div className="border-t border-brand-100 pt-6">
+                            <label className="flex items-center text-sm font-bold text-brand-900 mb-4 tracking-widest">
+                                <Globe className="text-brand-400 mr-2" size={16} />公開設定
+                            </label>
+                            <VisibilityPicker
+                                currentUid={user?.uid || ''}
+                                visibility={visibility}
+                                onVisibilityChange={setVisibility}
+                                selectedListIds={allowedListIds}
+                                onSelectedListIdsChange={setAllowedListIds}
+                                selectedUserIds={allowedUserIds}
+                                onSelectedUserIdsChange={setAllowedUserIds}
+                            />
                         </div>
                     </div>
 
