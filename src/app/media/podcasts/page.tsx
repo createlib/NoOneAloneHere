@@ -308,6 +308,13 @@ function MediaPageInner() {
         return <ArticleCard key={item.id} a={item} scroll={scroll} />;
     };
 
+    // レスポンシブグリッド: タブ種別ごとに最適なカラム幅
+    const gridCols = tab==='cast'
+        ? 'repeat(auto-fill,minmax(140px,1fr))'
+        : tab==='theater'
+            ? 'repeat(auto-fill,minmax(240px,1fr))'
+            : 'repeat(auto-fill,minmax(280px,1fr))';
+
     /* ══════════════════════════════════════════════════════════════ *
      *  RENDER
      * ══════════════════════════════════════════════════════════════ */
@@ -487,8 +494,8 @@ function MediaPageInner() {
                                                     </button>
                                                 )}
                                             </div>
-                                            <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:8, scrollbarWidth:'none' }}>
-                                                {filteredFollowing.slice(0,20).map((i:any) => renderCard(i, true))}
+                                            <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
+                                                {filteredFollowing.slice(0,40).map((i:any) => renderCard(i))}
                                             </div>
                                         </section>
                                     )}
@@ -505,8 +512,8 @@ function MediaPageInner() {
                                                 </button>
                                             )}
                                         </div>
-                                        <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:8, scrollbarWidth:'none' }}>
-                                            {filteredOther.slice(0,20).map((i:any) => renderCard(i, true))}
+                                        <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
+                                            {filteredOther.slice(0,40).map((i:any) => renderCard(i))}
                                         </div>
                                     </section>
                                 </div>
@@ -529,8 +536,8 @@ function MediaPageInner() {
                                             すべて見る <ChevronRight size={12} />
                                         </button>
                                     </div>
-                                    <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:8, scrollbarWidth:'none' }}>
-                                        {following.slice(0,20).map((i:any) => renderCard(i,true))}
+                                    <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
+                                        {following.slice(0,40).map((i:any) => renderCard(i))}
                                     </div>
                                 </section>
                             )}
@@ -553,8 +560,8 @@ function MediaPageInner() {
                                         <div style={{ fontSize:13, fontWeight:700, color:T2 }}>まだコンテンツがありません</div>
                                     </div>
                                 ) : (
-                                    <div style={{ display:'flex', gap:12, overflowX:'auto', paddingBottom:8, scrollbarWidth:'none' }}>
-                                        {recommended.slice(0,20).map((i:any) => renderCard(i,true))}
+                                    <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
+                                        {recommended.slice(0,40).map((i:any) => renderCard(i))}
                                     </div>
                                 )}
                             </section>
