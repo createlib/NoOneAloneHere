@@ -7,8 +7,9 @@ import { ref, uploadBytesResumable, uploadBytes, getDownloadURL } from 'firebase
 import { db, storage, APP_ID } from '@/lib/firebase';
 import {
     X, Mic, Film, Upload, Link as LinkIcon, Image as ImageIcon,
-    Loader2, CheckCircle2, Crown, MessageSquare, Tag
+    Loader2, CheckCircle2, Crown, MessageSquare, Tag, Globe
 } from 'lucide-react';
+import VisibilityPicker, { VisibilityMode } from './VisibilityPicker';
 
 /* ── Design tokens ─────────────────────────────────────────────────── */
 const BG   = '#f8f6f3';
@@ -80,6 +81,9 @@ export default function MediaPostModal({ type, isOpen, onClose, userId, userProf
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [customTags, setCustomTags] = useState('');
     const [allowComments, setAllowComments] = useState(true);
+    const [visibility, setVisibility] = useState<VisibilityMode>('public');
+    const [allowedUserIds, setAllowedUserIds] = useState<string[]>([]);
+    const [allowedListIds, setAllowedListIds] = useState<string[]>([]);
     const [overrideUserId, setOverrideUserId] = useState('');
 
     const [saving, setSaving] = useState(false);
@@ -101,6 +105,9 @@ export default function MediaPostModal({ type, isOpen, onClose, userId, userProf
                 setTitle(d.title||'');
                 setDescription(d.description||'');
                 setAllowComments(d.allowComments!==false);
+                setVisibility(d.visibility||'public');
+                setAllowedUserIds(d.allowedUserIds||[]);
+                setAllowedListIds(d.allowedListIds||[]);
 
                 if (type==='cast') {
                     setGuests(d.guests?d.guests.join(', '):'');
@@ -130,7 +137,9 @@ export default function MediaPostModal({ type, isOpen, onClose, userId, userProf
             setSourceMode('upload'); setFile(null); setUrlInput(''); setParsedUrl(''); setIsEmbed(false); setDuration(0);
             setThumbFile(null); setThumbPreview('');
             setTitle(''); setDescription(''); setGuests(''); setRelatedUrls('');
-            setSelectedTags([]); setCustomTags(''); setAllowComments(true); setOverrideUserId('');
+            setSelectedTags([]); setCustomTags(''); setAllowComments(true);
+            setVisibility('public'); setAllowedUserIds([]); setAllowedListIds([]);
+            setOverrideUserId('');
             setSaving(false); setProgress(0); setProgressText('');
         }
     }, [isOpen]);
@@ -240,9 +249,26 @@ export default function MediaPostModal({ type, isOpen, onClose, userId, userProf
             const docId=editId||Date.now().toString();
             const colName=type==='cast'?'podcasts':'videos';
 
+            // カスタム公開: リストメンバー + 個別指定を展開
+            let resolvedAllowedUserIds: string[] = [];
+            if (visibility === 'custom') {
+                const uidSet = new Set(allowedUserIds);
+                for (const lid of allowedListIds) {
+                    try {
+                        const lSnap = await getDoc(doc(db,'artifacts',APP_ID,'users',authorId,'audience_lists',lid));
+                        if (lSnap.exists()) (lSnap.data().memberIds||[]).forEach((uid:string)=>uidSet.add(uid));
+                    } catch {}
+                }
+                uidSet.delete(authorId);
+                resolvedAllowedUserIds = Array.from(uidSet);
+            }
+
             const payload:any = {
                 authorId, authorName, authorIcon,
                 sourceType:sourceMode, title, description, tags, allowComments,
+                visibility,
+                allowedUserIds: visibility==='custom' ? resolvedAllowedUserIds : [],
+                allowedListIds: visibility==='custom' ? allowedListIds : [],
                 updatedAt:new Date().toISOString(),
                 ...(!editId&&{createdAt:new Date().toISOString()}),
             };
@@ -262,11 +288,22 @@ export default function MediaPostModal({ type, isOpen, onClose, userId, userProf
 
             await setDoc(doc(db,'artifacts',APP_ID,'public','data',colName,docId),payload,{merge:true});
 
-            // Notify followers
+            // 公開設定に応じて通知先を決定
             if(!editId) {
                 try {
-                    const fSnap=await getDocs(collection(db,'artifacts',APP_ID,'users',authorId,'followers'));
-                    await Promise.all(fSnap.docs.map(f=>addDoc(collection(db,'artifacts',APP_ID,'users',f.id,'notifications'),{
+                    let notifyUids: string[] = [];
+                    if (visibility==='public'||visibility==='followers') {
+                        const fSnap=await getDocs(collection(db,'artifacts',APP_ID,'users',authorId,'followers'));
+                        notifyUids=fSnap.docs.map(f=>f.id);
+                    } else if (visibility==='mutual') {
+                        const fSnap=await getDocs(collection(db,'artifacts',APP_ID,'users',authorId,'followers'));
+                        const followingSnap=await getDocs(collection(db,'artifacts',APP_ID,'users',authorId,'following'));
+                        const followingIds=new Set(followingSnap.docs.map(d=>d.id));
+                        notifyUids=fSnap.docs.filter(f=>followingIds.has(f.id)).map(f=>f.id);
+                    } else if (visibility==='custom') {
+                        notifyUids=resolvedAllowedUserIds;
+                    }
+                    await Promise.all(notifyUids.map(uid=>addDoc(collection(db,'artifacts',APP_ID,'users',uid,'notifications'),{
                         type:type==='cast'?'new_podcast':'new_video', fromUid:authorId, contentId:docId, createdAt:serverTimestamp(), isRead:false,
                     })));
                 } catch {}
@@ -469,6 +506,19 @@ export default function MediaPostModal({ type, isOpen, onClose, userId, userProf
                                     }}>{v?'許可する':'許可しない'}</button>
                             ))}
                         </div>
+                    </Field>
+
+                    {/* 公開設定 */}
+                    <Field label="公開設定">
+                        <VisibilityPicker
+                            currentUid={userId}
+                            visibility={visibility}
+                            onVisibilityChange={setVisibility}
+                            selectedListIds={allowedListIds}
+                            onSelectedListIdsChange={setAllowedListIds}
+                            selectedUserIds={allowedUserIds}
+                            onSelectedUserIdsChange={setAllowedUserIds}
+                        />
                     </Field>
 
                     {/* Admin override */}
