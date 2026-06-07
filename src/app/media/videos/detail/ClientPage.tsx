@@ -211,9 +211,9 @@ export default function VideoDetailPage() {
                         {/* 動画プレーヤー (glassmorphism container) */}
                         <div style={{
                             width:'100%', aspectRatio:'16/9',
-                            borderRadius:20, overflow:'hidden',
+                            borderRadius:0, overflow:'hidden',
                             background:'#0d1a14',
-                            boxShadow:'0 12px 48px rgba(0,0,0,.4), 0 0 0 1px rgba(74,124,89,.2)',
+                            boxShadow:'0 12px 48px rgba(0,0,0,.4)',
                             marginBottom:20, position:'relative',
                         }}>
                             {videoData.embedUrl ? (

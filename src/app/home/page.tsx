@@ -455,23 +455,6 @@ export default function DeckPage() {
             }}
         >
             <div style={{ minHeight:'100vh', background:BG }}>
-                {/* ── Mobile Header ────────────────────────────── */}
-                <div className="deck-mob-header" style={{
-                    display:'flex', alignItems:'center', justifyContent:'space-between',
-                    padding:'12px 16px', background:SB,
-                    position:'sticky', top:0, zIndex:50,
-                }}>
-                    <div style={{ fontSize:16, fontWeight:800, letterSpacing:'.18em', color:'#fff' }}>甲板</div>
-                    <button onClick={() => setShowComposer(true)}
-                        style={{
-                            display:'flex', alignItems:'center', gap:5,
-                            padding:'7px 14px', borderRadius:100, border:'none',
-                            background:LIME, color:SB, fontSize:11, fontWeight:800,
-                            cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,.2)',
-                        }}>
-                        <Plus size={14} /> 投稿する
-                    </button>
-                </div>
 
                 {/* ── Tabs ─────────────────────────────────────── */}
                 <div style={{
@@ -675,13 +658,11 @@ export default function DeckPage() {
             {/* ── Styles ──────────────────────────────────────── */}
             <style>{`
                 @keyframes spin{to{transform:rotate(360deg)}}
-                /* Mobile: show header + FAB, hide PC compose */
-                .deck-mob-header { display: flex; }
+                /* Mobile: show FAB, hide PC compose */
                 .deck-pc-compose { display: none !important; }
                 .deck-fab { display: flex; }
                 .deck-tabs { top: 0; }
                 @media(min-width:1024px) {
-                    .deck-mob-header { display: none !important; }
                     .deck-pc-compose { display: block !important; }
                     .deck-fab { display: none !important; }
                     .deck-tabs { top: 0; }
