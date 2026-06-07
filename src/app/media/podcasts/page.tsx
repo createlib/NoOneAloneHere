@@ -289,8 +289,8 @@ function MediaPageInner() {
             overflow:'hidden', cursor:'pointer',
         }}>
             {(a.coverImageUrl || a.thumbnailUrl) && (
-                <div style={{ width: scroll?'100%':100, height: scroll?120:80, flexShrink:0, overflow:'hidden', borderRadius: scroll?'14px 14px 0 0':'14px 0 0 14px' }}>
-                    <img src={a.coverImageUrl||a.thumbnailUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }}
+                <div style={{ width: scroll?'100%':110, height: scroll?140:80, flexShrink:0, overflow:'hidden', background:'#f0ece7' }}>
+                    <img src={a.coverImageUrl||a.thumbnailUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'contain' }}
                         onError={e=>{(e.target as HTMLImageElement).style.display='none';}} />
                 </div>
             )}
