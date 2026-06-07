@@ -169,10 +169,47 @@ export default function MediaPostModal({ type, isOpen, onClose, userId, userProf
     const handleUrlChange = (v:string) => { setUrlInput(v); type==='cast'?parseCastUrl(v):parseVideoUrl(v); };
 
     /* ── File handlers ───────────────────────────────────────────────── */
-    const handleFileUpload = (e:React.ChangeEvent<HTMLInputElement>) => {
+    // 動画から自動でサムネイルをキャプチャ
+    const captureVideoThumbnail = (file: File): Promise<{ file: File; previewUrl: string } | null> =>
+        new Promise((resolve) => {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.muted = true;
+            const objUrl = URL.createObjectURL(file);
+            video.src = objUrl;
+            video.addEventListener('loadedmetadata', () => {
+                video.currentTime = Math.min(1, video.duration * 0.1 || 1);
+            }, { once: true });
+            video.addEventListener('seeked', () => {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth || 1280;
+                    canvas.height = video.videoHeight || 720;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) { URL.revokeObjectURL(objUrl); resolve(null); return; }
+                    ctx.drawImage(video, 0, 0);
+                    canvas.toBlob((blob) => {
+                        URL.revokeObjectURL(objUrl);
+                        if (!blob) { resolve(null); return; }
+                        const tf = new File([blob], 'auto_thumb.jpg', { type: 'image/jpeg' });
+                        resolve({ file: tf, previewUrl: URL.createObjectURL(tf) });
+                    }, 'image/jpeg', 0.85);
+                } catch { URL.revokeObjectURL(objUrl); resolve(null); }
+            }, { once: true });
+            video.addEventListener('error', () => { URL.revokeObjectURL(objUrl); resolve(null); }, { once: true });
+            video.load();
+        });
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const f=e.target.files?.[0]; if(!f) return;
-        setFile(f); setParsedUrl(URL.createObjectURL(f)); setIsEmbed(false);
-        if(type==='cast'&&audioRef.current) audioRef.current.src=URL.createObjectURL(f);
+        const objUrl = URL.createObjectURL(f);
+        setFile(f); setParsedUrl(objUrl); setIsEmbed(false);
+        if(type==='cast'&&audioRef.current) audioRef.current.src=objUrl;
+        // 動画アップロード時はサムネイルを自動キャプチャ
+        if(type==='theater'&&!thumbPreview) {
+            const result = await captureVideoThumbnail(f);
+            if(result) { setThumbFile(result.file); setThumbPreview(result.previewUrl); }
+        }
     };
     const handleThumbUpload = (e:React.ChangeEvent<HTMLInputElement>) => {
         const f=e.target.files?.[0]; if(!f) return;

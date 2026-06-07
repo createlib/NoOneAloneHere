@@ -27,6 +27,9 @@ const AMBER = '#d4a24a';
 const NEU  = '6px 6px 16px #dbd7d2,-6px -6px 16px #ffffff';
 const NEU_SM = '3px 3px 10px #dbd7d2,-3px -3px 10px #ffffff';
 const NEU_IN = 'inset 3px 3px 8px #dbd7d2,inset -3px -3px 8px #ffffff';
+const FALLBACK_VIDEO   = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 18"><rect width="32" height="18" fill="#2a2520"/><polygon points="12,4 12,14 22,9" fill="#4a7c59"/></svg>');
+const FALLBACK_PODCAST = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#4a7c59"/><rect x="13" y="6" width="6" height="11" rx="3" fill="#f8f6f3"/><path d="M9 17 Q9 25 16 25 Q23 25 23 17" stroke="#f8f6f3" stroke-width="2" fill="none"/><rect x="15" y="25" width="2" height="4" fill="#f8f6f3"/></svg>');
+const FALLBACK_AVATAR  = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="16" fill="#dbd7d2"/><circle cx="16" cy="12" r="5" fill="#b0a89e"/><ellipse cx="16" cy="26" rx="9" ry="7" fill="#b0a89e"/></svg>');
 
 /* ══════════════════════════════════════════════════════════════════ *
  *  Types
@@ -225,9 +228,9 @@ function MediaPageInner() {
                 width:'100%', aspectRatio:'1', borderRadius:14, overflow:'hidden',
                 background:BG, boxShadow:NEU_SM, position:'relative',
             }}>
-                <img src={p.thumbnailUrl||'/default_podcast.png'} alt={p.title}
+                <img src={p.thumbnailUrl||FALLBACK_PODCAST} alt={p.title}
                     style={{ width:'100%',height:'100%',objectFit:'cover' }}
-                    onError={e=>{(e.target as HTMLImageElement).src='/default_podcast.png';}} />
+                    onError={e=>{const i=e.target as HTMLImageElement;i.onerror=null;i.src=FALLBACK_PODCAST;}} />
                 {fmtDur(p.duration) && (
                     <span style={{
                         position:'absolute',bottom:6,right:6,background:'rgba(0,0,0,.7)',
@@ -252,9 +255,9 @@ function MediaPageInner() {
                 background:BG, boxShadow:NEU_SM,
             }}>
             <div style={{ width:'100%', aspectRatio:'16/9', background:'#000', overflow:'hidden', position:'relative' }}>
-                <img src={v.thumbnailUrl||'/default_video.png'} alt={v.title}
+                <img src={v.thumbnailUrl||FALLBACK_VIDEO} alt={v.title}
                     style={{ width:'100%',height:'100%',objectFit:'cover' }}
-                    onError={e=>{(e.target as HTMLImageElement).src='/default_video.png';}} />
+                    onError={e=>{const i=e.target as HTMLImageElement;i.onerror=null;i.src=FALLBACK_VIDEO;}} />
                 <div style={{
                     position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',
                     background:'rgba(0,0,0,.15)',
@@ -265,9 +268,9 @@ function MediaPageInner() {
                 </div>
             </div>
             <div style={{ padding:'10px 12px', display:'flex', gap:8 }}>
-                <img src={v.authorIcon||'/default_avatar.png'} alt=""
+                <img src={v.authorIcon||FALLBACK_AVATAR} alt=""
                     style={{ width:28,height:28,borderRadius:'50%',objectFit:'cover',flexShrink:0,border:`2px solid ${BG}`,boxShadow:NEU_SM }}
-                    onError={e=>{(e.target as HTMLImageElement).src='/default_avatar.png';}} />
+                    onError={e=>{const i=e.target as HTMLImageElement;i.onerror=null;i.src=FALLBACK_AVATAR;}} />
                 <div style={{ minWidth:0, flex:1 }}>
                     <div style={{ fontSize:11, fontWeight:700, lineHeight:1.4, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{v.title}</div>
                     <div style={{ fontSize:10, color:TM, marginTop:2 }}>{v.authorName||'名無し'} · {fmtDate(v.createdAt)}</div>
@@ -437,9 +440,9 @@ function MediaPageInner() {
                                         boxShadow:'0 2px 12px rgba(220,38,38,.3)',
                                     }}>
                                         <div style={{ width:'100%',height:'100%',borderRadius:'50%',overflow:'hidden',border:`2px solid ${BG}` }}>
-                                            <img src={r.hostIcon||'/default_avatar.png'} alt=""
+                                            <img src={r.hostIcon||FALLBACK_AVATAR} alt=""
                                                 style={{ width:'100%',height:'100%',objectFit:'cover' }}
-                                                onError={e=>{(e.target as HTMLImageElement).src='/default_avatar.png';}} />
+                                                onError={e=>{const i=e.target as HTMLImageElement;i.onerror=null;i.src=FALLBACK_AVATAR;}} />
                                         </div>
                                     </div>
                                     <div style={{ textAlign:'center', width:'100%' }}>

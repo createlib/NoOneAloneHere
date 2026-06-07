@@ -18,6 +18,7 @@ const T2   = '#7a7068';
 const TM   = '#b0a89e';
 const NEU_SM = '3px 3px 10px #dbd7d2,-3px -3px 10px #ffffff';
 const NEU_IN = 'inset 3px 3px 8px #dbd7d2,inset -3px -3px 8px #ffffff';
+const FALLBACK_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="16" fill="#dbd7d2"/><circle cx="16" cy="12" r="5" fill="#b0a89e"/><ellipse cx="16" cy="26" rx="9" ry="7" fill="#b0a89e"/></svg>');
 
 export type VisibilityMode = 'public' | 'followers' | 'mutual' | 'custom';
 
@@ -238,9 +239,9 @@ export default function VisibilityPicker({
                                                 padding: '2px 6px 2px 3px', borderRadius: 100,
                                                 background: 'rgba(74,124,89,.1)', fontSize: 10, fontWeight: 600, color: SAGE,
                                             }}>
-                                                <img src={m?.photoURL || '/default_avatar.png'} alt=""
+                                                <img src={m?.photoURL || FALLBACK_AVATAR} alt=""
                                                     style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'cover' }}
-                                                    onError={e => { (e.target as HTMLImageElement).src = '/default_avatar.png'; }} />
+                                                    onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_AVATAR; }} />
                                                 {m?.name || uid.slice(0, 6)}
                                                 <button onClick={() => toggleUser(uid)}
                                                     style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: SAGE, padding: 0, display: 'flex' }}>
@@ -284,9 +285,9 @@ export default function VisibilityPicker({
                                                     background: sel ? 'rgba(74,124,89,.06)' : 'transparent',
                                                     cursor: 'pointer', textAlign: 'left',
                                                 }}>
-                                                <img src={m.photoURL || '/default_avatar.png'} alt=""
+                                                <img src={m.photoURL || FALLBACK_AVATAR} alt=""
                                                     style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }}
-                                                    onError={e => { (e.target as HTMLImageElement).src = '/default_avatar.png'; }} />
+                                                    onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_AVATAR; }} />
                                                 <div style={{ flex: 1 }}>
                                                     <div style={{ fontSize: 11, fontWeight: 600, color: T1 }}>{m.name}</div>
                                                 </div>
