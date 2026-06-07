@@ -8,35 +8,33 @@ import { useAuth } from '@/contexts/AuthContext';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import Link from 'next/link';
-import { ArrowLeft, Edit, Trash2, Heart, Share2, AlignLeft, MessageSquare, Lock, Podcast, CalendarDays, Headphones, Play, Minimize2, X, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Heart, Share2, AlignLeft, MessageSquare, Lock, Mic, CalendarDays, Clock, Minimize2, X, CheckCircle2, Loader2, ChevronDown, ChevronUp, Send, ExternalLink } from 'lucide-react';
+
+/* ── Design tokens ─────────────────────────────────────────────── */
+const BG     = '#f8f6f3';
+const SB     = '#1a3024';
+const SAGE   = '#4a7c59';
+const LIME   = '#8ecfb2';
+const T1     = '#2a2520';
+const T2     = '#7a7068';
+const TM     = '#b0a89e';
+const RED    = '#d97070';
+const NEU    = '6px 6px 16px #dbd7d2,-6px -6px 16px #ffffff';
+const NEU_SM = '3px 3px 10px #dbd7d2,-3px -3px 10px #ffffff';
+const NEU_IN = 'inset 3px 3px 8px #dbd7d2,inset -3px -3px 8px #ffffff';
+const FALLBACK_AVATAR  = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="16" fill="#dbd7d2"/><circle cx="16" cy="12" r="5" fill="#b0a89e"/><ellipse cx="16" cy="26" rx="9" ry="7" fill="#b0a89e"/></svg>');
+const FALLBACK_PODCAST = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#4a7c59"/><rect x="13" y="6" width="6" height="11" rx="3" fill="#f8f6f3"/><path d="M9 17 Q9 25 16 25 Q23 25 23 17" stroke="#f8f6f3" stroke-width="2" fill="none"/><rect x="15" y="25" width="2" height="4" fill="#f8f6f3"/></svg>');
 
 interface PodcastData {
-    id: string;
-    title: string;
-    description: string;
-    tags: string[];
-    authorId: string;
-    authorName: string;
-    authorIcon: string;
-    thumbnailUrl: string;
-    audioUrl: string;
-    isEmbed: boolean;
-    duration: number;
-    relatedArticleUrls?: string[];
-    relatedArticleUrl?: string; // legacy support
-    allowComments: boolean;
-    createdAt: string | any;
-    updatedAt: string | any;
+    id: string; title: string; description: string; tags: string[];
+    authorId: string; authorName: string; authorIcon: string;
+    thumbnailUrl: string; audioUrl: string; isEmbed: boolean; duration: number;
+    relatedArticleUrls?: string[]; relatedArticleUrl?: string;
+    allowComments: boolean; createdAt: string | any; updatedAt: string | any;
 }
-
 interface CommentData {
-    id: string;
-    userId: string;
-    userName: string;
-    userIcon: string;
-    text: string;
-    isPrivate: boolean;
-    createdAt: any;
+    id: string; userId: string; userName: string; userIcon: string;
+    text: string; isPrivate: boolean; createdAt: any;
 }
 
 export default function PodcastDetailPage() {
@@ -45,506 +43,586 @@ export default function PodcastDetailPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
 
-    const [podcastData, setPodcastData] = useState<PodcastData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [notFound, setNotFound] = useState(false);
-    
-    const [isAdmin, setIsAdmin] = useState(false);
-    const [myProfile, setMyProfile] = useState<any>(null);
-
-    const [comments, setComments] = useState<CommentData[]>([]);
-    const [newComment, setNewComment] = useState('');
+    const [podcastData, setPodcastData]   = useState<PodcastData | null>(null);
+    const [isLoading, setIsLoading]       = useState(true);
+    const [notFound, setNotFound]         = useState(false);
+    const [isAdmin, setIsAdmin]           = useState(false);
+    const [myProfile, setMyProfile]       = useState<any>(null);
+    const [comments, setComments]         = useState<CommentData[]>([]);
+    const [newComment, setNewComment]     = useState('');
     const [isPrivateComment, setIsPrivateComment] = useState(false);
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-
-    const [likesCount, setLikesCount] = useState(0);
-    const [isLiked, setIsLiked] = useState(false);
-    
+    const [likesCount, setLikesCount]     = useState(0);
+    const [isLiked, setIsLiked]           = useState(false);
     const [relatedPodcasts, setRelatedPodcasts] = useState<PodcastData[]>([]);
     const [showNotification, setShowNotification] = useState(false);
-    
     const [isDescExpanded, setIsDescExpanded] = useState(false);
     const [isMiniPlayerActive, setIsMiniPlayerActive] = useState(false);
 
     useEffect(() => {
         if (loading) return;
-        if (!id) {
-            const timer = setTimeout(() => {
-                setIsLoading(false);
-                setNotFound(true);
-            }, 800);
-            return () => clearTimeout(timer);
-        }
-
+        if (!id) { setTimeout(() => { setIsLoading(false); setNotFound(true); }, 800); return; }
         const init = async () => {
             if (user && !user.isAnonymous) {
                 try {
                     const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'data'));
-                    if (snap.exists()) {
-                        setMyProfile(snap.data());
-                        if (snap.data().userId === 'admin') setIsAdmin(true);
-                    }
-                } catch (e) {
-                    console.error("Profile fetch error:", e);
-                }
+                    if (snap.exists()) { setMyProfile(snap.data()); if (snap.data().userId === 'admin') setIsAdmin(true); }
+                } catch {}
             }
-
             try {
                 const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id));
-                if (snap.exists()) {
-                    setPodcastData({ id: snap.id, ...snap.data() } as PodcastData);
-                } else {
-                    setNotFound(true);
-                }
-            } catch (e) {
-                console.error("Podcast fetch error:", e);
-                setNotFound(true);
-            } finally {
-                setIsLoading(false);
-            }
+                if (snap.exists()) setPodcastData({ id: snap.id, ...snap.data() } as PodcastData);
+                else setNotFound(true);
+            } catch { setNotFound(true); }
+            finally { setIsLoading(false); }
         };
-
         init();
     }, [id, user, loading]);
 
     useEffect(() => {
         if (!podcastData) return;
-
-        // Likes
-        const likesRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id, 'likes');
-        const unsubLikes = onSnapshot(likesRef, (snap) => {
+        const unsubLikes = onSnapshot(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id, 'likes'), (snap) => {
             setLikesCount(snap.size);
-            if (user) {
-                setIsLiked(!!snap.docs.find(d => d.id === user.uid));
-            }
+            if (user) setIsLiked(!!snap.docs.find(d => d.id === user.uid));
         });
-
-        // Comments
         let unsubComments = () => {};
         if (podcastData.allowComments !== false) {
-            const commentsRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id, 'comments');
-            const q = query(commentsRef, orderBy('createdAt', 'desc'));
-            unsubComments = onSnapshot(q, (snap) => {
-                const cmts = snap.docs.map(d => ({ id: d.id, ...d.data() } as CommentData));
-                setComments(cmts);
-            });
+            const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id, 'comments'), orderBy('createdAt', 'desc'));
+            unsubComments = onSnapshot(q, (snap) => setComments(snap.docs.map(d => ({ id: d.id, ...d.data() } as CommentData))));
         }
-
-        // Related Podcasts
         const fetchRelated = async () => {
-            const ref = collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts');
             try {
-                const snap = await getDocs(ref);
+                const snap = await getDocs(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts'));
                 const pods: PodcastData[] = [];
-                snap.forEach(d => {
-                    if (d.id !== id) pods.push({ id: d.id, ...d.data() } as PodcastData);
-                });
+                snap.forEach(d => { if (d.id !== id) pods.push({ id: d.id, ...d.data() } as PodcastData); });
                 pods.sort((a, b) => new Date(b.createdAt || b.updatedAt).getTime() - new Date(a.createdAt || a.updatedAt).getTime());
-                setRelatedPodcasts(pods.slice(0, 5));
-            } catch (e) {}
+                setRelatedPodcasts(pods.slice(0, 6));
+            } catch {}
         };
         fetchRelated();
-
-        return () => {
-            unsubLikes();
-            unsubComments();
-        };
+        return () => { unsubLikes(); unsubComments(); };
     }, [podcastData, id, user]);
 
     const formatText = (text: string) => {
         if (!text) return '';
-        let rawHtml = '';
-        try {
-            rawHtml = marked.parse(text, { breaks: true }) as string;
-        } catch (e) {
-            rawHtml = text.replace(/\n/g, '<br>');
-        }
-        return DOMPurify.sanitize(rawHtml);
+        try { return DOMPurify.sanitize(marked.parse(text, { breaks: true }) as string); }
+        catch { return text.replace(/\n/g, '<br>'); }
     };
-
-    const formatDuration = (seconds: number | undefined) => {
-        if (!seconds || isNaN(seconds)) return '--:--';
-        const m = Math.floor(seconds / 60);
-        const s = Math.floor(seconds % 60);
-        return `${m}:${s < 10 ? '0'+s : s}`;
+    const formatDuration = (sec: number | undefined) => {
+        if (!sec || isNaN(sec)) return '--:--';
+        const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+        return `${m}:${s < 10 ? '0' + s : s}`;
     };
 
     const handleLike = async () => {
-        if (!user || user.isAnonymous) return alert("いいねするにはログインが必要です");
+        if (!user || user.isAnonymous) return alert('いいねするにはログインが必要です');
         try {
-            const likeRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id, 'likes', user.uid);
-            if (isLiked) {
-                await deleteDoc(likeRef);
-            } else {
-                await setDoc(likeRef, { timestamp: serverTimestamp() });
-            }
-        } catch (e) {
-            console.error(e);
-        }
+            const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id, 'likes', user.uid);
+            if (isLiked) await deleteDoc(ref); else await setDoc(ref, { timestamp: serverTimestamp() });
+        } catch {}
     };
-
     const handleShare = () => {
-        const url = window.location.href;
-        navigator.clipboard.writeText(url).then(() => {
-            setShowNotification(true);
-            setTimeout(() => setShowNotification(false), 3000);
-        }).catch(err => {
-            alert('コピーに失敗しました。\n' + url);
-        });
+        navigator.clipboard.writeText(window.location.href)
+            .then(() => { setShowNotification(true); setTimeout(() => setShowNotification(false), 3000); })
+            .catch(() => alert('コピーに失敗しました。\n' + window.location.href));
     };
-
     const handleDelete = async () => {
-        if (!confirm("本当にこのエピソードを削除しますか？\n※この操作は元に戻せません。")) return;
-        try {
-            await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id));
-            alert("エピソードを削除しました");
-            router.push('/media/podcasts');
-        } catch (e) {
-            console.error(e);
-            alert("削除に失敗しました");
-        }
+        if (!confirm('本当にこのエピソードを削除しますか？\n※この操作は元に戻せません。')) return;
+        try { await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id)); router.push('/media/podcasts'); }
+        catch { alert('削除に失敗しました'); }
     };
-
     const handlePostComment = async () => {
         if (!user || user.isAnonymous) return alert('コメントするにはログインが必要です');
-        const text = newComment.trim();
-        if (!text) return;
-
+        const text = newComment.trim(); if (!text) return;
         setIsSubmittingComment(true);
         try {
-            let safeName = myProfile?.name || myProfile?.userId || '名無し';
-            let safeIcon = myProfile?.photoURL || null;
-
-            const isPublicSetting = myProfile && myProfile.profilePublic === 'true';
-            const isPaidMember = myProfile && myProfile.membershipRank !== 'arrival';
+            const isPublicSetting = myProfile?.profilePublic === 'true';
+            const isPaidMember = myProfile?.membershipRank !== 'arrival';
             const canPublish = isPaidMember || isAdmin;
-            
-            if (!(isPublicSetting && canPublish)) {
-                safeName = 'listener' + Math.floor(Math.random() * 10000);
-                safeIcon = 'https://via.placeholder.com/150/f7f5f0/c8b9a6?text=U';
-            }
-
+            const safeName = (isPublicSetting && canPublish) ? (myProfile?.name || myProfile?.userId || '名無し') : 'listener' + Math.floor(Math.random() * 10000);
+            const safeIcon = (isPublicSetting && canPublish) ? (myProfile?.photoURL || null) : null;
             await addDoc(collection(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id, 'comments'), {
-                userId: user.uid,
-                userName: safeName,
-                userIcon: safeIcon,
-                text: text,
-                isPrivate: isPrivateComment,
-                createdAt: serverTimestamp()
+                userId: user.uid, userName: safeName, userIcon: safeIcon,
+                text, isPrivate: isPrivateComment, createdAt: serverTimestamp(),
             });
-            setNewComment('');
-            setIsPrivateComment(false);
-        } catch (e) {
-            console.error(e);
-            alert("コメントの送信に失敗しました");
-        } finally {
-            setIsSubmittingComment(false);
-        }
+            setNewComment(''); setIsPrivateComment(false);
+        } catch { alert('コメントの送信に失敗しました'); }
+        finally { setIsSubmittingComment(false); }
     };
-
     const handleDeleteComment = async (cid: string) => {
-        if (!confirm("コメントを削除しますか？")) return;
-        try {
-            await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id, 'comments', cid));
-        } catch (e) {
-            console.error(e);
-            alert("削除に失敗しました");
-        }
+        if (!confirm('コメントを削除しますか？')) return;
+        try { await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'podcasts', id, 'comments', cid)); }
+        catch { alert('削除に失敗しました'); }
     };
 
-    if (isLoading) {
-        return <div className="min-h-screen flex items-center justify-center bg-texture"><div className="w-10 h-10 border-4 border-[#b8860b] border-t-transparent rounded-full animate-spin"></div></div>;
-    }
-
-    if (notFound || !podcastData) {
-        return (
-            <div className="min-h-screen bg-texture pt-24 px-4 pb-20">
-                <div className="max-w-[1600px] mx-auto text-center py-20 text-brand-500 font-bold tracking-widest bg-[#fffdf9] border border-brand-200 rounded-sm mt-10 shadow-sm">
-                    エピソードが存在しないか、削除されました。
-                </div>
+    /* ── Loading / Not found ───────────────────────────────────── */
+    if (isLoading) return (
+        <div style={{ minHeight:'100vh', background:BG, display:'flex', alignItems:'center', justifyContent:'center' }}>
+            <Loader2 size={32} color={SAGE} style={{ animation:'spin .8s linear infinite' }} />
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+    );
+    if (notFound || !podcastData) return (
+        <div style={{ minHeight:'100vh', background:BG, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+            <div style={{ textAlign:'center', padding:'40px 32px', borderRadius:20, background:BG, boxShadow:NEU }}>
+                <Mic size={36} color={TM} style={{ margin:'0 auto 12px' }} />
+                <div style={{ fontSize:14, fontWeight:700, color:T2 }}>エピソードが見つかりませんでした</div>
+                <button onClick={() => router.back()} style={{ marginTop:16, padding:'8px 20px', borderRadius:10, border:'none', background:SB, color:LIME, fontSize:12, fontWeight:700, cursor:'pointer' }}>戻る</button>
             </div>
-        );
-    }
+        </div>
+    );
 
-    const date = new Date(podcastData.createdAt || podcastData.updatedAt || Date.now());
-    const dateStr = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
     const isOwner = user && user.uid === podcastData.authorId;
     const canManage = isOwner || isAdmin;
-    const thumbUrl = podcastData.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop';
-
+    const thumbUrl = podcastData.thumbnailUrl || FALLBACK_PODCAST;
+    const dateStr = (() => {
+        try { const d = new Date(podcastData.createdAt?.toDate ? podcastData.createdAt.toDate() : podcastData.createdAt || podcastData.updatedAt); return d.toLocaleDateString('ja-JP'); } catch { return ''; }
+    })();
     let relatedUrls: string[] = [];
-    if (podcastData.relatedArticleUrls && Array.isArray(podcastData.relatedArticleUrls)) {
-        relatedUrls = podcastData.relatedArticleUrls;
-    } else if (podcastData.relatedArticleUrl) {
-        relatedUrls = [podcastData.relatedArticleUrl];
-    }
+    if (Array.isArray(podcastData.relatedArticleUrls)) relatedUrls = podcastData.relatedArticleUrls;
+    else if (podcastData.relatedArticleUrl) relatedUrls = [podcastData.relatedArticleUrl];
 
+    /* ══════════════════════════════════════════════════════════════ */
     return (
-        <div className="antialiased min-h-screen bg-texture body-pb-nav lg:pb-0 relative">
-            <div className={`transition-all duration-300 ${isMiniPlayerActive ? 'hidden' : ''}`}>
-                <nav className="bg-[rgba(255,253,249,0.95)] backdrop-blur border-b border-brand-200 fixed w-full z-40 top-0 h-16 shadow-sm">
-                    <div className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 h-full flex justify-between items-center">
-                        <button onClick={() => router.back()} className="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest group">
-                            <div className="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center group-hover:bg-brand-100 transition-colors">
-                                <ArrowLeft size={16} />
+        <div style={{ minHeight:'100vh', background:BG, paddingBottom:100 }}>
+
+            {/* ── URLコピー通知 (glassmorphism toast) ──────────── */}
+            <div style={{
+                position:'fixed', top:20, left:'50%',
+                transform:`translateX(-50%) translateY(${showNotification ? 0 : -80}px)`,
+                zIndex:9000, transition:'transform .3s, opacity .3s',
+                opacity: showNotification ? 1 : 0, pointerEvents: showNotification ? 'auto' : 'none',
+            }}>
+                <div style={{
+                    display:'flex', alignItems:'center', gap:8,
+                    padding:'10px 20px', borderRadius:100,
+                    background:'rgba(26,48,36,.85)', backdropFilter:'blur(16px)',
+                    border:'1px solid rgba(142,207,178,.3)',
+                    boxShadow:'0 8px 32px rgba(0,0,0,.3)',
+                    color:LIME, fontSize:12, fontWeight:700,
+                }}>
+                    <CheckCircle2 size={14} /> URLをコピーしました
+                </div>
+            </div>
+
+            {/* ── ミニプレーヤー (glassmorphism) ───────────────── */}
+            {isMiniPlayerActive && (
+                <div
+                    style={{
+                        position:'fixed', bottom:80, right:16, zIndex:8000,
+                        width:300, padding:14, borderRadius:18, cursor:'pointer',
+                        background:'rgba(13,26,20,.88)', backdropFilter:'blur(20px)',
+                        border:'1px solid rgba(142,207,178,.2)',
+                        boxShadow:'0 12px 40px rgba(0,0,0,.5)',
+                        transition:'transform .2s',
+                    }}
+                    onClick={() => setIsMiniPlayerActive(false)}
+                >
+                    <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                        <img
+                            src={thumbUrl} alt=""
+                            style={{ width:48, height:48, borderRadius:10, objectFit:'cover', flexShrink:0 }}
+                            onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_PODCAST; }}
+                        />
+                        <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontSize:9, color:LIME, fontWeight:700, marginBottom:3, display:'flex', alignItems:'center', gap:4 }}>
+                                <Mic size={8} /> 再生中
                             </div>
-                            <span className="hidden sm:inline">戻る</span>
+                            <div style={{ fontSize:12, fontWeight:700, color:'#f8f6f3', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{podcastData.title}</div>
+                            <div style={{ fontSize:10, color:TM, marginTop:2 }}>{podcastData.authorName}</div>
+                        </div>
+                        <button
+                            onClick={e => { e.stopPropagation(); setIsMiniPlayerActive(false); router.back(); }}
+                            style={{ width:28, height:28, borderRadius:'50%', border:'1px solid rgba(255,255,255,.15)', background:'rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', color:'#f8f6f3', flexShrink:0 }}
+                        >
+                            <X size={12} />
                         </button>
-                        <div className="flex items-center gap-4">
-                            <button onClick={() => setIsMiniPlayerActive(true)} className="text-[#a09080] hover:text-brand-800 transition-colors flex items-center gap-1.5 text-xs font-bold tracking-widest bg-brand-50 px-3 py-1.5 rounded-full border border-brand-200 shadow-sm" title="プレーヤーを縮小する">
-                                <Minimize2 size={14} /> <span className="hidden sm:inline">ミニプレーヤー</span>
-                            </button>
-                            {canManage && (
-                                <div className="flex gap-2 border-l border-brand-200 pl-4 ml-1">
-                                    <Link href={`/media/podcasts/new?pid=${id}`} className="text-xs flex items-center bg-[#fffdf9] text-brand-700 px-3 py-1.5 border border-brand-300 rounded-sm font-bold hover:bg-brand-50 transition-colors shadow-sm tracking-widest">
-                                        <Edit size={12} className="mr-1" />編集
-                                    </Link>
-                                    <button onClick={handleDelete} className="text-xs flex items-center bg-red-50 text-red-600 px-3 py-1.5 border border-red-200 rounded-sm font-bold hover:bg-red-100 transition-colors shadow-sm tracking-widest">
-                                        <Trash2 size={12} className="mr-1" />削除
-                                    </button>
-                                </div>
-                            )}
-                        </div>
                     </div>
-                </nav>
+                </div>
+            )}
 
-                <main className="w-full max-w-[1600px] mx-auto pt-24 px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-8 lg:gap-10 xl:gap-12 pb-20">
-                    <div className="flex-1 min-w-0">
-                        <div className="w-full bg-[#1a110f] sm:rounded-md overflow-hidden shadow-2xl border border-brand-300 relative flex flex-col justify-center items-center p-6 sm:p-10 mb-6 group">
-                            <img src={thumbUrl} className="absolute inset-0 w-full h-full object-cover opacity-20 blur-xl scale-110 pointer-events-none" alt="" />
-                            
-                            {podcastData.isEmbed ? (
-                                <div className="w-full max-w-3xl relative z-10">
-                                    <iframe src={podcastData.audioUrl} className="w-full h-40 sm:h-60 rounded-md shadow-xl" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
-                                </div>
-                            ) : podcastData.audioUrl ? (
-                                <>
-                                    <img src={thumbUrl} className="w-40 h-40 sm:w-64 sm:h-64 object-cover rounded-md shadow-2xl border border-[#5c4a3d] mb-8 relative z-10" alt="" />
-                                    <audio src={podcastData.audioUrl} controls className="w-full max-w-2xl relative z-10 shadow-lg rounded-full"></audio>
-                                </>
-                            ) : (
-                                <div className="w-full max-w-3xl relative z-10">
-                                    <div className="w-full h-40 sm:h-60 rounded-md bg-black/50 border border-[#5c4a3d] flex flex-col items-center justify-center text-[#a09080] font-bold tracking-widest">
-                                        <Podcast className="text-3xl w-10 h-10 mb-3" />音声データは準備中です
-                                    </div>
+            <div style={{ maxWidth:1400, margin:'0 auto', padding:'24px 16px 40px' }}>
+
+                {/* ── ヘッダー行 ────────────────────────────────── */}
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:10 }}>
+                    <button onClick={() => router.back()} style={{
+                        display:'flex', alignItems:'center', gap:6,
+                        padding:'8px 16px', borderRadius:12, border:'none',
+                        background:BG, boxShadow:NEU_SM, cursor:'pointer',
+                        fontSize:11, fontWeight:700, color:T2,
+                    }}>
+                        <ArrowLeft size={14} /> 戻る
+                    </button>
+                    <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                        <button onClick={() => setIsMiniPlayerActive(true)} style={{
+                            display:'flex', alignItems:'center', gap:5,
+                            padding:'7px 14px', borderRadius:12, border:'none',
+                            background:BG, boxShadow:NEU_SM, cursor:'pointer',
+                            fontSize:10, fontWeight:700, color:T2,
+                        }}>
+                            <Minimize2 size={11} /> ミニプレーヤー
+                        </button>
+                        {canManage && (
+                            <>
+                                <Link href={`/media/podcasts/new?pid=${id}`} style={{
+                                    display:'flex', alignItems:'center', gap:5,
+                                    padding:'7px 14px', borderRadius:12, border:'none',
+                                    background:BG, boxShadow:NEU_SM,
+                                    fontSize:10, fontWeight:700, color:SAGE, textDecoration:'none',
+                                }}>
+                                    <Edit size={11} /> 編集
+                                </Link>
+                                <button onClick={handleDelete} style={{
+                                    display:'flex', alignItems:'center', gap:5,
+                                    padding:'7px 14px', borderRadius:12, border:'none',
+                                    background:BG, boxShadow:NEU_SM, cursor:'pointer',
+                                    fontSize:10, fontWeight:700, color:RED,
+                                }}>
+                                    <Trash2 size={11} /> 削除
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* ── メインレイアウト ───────────────────────────── */}
+                <div style={{ display:'flex', gap:20, alignItems:'flex-start', flexWrap:'wrap' }}>
+
+                    {/* ── 左カラム ──────────────────────────────── */}
+                    <div style={{ flex:'1 1 480px', minWidth:0 }}>
+
+                        {/* ─ プレーヤーヒーロー (glassmorphism dark) ─ */}
+                        <div style={{
+                            borderRadius:20, overflow:'hidden', marginBottom:20,
+                            background:'linear-gradient(135deg, #0d1a14 0%, #1a3024 100%)',
+                            boxShadow:'0 12px 48px rgba(0,0,0,.4), 0 0 0 1px rgba(74,124,89,.2)',
+                            position:'relative', padding:'32px 24px',
+                            display:'flex', flexDirection:'column', alignItems:'center', gap:24,
+                        }}>
+                            {/* Blurred background art */}
+                            <img
+                                src={thumbUrl} alt=""
+                                style={{
+                                    position:'absolute', inset:0, width:'100%', height:'100%',
+                                    objectFit:'cover', opacity:.12, filter:'blur(24px)', transform:'scale(1.15)',
+                                    pointerEvents:'none',
+                                }}
+                                onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_PODCAST; }}
+                            />
+
+                            {/* Album artwork */}
+                            {!podcastData.isEmbed && (
+                                <div style={{
+                                    position:'relative', zIndex:1,
+                                    width:160, height:160, borderRadius:16, overflow:'hidden',
+                                    boxShadow:'0 8px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08)',
+                                }}>
+                                    <img
+                                        src={thumbUrl} alt={podcastData.title}
+                                        style={{ width:'100%', height:'100%', objectFit:'cover' }}
+                                        onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_PODCAST; }}
+                                    />
                                 </div>
                             )}
-                        </div>
 
-                        <div className="pt-2">
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                {podcastData.tags?.map(tag => (
-                                    <span key={tag} className="bg-brand-50 border border-brand-200 text-[#b8860b] px-3 py-1 rounded-sm text-xs font-bold tracking-widest shadow-sm">#{tag}</span>
-                                ))}
-                            </div>
-                            
-                            <h1 className="text-2xl sm:text-3xl font-bold text-brand-900 leading-tight mb-5 font-serif tracking-wide">{podcastData.title || 'タイトルなし'}</h1>
-                            
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 sm:pb-6 mb-4 sm:mb-6 border-b border-brand-200">
-                                <Link href={`/user?uid=${podcastData.authorId}&tab=media`} className="flex items-center gap-3 sm:gap-4 group bg-[#fffdf9] pl-1 pr-4 sm:pl-2 sm:pr-6 py-1 sm:py-1.5 rounded-full border border-brand-200 shadow-sm hover:shadow-md transition-all hover:border-[#b8860b] min-w-0">
-                                    <img src={podcastData.authorIcon || 'https://via.placeholder.com/48?text=U'} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-[#fffdf9] shadow-sm object-cover group-hover:scale-105 transition-transform shrink-0 ml-0.5" alt={podcastData.authorName} />
-                                    <p className="font-bold text-brand-900 group-hover:text-[#b8860b] transition-colors text-sm sm:text-base flex items-center gap-1.5 truncate tracking-widest font-serif">
-                                        {podcastData.authorName || '名無し'} <CheckCircle2 size={12} className="text-[#d4af37]" />
-                                    </p>
-                                </Link>
-
-                                <div className="flex items-center gap-4 text-xs font-mono text-brand-500 bg-brand-50 px-4 py-2.5 rounded-sm border border-brand-200 shadow-inner shrink-0">
-                                    <span className="flex items-center gap-1.5 tracking-wider"><CalendarDays size={14} className="text-[#8b6a4f]" /> {dateStr}</span>
-                                    <span className="w-px h-3 bg-brand-300"></span>
-                                    <span className="flex items-center gap-1.5 tracking-wider"><Headphones size={14} className="text-[#8b6a4f]" /> {formatDuration(podcastData.duration)}</span>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 mb-8">
-                                <button onClick={handleLike} className={`flex items-center gap-2 border px-5 py-2.5 rounded-full text-sm font-bold shadow-sm tracking-widest transition-colors ${isLiked ? 'bg-red-50 border-red-200 text-brand-700' : 'bg-[#fffdf9] border-brand-200 text-brand-700 hover:bg-brand-50 hover:border-[#b8860b]'}`}>
-                                    <Heart className={isLiked ? 'fill-red-500 text-red-500' : 'text-brand-400'} size={18} /> <span className="min-w-[1rem] text-center">{likesCount}</span>
-                                </button>
-                                <button onClick={handleShare} className="flex items-center gap-2 bg-[#fffdf9] border border-brand-200 px-5 py-2.5 rounded-full text-sm font-bold text-brand-700 hover:bg-brand-50 hover:border-[#b8860b] shadow-sm tracking-widest transition-colors">
-                                    <Share2 size={18} className="text-brand-400" /> シェア
-                                </button>
-                            </div>
-
-                            <div className="mb-12 bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm relative">
-                                <h3 className="text-lg font-bold text-brand-900 mb-6 flex items-center font-serif tracking-widest border-b border-brand-100 pb-4">
-                                    <div className="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center border border-brand-200 text-brand-400 shadow-inner mr-3 shrink-0">
-                                        <AlignLeft size={14} />
-                                    </div>
-                                    エピソードの概要
-                                </h3>
-                                
-                                <div className={`relative transition-all duration-300 ${!isDescExpanded ? 'max-h-48 overflow-hidden' : ''}`}>
-                                    <div className="prose prose-stone max-w-none text-brand-700 leading-relaxed text-sm sm:text-base" dangerouslySetInnerHTML={{ __html: formatText(podcastData.description) }}></div>
-
-                                    {relatedUrls.length > 0 && (
-                                        <div className="mt-8 pt-6 border-t border-brand-100 pb-2">
-                                            <h3 className="text-base font-bold text-brand-900 mb-4 flex items-center font-serif tracking-widest">
-                                                <div className="w-7 h-7 rounded-full bg-brand-50 flex items-center justify-center border border-brand-200 text-brand-400 shadow-inner mr-3 shrink-0">
-                                                    <Share2 size={12} />
-                                                </div>
-                                                関連記事
-                                            </h3>
-                                            <div className="space-y-4">
-                                                {relatedUrls.map((url, idx) => {
-                                                    const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
-                                                    if (noteMatch && noteMatch[1]) {
-                                                        return <iframe key={idx} className="w-full max-w-full rounded-sm border border-brand-200 shadow-sm" src={`https://note.com/embed/notes/${noteMatch[1]}`} style={{ border: 0, display: "block", padding: 0, margin: 0, width: "100%", height: "260px" }}></iframe>;
-                                                    } else {
-                                                        return (
-                                                            <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="block p-3 bg-brand-50 border border-brand-200 rounded-sm hover:border-[#b8860b] transition-colors text-sm text-brand-700 font-bold truncate shadow-sm">
-                                                                <Share2 size={12} className="inline mr-2 text-[#8b6a4f]" />{url}
-                                                            </a>
-                                                        );
-                                                    }
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {!isDescExpanded && (
-                                        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#fffdf9] to-transparent pointer-events-none"></div>
-                                    )}
-                                </div>
-                                
-                                <button onClick={() => setIsDescExpanded(!isDescExpanded)} className="mt-2 text-[#b8860b] hover:text-[#8b6508] text-sm font-bold tracking-widest transition-colors flex items-center border border-transparent hover:border-[#b8860b] px-3 py-1.5 rounded-full bg-brand-50 shadow-sm">
-                                    {isDescExpanded ? '一部を表示' : 'もっと見る'}
-                                </button>
-                            </div>
-
-                            <div className="mb-12 bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm">
-                                <h3 className="text-xl font-bold text-brand-900 mb-8 flex items-center font-serif tracking-widest border-b border-brand-100 pb-4">
-                                    <MessageSquare className="mr-3 text-brand-400 w-6 h-6" />コメント <span className="text-base font-normal text-brand-500 ml-2">({podcastData.allowComments === false ? 0 : comments.length})</span>
-                                </h3>
-
-                                {podcastData.allowComments === false ? (
-                                    <div className="text-center py-6 text-brand-400 text-sm tracking-widest border border-dashed border-brand-200 bg-brand-50 rounded-sm">
-                                        <MessageSquare className="inline mr-2 w-4 h-4" />コメントはオフになっています
-                                    </div>
+                            {/* Player */}
+                            <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:560 }}>
+                                {podcastData.isEmbed ? (
+                                    <iframe
+                                        src={podcastData.audioUrl}
+                                        style={{ width:'100%', height:160, borderRadius:14, border:'none' }}
+                                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                    />
+                                ) : podcastData.audioUrl ? (
+                                    <audio
+                                        src={podcastData.audioUrl} controls
+                                        style={{ width:'100%', borderRadius:50, background:'rgba(255,255,255,.08)' }}
+                                    />
                                 ) : (
-                                    <>
-                                        {!user || user.isAnonymous ? (
-                                            <div className="w-full text-center py-4 bg-brand-50 border border-brand-200 rounded-sm text-sm font-bold text-brand-600 tracking-widest mb-10">
-                                                コメントを投稿するには<Link href="/login" className="underline hover:text-brand-800 ml-1">ログイン</Link>してください。
-                                            </div>
-                                        ) : (
-                                            <div className="flex gap-4 mb-10 items-start">
-                                                <img src={myProfile?.photoURL || 'https://via.placeholder.com/40?text=U'} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-brand-200 shadow-sm object-cover" alt="" />
-                                                <div className="flex-1 bg-brand-50 p-1 rounded-sm border border-brand-200 focus-within:border-[#b8860b] focus-within:ring-1 focus-within:ring-[#b8860b] transition-all shadow-inner">
-                                                    <textarea value={newComment} onChange={e => setNewComment(e.target.value)} rows={2} className="w-full bg-transparent resize-none text-sm p-3 outline-none transition-colors text-brand-800 placeholder-brand-400" placeholder="エピソードの感想や質問をコメントしてみましょう..."></textarea>
-                                                    <div className="flex justify-between items-center p-2 border-t border-brand-200/50 bg-[#fffdf9]">
-                                                        <label className="flex items-center gap-2 text-[10px] sm:text-xs font-bold text-brand-600 cursor-pointer group px-2 py-1 hover:bg-brand-50 rounded-sm transition-colors">
-                                                            <input type="checkbox" checked={isPrivateComment} onChange={e => setIsPrivateComment(e.target.checked)} className="rounded border-brand-300 text-brand-600 focus:ring-brand-500" />
-                                                            <Lock size={12} className="text-brand-400 group-hover:text-brand-600 transition-colors" /> 投稿者にのみ公開する
-                                                        </label>
-                                                        <button onClick={handlePostComment} disabled={isSubmittingComment || !newComment.trim()} className="bg-[#3e2723] hover:bg-[#2a1a17] text-[#d4af37] px-6 py-2 rounded-sm text-xs font-bold transition-colors shadow-md disabled:opacity-50 tracking-widest border border-[#b8860b] flex items-center justify-center">
-                                                            {isSubmittingComment ? <div className="w-4 h-4 border-2 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div> : '送信'}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="space-y-6">
-                                            {comments.length === 0 ? (
-                                                <div className="text-center py-10 text-brand-400 text-sm tracking-widest border border-dashed border-brand-200 bg-brand-50 rounded-sm">まだコメントはありません。<br />最初の感想を伝えてみましょう！</div>
-                                            ) : (
-                                                comments.map(c => {
-                                                    const d = c.createdAt ? new Date(c.createdAt.toMillis()) : new Date();
-                                                    const dateString = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                                                    const canDelete = isAdmin || (user && user.uid === c.userId) || isOwner;
-                                                    
-                                                    let bgClass = "bg-brand-50 border-brand-100";
-                                                    let content = <p className="text-sm text-brand-700 leading-relaxed whitespace-pre-wrap">{c.text}</p>;
-
-                                                    if (c.isPrivate) {
-                                                        const isCommentOwner = user && user.uid === c.userId;
-                                                        if (isAdmin || isCommentOwner || isOwner) {
-                                                            bgClass = "bg-[#fffdf9] border-[#b8860b] border-2";
-                                                            content = (
-                                                                <>
-                                                                    <div className="mb-2 text-[10px] sm:text-xs text-[#b8860b] font-bold tracking-widest flex items-center gap-1 border-b border-brand-200 pb-1 w-fit"><Lock size={10} /> 投稿者にのみ公開されています</div>
-                                                                    <p className="text-sm text-brand-900 leading-relaxed whitespace-pre-wrap">{c.text}</p>
-                                                                </>
-                                                            );
-                                                        } else {
-                                                            content = <div className="py-2 text-xs sm:text-sm text-brand-400 italic flex items-center gap-2 tracking-widest font-bold"><Lock size={12} /> このコメントは投稿者のみ公開されています</div>;
-                                                        }
-                                                    }
-
-                                                    return (
-                                                        <div key={c.id} className="flex gap-4 group">
-                                                            <img src={c.userIcon || 'https://via.placeholder.com/40?text=U'} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-brand-200 object-cover shrink-0 shadow-sm mt-1" alt="" />
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className={`${bgClass} border p-4 rounded-sm rounded-tl-none shadow-sm relative`}>
-                                                                    <div className="flex justify-between items-start mb-2">
-                                                                        <div className="flex items-center gap-3">
-                                                                            <span className="font-bold text-brand-900 text-sm tracking-widest">{c.userName || '名無し'}</span>
-                                                                            <span className="text-[10px] text-brand-400 font-mono">{dateString}</span>
-                                                                        </div>
-                                                                        {canDelete && <button onClick={() => handleDeleteComment(c.id)} className="text-red-400 hover:text-red-600 text-sm transition-colors ml-4"><Trash2 size={14} /></button>}
-                                                                    </div>
-                                                                    {content}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })
-                                            )}
-                                        </div>
-                                    </>
+                                    <div style={{
+                                        height:80, borderRadius:14,
+                                        border:'1px solid rgba(142,207,178,.2)',
+                                        background:'rgba(255,255,255,.05)',
+                                        display:'flex', alignItems:'center', justifyContent:'center',
+                                        gap:8, color:TM, fontSize:12, fontWeight:700,
+                                    }}>
+                                        <Mic size={16} /> 音声データは準備中です
+                                    </div>
                                 )}
                             </div>
                         </div>
+
+                        {/* ─ タグ ───────────────────────────────── */}
+                        {podcastData.tags?.length > 0 && (
+                            <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:14 }}>
+                                {podcastData.tags.map(tag => (
+                                    <span key={tag} style={{
+                                        padding:'4px 10px', borderRadius:8,
+                                        background:BG, boxShadow:NEU_SM,
+                                        fontSize:9, fontWeight:700, color:SAGE, letterSpacing:'.06em',
+                                    }}>#{tag}</span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* ─ タイトル ───────────────────────────── */}
+                        <h1 style={{ fontSize:20, fontWeight:800, color:T1, lineHeight:1.4, margin:'0 0 16px' }}>
+                            {podcastData.title || 'タイトルなし'}
+                        </h1>
+
+                        {/* ─ 投稿者 + メタ情報 + アクション ────── */}
+                        <div style={{
+                            display:'flex', alignItems:'center', justifyContent:'space-between',
+                            flexWrap:'wrap', gap:10,
+                            paddingBottom:20, marginBottom:20,
+                            borderBottom:'1px solid rgba(0,0,0,.06)',
+                        }}>
+                            <Link href={`/user?uid=${podcastData.authorId}&tab=media`} style={{
+                                display:'flex', alignItems:'center', gap:10,
+                                padding:'8px 16px 8px 8px', borderRadius:100,
+                                background:BG, boxShadow:NEU_SM, textDecoration:'none',
+                            }}>
+                                <img
+                                    src={podcastData.authorIcon || FALLBACK_AVATAR} alt={podcastData.authorName}
+                                    style={{ width:36, height:36, borderRadius:'50%', objectFit:'cover', border:`2px solid ${SAGE}` }}
+                                    onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_AVATAR; }}
+                                />
+                                <div>
+                                    <div style={{ fontSize:12, fontWeight:700, color:T1 }}>{podcastData.authorName || '名無し'}</div>
+                                    <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:2 }}>
+                                        <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:9, color:TM }}>
+                                            <CalendarDays size={9} /> {dateStr}
+                                        </span>
+                                        {podcastData.duration ? (
+                                            <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:9, color:TM }}>
+                                                <Clock size={9} /> {formatDuration(podcastData.duration)}
+                                            </span>
+                                        ) : null}
+                                    </div>
+                                </div>
+                            </Link>
+
+                            <div style={{ display:'flex', gap:8 }}>
+                                <button onClick={handleLike} style={{
+                                    display:'flex', alignItems:'center', gap:6,
+                                    padding:'8px 16px', borderRadius:12, border:'none', cursor:'pointer',
+                                    background: isLiked ? 'rgba(217,112,112,.12)' : BG,
+                                    boxShadow: isLiked ? `inset 0 0 0 2px ${RED}` : NEU_SM,
+                                    fontSize:12, fontWeight:700, color: isLiked ? RED : T2, transition:'all .2s',
+                                }}>
+                                    <Heart size={14} style={{ fill: isLiked ? RED : 'none', stroke: isLiked ? RED : T2 }} />
+                                    {likesCount}
+                                </button>
+                                <button onClick={handleShare} style={{
+                                    display:'flex', alignItems:'center', gap:6,
+                                    padding:'8px 16px', borderRadius:12, border:'none', cursor:'pointer',
+                                    background:BG, boxShadow:NEU_SM, fontSize:12, fontWeight:700, color:T2,
+                                }}>
+                                    <Share2 size={14} /> シェア
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* ─ 概要 ───────────────────────────────── */}
+                        <div style={{ background:BG, boxShadow:NEU, borderRadius:18, padding:'20px 22px', marginBottom:16 }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16, paddingBottom:12, borderBottom:'1px solid rgba(0,0,0,.06)' }}>
+                                <div style={{ width:32, height:32, borderRadius:'50%', background:BG, boxShadow:NEU_SM, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                    <AlignLeft size={14} color={SAGE} />
+                                </div>
+                                <span style={{ fontSize:13, fontWeight:800, color:T1 }}>エピソードの概要</span>
+                            </div>
+
+                            <div style={{ position:'relative', overflow: isDescExpanded ? 'visible' : 'hidden', maxHeight: isDescExpanded ? 'none' : 180 }}>
+                                <div style={{ fontSize:13, color:T2, lineHeight:1.8 }}
+                                    dangerouslySetInnerHTML={{ __html: formatText(podcastData.description) || '<span style="color:#b0a89e">概要はありません</span>' }}
+                                />
+
+                                {/* 関連記事 */}
+                                {relatedUrls.length > 0 && (
+                                    <div style={{ marginTop:20, paddingTop:16, borderTop:'1px solid rgba(0,0,0,.06)' }}>
+                                        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:12, fontSize:11, fontWeight:700, color:T1 }}>
+                                            <ExternalLink size={12} color={SAGE} /> 関連記事
+                                        </div>
+                                        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                                            {relatedUrls.map((url, idx) => {
+                                                const noteMatch = url.match(/note\.com\/.*?n\/(n[a-zA-Z0-9]+)/) || url.match(/note\.com\/embed\/notes\/(n[a-zA-Z0-9]+)/);
+                                                if (noteMatch?.[1]) {
+                                                    return <iframe key={idx} src={`https://note.com/embed/notes/${noteMatch[1]}`} style={{ width:'100%', height:260, border:'none', borderRadius:10, display:'block' }} />;
+                                                }
+                                                return (
+                                                    <a key={idx} href={url} target="_blank" rel="noopener noreferrer" style={{
+                                                        display:'flex', alignItems:'center', gap:8,
+                                                        padding:'8px 12px', borderRadius:10,
+                                                        background:BG, boxShadow:NEU_SM,
+                                                        fontSize:11, color:SAGE, fontWeight:700, textDecoration:'none',
+                                                        overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis',
+                                                    }}>
+                                                        <ExternalLink size={11} /> {url}
+                                                    </a>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!isDescExpanded && (
+                                    <div style={{ position:'absolute', bottom:0, left:0, right:0, height:60, background:`linear-gradient(to top, ${BG}, transparent)` }} />
+                                )}
+                            </div>
+
+                            <button onClick={() => setIsDescExpanded(!isDescExpanded)} style={{
+                                display:'flex', alignItems:'center', gap:4,
+                                marginTop:12, padding:'6px 14px', borderRadius:10, border:'none',
+                                background:BG, boxShadow:NEU_SM, cursor:'pointer',
+                                fontSize:10, fontWeight:700, color:SAGE,
+                            }}>
+                                {isDescExpanded ? <><ChevronUp size={11} /> 閉じる</> : <><ChevronDown size={11} /> もっと見る</>}
+                            </button>
+                        </div>
+
+                        {/* ─ コメント ───────────────────────────── */}
+                        <div style={{ background:BG, boxShadow:NEU, borderRadius:18, padding:'20px 22px' }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16, paddingBottom:12, borderBottom:'1px solid rgba(0,0,0,.06)' }}>
+                                <div style={{ width:32, height:32, borderRadius:'50%', background:BG, boxShadow:NEU_SM, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                    <MessageSquare size={14} color={SAGE} />
+                                </div>
+                                <span style={{ fontSize:13, fontWeight:800, color:T1 }}>コメント</span>
+                                {podcastData.allowComments !== false && (
+                                    <span style={{ fontSize:11, color:TM }}>({comments.length})</span>
+                                )}
+                            </div>
+
+                            {podcastData.allowComments === false ? (
+                                <div style={{ textAlign:'center', padding:24, color:TM, fontSize:12 }}>
+                                    <MessageSquare size={20} style={{ margin:'0 auto 8px', opacity:.5 }} />
+                                    コメントはオフになっています
+                                </div>
+                            ) : (
+                                <>
+                                    {!user || user.isAnonymous ? (
+                                        <div style={{ textAlign:'center', padding:'14px', borderRadius:12, background:BG, boxShadow:NEU_IN, fontSize:12, color:TM, marginBottom:16 }}>
+                                            <Link href="/login" style={{ color:SAGE, fontWeight:700, textDecoration:'none' }}>ログイン</Link>してコメントを投稿
+                                        </div>
+                                    ) : (
+                                        <div style={{ display:'flex', gap:10, marginBottom:20, alignItems:'flex-start' }}>
+                                            <img
+                                                src={myProfile?.photoURL || FALLBACK_AVATAR} alt=""
+                                                style={{ width:36, height:36, borderRadius:'50%', objectFit:'cover', flexShrink:0, border:`2px solid ${SAGE}` }}
+                                                onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_AVATAR; }}
+                                            />
+                                            <div style={{ flex:1, background:BG, boxShadow:NEU_IN, borderRadius:14, overflow:'hidden' }}>
+                                                <textarea
+                                                    value={newComment} onChange={e => setNewComment(e.target.value)} rows={2}
+                                                    placeholder="エピソードの感想や質問を..."
+                                                    style={{ width:'100%', padding:'10px 14px', border:'none', background:'transparent', resize:'none', fontSize:12, color:T1, outline:'none', fontFamily:'inherit', lineHeight:1.6, boxSizing:'border-box' }}
+                                                />
+                                                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px', borderTop:'1px solid rgba(0,0,0,.06)' }}>
+                                                    <label style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, fontWeight:700, color:TM, cursor:'pointer' }}>
+                                                        <input type="checkbox" checked={isPrivateComment} onChange={e => setIsPrivateComment(e.target.checked)} style={{ accentColor: SAGE }} />
+                                                        <Lock size={9} /> 投稿者のみ
+                                                    </label>
+                                                    <button onClick={handlePostComment} disabled={isSubmittingComment || !newComment.trim()}
+                                                        style={{
+                                                            display:'flex', alignItems:'center', gap:5,
+                                                            padding:'6px 14px', borderRadius:10, border:'none',
+                                                            background: newComment.trim() ? SB : BG,
+                                                            color: newComment.trim() ? LIME : TM,
+                                                            boxShadow: newComment.trim() ? 'none' : NEU_SM,
+                                                            fontSize:10, fontWeight:700,
+                                                            cursor: newComment.trim() ? 'pointer' : 'default',
+                                                            opacity: isSubmittingComment ? .6 : 1, transition:'all .2s',
+                                                        }}>
+                                                        {isSubmittingComment ? <Loader2 size={11} style={{ animation:'spin .8s linear infinite' }} /> : <Send size={11} />} 送信
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                                        {comments.length === 0 ? (
+                                            <div style={{ textAlign:'center', padding:24, borderRadius:12, background:BG, boxShadow:NEU_IN, fontSize:11, color:TM }}>
+                                                まだコメントはありません。最初の感想を書いてみましょう！
+                                            </div>
+                                        ) : comments.map(c => {
+                                            const d = c.createdAt ? new Date(c.createdAt.toMillis ? c.createdAt.toMillis() : c.createdAt) : new Date();
+                                            const ds = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                                            const canDelete = isAdmin || (user && user.uid === c.userId) || isOwner;
+                                            const canSeePrivate = isAdmin || (user && user.uid === c.userId) || isOwner;
+                                            if (c.isPrivate && !canSeePrivate) return (
+                                                <div key={c.id} style={{ display:'flex', alignItems:'center', gap:6, padding:'10px 14px', borderRadius:12, background:BG, boxShadow:NEU_SM, fontSize:10, color:TM, fontStyle:'italic' }}>
+                                                    <Lock size={10} /> このコメントは投稿者のみ公開されています
+                                                </div>
+                                            );
+                                            return (
+                                                <div key={c.id} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+                                                    <img src={c.userIcon || FALLBACK_AVATAR} alt=""
+                                                        style={{ width:32, height:32, borderRadius:'50%', objectFit:'cover', flexShrink:0, marginTop:2, border:`2px solid ${BG}`, boxShadow:NEU_SM }}
+                                                        onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_AVATAR; }}
+                                                    />
+                                                    <div style={{ flex:1, minWidth:0 }}>
+                                                        <div style={{ padding:'10px 14px', borderRadius:14, background:BG, boxShadow: c.isPrivate ? `inset 0 0 0 1.5px ${RED}` : NEU_SM }}>
+                                                            {c.isPrivate && <div style={{ fontSize:9, color:RED, fontWeight:700, marginBottom:6, display:'flex', alignItems:'center', gap:4 }}><Lock size={8} /> 投稿者のみ公開</div>}
+                                                            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+                                                                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                                                                    <span style={{ fontSize:12, fontWeight:700, color:T1 }}>{c.userName || '名無し'}</span>
+                                                                    <span style={{ fontSize:9, color:TM }}>{ds}</span>
+                                                                </div>
+                                                                {canDelete && <button onClick={() => handleDeleteComment(c.id)} style={{ border:'none', background:'transparent', cursor:'pointer', color:TM, padding:2, display:'flex' }}><Trash2 size={12} /></button>}
+                                                            </div>
+                                                            <p style={{ fontSize:12, color:T2, lineHeight:1.7, margin:0, whiteSpace:'pre-wrap' }}>{c.text}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Right: Related */}
-                    <div className="w-full lg:w-[320px] xl:w-[400px] shrink-0">
-                        <h3 className="font-bold text-brand-800 mb-5 tracking-widest text-sm border-b border-brand-200 pb-2 flex items-center"><Podcast size={16} className="mr-2 text-[#b8860b]" />新着のCAST</h3>
-                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    {/* ── 右サイドバー: 関連CAST ────────────────── */}
+                    <div style={{ width:'100%', maxWidth:320, flexShrink:0 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
+                            <Mic size={14} color={SAGE} />
+                            <span style={{ fontSize:12, fontWeight:800, color:T1 }}>新着のCAST</span>
+                        </div>
+                        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
                             {relatedPodcasts.map(p => {
-                                const m = p.duration ? Math.floor(p.duration / 60) : 0;
-                                const s = p.duration ? Math.floor(p.duration % 60) : 0;
-                                const durStr = p.duration ? `${m}:${s < 10 ? '0'+s : s}` : '';
+                                const dur = p.duration ? `${Math.floor(p.duration/60)}:${String(Math.floor(p.duration%60)).padStart(2,'0')}` : '';
                                 return (
-                                    <Link key={p.id} href={`/media/podcasts/detail?id=${p.id}`} className="flex flex-col group block transition-all w-full">
-                                        <div className="w-full aspect-square rounded-xl bg-[#e8dfd1] overflow-hidden relative shadow-sm mb-2 border border-[#e8dfd1]">
-                                            <img src={p.thumbnailUrl || 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?q=80&w=640&auto=format&fit=crop'} className="w-full h-full object-cover opacity-95 group-hover:scale-105 group-hover:opacity-100 transition-transform duration-500" alt={p.title} />
-                                            {durStr && (
-                                                <div className="absolute bottom-1.5 right-1.5 bg-black/70 backdrop-blur-sm text-white text-[9px] font-sans font-bold px-1.5 py-0.5 rounded tracking-widest leading-none shadow-sm">{durStr}</div>
-                                            )}
-                                        </div>
-                                        <div className="px-0.5">
-                                            <h4 className="text-xs sm:text-sm font-bold text-[#3e2723] line-clamp-2 leading-tight group-hover:text-[#b8860b] transition-colors mb-0.5 tracking-wide font-serif">{p.title || 'タイトルなし'}</h4>
-                                            <p className="text-[10px] text-[#725b3f] line-clamp-1 truncate tracking-wide font-medium">{p.authorName || '名無し'}</p>
+                                    <Link key={p.id} href={`/media/podcasts/detail?id=${p.id}`} style={{ textDecoration:'none' }}>
+                                        <div style={{ background:BG, boxShadow:NEU_SM, borderRadius:14, overflow:'hidden', transition:'box-shadow .2s' }}
+                                            onMouseEnter={e => (e.currentTarget.style.boxShadow = NEU)}
+                                            onMouseLeave={e => (e.currentTarget.style.boxShadow = NEU_SM)}
+                                        >
+                                            <div style={{ width:'100%', aspectRatio:'1', position:'relative', overflow:'hidden' }}>
+                                                <img src={p.thumbnailUrl || FALLBACK_PODCAST} alt={p.title}
+                                                    style={{ width:'100%', height:'100%', objectFit:'cover' }}
+                                                    onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_PODCAST; }}
+                                                />
+                                                {dur && (
+                                                    <span style={{ position:'absolute', bottom:6, right:6, background:'rgba(0,0,0,.7)', color:'#fff', fontSize:8, fontWeight:700, padding:'2px 5px', borderRadius:5, fontFamily:'monospace' }}>{dur}</span>
+                                                )}
+                                            </div>
+                                            <div style={{ padding:'8px 10px 10px' }}>
+                                                <div style={{ fontSize:11, fontWeight:700, color:T1, lineHeight:1.4, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{p.title || 'タイトルなし'}</div>
+                                                <div style={{ fontSize:9, color:TM, marginTop:3 }}>{p.authorName || '名無し'}</div>
+                                            </div>
                                         </div>
                                     </Link>
                                 );
                             })}
+                            {relatedPodcasts.length === 0 && (
+                                <div style={{ gridColumn:'1/-1', textAlign:'center', padding:20, fontSize:11, color:TM }}>他のCAST配信はありません</div>
+                            )}
                         </div>
                     </div>
-                </main>
-            </div>
-
-            {/* Mini Player UI */}
-            <div className={`fixed bottom-4 right-4 sm:bottom-8 sm:right-8 w-[calc(100%-2rem)] sm:w-80 bg-[#1a110f] rounded-md shadow-2xl border border-[#5c4a3d] z-[8000] p-3 cursor-pointer hover:scale-105 transition-all duration-300 ${!isMiniPlayerActive ? 'hidden' : 'translate-y-0 opacity-100'}`} onClick={() => setIsMiniPlayerActive(false)}>
-                <div className="flex items-center gap-3 sm:gap-4 relative z-10">
-                    <img src={thumbUrl} className="w-14 h-14 rounded-sm object-cover border border-[#3e2723] shadow-md shrink-0" alt="" />
-                    <div className="flex-1 min-w-0">
-                        <p className="text-[9px] text-[#d4af37] font-bold tracking-widest mb-0.5 flex items-center gap-1"><Podcast size={10} /> 再生中</p>
-                        <p className="text-sm font-bold text-[#f7f5f0] truncate font-serif tracking-wide leading-snug">{podcastData.title}</p>
-                        <p className="text-[10px] text-[#a09080] truncate mt-1 tracking-widest font-bold">{podcastData.authorName}</p>
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); setIsMiniPlayerActive(false); router.back(); }} className="w-8 h-8 rounded-full bg-[#3e2723] hover:bg-red-600 text-white transition-colors flex items-center justify-center border border-[#5c4a3d] shrink-0 shadow-md">
-                        <X size={14} />
-                    </button>
                 </div>
             </div>
 
-            <div className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[9000] transition-all duration-300 ${showNotification ? 'translate-y-0 opacity-100' : '-translate-y-20 opacity-0 pointer-events-none'}`}>
-                <div className="bg-[#3e2723] text-[#f7f5f0] px-6 py-3 rounded-sm shadow-2xl flex items-center gap-3 backdrop-blur-md bg-opacity-95 border border-[#8b6a4f]">
-                    <CheckCircle2 className="text-[#d4af37] w-5 h-5" />
-                    <span className="text-sm font-bold tracking-widest font-serif">URLをコピーしました！</span>
-                </div>
-            </div>
+            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
     );
 }
