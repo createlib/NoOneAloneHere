@@ -201,11 +201,12 @@ function ArticleEditorInner() {
         if (!editor || !user) return;
         const interval = setInterval(() => {
             if (editor.getHTML() && title) {
-                handleSave('draft', true);
+                // 公開済み記事は公開保存、下書きは下書き保存（statusを維持）
+                handleSave(status, true);
             }
         }, 30000);
         return () => clearInterval(interval);
-    }, [editor, user, title]);
+    }, [editor, user, title, status]);
 
     /* ── Save handler ────────────────────────────────────────── */
     const handleSave = useCallback(async (targetStatus: 'draft'|'published', silent = false) => {
