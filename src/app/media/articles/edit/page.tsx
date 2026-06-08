@@ -27,9 +27,11 @@ import {
     Image as ImageIcon, Youtube as YtIcon, Minus, Table as TableIcon,
     AlignLeft, AlignCenter, Plus, X, Eye, ChevronDown, MessageSquare,
     BookOpen, Hash, Upload, Loader2, FileText, PenLine, Underline as UnderlineIcon,
-    Type, Pilcrow, SquareCode
+    Type, Pilcrow, SquareCode, Sparkles,
 } from 'lucide-react';
 import VisibilityPicker, { VisibilityMode } from '@/components/VisibilityPicker';
+import AiUpdateModal from '@/components/AiUpdateModal';
+import { fetchAiUpdates, DiffSuggestion } from '@/lib/aiArticleUpdater';
 
 /* ── Design tokens ─────────────────────────────────────────────── */
 const BG   = '#f8f6f3';
@@ -98,6 +100,11 @@ function ArticleEditorInner() {
     const [showDrafts, setShowDrafts] = useState(false);
     const [drafts, setDrafts] = useState<any[]>([]);
     const [draftsLoading, setDraftsLoading] = useState(false);
+
+    // AI 更新チェック
+    const [showAiModal, setShowAiModal]       = useState(false);
+    const [aiLoading, setAiLoading]           = useState(false);
+    const [aiSuggestions, setAiSuggestions]   = useState<DiffSuggestion[]>([]);
 
     const [myProfile, setMyProfile] = useState<any>(null);
     const coverInputRef = useRef<HTMLInputElement>(null);
@@ -389,6 +396,67 @@ function ArticleEditorInner() {
         finally { setDraftsLoading(false); }
     };
 
+    /* ── AI 更新チェック ─────────────────────────────────────── */
+    const handleAiCheck = async () => {
+        if (!editor) return;
+        setShowAiModal(true);
+        setAiLoading(true);
+        setAiSuggestions([]);
+        try {
+            const results = await fetchAiUpdates(title, editor.getHTML(), tags);
+            setAiSuggestions(results.map(s => ({ ...s, approved: null })));
+        } catch (e) {
+            console.error('AI更新チェックエラー:', e);
+            alert('AI分析中にエラーが発生しました');
+            setShowAiModal(false);
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    const handleAiApprove = (id: string) =>
+        setAiSuggestions(prev => prev.map(s => s.id === id ? { ...s, approved: true } : s));
+    const handleAiReject = (id: string) =>
+        setAiSuggestions(prev => prev.map(s => s.id === id ? { ...s, approved: false } : s));
+    const handleAiApproveAll = () =>
+        setAiSuggestions(prev => prev.map(s => ({ ...s, approved: true })));
+    const handleAiRejectAll = () =>
+        setAiSuggestions(prev => prev.map(s => ({ ...s, approved: false })));
+
+    const handleAiApply = async (approved: DiffSuggestion[], notifyFollowers: boolean) => {
+        if (!editor) return;
+        // 承認された変更をエディタに適用
+        for (const s of approved) {
+            if (s.type === 'title_update') {
+                setTitle(s.proposedText);
+            } else if (s.type === 'new_section') {
+                // 末尾にセクションを追加
+                editor.chain().focus().setContent(
+                    editor.getHTML() + `<h2>${s.section}</h2><p>${s.proposedText.replace(/\n/g, '</p><p>')}</p>`
+                ).run();
+            } else {
+                // 本文内の文字列を置き換え
+                const currentHtml = editor.getHTML();
+                if (currentHtml.includes(s.originalText)) {
+                    editor.commands.setContent(currentHtml.replace(s.originalText, s.proposedText));
+                } else {
+                    // 見つからない場合は末尾に追記
+                    editor.chain().focus().setContent(
+                        currentHtml + `<p><em>（AI追記）${s.proposedText}</em></p>`
+                    ).run();
+                }
+            }
+        }
+        setShowAiModal(false);
+        // 自動保存
+        await handleSave('draft', true);
+        if (notifyFollowers) {
+            alert(`${approved.length} 件の変更を適用しました。\n公開設定から「公開」を押すとフォロワーに通知されます。`);
+        } else {
+            alert(`${approved.length} 件の変更を適用し、下書き保存しました。`);
+        }
+    };
+
     if (!editor) return null;
 
     /* ══════════════════════════════════════════════════════════════ *
@@ -420,6 +488,21 @@ function ArticleEditorInner() {
                         }}>
                         <FileText size={12} /> 下書き一覧
                     </button>
+                    {/* AI更新チェック（既存記事編集時のみ）*/}
+                    {editId && (
+                        <button
+                            onClick={handleAiCheck}
+                            style={{
+                                display:'flex', alignItems:'center', gap:4,
+                                padding:'7px 12px', borderRadius:10, border:'none',
+                                background:'#f0ecfc', boxShadow:NEU_SM,
+                                fontSize:11, fontWeight:700, color:'#7c5cbf', cursor:'pointer',
+                            }}
+                            title="AIが最新情報を収集し、記事の更新箇所を提案します"
+                        >
+                            <Sparkles size={12} /> AI更新チェック
+                        </button>
+                    )}
                     <button onClick={() => handleSave('draft')} disabled={saving}
                         style={{
                             display:'flex', alignItems:'center', gap:4,
@@ -780,6 +863,21 @@ function ArticleEditorInner() {
                 .tiptap s { text-decoration: line-through; color: ${TM}; }
                 .tiptap iframe { border-radius: 10px; margin: 16px 0; }
             `}</style>
+
+            {/* AI 更新チェックモーダル */}
+            {showAiModal && (
+                <AiUpdateModal
+                    articleTitle={title}
+                    suggestions={aiSuggestions}
+                    isLoading={aiLoading}
+                    onClose={() => setShowAiModal(false)}
+                    onApply={handleAiApply}
+                    onApprove={handleAiApprove}
+                    onReject={handleAiReject}
+                    onApproveAll={handleAiApproveAll}
+                    onRejectAll={handleAiRejectAll}
+                />
+            )}
         </div>
     );
 }
