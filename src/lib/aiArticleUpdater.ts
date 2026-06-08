@@ -1,8 +1,18 @@
 /**
  * AI記事更新チェック — 呼び出しモジュール
  *
- * Phase 1: モックデータを返すスタブ実装
- * Phase 2: 下の TODO コメント箇所に Gemini API 呼び出しを追加するだけで移行可能
+ * 【現在の状態】
+ *   Phase 0: UI のみ実装済み。AI や Web 検索は一切呼び出していない。
+ *            ボタンを押すと「提案なし」をそのまま返す（正直な動作）。
+ *
+ * 【Phase 2 実装時の正しい設計指針】
+ *   - 「一般公開されている情報」が対象:
+ *       技術ドキュメント、料金ページ、法律・制度、製品仕様 など
+ *   - 「独自コンテンツ」は対象外:
+ *       自社開発システムの記事、体験記、コラム、個人の考察 など
+ *   - AI に記事を渡す前に「更新対象かどうか」を記事カテゴリ/タグで判定する
+ *   - 検索結果が0件 or 信頼度が低い場合は「提案なし」を返す
+ *   - ハルシネーション防止: 根拠URLなしの提案は出力させない
  */
 
 export type DiffType = 'body_update' | 'new_section' | 'title_update' | 'price_update' | 'link_update';
@@ -12,10 +22,10 @@ export interface DiffSuggestion {
     type: DiffType;
     section: string;      // "本文" "タイトル" "新セクション" など
     reason: string;       // AI が提示する変更理由
-    sourceUrl?: string;   // 参照元 URL（あれば）
+    sourceUrl?: string;   // 参照元 URL（必須 — なければ提案しない）
     sourceTitle?: string; // 参照元サイト名
-    originalText: string; // 変更前テキスト
-    proposedText: string; // 変更後テキスト（HTML可）
+    originalText: string; // 変更前テキスト（記事内に実在する文字列）
+    proposedText: string; // 変更後テキスト
     approved: boolean | null; // null=未決定 true=承認 false=却下
 }
 
@@ -25,7 +35,7 @@ export interface DiffSuggestion {
  * @param articleTitle 記事タイトル
  * @param articleBody  記事本文HTML
  * @param tags         記事タグ配列
- * @returns DiffSuggestion の配列
+ * @returns DiffSuggestion の配列（提案なしの場合は空配列）
  */
 export async function fetchAiUpdates(
     articleTitle: string,
@@ -34,72 +44,53 @@ export async function fetchAiUpdates(
 ): Promise<DiffSuggestion[]> {
 
     // ────────────────────────────────────────────────────────────────
-    // TODO (Phase 2): 以下を実装すると本番 AI 更新が動く
+    // TODO (Phase 2): 実装手順
     //
-    // Step 1: Web 検索 API（Serper/Google）でキーワード検索
+    // Step 0: 更新対象かどうかを判定（独自コンテンツは除外）
+    //   const UPDATE_TARGET_CATEGORIES = ['ノウハウ', 'テクノロジー', '料金・費用', '法律・制度'];
+    //   const isUpdateCandidate = tags.some(t => UPDATE_TARGET_CATEGORIES.includes(t));
+    //   if (!isUpdateCandidate) return []; // 独自コンテンツは提案なしで即返す
+    //
+    // Step 1: Web 検索 API でキーワード検索
     //   const searchResults = await fetch('https://google.serper.dev/search', {
     //     method: 'POST',
-    //     headers: { 'X-API-KEY': process.env.NEXT_PUBLIC_SERPER_API_KEY, 'Content-Type': 'application/json' },
+    //     headers: { 'X-API-KEY': process.env.NEXT_PUBLIC_SERPER_API_KEY!, 'Content-Type': 'application/json' },
     //     body: JSON.stringify({ q: `${articleTitle} 最新情報 ${new Date().getFullYear()}`, gl:'jp', hl:'ja' })
     //   }).then(r => r.json());
+    //   if (!searchResults.organic?.length) return []; // 検索結果なし → 提案なし
     //
-    // Step 2: Gemini API で差分生成
+    // Step 2: Gemini API で差分を生成（根拠URLなし提案は禁止プロンプト）
     //   const prompt = `
-    //     あなたは記事更新アシスタントです。
-    //     以下の記事と最新の検索結果を比較し、更新が必要な箇所を JSON 配列として返してください。
+    //     あなたは記事の情報鮮度チェックアシスタントです。
+    //     以下の記事の内容と、最新の検索結果を比較してください。
+    //
+    //     【重要なルール】
+    //     - 根拠となるURLが存在しない提案は絶対に出力しないでください
+    //     - 記事内に実際に存在する文字列のみ originalText に入れてください
+    //     - 独自システム・体験記・個人の意見については提案しないでください
+    //     - 比較できる情報がなければ空配列 [] を返してください
+    //
     //     記事タイトル: ${articleTitle}
-    //     記事本文（HTML）: ${articleBody}
-    //     最新情報: ${JSON.stringify(searchResults.organic?.slice(0,5))}
-    //     出力形式: DiffSuggestion[] (id/type/section/reason/sourceUrl/originalText/proposedText)
+    //     記事本文（テキスト）: ${articleBody.replace(/<[^>]+>/g, '')}
+    //     最新の検索結果: ${JSON.stringify(searchResults.organic?.slice(0, 5))}
+    //
+    //     出力形式（JSON配列のみ、Markdown不要）:
+    //     [{ "id": string, "type": DiffType, "section": string, "reason": string,
+    //        "sourceUrl": string（必須）, "sourceTitle": string, "originalText": string, "proposedText": string }]
     //   `;
     //   const response = await fetch(
-    //     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_API_KEY}`,
+    //     \`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\${process.env.NEXT_PUBLIC_GEMINI_API_KEY}\`,
     //     { method:'POST', headers:{'Content-Type':'application/json'},
     //       body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] }) }
     //   ).then(r => r.json());
-    //   return JSON.parse(response.candidates[0].content.parts[0].text);
+    //   try {
+    //     const text = response.candidates[0].content.parts[0].text;
+    //     const jsonStr = text.replace(/```json\n?|\n?```/g, '').trim();
+    //     return JSON.parse(jsonStr).map((s: any, i: number) => ({ ...s, id: `diff-${i}`, approved: null }));
+    //   } catch { return []; }
     // ────────────────────────────────────────────────────────────────
 
-    // Phase 1: 動作確認用のモックデータ（記事のタイトルとタグに応じてサンプル提案を返す）
-    await new Promise(r => setTimeout(r, 2000)); // API呼び出しをシミュレート
-
-    const topicHint = tags[0] || 'テクノロジー';
-
-    const mockSuggestions: DiffSuggestion[] = [
-        {
-            id: 'diff-1',
-            type: 'body_update',
-            section: '本文の修正',
-            reason: `「${topicHint}」に関する情報が最新でない可能性があります。2025年以降の更新情報が確認されました。`,
-            sourceUrl: 'https://example.com/latest',
-            sourceTitle: '公式ドキュメント',
-            originalText: `この記事で紹介している情報は現時点での最新仕様に基づいています。`,
-            proposedText: `この記事で紹介している情報は現時点での最新仕様に基づいています（2026年6月時点）。最新の公式ドキュメントも併せてご確認ください。`,
-            approved: null,
-        },
-        {
-            id: 'diff-2',
-            type: 'price_update',
-            section: '料金・費用情報',
-            reason: '記事内の料金情報が変更されている可能性があります。',
-            sourceUrl: 'https://example.com/pricing',
-            sourceTitle: '公式料金ページ',
-            originalText: `プランA: 月額 ¥3,000`,
-            proposedText: `プランA: 月額 ¥3,500（2025年10月より改定）`,
-            approved: null,
-        },
-        {
-            id: 'diff-3',
-            type: 'new_section',
-            section: '新セクションの追加提案',
-            reason: '関連する新しいトピックが登場しているため、補足セクションの追加を提案します。',
-            sourceUrl: 'https://example.com/new-topic',
-            sourceTitle: '業界ニュース',
-            originalText: '（新規追加 — 現在の記事には該当箇所なし）',
-            proposedText: `## 最近の動向\n\n${topicHint}に関して、2025年以降に大きなアップデートがありました。特に注目すべきは〇〇の機能追加で、従来の方法より効率的に実現できるようになりました。`,
-            approved: null,
-        },
-    ];
-
-    return mockSuggestions;
+    // Phase 0（現在）: 処理なし → UIの「提案なし」状態を表示
+    await new Promise(r => setTimeout(r, 800)); // 実装中であることを示す短い待機
+    return [];
 }
