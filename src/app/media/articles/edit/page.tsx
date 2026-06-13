@@ -27,11 +27,12 @@ import {
     Image as ImageIcon, Youtube as YtIcon, Minus, Table as TableIcon,
     AlignLeft, AlignCenter, Plus, X, Eye, ChevronDown, MessageSquare,
     BookOpen, Hash, Upload, Loader2, FileText, PenLine, Underline as UnderlineIcon,
-    Type, Pilcrow, SquareCode, Sparkles,
+    Type, Pilcrow, SquareCode, Sparkles, Layers, GalleryHorizontal, ListCollapse,
 } from 'lucide-react';
 import VisibilityPicker, { VisibilityMode } from '@/components/VisibilityPicker';
 import AiUpdateModal from '@/components/AiUpdateModal';
 import { fetchAiUpdates, DiffSuggestion } from '@/lib/aiArticleUpdater';
+import { AccordionExtension, TabsExtension, TabPanelExtension, ImageGalleryExtension } from '@/components/ArticleExtensions';
 
 /* ── Design tokens ─────────────────────────────────────────────── */
 const BG   = '#f8f6f3';
@@ -101,15 +102,23 @@ function ArticleEditorInner() {
     const [drafts, setDrafts] = useState<any[]>([]);
     const [draftsLoading, setDraftsLoading] = useState(false);
 
+    // タブ挿入モーダル
+    const [showTabsModal, setShowTabsModal] = useState(false);
+    const [tabLabels, setTabLabels] = useState(['タブ1', 'タブ2']);
+
+    // ギャラリーアップロード中フラグ
+    const [galleryUploading, setGalleryUploading] = useState(false);
+
     // AI 更新チェック
     const [showAiModal, setShowAiModal]       = useState(false);
     const [aiLoading, setAiLoading]           = useState(false);
     const [aiSuggestions, setAiSuggestions]   = useState<DiffSuggestion[]>([]);
 
     const [myProfile, setMyProfile] = useState<any>(null);
-    const coverInputRef = useRef<HTMLInputElement>(null);
-    const imageInputRef = useRef<HTMLInputElement>(null);
-    const editorWrapRef = useRef<HTMLDivElement>(null);
+    const coverInputRef   = useRef<HTMLInputElement>(null);
+    const imageInputRef   = useRef<HTMLInputElement>(null);
+    const galleryInputRef = useRef<HTMLInputElement>(null);
+    const editorWrapRef   = useRef<HTMLDivElement>(null);
 
     /* ── Tiptap editor ──────────────────────────────────────────── */
     const editor = useEditor({
@@ -128,6 +137,11 @@ function ArticleEditorInner() {
             Table.configure({ resizable: true }),
             TableRow, TableCell, TableHeader,
             CodeBlockLowlight.configure({ lowlight }),
+            // ── カスタムブロック ────────────────────────────────
+            AccordionExtension,
+            TabPanelExtension,
+            TabsExtension,
+            ImageGalleryExtension,
         ],
         content: '',
         editorProps: {
@@ -379,6 +393,54 @@ function ArticleEditorInner() {
         editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
     };
 
+    /* ── アコーディオン挿入 ──────────────────────────────────── */
+    const insertAccordion = () => {
+        if (!editor) return;
+        editor.chain().focus().insertContent({
+            type: 'accordion',
+            attrs: { title: 'クリックして見出しを編集' },
+            content: [{ type: 'paragraph' }],
+        }).run();
+    };
+
+    /* ── タブ挿入 ────────────────────────────────────────────── */
+    const insertTabs = () => {
+        if (!editor) return;
+        editor.chain().focus().insertContent({
+            type: 'tabs',
+            content: tabLabels.filter(l => l.trim()).map(label => ({
+                type: 'tabPanel',
+                attrs: { label },
+                content: [{ type: 'paragraph' }],
+            })),
+        }).run();
+        setShowTabsModal(false);
+        setTabLabels(['タブ1', 'タブ2']);
+    };
+
+    /* ── ギャラリー画像アップロード ──────────────────────────── */
+    const handleGalleryImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || !user || !editor) return;
+        setGalleryUploading(true);
+        try {
+            const urls: string[] = [];
+            for (const f of Array.from(files)) {
+                if (f.size > 10 * 1024 * 1024) continue;
+                const gRef = ref(storage, `articles/gallery/${user.uid}/${Date.now()}_${f.name}`);
+                const snap = await uploadBytes(gRef, f);
+                urls.push(await getDownloadURL(snap.ref));
+            }
+            if (urls.length > 0) {
+                editor.chain().focus().insertContent({
+                    type: 'imageGallery',
+                    attrs: { images: urls },
+                }).run();
+            }
+        } catch (err) { console.error(err); alert('画像のアップロードに失敗しました'); }
+        finally { setGalleryUploading(false); e.target.value = ''; }
+    };
+
     /* ── Load drafts ─────────────────────────────────────────── */
     const loadDrafts = async () => {
         if (!user) return;
@@ -611,13 +673,29 @@ function ArticleEditorInner() {
                             <TBtn onClick={insertYoutube} title="YouTube"><YtIcon size={13} /></TBtn>
                             <TBtn onClick={() => editor.chain().focus().insertTable({rows:3,cols:3,withHeaderRow:true}).run()} title="テーブル"><TableIcon size={13} /></TBtn>
                             <TBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} title="区切り線"><Minus size={13} /></TBtn>
+                            <div style={{ width:1, background:'rgba(0,0,0,.08)', margin:'4px 2px' }} />
+                            <TBtn onClick={insertAccordion} title="アコーディオン">
+                                <ListCollapse size={13} />
+                            </TBtn>
+                            <TBtn onClick={() => setShowTabsModal(true)} title="タブブロック">
+                                <Layers size={13} />
+                            </TBtn>
+                            <TBtn
+                                onClick={() => galleryInputRef.current?.click()}
+                                title={galleryUploading ? 'アップロード中...' : '画像ギャラリー'}
+                            >
+                                {galleryUploading
+                                    ? <Loader2 size={13} style={{ animation:'spin .8s linear infinite' }} />
+                                    : <GalleryHorizontal size={13} />}
+                            </TBtn>
                         </div>
                     )}
 
                     {/* Editor content */}
                     <EditorContent editor={editor} />
                 </div>
-                <input ref={imageInputRef} type="file" accept="image/*" onChange={handleInsertImage} style={{ display:'none' }} />
+                <input ref={imageInputRef}   type="file" accept="image/*" onChange={handleInsertImage} style={{ display:'none' }} />
+                <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGalleryImages} style={{ display:'none' }} />
 
                 {/* Tags section */}
                 <div style={{ marginTop:40, paddingTop:20, borderTop:'1px solid rgba(0,0,0,.06)' }}>
@@ -863,7 +941,97 @@ function ArticleEditorInner() {
                 .tiptap th { background: rgba(74,124,89,.06); font-weight: 700; }
                 .tiptap s { text-decoration: line-through; color: ${TM}; }
                 .tiptap iframe { border-radius: 10px; margin: 16px 0; }
+                /* ── カスタムブロック (エディタ内プレビュー) ─ */
+                .tiptap [data-type="accordion"] { user-select: auto; }
+                .tiptap [data-type="tabs"]      { user-select: auto; }
+                .tiptap [data-type="tab-panel"] { user-select: auto; }
+                .tiptap [data-type="image-gallery"] img::-webkit-scrollbar { display:none; }
             `}</style>
+
+            {/* ── タブ挿入モーダル ─────────────────────────────── */}
+            {showTabsModal && (
+                <div style={{
+                    position:'fixed', inset:0, zIndex:7000,
+                    background:'rgba(26,48,36,.5)', backdropFilter:'blur(6px)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                }}
+                    onClick={e => { if(e.target===e.currentTarget) setShowTabsModal(false); }}
+                >
+                    <div style={{
+                        width:'90%', maxWidth:420, background:BG, borderRadius:20,
+                        boxShadow:'0 16px 60px rgba(0,0,0,.25)', padding:24,
+                    }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
+                            <Layers size={16} color={SAGE} />
+                            <span style={{ fontSize:15, fontWeight:800, color:T1 }}>タブブロックを挿入</span>
+                            <button onClick={() => setShowTabsModal(false)}
+                                style={{ marginLeft:'auto', border:'none', background:'transparent', cursor:'pointer', color:TM }}>
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <p style={{ fontSize:11, color:T2, marginBottom:14, lineHeight:1.6 }}>
+                            タブ名を入力してください。挿入後、各タブ内容をエディタで編集できます。
+                        </p>
+
+                        <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:16 }}>
+                            {tabLabels.map((label, i) => (
+                                <div key={i} style={{ display:'flex', gap:8, alignItems:'center' }}>
+                                    <div style={{
+                                        width:22, height:22, borderRadius:'50%', background:SAGE,
+                                        color:'#fff', fontSize:10, fontWeight:700,
+                                        display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+                                    }}>{i+1}</div>
+                                    <input
+                                        value={label}
+                                        onChange={e => setTabLabels(prev => prev.map((l,j) => j===i ? e.target.value : l))}
+                                        placeholder={`タブ${i+1}の名前`}
+                                        style={{
+                                            flex:1, padding:'8px 12px', borderRadius:8,
+                                            border:'none', background:BG, boxShadow:NEU_IN,
+                                            fontSize:12, color:T1, outline:'none',
+                                        }}
+                                    />
+                                    {tabLabels.length > 2 && (
+                                        <button onClick={() => setTabLabels(prev => prev.filter((_,j)=>j!==i))}
+                                            style={{ border:'none', background:'transparent', cursor:'pointer', color:TM }}>
+                                            <X size={14} />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {tabLabels.length < 6 && (
+                            <button onClick={() => setTabLabels(prev => [...prev, `タブ${prev.length+1}`])}
+                                style={{
+                                    display:'flex', alignItems:'center', gap:5, width:'100%',
+                                    padding:'8px 12px', borderRadius:8, border:'none',
+                                    background:BG, boxShadow:NEU_SM, fontSize:11, fontWeight:700,
+                                    color:SAGE, cursor:'pointer', marginBottom:16,
+                                }}>
+                                <Plus size={13} /> タブを追加
+                            </button>
+                        )}
+
+                        <div style={{ display:'flex', gap:10 }}>
+                            <button onClick={() => setShowTabsModal(false)}
+                                style={{ flex:1, padding:'10px 0', borderRadius:10, border:'none', background:BG, boxShadow:NEU_SM, fontSize:12, fontWeight:700, color:T2, cursor:'pointer' }}>
+                                キャンセル
+                            </button>
+                            <button onClick={insertTabs}
+                                disabled={tabLabels.filter(l=>l.trim()).length < 2}
+                                style={{
+                                    flex:2, padding:'10px 0', borderRadius:10, border:'none',
+                                    background:SB, color:LIME, fontSize:12, fontWeight:800,
+                                    cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                                    opacity:tabLabels.filter(l=>l.trim()).length<2?.5:1,
+                                }}>
+                                <Layers size={13} /> 挿入する
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* AI 更新チェックモーダル */}
             {showAiModal && (

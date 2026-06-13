@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -391,196 +391,307 @@ function PodcastPostInternalForm() {
     const rankLevel = myProfile ? ({ 'arrival': 0, 'settler': 1, 'builder': 2, 'guardian': 3, 'covenant': 4, 'admin': 99 }[myProfile.membershipRank as string] || 0) : 0;
 
     return (
-        <div className="antialiased min-h-screen bg-texture pb-20">
-            <nav className="bg-[rgba(255,253,249,0.95)] backdrop-blur border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
-                <div className="max-w-4xl mx-auto px-4 h-full flex justify-between items-center">
-                    <button onClick={() => router.back()} className="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest">
-                        <div className="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center hover:bg-brand-100 transition-colors">
-                            <ArrowLeft size={16} />
-                        </div>
+        <div className="antialiased min-h-screen pb-28" style={{ background: 'linear-gradient(135deg, #f0ede8 0%, #e8e4df 100%)' }}>
+            {/* Header */}
+            <nav className="fixed w-full z-50 top-0 h-14"
+                 style={{ background: 'rgba(240,237,232,0.88)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 2px 20px rgba(120,110,100,0.08)' }}>
+                <div className="max-w-3xl mx-auto px-4 h-full flex items-center justify-between">
+                    <button onClick={() => router.back()}
+                            className="flex items-center gap-2 text-sm font-bold tracking-widest"
+                            style={{ color: '#6b6560' }}>
+                        <span className="w-8 h-8 rounded-full flex items-center justify-center"
+                              style={{ background: '#eae8e4', boxShadow: '3px 3px 8px #cbc8c3, -3px -3px 8px #ffffff' }}>
+                            <ArrowLeft size={15} />
+                        </span>
                         <span className="hidden sm:inline">キャンセル</span>
                     </button>
-                    <h1 className="font-serif font-bold text-brand-900 tracking-widest text-lg flex items-center gap-2">
-                        <Podcast className="text-[#b8860b]" /> 音声の配信・編集
-                    </h1>
-                    <div className="w-20"></div>
+                    <div className="flex items-center gap-2.5">
+                        <span className="w-8 h-8 rounded-xl flex items-center justify-center"
+                              style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 4px 12px rgba(124,58,237,0.35)' }}>
+                            <Podcast size={15} color="white" />
+                        </span>
+                        <h1 className="font-bold tracking-widest text-base" style={{ color: '#2a2520' }}>
+                            音声の配信・編集
+                        </h1>
+                    </div>
+                    <div className="w-20" />
                 </div>
             </nav>
 
             <main className="max-w-3xl mx-auto pt-24 px-4 sm:px-6">
                 <div className="mb-8 text-center">
-                    <p className="text-sm text-brand-600 tracking-widest leading-relaxed">
-                        あなたの声で、深い考えや対話を届けましょう。<br />
-                        <span className="text-xs text-brand-400">※音声ファイルのアップロード、各種サービスのURL指定、または生配信が可能です。</span>
+                    <p className="text-sm tracking-widest leading-relaxed" style={{ color: '#6b6560' }}>
+                        あなたの声で、深い考えや対話を届けましょう。
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: '#9c9590' }}>
+                        ※ 音声ファイルのアップロード・各種サービスURL指定が可能です
                     </p>
                 </div>
 
-                <form onSubmit={handleSave} className="space-y-8">
-                    
-                    <div className="bg-white p-6 sm:p-8 rounded-sm border border-brand-200 shadow-sm relative overlow-hidden">
-                        <label className="block text-sm font-bold text-brand-900 mb-4 tracking-widest flex items-center gap-2">
-                            <Music className="text-[#b8860b] w-4 h-4" />音声データ・配信方法 <span className="text-red-500">*</span>
-                        </label>
-                        
-                        <div className="flex gap-4 sm:gap-6 mb-6 border-b border-brand-200 overflow-x-auto no-scrollbar">
-                            <button type="button" onClick={() => setAudioType('upload')} className={`pb-2 border-b-2 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap ${audioType === 'upload' ? 'border-[#b8860b] text-[#b8860b] font-bold' : 'border-transparent text-brand-400 hover:text-brand-600'}`}>ファイルをアップロード</button>
-                            <button type="button" onClick={() => setAudioType('url')} className={`pb-2 border-b-2 text-xs sm:text-sm tracking-widest transition-colors whitespace-nowrap ${audioType === 'url' ? 'border-[#b8860b] text-[#b8860b] font-bold' : 'border-transparent text-brand-400 hover:text-brand-600'}`}>URLを指定</button>
+                <form onSubmit={handleSave} className="space-y-6">
+
+                    {/* Section: 音声データ */}
+                    <section className="rounded-2xl p-6 sm:p-8"
+                             style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                        <div className="flex items-center gap-2.5 mb-5">
+                            <span className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                  style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 3px 10px rgba(124,58,237,0.3)' }}>
+                                <Music size={13} color="white" />
+                            </span>
+                            <span className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>
+                                音声データ・配信方法 <span className="text-red-500">*</span>
+                            </span>
+                        </div>
+
+                        {/* Tab switcher */}
+                        <div className="flex gap-1 mb-5 p-1 rounded-xl overflow-x-auto"
+                             style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff' }}>
+                            {(['upload', 'url'] as const).map(t => (
+                                <button key={t} type="button" onClick={() => setAudioType(t)}
+                                        className="flex-1 py-2 rounded-lg text-xs font-bold tracking-widest transition-all whitespace-nowrap min-w-max px-3"
+                                        style={audioType === t
+                                            ? { background: 'rgba(255,255,255,0.9)', boxShadow: '3px 3px 8px #cbc8c3, -3px -3px 8px #ffffff', color: '#2a2520' }
+                                            : { color: '#9c9590' }}>
+                                    {t === 'upload' ? 'ファイルをアップロード' : 'URLを指定'}
+                                </button>
+                            ))}
                         </div>
 
                         {audioType === 'upload' && (
                             <div>
-                                <p className="text-xs text-brand-500 mb-3">MP3形式などの音声ファイルを選択してください。（※上限: 30MB）</p>
-                                <input type="file" accept="audio/mp3, audio/mpeg, audio/mp4, audio/m4a" onChange={handleAudioUpload} className="block w-full text-sm text-brand-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-[#b8860b] hover:file:bg-brand-100 file:border file:border-brand-200 file:cursor-pointer transition-colors bg-[#f7f5f0] p-2 rounded-sm border border-brand-200" />
+                                <p className="text-xs mb-3" style={{ color: '#9c9590' }}>MP3形式などの音声ファイルを選択してください（上限: 30MB）</p>
+                                <input type="file" accept="audio/mp3, audio/mpeg, audio/mp4, audio/m4a" onChange={handleAudioUpload}
+                                       className="block w-full text-sm file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:cursor-pointer transition-colors rounded-xl p-2"
+                                       style={{ background: '#eae8e4', color: '#6b6560' }} />
                             </div>
                         )}
 
                         {audioType === 'url' && (
                             <div>
-                                <p className="text-[10px] sm:text-xs text-brand-500 mb-2 leading-relaxed">
-                                    <b>Spotify</b>, <b>Apple Podcasts</b>, <b>Google Drive</b> などのリンクを貼り付けると、自動で公式プレイヤーが埋め込まれます。または、直接再生可能な <code>.mp3</code> URLを入力してください。
+                                <p className="text-xs mb-3 leading-relaxed" style={{ color: '#9c9590' }}>
+                                    <b style={{ color: '#6b6560' }}>Spotify</b>, <b style={{ color: '#6b6560' }}>Apple Podcasts</b>, <b style={{ color: '#6b6560' }}>Google Drive</b> のURLを貼り付けてください
                                 </p>
-                                <input type="url" value={audioUrlInput} onChange={e => { setAudioUrlInput(e.target.value); handleAudioUrlParse(e.target.value); }} className="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="https://open.spotify.com/episode/..." />
+                                <input type="url" value={audioUrlInput}
+                                       onChange={e => { setAudioUrlInput(e.target.value); handleAudioUrlParse(e.target.value); }}
+                                       className="w-full rounded-xl p-4 text-sm outline-none transition-all"
+                                       style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                       placeholder="https://open.spotify.com/episode/..." />
                             </div>
                         )}
 
                         {parsedAudioUrl && (
-                            <div className="mt-4 bg-brand-50 p-4 rounded-sm border border-brand-200">
-                                <div className="flex items-center justify-between mb-2">
-                                    <p className="text-[10px] font-bold text-brand-500 tracking-widest uppercase">Preview</p>
-                                    <CheckCircle2 size={14} className="text-green-600" />
+                            <div className="mt-5 rounded-xl overflow-hidden"
+                                 style={{ boxShadow: '3px 3px 10px #cbc8c3, -3px -3px 10px #ffffff' }}>
+                                <div className="flex items-center justify-between px-4 py-2"
+                                     style={{ background: 'rgba(234,232,228,0.8)' }}>
+                                    <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: '#9c9590' }}>Preview</span>
+                                    <CheckCircle2 size={13} className="text-green-500" />
                                 </div>
                                 {!isEmbedMode ? (
-                                    <audio ref={audioRef} controls src={parsedAudioUrl} onLoadedMetadata={handleAudioLoadedMetadata} className="w-full h-10"></audio>
+                                    <audio ref={audioRef} controls src={parsedAudioUrl} onLoadedMetadata={handleAudioLoadedMetadata}
+                                           className="w-full h-12 bg-white" />
                                 ) : (
-                                    <iframe src={parsedAudioUrl} className="w-full rounded-sm shadow-inner bg-white min-h-[160px]" frameBorder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+                                    <iframe src={parsedAudioUrl} className="w-full bg-white min-h-[160px]" frameBorder="0"
+                                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" />
                                 )}
                             </div>
                         )}
-                    </div>
+                    </section>
 
-                    <div className="bg-white p-6 sm:p-8 rounded-sm border border-brand-200 shadow-sm relative overlow-hidden">
-                        <label className="block text-sm font-bold text-brand-900 mb-2 tracking-widest flex items-center gap-2">
-                            <ImageIcon className="text-[#b8860b] w-4 h-4" />サムネイル画像 <span className="text-[10px] text-brand-400 font-normal ml-1">(任意)</span>
+                    {/* Section: サムネイル */}
+                    <section className="rounded-2xl p-6 sm:p-8"
+                             style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                        <div className="flex items-center gap-2.5 mb-2">
+                            <span className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                  style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 3px 10px rgba(124,58,237,0.3)' }}>
+                                <ImageIcon size={13} color="white" />
+                            </span>
+                            <span className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>
+                                サムネイル画像 <span className="text-xs font-normal ml-1" style={{ color: '#9c9590' }}>(任意)</span>
+                            </span>
+                        </div>
+                        <p className="text-xs mb-5" style={{ color: '#9c9590' }}>
+                            設定しない場合は NOAH CAST のデフォルト背景が適用されます。<br />Spotify等の埋め込みリンクを使用する場合は設定不要です。
+                        </p>
+                        <label className="relative flex w-full sm:w-64 aspect-square rounded-xl cursor-pointer overflow-hidden group transition-all"
+                               style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff' }}>
+                            <input type="file" accept="image/*" onChange={handleThumbUpload} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                            {thumbPreviewUrl ? (
+                                <img src={thumbPreviewUrl} className="absolute inset-0 w-full h-full object-contain" alt="" />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center w-full gap-2 group-hover:scale-105 transition-transform">
+                                    <ImageIcon size={28} style={{ color: '#9c9590' }} />
+                                    <span className="text-xs font-bold tracking-widest" style={{ color: '#9c9590' }}>クリックして画像を選択</span>
+                                    <span className="text-[10px]" style={{ color: '#9c9590' }}>推奨: 正方形</span>
+                                </div>
+                            )}
                         </label>
-                        <p className="text-xs text-brand-500 mb-4">設定しない場合は、NOAH CASTのデフォルト背景が適用されます。<br />※Spotify等の埋め込みリンクを使用する場合は設定不要です。</p>
-                        <div className="flex flex-col items-center sm:flex-row gap-6">
-                            <div className="relative w-full sm:w-64 aspect-video bg-brand-50 rounded-sm border-2 border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner">
-                                <input type="file" accept="image/*" onChange={handleThumbUpload} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                                {thumbPreviewUrl ? (
-                                    <img src={thumbPreviewUrl} className="absolute inset-0 w-full h-full object-cover" alt="" />
-                                ) : (
-                                    <div className="group-hover:scale-110 transition-transform flex flex-col items-center">
-                                        <ImageIcon className="text-3xl mb-2 w-8 h-8" />
-                                        <span className="text-xs tracking-widest font-bold">画像を選択</span>
-                                    </div>
-                                )}
+                    </section>
+
+                    {/* Section: エピソード情報 */}
+                    <section className="rounded-2xl p-6 sm:p-8 space-y-6"
+                             style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                        <div>
+                            <label className="block text-sm font-bold mb-3 tracking-widest" style={{ color: '#2a2520' }}>
+                                配信タイトル <span className="text-red-500">*</span>
+                            </label>
+                            <input type="text" value={title} onChange={e => setTitle(e.target.value)} required
+                                   className="w-full rounded-xl p-4 text-sm font-bold outline-none"
+                                   style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                   placeholder="エピソードのタイトルを入力" />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-bold mb-3 tracking-widest" style={{ color: '#2a2520' }}>
+                                ゲスト <span className="text-xs font-normal ml-1" style={{ color: '#9c9590' }}>(任意)</span>
+                            </label>
+                            <input type="text" value={guests} onChange={e => setGuests(e.target.value)}
+                                   className="w-full rounded-xl p-4 text-sm outline-none"
+                                   style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                   placeholder="ゲスト名（複数の場合はカンマ区切り）" />
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>概要欄・エピソードメモ</label>
+                                <span className="text-[10px] font-bold tracking-widest px-2.5 py-1 rounded-lg"
+                                      style={{ background: '#eae8e4', color: '#9c9590', boxShadow: '2px 2px 5px #cbc8c3, -2px -2px 5px #ffffff' }}>
+                                    Markdown 対応
+                                </span>
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-6 sm:p-8 rounded-sm border border-brand-200 shadow-sm relative overlow-hidden space-y-6">
-                        <div>
-                            <label className="block text-sm font-bold text-brand-900 mb-2 tracking-widest">配信タイトル <span className="text-red-500">*</span></label>
-                            <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm font-bold focus:bg-white transition-colors outline-none focus:border-[#b8860b]" placeholder="エピソードのタイトルを入力" />
+                            <p className="text-xs mb-3" style={{ color: '#9c9590' }}>このエピソードで話している内容や、関連リンクなどを記述してください。</p>
+                            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6}
+                                      className="w-full rounded-xl p-4 text-sm leading-relaxed outline-none resize-none"
+                                      style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                      placeholder={"・オープニング\n・今回のテーマについて\n・ゲストからのお知らせ"} />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-brand-900 mb-2 tracking-widest">ゲスト <span className="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
-                            <input type="text" value={guests} onChange={e => setGuests(e.target.value)} className="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors outline-none focus:border-[#b8860b]" placeholder="ゲスト名（複数いる場合はカンマ区切り）" />
-                        </div>
-
-                        <div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-2 gap-2">
-                                <label className="block text-sm font-bold text-brand-900 tracking-widest">概要欄・エピソードメモ</label>
-                                <span className="text-[10px] bg-[#f7f5f0] text-brand-600 px-2 py-1 rounded-sm border border-brand-200 font-bold tracking-widest flex items-center gap-1 w-fit">Markdown対応</span>
+                            <div className="flex items-center gap-2 mb-3">
+                                <LinkIcon size={13} style={{ color: '#9c9590' }} />
+                                <label className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>
+                                    関連記事 <span className="text-xs font-normal ml-1" style={{ color: '#9c9590' }}>(任意)</span>
+                                </label>
                             </div>
-                            <p className="text-xs text-brand-500 mb-3">このエピソードで話している内容や、関連リンクなどを記述してください。</p>
-                            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6} className="w-full border border-brand-200 rounded-sm p-4 bg-[#f7f5f0] text-sm leading-relaxed focus:bg-white transition-colors outline-none focus:border-[#b8860b]" placeholder="・オープニング&#13;&#10;・今回のテーマについて&#13;&#10;・ゲストからのお知らせ"></textarea>
+                            <p className="text-xs mb-3" style={{ color: '#9c9590' }}>noteの記事URL等を貼り付けます。複数ある場合はカンマ区切りで。</p>
+                            <input type="text" value={relatedArticleUrls} onChange={e => setRelatedArticleUrls(e.target.value)}
+                                   className="w-full rounded-xl p-4 text-sm outline-none"
+                                   style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                   placeholder="https://note.com/..., https://..." />
                         </div>
+                    </section>
 
-                        <div className="pt-2">
-                            <label className="block text-sm font-bold text-brand-900 mb-2 tracking-widest flex items-center gap-2"><LinkIcon className="text-brand-400 w-4 h-4" />関連記事 (Note等) <span className="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
-                            <p className="text-[10px] sm:text-xs text-brand-500 mb-2">noteの記事URL等を貼り付けます。複数ある場合は「, (カンマ)」で区切ってください。</p>
-                            <input type="text" value={relatedArticleUrls} onChange={e => setRelatedArticleUrls(e.target.value)} className="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors outline-none focus:border-[#b8860b]" placeholder="https://note.com/..., https://..." />
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-6 sm:p-8 rounded-sm border border-brand-200 shadow-sm relative overlow-hidden space-y-8">
+                    {/* Section: タグ・設定 */}
+                    <section className="rounded-2xl p-6 sm:p-8 space-y-7"
+                             style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                        {/* Tags */}
                         <div>
-                            <label className="block text-sm font-bold text-brand-900 mb-3 tracking-widest">カテゴリー・タグ</label>
-                            <p className="text-xs text-brand-500 mb-4">配信内容に合うものを選択してください。</p>
-                            
+                            <label className="block text-sm font-bold mb-4 tracking-widest" style={{ color: '#2a2520' }}>カテゴリー・タグ</label>
+                            <p className="text-xs mb-4" style={{ color: '#9c9590' }}>配信内容に合うものを選択してください。</p>
                             <div className="flex flex-wrap gap-2.5 mb-4">
                                 {PRESET_TAGS.map(tag => (
                                     <label key={tag} className="cursor-pointer">
                                         <input type="checkbox" checked={selectedTags.includes(tag)} onChange={() => toggleTag(tag)} className="hidden" />
-                                        <div className={`px-4 py-2 border text-xs font-bold rounded-sm tracking-widest transition-all shadow-sm whitespace-nowrap ${selectedTags.includes(tag) ? 'bg-[#3e2723] border-[#b8860b] text-[#d4af37]' : 'border-brand-200 text-brand-700 hover:bg-brand-50'}`}>{tag}</div>
+                                        <div className="px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all whitespace-nowrap"
+                                             style={selectedTags.includes(tag)
+                                                 ? { background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', color: '#fff', boxShadow: '0 4px 12px rgba(124,58,237,0.35)' }
+                                                 : { background: '#eae8e4', color: '#6b6560', boxShadow: '3px 3px 8px #cbc8c3, -3px -3px 8px #ffffff' }}>
+                                            {tag}
+                                        </div>
                                     </label>
                                 ))}
                             </div>
-                            <input type="text" value={customTags} onChange={e => setCustomTags(e.target.value)} className="w-full border border-brand-200 rounded-sm p-3 bg-[#f7f5f0] text-sm focus:bg-white transition-colors outline-none focus:border-[#b8860b]" placeholder="その他のタグ (カンマ区切りで入力)" />
+                            <input type="text" value={customTags} onChange={e => setCustomTags(e.target.value)}
+                                   className="w-full rounded-xl p-3.5 text-sm outline-none"
+                                   style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                   placeholder="その他のタグ（カンマ区切りで入力）" />
                         </div>
 
-                            <div className="border-t border-brand-100 pt-6">
-                                <label className="block text-sm font-bold text-brand-900 mb-4 tracking-widest">コメント機能の設定</label>
-                                <div className="flex gap-6">
-                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
-                                        <input type="radio" checked={allowComments === true} onChange={() => setAllowComments(true)} className="text-[#b8860b] focus:ring-[#b8860b]" /> 許可する
+                        {/* Comments */}
+                        <div className="pt-5" style={{ borderTop: '1px solid rgba(203,200,195,0.5)' }}>
+                            <label className="block text-sm font-bold mb-4 tracking-widest" style={{ color: '#2a2520' }}>コメント設定</label>
+                            <div className="flex gap-3">
+                                {[{ v: true, label: '許可する' }, { v: false, label: '許可しない' }].map(opt => (
+                                    <label key={String(opt.v)} className="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl text-sm font-bold tracking-widest transition-all"
+                                           style={allowComments === opt.v
+                                               ? { background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', color: '#fff', boxShadow: '0 4px 12px rgba(124,58,237,0.35)' }
+                                               : { background: '#eae8e4', color: '#6b6560', boxShadow: '3px 3px 8px #cbc8c3, -3px -3px 8px #ffffff' }}>
+                                        <input type="radio" checked={allowComments === opt.v} onChange={() => setAllowComments(opt.v)} className="hidden" />
+                                        {opt.label}
                                     </label>
-                                    <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
-                                        <input type="radio" checked={allowComments === false} onChange={() => setAllowComments(false)} className="text-brand-400 focus:ring-brand-400" /> 許可しない
-                                    </label>
-                                </div>
+                                ))}
                             </div>
+                        </div>
 
-                            {/* 公開設定 */}
-                            <div className="border-t border-brand-100 pt-6">
-                                <label className="flex items-center text-sm font-bold text-brand-900 mb-4 tracking-widest">
-                                    <Globe className="text-brand-400 mr-2" size={16} />公開設定
-                                </label>
-                                <VisibilityPicker
-                                    currentUid={user?.uid || ''}
-                                    visibility={visibility}
-                                    onVisibilityChange={setVisibility}
-                                    selectedListIds={allowedListIds}
-                                    onSelectedListIdsChange={setAllowedListIds}
-                                    selectedUserIds={allowedUserIds}
-                                    onSelectedUserIdsChange={setAllowedUserIds}
-                                />
+                        {/* Visibility */}
+                        <div className="pt-5" style={{ borderTop: '1px solid rgba(203,200,195,0.5)' }}>
+                            <div className="flex items-center gap-2.5 mb-4">
+                                <Globe size={14} style={{ color: '#9c9590' }} />
+                                <span className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>公開設定</span>
                             </div>
+                            <VisibilityPicker
+                                currentUid={user?.uid || ''}
+                                visibility={visibility}
+                                onVisibilityChange={setVisibility}
+                                selectedListIds={allowedListIds}
+                                onSelectedListIdsChange={setAllowedListIds}
+                                selectedUserIds={allowedUserIds}
+                                onSelectedUserIdsChange={setAllowedUserIds}
+                            />
+                        </div>
+                    </section>
 
-
-                    </div>
-
+                    {/* Admin */}
                     {isAdmin && (
-                        <div className="bg-red-50/30 border border-red-300 p-6 sm:p-8 rounded-sm space-y-4">
-                            <h3 className="text-sm font-bold text-red-600 mb-1 tracking-widest flex items-center gap-2"><Crown size={16} />【管理者機能】 代理投稿</h3>
-                            <p className="text-xs text-brand-600 mb-3">他のユーザーとして投稿する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br />※空欄の場合はあなた自身として投稿されます。</p>
-                            <input type="text" value={overrideUserId} onChange={e => setOverrideUserId(e.target.value)} className="w-full border border-red-200 rounded-sm p-3.5 bg-[#fffdf9] text-sm focus:border-red-500 focus:ring-red-500 transition-colors outline-none" placeholder="例: taro_123" />
-                        </div>
+                        <section className="rounded-2xl p-6 relative overflow-hidden"
+                                 style={{ background: 'rgba(254,242,242,0.7)', border: '1px solid rgba(252,165,165,0.4)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+                                 style={{ background: 'linear-gradient(180deg, #ef4444, #c0392b)' }} />
+                            <div className="flex items-center gap-2 mb-1">
+                                <Crown size={14} className="text-red-500" />
+                                <h3 className="text-sm font-bold tracking-widest text-red-600">【管理者機能】 代理投稿</h3>
+                            </div>
+                            <p className="text-xs mb-3" style={{ color: '#6b6560' }}>他ユーザーとして投稿する場合、ユーザーID（@以降）を入力してください。</p>
+                            <input type="text" value={overrideUserId} onChange={e => setOverrideUserId(e.target.value)}
+                                   className="w-full rounded-xl p-4 text-sm outline-none"
+                                   style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(252,165,165,0.5)', color: '#2a2520' }}
+                                   placeholder="例: taro_123" />
+                        </section>
                     )}
 
-                    <div className="pb-12 pt-6">
-                        <button type="submit" disabled={isSaving} className="w-full py-4 font-bold text-lg rounded-sm transition-all shadow-xl tracking-widest border flex items-center justify-center gap-3 transform hover:-translate-y-0.5 bg-gradient-to-r from-[#2a1a17] to-[#3e2723] text-[#d4af37] border-[#b8860b] hover:from-[#1a110f] hover:to-[#2a1a17]">
+                    {/* Submit */}
+                    <div className="pb-8 pt-2">
+                        <button type="submit" disabled={isSaving}
+                                className="w-full py-4 font-bold text-base rounded-2xl transition-all tracking-widest flex items-center justify-center gap-3 disabled:opacity-50"
+                                style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)', color: '#fff', boxShadow: '0 8px 30px rgba(124,58,237,0.4), 6px 6px 18px #cbc8c3, -6px -6px 18px #ffffff' }}>
                             {editPid ? (
-                                <><CloudUpload className="w-6 h-6" /> 編集を保存する</>
+                                <><CloudUpload size={20} /> 編集を保存する</>
                             ) : (
-                                <><Podcast className="w-6 h-6" /> 音声を配信する</>
+                                <><Podcast size={20} /> 音声を配信する</>
                             )}
                         </button>
                     </div>
                 </form>
             </main>
 
+            {/* Upload overlay */}
             {isSaving && (
-                <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
-                    <div className="bg-[#fffdf9] p-8 rounded-sm shadow-2xl border border-brand-300 text-center max-w-sm w-full">
-                        <CloudUpload className="text-4xl text-[#b8860b] mb-4 w-12 h-12 mx-auto animate-bounce" />
-                        <h3 className="text-lg font-bold text-brand-900 font-serif tracking-widest mb-2">アップロード中...</h3>
-                        <p className="text-xs text-brand-500 mb-4 tracking-widest">{progressText}</p>
-                        <div className="w-full bg-brand-100 rounded-full h-2.5 overflow-hidden">
-                            <div className="bg-[#b8860b] h-2.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+                     style={{ background: 'rgba(42,37,32,0.6)', backdropFilter: 'blur(16px)' }}>
+                    <div className="text-center max-w-sm w-full p-8 rounded-3xl"
+                         style={{ background: 'rgba(240,237,232,0.97)', boxShadow: '0 24px 60px rgba(42,37,32,0.25)', border: '1px solid rgba(255,255,255,0.7)' }}>
+                        <div className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center animate-bounce"
+                             style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)', boxShadow: '0 8px 24px rgba(124,58,237,0.4)' }}>
+                            <CloudUpload size={28} color="white" />
                         </div>
+                        <h3 className="text-base font-bold tracking-widest mb-2" style={{ color: '#2a2520' }}>アップロード中...</h3>
+                        <p className="text-xs mb-5 tracking-widest" style={{ color: '#9c9590' }}>{progressText}</p>
+                        <div className="w-full rounded-full h-2 overflow-hidden"
+                             style={{ background: 'rgba(203,200,195,0.5)', boxShadow: 'inset 2px 2px 5px #cbc8c3' }}>
+                            <div className="h-2 rounded-full transition-all duration-300"
+                                 style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #7c3aed, #a855f7)' }} />
+                        </div>
+                        <p className="text-xs mt-2 font-bold" style={{ color: '#7c3aed' }}>{progress}%</p>
                     </div>
                 </div>
             )}

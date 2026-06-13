@@ -11,6 +11,7 @@ import {
     Clock, Eye, Send, X, Copy, Loader2, PenLine, Trash2, ChevronUp,
     CornerDownRight, AlertTriangle
 } from 'lucide-react';
+import { ArticleRenderer } from '@/components/ArticleRenderer';
 
 /* ── Design tokens ─────────────────────────────────────────────── */
 const BG   = '#f8f6f3';
@@ -453,8 +454,7 @@ function ArticleViewInner() {
                 )}
 
                 {/* Article body */}
-                <div className="article-body" dangerouslySetInnerHTML={{ __html: processedBody }}
-                    style={{ fontSize:15, lineHeight:1.85, color:T1, marginBottom:40 }} />
+                <ArticleRenderer html={processedBody} />
 
                 {/* Action bar */}
                 <div style={{
@@ -632,6 +632,7 @@ function ArticleViewInner() {
             {/* Article body styles */}
             <style>{`
                 @keyframes spin{to{transform:rotate(360deg)}}
+                .article-body { margin-bottom: 40px; }
                 .article-body h2 { font-size: 22px; font-weight: 800; margin: 32px 0 12px; color: ${T1}; border-bottom: 2px solid rgba(0,0,0,.06); padding-bottom: 8px; }
                 .article-body h3 { font-size: 17px; font-weight: 700; margin: 24px 0 8px; color: ${T1}; }
                 .article-body p { margin: 0 0 12px; }

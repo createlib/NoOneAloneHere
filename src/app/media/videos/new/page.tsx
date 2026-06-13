@@ -95,7 +95,7 @@ function VideoPostContent() {
                 if (data.sourceType === 'url' || data.embedUrl) {
                     setVideoInputType('url');
                     setVideoUrl(data.sourceUrl || data.embedUrl || '');
-                    handleUrlPreview(data.sourceUrl || data.embedUrl);
+                    handleUrlPreview(data.sourceUrl || data.embedUrl || '');
                 } else {
                     setVideoInputType('upload');
                     setVideoPreviewUrl(data.sourceUrl || '');
@@ -371,138 +371,215 @@ function VideoPostContent() {
     };
 
     return (
-        <div className="antialiased min-h-screen bg-texture pb-20">
-            <nav className="bg-[rgba(255,253,249,0.95)] backdrop-blur border-b border-brand-200 fixed w-full z-50 top-0 h-16 shadow-sm">
-                <div className="max-w-4xl mx-auto px-4 h-full flex justify-between items-center">
-                    <button onClick={() => router.back()} className="text-brand-500 hover:text-brand-800 transition-colors flex items-center gap-2 text-sm font-bold tracking-widest">
-                        <div className="w-8 h-8 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center hover:bg-brand-100 transition-colors">
-                            <ArrowLeft size={16} />
-                        </div>
+        <div className="antialiased min-h-screen pb-28" style={{ background: 'linear-gradient(135deg, #f0ede8 0%, #e8e4df 100%)' }}>
+            {/* Header */}
+            <nav className="fixed w-full z-50 top-0 h-14"
+                 style={{ background: 'rgba(240,237,232,0.88)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 2px 20px rgba(120,110,100,0.08)' }}>
+                <div className="max-w-3xl mx-auto px-4 h-full flex items-center justify-between">
+                    <button onClick={() => router.back()}
+                            className="flex items-center gap-2 text-sm font-bold tracking-widest transition-all group"
+                            style={{ color: '#6b6560' }}>
+                        <span className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                              style={{ background: '#eae8e4', boxShadow: '3px 3px 8px #cbc8c3, -3px -3px 8px #ffffff' }}>
+                            <ArrowLeft size={15} />
+                        </span>
                         <span className="hidden sm:inline">キャンセル</span>
                     </button>
-                    <h1 className="font-serif font-bold text-brand-900 tracking-widest text-lg flex items-center gap-2">
-                        <Film className="text-[#b8860b]" /> 動画の投稿・編集
-                    </h1>
-                    <div className="w-20"></div>
+                    <div className="flex items-center gap-2.5">
+                        <span className="w-8 h-8 rounded-xl flex items-center justify-center"
+                              style={{ background: 'linear-gradient(135deg, #c0392b, #922b21)', boxShadow: '0 4px 12px rgba(192,57,43,0.35)' }}>
+                            <Film size={15} color="white" />
+                        </span>
+                        <h1 className="font-bold tracking-widest text-base" style={{ color: '#2a2520' }}>
+                            動画の投稿・編集
+                        </h1>
+                    </div>
+                    <div className="w-20" />
                 </div>
             </nav>
 
             <main className="max-w-3xl mx-auto pt-24 px-4 sm:px-6">
                 <div className="mb-8 text-center">
-                    <p className="text-sm text-brand-600 tracking-widest leading-relaxed">
-                        あなたの活動やPRを動画で届けましょう。<br />
-                        <span className="text-xs text-brand-400">※動画ファイルのアップロード、またはYouTube等のURL指定が可能です。</span>
+                    <p className="text-sm tracking-widest leading-relaxed" style={{ color: '#6b6560' }}>
+                        あなたの活動やPRを動画で届けましょう。
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: '#9c9590' }}>
+                        ※ YouTube URL指定またはファイルアップロードが可能です
                     </p>
                 </div>
 
-                <form onSubmit={handleSave} className="space-y-8">
+                <form onSubmit={handleSave} className="space-y-6">
 
-                    {/* Video Input */}
-                    <div className="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm">
-                        <label className="flex items-center text-sm font-bold text-brand-900 mb-4 tracking-widest"><Video className="text-[#b8860b] mr-2" size={16} />動画データ <span className="text-red-500 ml-1">*</span></label>
-                        
-                        <div className="flex gap-6 mb-4 border-b border-brand-200">
-                            <button type="button" onClick={() => setVideoInputType('url')} className={`pb-2 border-b-2 text-sm tracking-widest transition-colors ${videoInputType === 'url' ? 'border-brand-600 text-brand-900 font-bold' : 'border-transparent text-brand-400 hover:text-brand-600'}`}>URLを指定</button>
-                            <button type="button" onClick={() => setVideoInputType('upload')} className={`pb-2 border-b-2 text-sm tracking-widest transition-colors flex items-center gap-1.5 ${videoInputType === 'upload' ? 'border-brand-600 text-brand-900 font-bold' : 'border-transparent text-brand-400 hover:text-brand-600'}`}>
-                                ファイルをアップロード {(!isAdmin) && <span className="text-[9px] bg-brand-100 text-brand-600 px-1.5 py-0.5 rounded-sm font-bold tracking-widest">準備中</span>}
-                            </button>
+                    {/* Section: 動画データ */}
+                    <section className="rounded-2xl p-6 sm:p-8"
+                             style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                        <div className="flex items-center gap-2.5 mb-5">
+                            <span className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                  style={{ background: 'linear-gradient(135deg, #c0392b, #922b21)', boxShadow: '0 3px 10px rgba(192,57,43,0.3)' }}>
+                                <Video size={13} color="white" />
+                            </span>
+                            <span className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>
+                                動画データ <span className="text-red-500">*</span>
+                            </span>
+                        </div>
+
+                        {/* Tab switcher */}
+                        <div className="flex gap-1 mb-5 p-1 rounded-xl"
+                             style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff' }}>
+                            {(['url', 'upload'] as const).map(t => (
+                                <button key={t} type="button" onClick={() => setVideoInputType(t)}
+                                        className="flex-1 py-2 rounded-lg text-xs font-bold tracking-widest transition-all"
+                                        style={videoInputType === t
+                                            ? { background: 'rgba(255,255,255,0.9)', boxShadow: '3px 3px 8px #cbc8c3, -3px -3px 8px #ffffff', color: '#2a2520' }
+                                            : { color: '#9c9590' }}>
+                                    {t === 'url' ? 'URL を指定' : (
+                                        <>ファイルをアップロード {!isAdmin && <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded ml-1">準備中</span>}</>
+                                    )}
+                                </button>
+                            ))}
                         </div>
 
                         {videoInputType === 'url' ? (
                             <div>
-                                <p className="text-[10px] sm:text-xs text-brand-500 mb-2 leading-relaxed">
-                                    <b>YouTube</b>, <b>Vimeo</b>, <b>Google Drive</b> などのリンクを貼り付けると自動で公式プレイヤーが埋め込まれます。
+                                <p className="text-xs mb-3 leading-relaxed" style={{ color: '#9c9590' }}>
+                                    <b style={{ color: '#6b6560' }}>YouTube</b>, <b style={{ color: '#6b6560' }}>Vimeo</b>, <b style={{ color: '#6b6560' }}>Google Drive</b> のURLを貼り付けてください
                                 </p>
-                                <input type="url" value={videoUrl} onChange={e => handleUrlPreview(e.target.value)} className="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="https://www.youtube.com/watch?v=..." />
+                                <input type="url" value={videoUrl} onChange={e => handleUrlPreview(e.target.value)}
+                                       className="w-full rounded-xl p-4 text-sm outline-none transition-all"
+                                       style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                       placeholder="https://www.youtube.com/watch?v=..." />
                             </div>
                         ) : (
                             <div>
-                                <p className="text-xs text-brand-500 mb-3">MP4形式などの動画ファイルを選択してください。（※上限: 100MB）</p>
-                                <input type="file" accept="video/mp4, video/webm, video/quicktime" onChange={handleVideoFileUpload} className="block w-full text-sm text-brand-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-sm file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-[#b8860b] hover:file:bg-brand-100 file:border file:border-brand-200 file:cursor-pointer transition-colors bg-[#f7f5f0] p-2 rounded-sm border border-brand-200" />
+                                <p className="text-xs mb-3" style={{ color: '#9c9590' }}>MP4形式などの動画ファイルを選択してください（上限: 100MB）</p>
+                                <input type="file" accept="video/mp4, video/webm, video/quicktime" onChange={handleVideoFileUpload}
+                                       className="block w-full text-sm file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:cursor-pointer transition-colors rounded-xl p-2"
+                                       style={{ background: '#eae8e4', color: '#6b6560' }} />
                             </div>
                         )}
 
                         {videoPreviewUrl && (
-                            <div className="mt-4 bg-brand-50 p-4 rounded-sm border border-brand-200">
-                                <p className="text-[10px] font-bold text-brand-500 tracking-widest uppercase mb-2">Preview</p>
+                            <div className="mt-5 rounded-xl overflow-hidden"
+                                 style={{ boxShadow: '3px 3px 10px #cbc8c3, -3px -3px 10px #ffffff' }}>
+                                <div className="px-4 py-2 text-[10px] font-bold tracking-widest uppercase"
+                                     style={{ background: 'rgba(234,232,228,0.8)', color: '#9c9590' }}>Preview</div>
                                 {isEmbedMode ? (
-                                    <iframe src={videoPreviewUrl} className="w-full rounded-sm shadow-inner bg-black aspect-video" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+                                    <iframe src={videoPreviewUrl} className="w-full bg-black aspect-video" frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                                 ) : (
-                                    <video src={videoPreviewUrl} controls className="w-full rounded-sm bg-black max-h-64"></video>
+                                    <video src={videoPreviewUrl} controls className="w-full bg-black max-h-64" />
                                 )}
                             </div>
                         )}
-                    </div>
+                    </section>
 
-                    {/* Thumbnail Input */}
-                    <div className="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm">
-                        <label className="flex items-center text-sm font-bold text-brand-900 mb-2 tracking-widest"><ImageIcon className="text-[#b8860b] mr-2" size={16} />サムネイル画像 <span className="text-[10px] text-brand-400 font-normal ml-1">(任意)</span></label>
-                        <p className="text-xs text-brand-500 mb-4">設定しない場合はデフォルト背景が適用されます。<br />YouTube等のリンクを使用する場合は自動で画像が取得されます。</p>
-                        <div className="flex flex-col items-center sm:flex-row gap-6">
-                            <label className="relative w-full sm:w-64 aspect-video bg-brand-50 rounded-sm border-2 border-dashed border-brand-300 flex flex-col items-center justify-center text-brand-400 hover:bg-[#fffdf9] cursor-pointer overflow-hidden group shadow-inner">
-                                <input type="file" accept="image/*" onChange={handleThumbUpload} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                                {thumbPreviewUrl ? (
-                                    <img src={thumbPreviewUrl} className="absolute inset-0 w-full h-full object-cover" alt="Thumbnail Preview" />
-                                ) : (
-                                    <div className="group-hover:scale-110 transition-transform flex flex-col items-center">
-                                        <ImageIcon className="text-3xl mb-2" />
-                                        <span className="text-xs tracking-widest font-bold">画像を選択</span>
-                                    </div>
-                                )}
+                    {/* Section: サムネイル */}
+                    <section className="rounded-2xl p-6 sm:p-8"
+                             style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                        <div className="flex items-center gap-2.5 mb-2">
+                            <span className="w-7 h-7 rounded-lg flex items-center justify-center"
+                                  style={{ background: 'linear-gradient(135deg, #c0392b, #922b21)', boxShadow: '0 3px 10px rgba(192,57,43,0.3)' }}>
+                                <ImageIcon size={13} color="white" />
+                            </span>
+                            <span className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>
+                                サムネイル画像 <span className="text-xs font-normal ml-1" style={{ color: '#9c9590' }}>(任意)</span>
+                            </span>
+                        </div>
+                        <p className="text-xs mb-5" style={{ color: '#9c9590' }}>設定しない場合はデフォルト背景が適用されます。YouTube URLの場合は自動取得されます。</p>
+                        <label className="relative flex w-full sm:w-64 aspect-video rounded-xl cursor-pointer overflow-hidden group transition-all"
+                               style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff' }}>
+                            <input type="file" accept="image/*" onChange={handleThumbUpload} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                            {thumbPreviewUrl ? (
+                                <img src={thumbPreviewUrl} className="absolute inset-0 w-full h-full object-contain" alt="Thumbnail" />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center w-full gap-2 group-hover:scale-105 transition-transform">
+                                    <ImageIcon size={28} style={{ color: '#9c9590' }} />
+                                    <span className="text-xs font-bold tracking-widest" style={{ color: '#9c9590' }}>クリックして画像を選択</span>
+                                </div>
+                            )}
+                        </label>
+                    </section>
+
+                    {/* Section: テキスト情報 */}
+                    <section className="rounded-2xl p-6 sm:p-8 space-y-6"
+                             style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                        <div>
+                            <label className="block text-sm font-bold mb-3 tracking-widest" style={{ color: '#2a2520' }}>
+                                動画タイトル <span className="text-red-500">*</span>
                             </label>
+                            <input type="text" value={title} onChange={e => setTitle(e.target.value)} required
+                                   className="w-full rounded-xl p-4 text-sm font-bold outline-none"
+                                   style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                   placeholder="動画のタイトルを入力" />
                         </div>
-                    </div>
-
-                    {/* Text Inputs */}
-                    <div className="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm space-y-6">
                         <div>
-                            <label className="block text-sm font-bold text-brand-900 mb-2 tracking-widest">動画タイトル <span className="text-red-500">*</span></label>
-                            <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full border border-brand-200 rounded-sm p-3.5 bg-[#f7f5f0] text-sm font-bold focus:bg-white transition-colors" placeholder="動画のタイトルを入力" />
-                        </div>
-
-                        <div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-2 gap-2">
-                                <label className="block text-sm font-bold text-brand-900 tracking-widest">概要欄・説明</label>
-                                <span className="text-[10px] bg-[#f7f5f0] text-brand-600 px-2 py-1 rounded-sm border border-brand-200 font-bold tracking-widest flex items-center gap-1 w-fit">Markdown対応</span>
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>概要欄・説明</label>
+                                <span className="text-[10px] font-bold tracking-widest px-2.5 py-1 rounded-lg"
+                                      style={{ background: '#eae8e4', color: '#9c9590', boxShadow: '2px 2px 5px #cbc8c3, -2px -2px 5px #ffffff' }}>
+                                    Markdown 対応
+                                </span>
                             </div>
-                            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6} className="w-full border border-brand-200 rounded-sm p-4 bg-[#f7f5f0] text-sm leading-relaxed focus:bg-white transition-colors" placeholder="・動画の概要&#13;&#10;・今回のテーマについて&#13;&#10;・関連リンク集"></textarea>
+                            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={6}
+                                      className="w-full rounded-xl p-4 text-sm leading-relaxed outline-none resize-none"
+                                      style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                      placeholder={"・動画の概要\n・今回のテーマについて\n・関連リンク集"} />
                         </div>
-                    </div>
+                    </section>
 
-                    {/* Tags and Settings */}
-                    <div className="bg-[#fffdf9] border border-brand-200 rounded-sm p-6 sm:p-8 shadow-sm space-y-8">
+                    {/* Section: タグ・設定 */}
+                    <section className="rounded-2xl p-6 sm:p-8 space-y-7"
+                             style={{ background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                        {/* Tags */}
                         <div>
-                            <label className="flex items-center text-sm font-bold text-brand-900 mb-3 tracking-widest"><Tags className="text-brand-400 mr-2" size={16} />カテゴリー・タグ</label>
+                            <div className="flex items-center gap-2.5 mb-4">
+                                <Tags size={14} style={{ color: '#9c9590' }} />
+                                <span className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>カテゴリー・タグ</span>
+                            </div>
                             <div className="flex flex-wrap gap-2.5 mb-4">
                                 {presetTags.map(tag => (
                                     <label key={tag.value} className="cursor-pointer">
                                         <input type="checkbox" checked={selectedTags.includes(tag.value)} onChange={() => handleTagToggle(tag.value)} className="hidden" />
-                                        <div className={`px-4 py-2 border text-xs font-bold rounded-sm tracking-widest transition-all shadow-sm ${selectedTags.includes(tag.value) ? 'bg-brand-100 border-brand-300 text-brand-800' : 'bg-white border-brand-200 text-brand-700 hover:bg-brand-50'}`}>
+                                        <div className="px-4 py-2 rounded-xl text-xs font-bold tracking-widest transition-all"
+                                             style={selectedTags.includes(tag.value)
+                                                 ? { background: 'linear-gradient(135deg, #c0392b, #922b21)', color: '#fff', boxShadow: '0 4px 12px rgba(192,57,43,0.35)' }
+                                                 : { background: '#eae8e4', color: '#6b6560', boxShadow: '3px 3px 8px #cbc8c3, -3px -3px 8px #ffffff' }}>
                                             {tag.label}
                                         </div>
                                     </label>
                                 ))}
                             </div>
-                            <input type="text" value={customTags} onChange={e => setCustomTags(e.target.value)} className="w-full border border-brand-200 rounded-sm p-3 bg-[#f7f5f0] text-sm focus:bg-white transition-colors" placeholder="その他のタグ (カンマ区切りで入力)" />
+                            <input type="text" value={customTags} onChange={e => setCustomTags(e.target.value)}
+                                   className="w-full rounded-xl p-3.5 text-sm outline-none"
+                                   style={{ background: '#eae8e4', boxShadow: 'inset 3px 3px 8px #cbc8c3, inset -3px -3px 8px #ffffff', border: 'none', color: '#2a2520' }}
+                                   placeholder="その他のタグ（カンマ区切りで入力）" />
                         </div>
 
-                        <div className="border-t border-brand-100 pt-6">
-                            <label className="flex items-center text-sm font-bold text-brand-900 mb-4 tracking-widest"><MessageSquare className="text-brand-400 mr-2" size={16} />コメント機能の設定</label>
-                            <div className="flex gap-6">
-                                <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
-                                    <input type="radio" checked={allowComments} onChange={() => setAllowComments(true)} className="text-[#b8860b] focus:ring-[#b8860b]" /> 許可する
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-brand-700 bg-[#f7f5f0] border border-brand-200 px-4 py-2 rounded-sm hover:bg-white transition-colors">
-                                    <input type="radio" checked={!allowComments} onChange={() => setAllowComments(false)} className="text-brand-400 focus:ring-brand-400" /> 許可しない
-                                </label>
+                        {/* Comments */}
+                        <div className="pt-5" style={{ borderTop: '1px solid rgba(203,200,195,0.5)' }}>
+                            <div className="flex items-center gap-2.5 mb-4">
+                                <MessageSquare size={14} style={{ color: '#9c9590' }} />
+                                <span className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>コメント設定</span>
+                            </div>
+                            <div className="flex gap-3">
+                                {[{ v: true, label: '許可する' }, { v: false, label: '許可しない' }].map(opt => (
+                                    <label key={String(opt.v)} className="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl text-sm font-bold tracking-widest transition-all"
+                                           style={allowComments === opt.v
+                                               ? { background: 'linear-gradient(135deg, #c0392b, #922b21)', color: '#fff', boxShadow: '0 4px 12px rgba(192,57,43,0.35)' }
+                                               : { background: '#eae8e4', color: '#6b6560', boxShadow: '3px 3px 8px #cbc8c3, -3px -3px 8px #ffffff' }}>
+                                        <input type="radio" checked={allowComments === opt.v} onChange={() => setAllowComments(opt.v)} className="hidden" />
+                                        {opt.label}
+                                    </label>
+                                ))}
                             </div>
                         </div>
 
-                        {/* 公開設定 */}
-                        <div className="border-t border-brand-100 pt-6">
-                            <label className="flex items-center text-sm font-bold text-brand-900 mb-4 tracking-widest">
-                                <Globe className="text-brand-400 mr-2" size={16} />公開設定
-                            </label>
+                        {/* Visibility */}
+                        <div className="pt-5" style={{ borderTop: '1px solid rgba(203,200,195,0.5)' }}>
+                            <div className="flex items-center gap-2.5 mb-4">
+                                <Globe size={14} style={{ color: '#9c9590' }} />
+                                <span className="text-sm font-bold tracking-widest" style={{ color: '#2a2520' }}>公開設定</span>
+                            </div>
                             <VisibilityPicker
                                 currentUid={user?.uid || ''}
                                 visibility={visibility}
@@ -513,35 +590,56 @@ function VideoPostContent() {
                                 onSelectedUserIdsChange={setAllowedUserIds}
                             />
                         </div>
-                    </div>
+                    </section>
 
+                    {/* Admin section */}
                     {isAdmin && (
-                        <div className="bg-red-50/30 border border-red-300 rounded-sm p-6 relative">
-                            <div className="absolute top-0 left-0 w-1 h-full bg-red-500 rounded-l-sm"></div>
-                            <h3 className="flex items-center text-sm font-bold text-red-600 mb-1 tracking-widest"><Crown className="mr-2" size={16} />【管理者機能】 代理投稿</h3>
-                            <p className="text-xs text-brand-600 mb-3">他のユーザーとして投稿する場合、そのユーザーの「希望ユーザーID（@以降の英数字）」を入力してください。<br />※空欄の場合はあなた自身として投稿されます。</p>
-                            <input type="text" value={overrideUserId} onChange={e => setOverrideUserId(e.target.value)} className="w-full border border-red-200 rounded-sm p-3.5 bg-[#fffdf9] text-sm focus:border-red-500 focus:ring-red-500 transition-colors" placeholder="例: taro_123" />
-                        </div>
+                        <section className="rounded-2xl p-6 relative overflow-hidden"
+                                 style={{ background: 'rgba(254,242,242,0.7)', border: '1px solid rgba(252,165,165,0.4)', boxShadow: '10px 10px 30px #c2bfba, -10px -10px 30px #ffffff' }}>
+                            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+                                 style={{ background: 'linear-gradient(180deg, #ef4444, #c0392b)' }} />
+                            <div className="flex items-center gap-2 mb-1">
+                                <Crown size={14} className="text-red-500" />
+                                <h3 className="text-sm font-bold tracking-widest text-red-600">【管理者機能】 代理投稿</h3>
+                            </div>
+                            <p className="text-xs mb-3" style={{ color: '#6b6560' }}>他ユーザーとして投稿する場合、ユーザーID（@以降）を入力してください。</p>
+                            <input type="text" value={overrideUserId} onChange={e => setOverrideUserId(e.target.value)}
+                                   className="w-full rounded-xl p-4 text-sm outline-none"
+                                   style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(252,165,165,0.5)', color: '#2a2520' }}
+                                   placeholder="例: taro_123" />
+                        </section>
                     )}
 
-                    <div className="pb-12 pt-6">
-                        <button type="submit" disabled={isSaving} className="w-full py-4 bg-gradient-to-r from-[#3e2723] to-[#2a1a17] text-[#d4af37] font-bold text-lg rounded-sm hover:from-[#2a1a17] hover:to-[#1a110f] transition-all shadow-xl tracking-widest border border-[#b8860b] flex items-center justify-center gap-3 transform hover:-translate-y-0.5 disabled:opacity-50">
-                            <CloudUpload size={24} /> {editVid ? '編集を保存する' : '動画を公開する'}
+                    {/* Submit */}
+                    <div className="pb-8 pt-2">
+                        <button type="submit" disabled={isSaving}
+                                className="w-full py-4 font-bold text-base rounded-2xl transition-all tracking-widest flex items-center justify-center gap-3 disabled:opacity-50"
+                                style={{ background: 'linear-gradient(135deg, #c0392b 0%, #922b21 100%)', color: '#fff', boxShadow: '0 8px 30px rgba(192,57,43,0.4), 6px 6px 18px #cbc8c3, -6px -6px 18px #ffffff' }}>
+                            <CloudUpload size={20} />
+                            {editVid ? '編集を保存する' : '動画を公開する'}
                         </button>
                     </div>
-
                 </form>
             </main>
 
+            {/* Upload overlay */}
             {isSaving && (
-                <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center">
-                    <div className="bg-[#fffdf9] p-8 rounded-sm shadow-2xl border border-brand-300 text-center max-w-sm w-full mx-4">
-                        <CloudUpload className="mx-auto w-10 h-10 text-[#b8860b] mb-4 animate-bounce" />
-                        <h3 className="text-lg font-bold text-brand-900 font-serif tracking-widest mb-2">アップロード中...</h3>
-                        <p className="text-xs text-brand-500 mb-4 tracking-widest">{progressText || 'しばらくお待ちください'}</p>
-                        <div className="w-full bg-brand-100 rounded-full h-2.5 overflow-hidden">
-                            <div className="bg-[#b8860b] h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center px-4"
+                     style={{ background: 'rgba(42,37,32,0.6)', backdropFilter: 'blur(16px)' }}>
+                    <div className="text-center max-w-sm w-full p-8 rounded-3xl"
+                         style={{ background: 'rgba(240,237,232,0.97)', boxShadow: '0 24px 60px rgba(42,37,32,0.25)', border: '1px solid rgba(255,255,255,0.7)' }}>
+                        <div className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center animate-bounce"
+                             style={{ background: 'linear-gradient(135deg, #c0392b, #922b21)', boxShadow: '0 8px 24px rgba(192,57,43,0.4)' }}>
+                            <CloudUpload size={28} color="white" />
                         </div>
+                        <h3 className="text-base font-bold tracking-widest mb-2" style={{ color: '#2a2520' }}>アップロード中...</h3>
+                        <p className="text-xs mb-5 tracking-widest" style={{ color: '#9c9590' }}>{progressText || 'しばらくお待ちください'}</p>
+                        <div className="w-full rounded-full h-2 overflow-hidden"
+                             style={{ background: 'rgba(203,200,195,0.5)', boxShadow: 'inset 2px 2px 5px #cbc8c3' }}>
+                            <div className="h-2 rounded-full transition-all duration-300"
+                                 style={{ width: `${uploadProgress}%`, background: 'linear-gradient(90deg, #c0392b, #e74c3c)' }} />
+                        </div>
+                        <p className="text-xs mt-2 font-bold" style={{ color: '#c0392b' }}>{uploadProgress}%</p>
                     </div>
                 </div>
             )}
@@ -551,7 +649,12 @@ function VideoPostContent() {
 
 export default function VideoPostPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-texture flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#b8860b]"></div></div>}>
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f0ede8, #e8e4df)' }}>
+                <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin"
+                     style={{ borderColor: '#c0392b', borderTopColor: 'transparent' }} />
+            </div>
+        }>
             <VideoPostContent />
         </Suspense>
     );
