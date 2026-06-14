@@ -127,19 +127,23 @@ function TabPanelNodeView({ node, updateAttributes, getPos, editor }: any) {
                             border: 'none', background: 'transparent', outline: 'none',
                             fontSize: 11, fontWeight: 700, color: SAGE, cursor: 'text',
                             fontFamily: "'Noto Sans JP', sans-serif",
+                            flex: 1,
                         }}
                     />
+                    <span style={{ fontSize: 9, color: TM, letterSpacing: '.06em', flexShrink: 0, marginRight: 4 }}>
+                        テキスト・画像を複数追加可
+                    </span>
                     <button
                         onClick={deletePanel}
-                        style={{ marginLeft: 'auto', border: 'none', background: 'transparent', cursor: 'pointer', color: TM, display: 'flex', padding: 2 }}
+                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: TM, display: 'flex', padding: 2 }}
                         title="このタブを削除"
                     >
                         <Trash2 size={11} />
                     </button>
                 </div>
 
-                {/* タブ内容（インライン編集） */}
-                <div style={{ padding: '10px 12px' }}>
+                {/* タブ内容（インライン編集） — テキスト・画像・リストなど複数ブロックを追加可能 */}
+                <div style={{ padding: '10px 12px', minHeight: 60 }}>
                     <NodeViewContent />
                 </div>
             </div>

@@ -128,3 +128,13 @@ html, body {
 .markdown-body hr {
   @apply border-0 border-t-2 border-dashed border-brand-200 my-6;
 }
+
+/* ── NOAH article tab header: hide scrollbar, enable touch scroll ── */
+.noah-tabs-header {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.noah-tabs-header::-webkit-scrollbar {
+  display: none;
+}

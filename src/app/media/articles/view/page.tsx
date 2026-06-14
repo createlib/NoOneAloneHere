@@ -644,7 +644,7 @@ function ArticleViewInner() {
                 .article-body pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 10px; margin: 16px 0; overflow-x: auto; font-size: 13px; line-height: 1.6; }
                 .article-body code { background: rgba(0,0,0,.06); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
                 .article-body pre code { background: transparent; padding: 0; }
-                .article-body img { max-width: 100%; border-radius: 10px; margin: 16px 0; }
+                .article-body img { max-width: 100%; border-radius: 10px; margin: 16px 0; display: block; }
                 .article-body a { color: ${SAGE}; text-decoration: underline; }
                 .article-body mark { background: #fef08a; padding: 1px 4px; border-radius: 3px; }
                 .article-body hr { border: none; border-top: 2px solid rgba(0,0,0,.06); margin: 24px 0; }
@@ -653,6 +653,8 @@ function ArticleViewInner() {
                 .article-body th { background: rgba(74,124,89,.06); font-weight: 700; }
                 .article-body s { text-decoration: line-through; color: ${TM}; }
                 .article-body iframe { border-radius: 10px; margin: 16px 0; max-width: 100%; }
+                /* タブヘッダースクロールバー非表示（Webkit） */
+                .noah-tabs-header::-webkit-scrollbar { display: none; }
             `}</style>
         </div>
     );

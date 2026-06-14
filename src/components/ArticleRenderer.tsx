@@ -66,23 +66,32 @@ function TabsBlock({ tabs }: { tabs: TabData[] }) {
 
     return (
         <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: NEU_SM, marginBottom: 16 }}>
-            {/* タブヘッダー */}
-            <div style={{
-                display: 'flex', background: BG,
-                borderBottom: '1px solid rgba(0,0,0,.08)',
-                overflowX: 'auto', scrollbarWidth: 'none',
-            }}>
+            {/* タブヘッダー（横スクロール対応） */}
+            <div
+                style={{
+                    display: 'flex', background: BG,
+                    borderBottom: '1px solid rgba(0,0,0,.08)',
+                    overflowX: 'auto',
+                    /* スクロールバー非表示 */
+                    scrollbarWidth: 'none',
+                    /* iOS スムーズスクロール */
+                    WebkitOverflowScrolling: 'touch' as any,
+                }}
+                /* Webkit 用スクロールバー非表示 */
+                className="noah-tabs-header"
+            >
                 {tabs.map((tab, i) => (
                     <button
                         key={i}
                         onClick={() => setActiveIdx(i)}
                         style={{
-                            padding: '10px 18px', border: 'none', flexShrink: 0,
+                            padding: '10px 20px', border: 'none', flexShrink: 0,
                             borderBottom: i === activeIdx ? `2.5px solid ${SAGE}` : '2.5px solid transparent',
                             background: 'transparent',
-                            fontSize: 12, fontWeight: i === activeIdx ? 700 : 500,
+                            fontSize: 13, fontWeight: i === activeIdx ? 700 : 500,
                             color: i === activeIdx ? T1 : TM,
                             cursor: 'pointer', transition: 'all .15s',
+                            whiteSpace: 'nowrap',
                         }}
                     >
                         {tab.label}
