@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -37,6 +37,7 @@ function RegisterForm() {
   const [isReferrerValid, setIsReferrerValid] = useState(false);
   const [referrerMsg, setReferrerMsg]     = useState('半角英数字とアンダーバーのみ');
   const [referrerStatus, setReferrerStatus] = useState<'idle'|'checking'|'valid'|'invalid'|'admin'|'ban'>('idle');
+  const [referrerUid, setReferrerUid]     = useState<string|null>(null);  // 紹介者のFirestore UID
 
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [notification, setNotification]   = useState<{msg:string, type:'error'|'success'|'info'}|null>(null);
@@ -68,6 +69,7 @@ function RegisterForm() {
 
   const checkReferrer = async (value: string) => {
     setIsReferrerValid(false);
+    setReferrerUid(null);
     if (!value) { setReferrerMsg('半角英数字とアンダーバーのみ'); setReferrerStatus('idle'); return; }
     if (value === ADMIN_SECRET) { setReferrerMsg('管理者モード: 紹介者チェックをスキップします'); setReferrerStatus('admin'); setIsReferrerValid(true); return; }
     if (value === 'admin') { setReferrerMsg('このIDは紹介者として指定できません'); setReferrerStatus('ban'); return; }
@@ -79,6 +81,7 @@ function RegisterForm() {
         const ud = snap.docs[0].data();
         setReferrerMsg(`紹介者: ${ud.name || ud.userId || 'ユーザー'} さんを確認しました`);
         setReferrerStatus('valid'); setIsReferrerValid(true);
+        setReferrerUid(snap.docs[0].id);  // 紹介者のUIDを保持
       } else {
         setReferrerMsg('該当する紹介者が見つかりません'); setReferrerStatus('invalid');
       }
@@ -107,20 +110,30 @@ function RegisterForm() {
         hometownVisibility: 'public', activityAreaVisibility: 'public',
       });
       await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'users', newUser.uid), {
-        userId: userid, name: userid, email, isHidden: true,
+        userId: userid, name: userid, email, isHidden: false,  // 登録直後から公開状態
         updatedAt: ts, referrerId: referrer||null, profileScore: 0
       });
 
-      if (referrer && referrer !== ADMIN_SECRET) {
+      // 紹介者を自動フォロー＆通知（招待された人は登録時に招待者をフォロー）
+      const resolvedReferrerUid = referrerUid; // checkReferrerで取得済み
+      if (referrer && referrer !== ADMIN_SECRET && resolvedReferrerUid) {
         try {
-          const refSnap = await getDocs(query(usersRef, where("userId", "==", referrer)));
-          if (!refSnap.empty) {
-            await addDoc(collection(db, 'artifacts', APP_ID, 'users', refSnap.docs[0].id, 'notifications'), {
-              type:'new_member', title:'新しい乗船者',
-              body:`あなたの紹介リンクから ${userid} さんがNOAHに乗船しました！`,
-              link:`/user?uid=${newUser.uid}`, fromUid: newUser.uid, isRead:false, createdAt:Date.now()
-            });
-          }
+          // 新規ユーザー → 紹介者をフォロー中に追加
+          await setDoc(
+            doc(db, 'artifacts', APP_ID, 'users', newUser.uid, 'following', resolvedReferrerUid),
+            { followedAt: ts }
+          );
+          // 紹介者のフォロワーリストに新規ユーザーを追加
+          await setDoc(
+            doc(db, 'artifacts', APP_ID, 'users', resolvedReferrerUid, 'followers', newUser.uid),
+            { followedAt: ts }
+          );
+          // 紹介者に通知を送る（UID直接指定で再クエリ不要）
+          await addDoc(collection(db, 'artifacts', APP_ID, 'users', resolvedReferrerUid, 'notifications'), {
+            type:'new_member', title:'新しい乗船者',
+            body:`あなたの紹介リンクから ${userid} さんがNOAHに乗船しました！`,
+            link:`/user?uid=${newUser.uid}`, fromUid: newUser.uid, isRead:false, createdAt:Date.now()
+          });
         } catch(e) { console.error("Referral Error:", e); }
       }
       showNotif('乗船手続き完了！ホームへ移動します', 'success');
