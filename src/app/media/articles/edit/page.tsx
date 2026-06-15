@@ -28,6 +28,7 @@ import {
     AlignLeft, AlignCenter, Plus, X, Eye, ChevronDown, MessageSquare,
     BookOpen, Hash, Upload, Loader2, FileText, PenLine, Underline as UnderlineIcon,
     Type, Pilcrow, SquareCode, Sparkles, Layers, GalleryHorizontal, ListCollapse,
+    RefreshCw, ArchiveRestore, AlertCircle,
 } from 'lucide-react';
 import VisibilityPicker, { VisibilityMode } from '@/components/VisibilityPicker';
 import AiUpdateModal from '@/components/AiUpdateModal';
@@ -108,6 +109,9 @@ function ArticleEditorInner() {
 
     // ギャラリーアップロード中フラグ
     const [galleryUploading, setGalleryUploading] = useState(false);
+
+    // 下書きに戻す確認モーダル
+    const [showRevertConfirm, setShowRevertConfirm] = useState(false);
 
     // AI 更新チェック
     const [showAiModal, setShowAiModal]       = useState(false);
@@ -215,7 +219,8 @@ function ArticleEditorInner() {
         if (!editor || !user) return;
         const interval = setInterval(() => {
             if (editor.getHTML() && title) {
-                // 公開済み記事は公開保存、下書きは下書き保存（statusを維持）
+                // 公開済み記事は published のまま静かに保存（draft に落とさない）
+                // 下書きは draft のまま保存
                 handleSave(status, true);
             }
         }, 30000);
@@ -332,9 +337,10 @@ function ArticleEditorInner() {
 
             if (!silent) {
                 if (targetStatus === 'published') {
-                    router.push(`/media/articles/view?id=${docId}`);
-                } else {
-                    // Update URL to include edit id
+                    // replace で履歴置き換え → 戻るボタンで編集画面に戻れなくする
+                    router.replace(`/media/articles/view?id=${docId}`);
+                } else if (targetStatus === 'draft') {
+                    // 下書き保存: URL を編集 URL に更新（新規の場合のみ）
                     if (!editId) {
                         window.history.replaceState(null, '', `/media/articles/edit?id=${docId}`);
                     }
@@ -347,6 +353,28 @@ function ArticleEditorInner() {
             if (!silent) setSaving(false);
         }
     }, [user, editor, title, coverUrl, coverFile, tags, category, visibility, allowedUserIds, allowedListIds, allowComments, editId, status, myProfile]);
+
+    /* ── 下書きに戻す ────────────────────────────────────────── */
+    const doRevertToDraft = useCallback(async () => {
+        if (!user || !editor || !editId) return;
+        setSaving(true);
+        try {
+            await setDoc(
+                doc(db, 'artifacts', APP_ID, 'public', 'data', 'articles', editId),
+                { status: 'draft', updatedAt: new Date().toISOString() },
+                { merge: true }
+            );
+            setStatus('draft');
+            setShowRevertConfirm(false);
+            // 記事一覧へ replace（戻れないように）
+            router.replace('/media/podcasts?tab=article');
+        } catch (e: any) {
+            console.error(e);
+            alert(`失敗しました: ${e.message}`);
+        } finally {
+            setSaving(false);
+        }
+    }, [user, editor, editId, router]);
 
     /* ── Cover image handler ─────────────────────────────────── */
     const handleCover = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -541,16 +569,25 @@ function ArticleEditorInner() {
                 </button>
 
                 <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                    {lastSaved && <span style={{ fontSize:9, color:TM, marginRight:6 }}>保存済み {lastSaved}</span>}
-                    <button onClick={() => { setShowDrafts(true); loadDrafts(); }}
-                        style={{
-                            display:'flex', alignItems:'center', gap:4,
-                            padding:'7px 12px', borderRadius:10, border:'none',
-                            background:BG, boxShadow:NEU_SM, fontSize:11, fontWeight:700,
-                            color:SAGE, cursor:'pointer',
-                        }}>
-                        <FileText size={12} /> 下書き一覧
-                    </button>
+                    {lastSaved && (
+                        <span style={{ fontSize:9, color:TM, marginRight:6 }}>
+                            {status === 'published' ? '更新済み' : '保存済み'} {lastSaved}
+                        </span>
+                    )}
+
+                    {/* 下書き一覧（下書き/新規のみ） */}
+                    {status !== 'published' && (
+                        <button onClick={() => { setShowDrafts(true); loadDrafts(); }}
+                            style={{
+                                display:'flex', alignItems:'center', gap:4,
+                                padding:'7px 12px', borderRadius:10, border:'none',
+                                background:BG, boxShadow:NEU_SM, fontSize:11, fontWeight:700,
+                                color:SAGE, cursor:'pointer',
+                            }}>
+                            <FileText size={12} /> 下書き一覧
+                        </button>
+                    )}
+
                     {/* AI更新チェック（既存記事編集時のみ）*/}
                     {editId && (
                         <button
@@ -566,15 +603,35 @@ function ArticleEditorInner() {
                             <Sparkles size={12} /> AI更新チェック
                         </button>
                     )}
-                    <button onClick={() => handleSave('draft')} disabled={saving}
-                        style={{
-                            display:'flex', alignItems:'center', gap:4,
-                            padding:'7px 14px', borderRadius:10, border:'none',
-                            background:BG, boxShadow:NEU_SM, fontSize:11, fontWeight:700,
-                            color:T2, cursor:'pointer',
-                        }}>
-                        <Save size={12} /> 保存
-                    </button>
+
+                    {/* 下書きに戻す（公開済みのみ） */}
+                    {editId && status === 'published' && (
+                        <button onClick={() => setShowRevertConfirm(true)} disabled={saving}
+                            style={{
+                                display:'flex', alignItems:'center', gap:4,
+                                padding:'7px 14px', borderRadius:10, border:'none',
+                                background:BG, boxShadow:NEU_SM, fontSize:11, fontWeight:700,
+                                color:'#b05020', cursor:'pointer',
+                            }}
+                            title="公開を取り消して下書きに戻す">
+                            <ArchiveRestore size={12} /> 下書きに戻す
+                        </button>
+                    )}
+
+                    {/* 下書き保存（下書き/新規のみ） */}
+                    {status !== 'published' && (
+                        <button onClick={() => handleSave('draft')} disabled={saving}
+                            style={{
+                                display:'flex', alignItems:'center', gap:4,
+                                padding:'7px 14px', borderRadius:10, border:'none',
+                                background:BG, boxShadow:NEU_SM, fontSize:11, fontWeight:700,
+                                color:T2, cursor:'pointer',
+                            }}>
+                            <Save size={12} /> 下書き保存
+                        </button>
+                    )}
+
+                    {/* 公開する / 更新する */}
                     <button onClick={() => setShowPublishPanel(true)}
                         style={{
                             display:'flex', alignItems:'center', gap:4,
@@ -582,7 +639,10 @@ function ArticleEditorInner() {
                             background:SB, color:LIME, fontSize:11, fontWeight:800,
                             cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,.2)',
                         }}>
-                        <Send size={12} /> 公開
+                        {editId && status === 'published'
+                            ? <><RefreshCw size={12} /> 更新する</>
+                            : <><Send size={12} /> 公開する</>
+                        }
                     </button>
                 </div>
             </div>
@@ -734,7 +794,7 @@ function ArticleEditorInner() {
                 </div>
             </div>
 
-            {/* ── Publish panel (modal) ───────────────────────────── */}
+            {/* ── 公開/更新 パネル (modal) ───────────────────── */}
             {showPublishPanel && (
                 <div style={{
                     position:'fixed', inset:0, zIndex:6000,
@@ -747,16 +807,35 @@ function ArticleEditorInner() {
                         width:'90%', maxWidth:440, background:BG, borderRadius:20,
                         boxShadow:'0 16px 60px rgba(0,0,0,.2)', padding:24,
                     }}>
+                        {/* ヘッダー */}
                         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
                             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                                <Send size={16} color={SAGE} />
-                                <span style={{ fontSize:15, fontWeight:800, color:T1 }}>公開設定</span>
+                                {editId && status === 'published'
+                                    ? <RefreshCw size={16} color={SAGE} />
+                                    : <Send size={16} color={SAGE} />
+                                }
+                                <span style={{ fontSize:15, fontWeight:800, color:T1 }}>
+                                    {editId && status === 'published' ? '更新設定' : '公開設定'}
+                                </span>
                             </div>
                             <button onClick={() => setShowPublishPanel(false)}
                                 style={{ width:30,height:30,borderRadius:'50%',border:'none',background:BG,boxShadow:NEU_SM,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:T2 }}>
                                 <X size={13} />
                             </button>
                         </div>
+
+                        {/* 公開ステータスバッジ（更新時のみ表示） */}
+                        {editId && status === 'published' && (
+                            <div style={{
+                                display:'flex', alignItems:'center', gap:6,
+                                padding:'8px 12px', borderRadius:10, marginBottom:16,
+                                background:'rgba(74,124,89,.08)', border:'1px solid rgba(74,124,89,.2)',
+                            }}>
+                                <div style={{ width:7, height:7, borderRadius:'50%', background:SAGE }} />
+                                <span style={{ fontSize:11, fontWeight:700, color:SAGE }}>現在公開中</span>
+                                <span style={{ fontSize:10, color:T2, marginLeft:4 }}>— 更新すると即時反映されます</span>
+                            </div>
+                        )}
 
                         {/* Visibility (shared component) */}
                         <VisibilityPicker
@@ -802,22 +881,42 @@ function ArticleEditorInner() {
                         </div>
 
                         {/* Actions */}
-                        <div style={{ display:'flex', gap:10 }}>
-                            <button onClick={() => setShowPublishPanel(false)}
-                                style={{ flex:1, padding:'12px 0', borderRadius:12, border:'none', background:BG, boxShadow:NEU_SM, fontSize:12, fontWeight:700, color:T2, cursor:'pointer' }}>
-                                キャンセル
-                            </button>
-                            <button onClick={() => { setShowPublishPanel(false); handleSave('published'); }} disabled={saving}
-                                style={{
-                                    flex:2, padding:'12px 0', borderRadius:12, border:'none',
-                                    background:SB, color:LIME, fontSize:12, fontWeight:800,
-                                    cursor:'pointer', boxShadow:'0 2px 12px rgba(0,0,0,.2)',
-                                    display:'flex', alignItems:'center', justifyContent:'center', gap:6,
-                                    opacity:saving?.6:1,
-                                }}>
-                                {saving ? <Loader2 size={14} style={{ animation:'spin .8s linear infinite' }} /> : <Send size={14} />}
-                                {editId && status==='published' ? '更新する' : '公開する'}
-                            </button>
+                        <div style={{ display:'flex', gap:8, flexDirection:'column' }}>
+                            {/* メインボタン: キャンセル + 公開/更新 */}
+                            <div style={{ display:'flex', gap:8 }}>
+                                <button onClick={() => setShowPublishPanel(false)}
+                                    style={{ flex:1, padding:'12px 0', borderRadius:12, border:'none', background:BG, boxShadow:NEU_SM, fontSize:12, fontWeight:700, color:T2, cursor:'pointer' }}>
+                                    キャンセル
+                                </button>
+                                <button onClick={() => { setShowPublishPanel(false); handleSave('published'); }} disabled={saving}
+                                    style={{
+                                        flex:2, padding:'12px 0', borderRadius:12, border:'none',
+                                        background:SB, color:LIME, fontSize:12, fontWeight:800,
+                                        cursor:'pointer', boxShadow:'0 2px 12px rgba(0,0,0,.2)',
+                                        display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                                        opacity:saving?.6:1,
+                                    }}>
+                                    {saving
+                                        ? <Loader2 size={14} style={{ animation:'spin .8s linear infinite' }} />
+                                        : (editId && status==='published' ? <RefreshCw size={14} /> : <Send size={14} />)
+                                    }
+                                    {editId && status === 'published' ? '更新する' : '公開する'}
+                                </button>
+                            </div>
+                            {/* 下書きに戻す（公開済みのみ） */}
+                            {editId && status === 'published' && (
+                                <button
+                                    onClick={() => { setShowPublishPanel(false); setShowRevertConfirm(true); }}
+                                    disabled={saving}
+                                    style={{
+                                        width:'100%', padding:'10px 0', borderRadius:12, border:'1px solid rgba(176,80,32,.3)',
+                                        background:'rgba(176,80,32,.05)', fontSize:11, fontWeight:700,
+                                        color:'#b05020', cursor:'pointer',
+                                        display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                                    }}>
+                                    <ArchiveRestore size={13} /> 公開を取り消して下書きに戻す
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -902,6 +1001,52 @@ function ArticleEditorInner() {
                 </div>
             )}
 
+            {/* ── 下書きに戻す 確認モーダル ─────────────────────── */}
+            {showRevertConfirm && (
+                <div style={{
+                    position:'fixed', inset:0, zIndex:8000,
+                    background:'rgba(0,0,0,.5)', backdropFilter:'blur(4px)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                }}
+                    onClick={e => { if(e.target===e.currentTarget) setShowRevertConfirm(false); }}
+                >
+                    <div style={{
+                        width:'90%', maxWidth:380, background:BG, borderRadius:20,
+                        boxShadow:'0 16px 60px rgba(0,0,0,.25)', padding:28, textAlign:'center',
+                    }}>
+                        <div style={{
+                            width:52, height:52, borderRadius:'50%',
+                            background:'rgba(176,80,32,.1)', margin:'0 auto 16px',
+                            display:'flex', alignItems:'center', justifyContent:'center',
+                        }}>
+                            <ArchiveRestore size={24} color="#b05020" />
+                        </div>
+                        <div style={{ fontSize:16, fontWeight:800, color:T1, marginBottom:8 }}>公開を取り消しますか？</div>
+                        <div style={{ fontSize:12, color:T2, lineHeight:1.7, marginBottom:24 }}>
+                            記事を下書き状態に戻します。<br />
+                            公開ページからは非表示になり、<br />
+                            コメントやいいねは保持されます。
+                        </div>
+                        <div style={{ display:'flex', gap:10 }}>
+                            <button onClick={() => setShowRevertConfirm(false)}
+                                style={{ flex:1, padding:'11px 0', borderRadius:12, border:'none', background:BG, boxShadow:NEU_SM, fontSize:12, fontWeight:700, color:T2, cursor:'pointer' }}>
+                                キャンセル
+                            </button>
+                            <button onClick={doRevertToDraft} disabled={saving}
+                                style={{
+                                    flex:2, padding:'11px 0', borderRadius:12, border:'none',
+                                    background:'#b05020', color:'#fff', fontSize:12, fontWeight:800,
+                                    cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                                    opacity:saving?.6:1,
+                                }}>
+                                {saving ? <Loader2 size={13} style={{ animation:'spin .8s linear infinite' }} /> : <ArchiveRestore size={13} />}
+                                下書きに戻す
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── Saving overlay ──────────────────────────────────── */}
             {saving && (
                 <div style={{
@@ -911,7 +1056,7 @@ function ArticleEditorInner() {
                     display:'flex', alignItems:'center', gap:8, zIndex:7000,
                 }}>
                     <Loader2 size={13} style={{ animation:'spin .8s linear infinite' }} />
-                    保存中...
+                    {status === 'published' ? '更新中...' : '保存中...'}
                 </div>
             )}
 
