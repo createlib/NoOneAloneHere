@@ -37,7 +37,7 @@ const FALLBACK_AVATAR  = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns=
 interface PodcastData { id:string; title:string; description:string; tags:string[]; authorId:string; authorName:string; authorIcon:string; thumbnailUrl:string; duration:number; createdAt:any; updatedAt:any; }
 interface VideoData   { id:string; title:string; description:string; tags:string[]; authorId:string; authorName:string; authorIcon:string; thumbnailUrl:string; createdAt:string; }
 interface LiveRoomData { id:string; hostName:string; hostIcon:string; title:string; status:string; startedAt:any; }
-interface ArticleData { id:string; title:string; body:string; bodyText?:string; authorId:string; authorName:string; authorIcon:string; thumbnailUrl?:string; coverImageUrl?:string; tags:string[]; createdAt:any; status?:string; visibility?:string; allowedUserIds?:string[]; allowedListIds?:string[]; }
+interface ArticleData { id:string; title:string; body:string; bodyText?:string; authorId:string; authorName:string; authorIcon:string; thumbnailUrl?:string; coverImageUrl?:string; tags:string[]; category?:string; createdAt:any; status?:string; visibility?:string; allowedUserIds?:string[]; allowedListIds?:string[]; }
 
 type TabKey = 'cast' | 'theater' | 'article';
 
@@ -279,30 +279,89 @@ function MediaPageInner() {
         </Link>
     );
 
-    const ArticleCard = ({a,scroll}:{a:ArticleData;scroll?:boolean}) => (
-        <Link href={`/media/articles/view?id=${a.id}`} style={{ textDecoration:'none', color:'inherit', display:'block', width: scroll?200:'100%', flexShrink: scroll?0:undefined }}>
-        <div style={{
-            display:'flex', flexDirection: scroll?'column':'row',
-            gap: scroll?8:12,
-            width:'100%',
-            background:BG, borderRadius:14, boxShadow:NEU_SM,
-            overflow:'hidden', cursor:'pointer',
-        }}>
-            {(a.coverImageUrl || a.thumbnailUrl) && (
-                <div style={{ width: scroll?'100%':110, height: scroll?140:80, flexShrink:0, overflow:'hidden', background:'#f0ece7' }}>
-                    <img src={a.coverImageUrl||a.thumbnailUrl} alt="" style={{ width:'100%',height:'100%',objectFit:'contain' }}
-                        onError={e=>{(e.target as HTMLImageElement).style.display='none';}} />
+    const ArticleCard = ({a,scroll}:{a:ArticleData;scroll?:boolean}) => {
+        const thumb = a.coverImageUrl || a.thumbnailUrl;
+        const tag   = a.category || a.tags?.[0] || '';
+        return (
+            <Link
+                href={`/media/articles/view?id=${a.id}`}
+                style={{ textDecoration:'none', color:'inherit', display:'block',
+                    width: scroll ? 240 : '100%', flexShrink: scroll ? 0 : undefined }}
+            >
+                <div className="article-card-inner" style={{
+                    display:'flex', flexDirection:'column',
+                    width:'100%', borderRadius:6,
+                    background:BG, boxShadow:NEU_SM,
+                    overflow:'hidden', cursor:'pointer',
+                    transition:'box-shadow .2s, transform .2s',
+                }}
+                    onMouseEnter={e=>{
+                        (e.currentTarget as HTMLDivElement).style.boxShadow='6px 6px 18px #ccc9c4,-6px -6px 18px #fff';
+                        (e.currentTarget as HTMLDivElement).style.transform='translateY(-2px)';
+                    }}
+                    onMouseLeave={e=>{
+                        (e.currentTarget as HTMLDivElement).style.boxShadow=NEU_SM;
+                        (e.currentTarget as HTMLDivElement).style.transform='none';
+                    }}
+                >
+                    {/* ── Thumbnail ── */}
+                    <div className="article-card-thumb" style={{
+                        overflow:'hidden', flexShrink:0, position:'relative',
+                        background:'linear-gradient(135deg,#2a2520 0%,#1a3024 60%,#4a7c59 100%)',
+                        aspectRatio: scroll ? '4/3' : '16/9',
+                        width: '100%',
+                    }}>
+                        {thumb ? (
+                            <img src={thumb} alt={a.title}
+                                style={{ width:'100%', height:'100%', objectFit:'cover', display:'block',
+                                    transition:'transform .3s' }}
+                                onError={e=>{ (e.target as HTMLImageElement).style.display='none'; }} />
+                        ) : (
+                            <div style={{
+                                position:'absolute', inset:0,
+                                display:'flex', alignItems:'center', justifyContent:'center',
+                                flexDirection:'column', gap:8,
+                            }}>
+                                <BookOpen size={28} color='rgba(142,207,178,.5)' />
+                                <span style={{ fontSize:10, color:'rgba(142,207,178,.6)', fontWeight:600 }}>NO IMAGE</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ── Info ── */}
+                    <div className="article-card-info" style={{ padding: scroll ? '10px 12px 12px' : '12px 14px 14px', flex:1, minWidth:0 }}>
+                        {/* Tag + date row */}
+                        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8, flexWrap:'wrap' }}>
+                            {tag && (
+                                <span style={{
+                                    padding:'2px 9px', borderRadius:100,
+                                    background:SB, color:LIME,
+                                    fontSize:9, fontWeight:700, letterSpacing:'.04em',
+                                    lineHeight:1.8, flexShrink:0,
+                                }}>
+                                    {tag}
+                                </span>
+                            )}
+                            <span style={{ fontSize:10, color:TM, fontWeight:500 }}>
+                                {fmtDate(a.createdAt)}
+                            </span>
+                        </div>
+                        {/* Title */}
+                        <div style={{
+                            fontSize: scroll ? 12 : 13,
+                            fontWeight:700, lineHeight:1.5,
+                            display:'-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient:'vertical',
+                            overflow:'hidden', color:T1,
+                        }}>
+                            {a.title || 'タイトルなし'}
+                        </div>
+                    </div>
                 </div>
-            )}
-            <div style={{ padding: scroll?'0 12px 12px':'12px', flex:1, minWidth:0 }}>
-                <div style={{ fontSize: scroll?12:13, fontWeight:700, lineHeight:1.4, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', color:T1 }}>{a.title||'タイトルなし'}</div>
-                <div style={{ fontSize:9, color:TM, marginTop:6, display:'flex', alignItems:'center', gap:4 }}>
-                    <BookOpen size={9} /> {a.authorName||'名無し'} · {fmtDate(a.createdAt)}
-                </div>
-            </div>
-        </div>
-        </Link>
-    );
+            </Link>
+        );
+    };
 
     /* ── Render card based on tab ─────────────────────────────── */
     const renderCard = (item:any, scroll?:boolean) => {
@@ -316,7 +375,14 @@ function MediaPageInner() {
         ? 'repeat(auto-fill,minmax(140px,1fr))'
         : tab==='theater'
             ? 'repeat(auto-fill,minmax(240px,1fr))'
-            : 'repeat(auto-fill,minmax(280px,1fr))';
+            : 'repeat(auto-fill,minmax(200px,1fr))';
+    // 記事タブはモーダル内でも4-5列に
+    const modalGridCols = tab==='cast'
+        ? 'repeat(auto-fill,minmax(140px,1fr))'
+        : tab==='theater'
+            ? 'repeat(auto-fill,minmax(260px,1fr))'
+            : 'repeat(auto-fill,minmax(200px,1fr))';
+    // スクロール横並び幅は個別カードコンポーネント内で管理
 
     /* ══════════════════════════════════════════════════════════════ *
      *  RENDER
@@ -497,7 +563,7 @@ function MediaPageInner() {
                                                     </button>
                                                 )}
                                             </div>
-                                            <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
+                                            <div className={tab==='article' ? 'article-grid' : ''} style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
                                                 {filteredFollowing.slice(0,40).map((i:any) => renderCard(i))}
                                             </div>
                                         </section>
@@ -515,7 +581,7 @@ function MediaPageInner() {
                                                 </button>
                                             )}
                                         </div>
-                                        <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
+                                        <div className={tab==='article' ? 'article-grid' : ''} style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
                                             {filteredOther.slice(0,40).map((i:any) => renderCard(i))}
                                         </div>
                                     </section>
@@ -539,7 +605,7 @@ function MediaPageInner() {
                                             すべて見る <ChevronRight size={12} />
                                         </button>
                                     </div>
-                                    <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
+                                    <div className={tab==='article' ? 'article-grid' : ''} style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
                                         {following.slice(0,40).map((i:any) => renderCard(i))}
                                     </div>
                                 </section>
@@ -563,7 +629,7 @@ function MediaPageInner() {
                                         <div style={{ fontSize:13, fontWeight:700, color:T2 }}>まだコンテンツがありません</div>
                                     </div>
                                 ) : (
-                                    <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
+                                    <div className={tab==='article' ? 'article-grid' : ''} style={{ display:'grid', gridTemplateColumns:gridCols, gap:12 }}>
                                         {recommended.slice(0,40).map((i:any) => renderCard(i))}
                                     </div>
                                 )}
@@ -603,7 +669,7 @@ function MediaPageInner() {
                         <div style={{ flex:1, overflowY:'auto', padding:'16px 20px 40px' }}>
                             <div style={{
                                 display:'grid',
-                                gridTemplateColumns: modalType==='theater'?'repeat(auto-fill,minmax(260px,1fr))':modalType==='article'?'1fr':'repeat(auto-fill,minmax(140px,1fr))',
+                                gridTemplateColumns: modalGridCols,
                                 gap:14,
                             }}>
                                 {modalItems.map((i:any) => {
@@ -629,8 +695,37 @@ function MediaPageInner() {
             )}
 
             <style>{`
+                /* PC: 記事カード情報エリアの高さを固定 */
+                @media(min-width:768px){
+                    .article-card-info {
+                        height: 88px;
+                        overflow: hidden;
+                    }
+                }
                 @media(max-width:767px){
                     .mob-topbar { display:flex !important; }
+
+                    /* 記事カード: モバイルは横長1カラム */
+                    .article-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 10px !important;
+                    }
+                    .article-card-inner {
+                        flex-direction: row !important;
+                        border-radius: 12px !important;
+                        align-items: stretch;
+                    }
+                    .article-card-thumb {
+                        width: 110px !important;
+                        aspect-ratio: unset !important;
+                        flex-shrink: 0 !important;
+                        height: auto !important;
+                        min-height: 80px;
+                    }
+                    .article-card-info {
+                        padding: 10px 12px !important;
+                        height: auto !important;
+                    }
                 }
             `}</style>
         </AppShell>
