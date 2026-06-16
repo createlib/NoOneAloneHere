@@ -55,7 +55,7 @@ export default function ArticleViewPage() {
 }
 
 function ArticleViewInner() {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const articleId = searchParams.get('id') || '';
@@ -80,7 +80,13 @@ function ArticleViewInner() {
     /* ── Load article ─────────────────────────────────────────── */
     useEffect(() => {
         if (!articleId) return;
+        // Firebase認証セッションの復元が完了するまで待機する
+        // （PWA/LINEなど外部アプリ経由で開かれた場合、user=nullのまま
+        //   アクセスチェックが走り誤って「限定公開」と判定されるのを防ぐ）
+        if (authLoading) return;
         const load = async () => {
+            setLoading(true);
+            setAccessDenied(false); // 再ロード時にリセット
             try {
                 const snap = await getDoc(doc(db,'artifacts',APP_ID,'public','data','articles',articleId));
                 if (!snap.exists()) { setLoading(false); return; }
@@ -167,7 +173,7 @@ function ArticleViewInner() {
             finally { setLoading(false); }
         };
         load();
-    }, [articleId, user]);
+    }, [articleId, user, authLoading]);
 
     /* ── Build TOC from body HTML ─────────────────────────────── */
     useEffect(() => {
