@@ -347,7 +347,7 @@ function MediaPageInner() {
                             </span>
                         </div>
                         {/* Title */}
-                        <div style={{
+                        <div className="article-card-title" style={{
                             fontSize: scroll ? 12 : 13,
                             fontWeight:700, lineHeight:1.5,
                             display:'-webkit-box',
@@ -700,6 +700,10 @@ function MediaPageInner() {
                     .article-card-info {
                         height: 88px;
                         overflow: hidden;
+                    }
+                    /* タイトルは常に2行分の高さを確保 */
+                    .article-card-title {
+                        min-height: 40px; /* 13px × 1.5 line-height × 2行 = 39px */
                     }
                 }
                 @media(max-width:767px){
