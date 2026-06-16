@@ -17,6 +17,7 @@ const T2   = '#7a7068';
 const TM   = '#b0a89e';
 const NEU_SM = '3px 3px 10px #dbd7d2,-3px -3px 10px #ffffff';
 const NEU_IN = 'inset 3px 3px 8px #dbd7d2,inset -3px -3px 8px #ffffff';
+const FALLBACK_AVATAR = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="16" fill="#dbd7d2"/><circle cx="16" cy="12" r="5" fill="#b0a89e"/><ellipse cx="16" cy="26" rx="9" ry="7" fill="#b0a89e"/></svg>');
 
 const MAX_LISTS = 10;
 
@@ -266,9 +267,9 @@ export default function AudienceListManager({ isOpen, onClose, currentUid, onLis
                                                     padding: '3px 8px 3px 4px', borderRadius: 100, background: 'rgba(74,124,89,.1)',
                                                     fontSize: 10, fontWeight: 600, color: SAGE,
                                                 }}>
-                                                    <img src={m?.photoURL || '/default_avatar.png'} alt=""
+                                                    <img src={m?.photoURL || FALLBACK_AVATAR} alt=""
                                                         style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover' }}
-                                                        onError={e => { (e.target as HTMLImageElement).src = '/default_avatar.png'; }} />
+                                                        onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_AVATAR; }} />
                                                     {m?.name || uid.slice(0, 8)}
                                                     <button onClick={() => toggleMember(uid)}
                                                         style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: SAGE, padding: 0, display: 'flex' }}>
@@ -300,9 +301,9 @@ export default function AudienceListManager({ isOpen, onClose, currentUid, onLis
                                                     background: selected ? 'rgba(74,124,89,.08)' : 'transparent',
                                                     cursor: 'pointer', textAlign: 'left',
                                                 }}>
-                                                <img src={m.photoURL || '/default_avatar.png'} alt=""
+                                                <img src={m.photoURL || FALLBACK_AVATAR} alt=""
                                                     style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-                                                    onError={e => { (e.target as HTMLImageElement).src = '/default_avatar.png'; }} />
+                                                    onError={e => { const i = e.target as HTMLImageElement; i.onerror = null; i.src = FALLBACK_AVATAR; }} />
                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                     <div style={{ fontSize: 12, fontWeight: 600, color: T1 }}>{m.name}</div>
                                                     <div style={{ fontSize: 9, color: TM }}>@{m.userId}</div>
