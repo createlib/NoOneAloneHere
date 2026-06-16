@@ -108,9 +108,24 @@ function ArticleViewInner() {
                         } catch { setAccessDenied(true); setLoading(false); return; }
                     }
                     if (vis === 'custom') {
-                        if (!d.allowedUserIds?.includes(user.uid)) {
-                            setAccessDenied(true); setLoading(false); return;
+                        // まず allowedUserIds（展開済み個人UID）をチェック
+                        let hasAccess = d.allowedUserIds?.includes(user.uid) ?? false;
+
+                        // allowedUserIds に含まれていない場合、allowedListIds のリストメンバーも確認する
+                        // （保存後にリストメンバーが変更されたケースや展開漏れに対応）
+                        if (!hasAccess && d.allowedListIds && d.allowedListIds.length > 0) {
+                            for (const lid of d.allowedListIds) {
+                                try {
+                                    const lSnap = await getDoc(doc(db,'artifacts',APP_ID,'users',d.authorId,'audience_lists',lid));
+                                    if (lSnap.exists() && (lSnap.data().memberIds || []).includes(user.uid)) {
+                                        hasAccess = true;
+                                        break;
+                                    }
+                                } catch {}
+                            }
                         }
+
+                        if (!hasAccess) { setAccessDenied(true); setLoading(false); return; }
                     }
                 }
 
