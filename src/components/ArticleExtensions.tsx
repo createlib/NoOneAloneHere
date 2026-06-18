@@ -450,15 +450,9 @@ function RichLinkNodeView({ node, updateAttributes, deleteNode }: any) {
             return;
         }
 
-        // 通常URL: api/ogでOGP取得を試みる
-        fetch(`/api/og?url=${encodeURIComponent(url)}`)
-            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-            .then((d: OgData) => {
-                setOgData(d);
-                updateAttributes({ title: d.title, description: d.description, image: d.image, favicon: d.favicon, siteName: d.siteName });
-            })
-            .catch(() => {})
-            .finally(() => setLoading(false));
+        // 外部URL: 静的エクスポート環境ではOGP APIが使えないため
+        // 保存済み属性をそのまま使用（エディタ外観のみ）
+        setLoading(false);
     }, [url]);
 
     const display = ogData.title ? ogData : { ...ogData, title: url };

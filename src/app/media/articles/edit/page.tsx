@@ -561,21 +561,18 @@ function ArticleEditorInner() {
             return;
         }
 
-        // === 通常URLはOGP APIで取得を試みる ===
-        try {
-            const res = await fetch(`/api/og?url=${encodeURIComponent(targetUrl)}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            setUrlModalOgData({ ...data, url: data.url || targetUrl });
-            setUrlModalType(isVideoUrl(targetUrl) ? 'video' : 'link');
-            setUrlModalStyle(isVideoUrl(targetUrl) ? 'embed' : 'card');
-        } catch {
-            setUrlModalOgData({ title: '', description: '', image: '', favicon: '', siteName: new URL(targetUrl).hostname, url: targetUrl });
-            setUrlModalType('link');
-            setUrlModalStyle('card');
-        } finally {
-            setUrlModalLoading(false);
-        }
+        // === \u5916\u90e8URL: \u9759\u7684\u30a8\u30af\u30b9\u30dd\u30fc\u30c8\u74b0\u5883\u306eOGP\u53d6\u5f97\u306fAPI\u4e0d\u53ef\u306e\u305f\u3081\u3001URL\u60c5\u5831\u306e\u307f\u8a2d\u5b9a ===
+        setUrlModalOgData({
+            title: '',
+            description: '',
+            image: '',
+            favicon: `https://www.google.com/s2/favicons?domain=${new URL(targetUrl).hostname}&sz=32`,
+            siteName: new URL(targetUrl).hostname,
+            url: targetUrl,
+        });
+        setUrlModalType('link');
+        setUrlModalStyle('card');
+        setUrlModalLoading(false);
     };
 
     const insertUrlBlock = () => {
