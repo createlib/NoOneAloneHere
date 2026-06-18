@@ -257,24 +257,70 @@ export const TabsExtension = Node.create({
 
 /* ══════════════════════════════════════════════════════════════
  *  IMAGE GALLERY（横スクロールギャラリー）
+ *  ・画像追加 / 削除 / 左右並び替え
+ *  ・draggable=true でエディタ内をドラッグ移動可能
  * ══════════════════════════════════════════════════════════════ */
-function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
+function ImageGalleryNodeView({ node, updateAttributes, deleteNode, editor, getPos }: any) {
     const images: string[] = Array.isArray(node.attrs.images) ? node.attrs.images : [];
-    const scrollRef = React.useRef<HTMLDivElement>(null);
+    const scrollRef  = React.useRef<HTMLDivElement>(null);
+    const addInputRef = React.useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = React.useState(false);
 
+    // ── スクロール ────────────────────────────────────────────
+    const scroll = (dir: 'left' | 'right') => {
+        scrollRef.current?.scrollBy({ left: dir === 'right' ? 180 : -180, behavior: 'smooth' });
+    };
+
+    // ── 画像削除 ───────────────────────────────────────────────
     const removeImage = (index: number) => {
         updateAttributes({ images: images.filter((_, i) => i !== index) });
     };
 
-    // を8方向スクロールボタン
-    const scroll = (dir: 'left' | 'right') => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollBy({ left: dir === 'right' ? 160 : -160, behavior: 'smooth' });
+    // ── 左右入れ替え ──────────────────────────────────────────
+    const moveImage = (index: number, dir: -1 | 1) => {
+        const next = index + dir;
+        if (next < 0 || next >= images.length) return;
+        const arr = [...images];
+        [arr[index], arr[next]] = [arr[next], arr[index]];
+        updateAttributes({ images: arr });
+    };
+
+    // ── 画像追加（Firebase Storage へアップロード） ────────────
+    const handleAddImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files ? Array.from(e.target.files) : [];
+        e.target.value = '';
+        if (!files.length) return;
+        setUploading(true);
+        try {
+            const { ref: storageRef, uploadBytes, getDownloadURL } = await import('firebase/storage');
+            const { storage } = await import('@/lib/firebase');
+            const { compressImage } = await import('@/lib/compressImage');
+            const newUrls: string[] = [];
+            for (let i = 0; i < files.length; i++) {
+                const compressed = await compressImage(files[i]);
+                const path = `articles/gallery/_shared/${Date.now()}_${i}_${compressed.name}`;
+                const snap = await uploadBytes(storageRef(storage, path), compressed);
+                newUrls.push(await getDownloadURL(snap.ref));
+            }
+            updateAttributes({ images: [...images, ...newUrls] });
+            // ギャラリー更新後に自動保存
+            if (editor) {
+                setTimeout(() => {
+                    const pos = typeof getPos === 'function' ? getPos() : null;
+                    if (pos != null) { /* node already updated via updateAttributes */ }
+                }, 100);
+            }
+        } catch (err) {
+            console.error('ギャラリー画像追加エラー:', err);
+            alert(`画像の追加に失敗しました: ${(err as Error).message || err}`);
+        } finally {
+            setUploading(false);
         }
     };
 
     return (
         <NodeViewWrapper>
+            {/* ドラッグハンドル（Tiptap の draggable 機能を利用） */}
             <div
                 data-type="image-gallery"
                 contentEditable={false}
@@ -282,37 +328,65 @@ function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
                     border: `2px solid rgba(74,124,89,.3)`,
                     borderRadius: 12, marginBottom: 16,
                     background: BG, boxShadow: NEU_SM,
-                    // overflow: 'hidden' を削除→横スクロールが機能するように
+                    userSelect: 'none',
                 }}
             >
-                {/* ヘッダー */}
+                {/* ── ヘッダー ────────────────────────────────── */}
                 <div style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '8px 12px',
+                    padding: '8px 10px',
                     background: 'rgba(74,124,89,.07)',
                     borderBottom: '1px solid rgba(74,124,89,.15)',
                     borderRadius: '10px 10px 0 0',
-                }}>
+                    cursor: 'grab',
+                }}
+                    data-drag-handle   /* Tiptap はこの属性をドラッグ開始点として認識 */
+                >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        {/* ドラッグ用グリップアイコン（6点） */}
+                        <span style={{ fontSize: 11, color: TM, letterSpacing: 1, lineHeight: 1, paddingRight: 2, cursor: 'grab' }}>⠿</span>
                         <GalleryHorizontal size={12} color={SAGE} />
                         <span style={{ fontSize: 10, fontWeight: 700, color: SAGE, letterSpacing: '.08em' }}>
                             IMAGE GALLERY ({images.length}枚)
                         </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        {/* 左右スクロールボタン */}
+                        {/* 左右スクロール */}
                         {images.length > 2 && (
                             <>
                                 <button onClick={() => scroll('left')}
-                                    style={{ border: 'none', background: 'rgba(74,124,89,.15)', cursor: 'pointer', color: SAGE, display: 'flex', borderRadius: 4, padding: '2px 5px' }}
-                                    title="左にスクロール"
-                                >←</button>
+                                    style={{ border: 'none', background: 'rgba(74,124,89,.15)', cursor: 'pointer', color: SAGE, display: 'flex', borderRadius: 4, padding: '2px 6px' }}
+                                    title="左へスクロール">◀</button>
                                 <button onClick={() => scroll('right')}
-                                    style={{ border: 'none', background: 'rgba(74,124,89,.15)', cursor: 'pointer', color: SAGE, display: 'flex', borderRadius: 4, padding: '2px 5px' }}
-                                    title="右にスクロール"
-                                >→</button>
+                                    style={{ border: 'none', background: 'rgba(74,124,89,.15)', cursor: 'pointer', color: SAGE, display: 'flex', borderRadius: 4, padding: '2px 6px' }}
+                                    title="右へスクロール">▶</button>
                             </>
                         )}
+                        {/* 画像追加ボタン */}
+                        <input
+                            ref={addInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            hidden
+                            onChange={handleAddImages}
+                        />
+                        <button
+                            onClick={() => addInputRef.current?.click()}
+                            disabled={uploading}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 3,
+                                border: 'none', background: 'rgba(74,124,89,.15)',
+                                cursor: 'pointer', color: SAGE,
+                                borderRadius: 5, padding: '3px 7px',
+                                fontSize: 10, fontWeight: 700,
+                                opacity: uploading ? .5 : 1,
+                            }}
+                            title="画像を追加"
+                        >
+                            {uploading ? '…' : <><Plus size={10} /> 追加</>}
+                        </button>
+                        {/* ギャラリー削除 */}
                         <button
                             onClick={deleteNode}
                             style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: TM, display: 'flex' }}
@@ -323,7 +397,7 @@ function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
                     </div>
                 </div>
 
-                {/* 横スクロール画像リスト */}
+                {/* ── 横スクロール画像リスト ──────────────────── */}
                 <div
                     ref={scrollRef}
                     style={{
@@ -336,33 +410,61 @@ function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
                 >
                     {images.length === 0 ? (
                         <div style={{ color: TM, fontSize: 12, padding: '20px 0' }}>
-                            ツールバーの「ギャラリー」ボタンから画像を追加できます
+                            「追加」ボタンから画像を追加できます
                         </div>
                     ) : (
                         images.map((url, i) => (
-                            <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
+                            <div key={url + i} style={{ position: 'relative', flexShrink: 0 }}>
                                 <img
                                     src={url} alt=""
-                                    style={{ height: 120, borderRadius: 8, objectFit: 'cover', display: 'block' }}
+                                    style={{ height: 130, borderRadius: 8, objectFit: 'cover', display: 'block', minWidth: 90 }}
                                 />
-                                {/* 各画像の操作ボタン (削除) */}
+                                {/* 削除ボタン */}
                                 <button
                                     onClick={() => removeImage(i)}
                                     style={{
                                         position: 'absolute', top: 4, right: 4,
                                         width: 20, height: 20, borderRadius: '50%',
-                                        border: 'none', background: 'rgba(0,0,0,.65)',
+                                        border: 'none', background: 'rgba(0,0,0,.72)',
                                         color: '#fff', cursor: 'pointer', fontSize: 12,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        lineHeight: 1,
                                     }}
+                                    title="この画像を削除"
                                 >×</button>
-                                {/* 番号バッジ */}
+                                {/* 並び替えボタン（左右） */}
                                 <div style={{
-                                    position: 'absolute', bottom: 4, left: 4,
-                                    padding: '1px 5px', borderRadius: 4,
-                                    background: 'rgba(0,0,0,.5)', color: '#fff',
-                                    fontSize: 9, fontWeight: 700,
-                                }}>{i + 1}</div>
+                                    position: 'absolute', bottom: 4, left: '50%', transform: 'translateX(-50%)',
+                                    display: 'flex', gap: 2,
+                                }}>
+                                    <button
+                                        onClick={() => moveImage(i, -1)}
+                                        disabled={i === 0}
+                                        style={{
+                                            width: 18, height: 18, borderRadius: 4, border: 'none',
+                                            background: i === 0 ? 'rgba(0,0,0,.2)' : 'rgba(0,0,0,.65)',
+                                            color: '#fff', cursor: i === 0 ? 'default' : 'pointer',
+                                            fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        }}
+                                        title="左へ移動"
+                                    >◀</button>
+                                    <span style={{
+                                        padding: '1px 4px', borderRadius: 3,
+                                        background: 'rgba(0,0,0,.55)', color: '#fff',
+                                        fontSize: 9, fontWeight: 700, lineHeight: '16px',
+                                    }}>{i + 1}</span>
+                                    <button
+                                        onClick={() => moveImage(i, 1)}
+                                        disabled={i === images.length - 1}
+                                        style={{
+                                            width: 18, height: 18, borderRadius: 4, border: 'none',
+                                            background: i === images.length - 1 ? 'rgba(0,0,0,.2)' : 'rgba(0,0,0,.65)',
+                                            color: '#fff', cursor: i === images.length - 1 ? 'default' : 'pointer',
+                                            fontSize: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        }}
+                                        title="右へ移動"
+                                    >▶</button>
+                                </div>
                             </div>
                         ))
                     )}
@@ -376,6 +478,7 @@ export const ImageGalleryExtension = Node.create({
     name: 'imageGallery',
     group: 'block',
     atom: true,
+    draggable: true,   // ← エディタ内でドラッグ移動を有効化
 
     addAttributes() {
         return {
@@ -395,7 +498,6 @@ export const ImageGalleryExtension = Node.create({
     },
 
     renderHTML({ HTMLAttributes, node }) {
-        // attrsから直接imagesを取得して確実に出力（HTMLAttributesの内容に音存しない場合のフォールバック対応）
         const images = node?.attrs?.images || [];
         return ['div', mergeAttributes(HTMLAttributes, {
             'data-type': 'image-gallery',

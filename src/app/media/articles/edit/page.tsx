@@ -497,7 +497,7 @@ function ArticleEditorInner() {
                 const [next, ...rest] = galleryQueue;
                 setGalleryResults(newResults);
                 setGalleryQueue(rest);
-                setAnnotatingFile(next); // file prop が変わるだけ → useEffect(,[file]) が再実行
+                setAnnotatingFile(next);
             } else {
                 // 全枚完了 → アップロード
                 setAnnotatingFile(null);
@@ -508,17 +508,41 @@ function ArticleEditorInner() {
                 setGalleryUploading(true);
                 try {
                     const urls: string[] = [];
-                    for (const f of newResults) {
-                        const gRef = ref(storage, `articles/gallery/${user.uid}/${Date.now()}_${f.name}`);
+                    for (let i = 0; i < newResults.length; i++) {
+                        const f = newResults[i];
+                        // ファイル名衝突防止のため timestamp + index を付与
+                        const gRef = ref(storage, `articles/gallery/${user.uid}/${Date.now()}_${i}_${f.name}`);
                         const s = await uploadBytes(gRef, f);
                         urls.push(await getDownloadURL(s.ref));
                     }
                     if (urls.length > 0) {
-                        editor.chain().focus().insertContent({ type: 'imageGallery', attrs: { images: urls } }).run();
+                        // ── 挿入位置の修正 ──────────────────────────────────────
+                        // カーソルがリストなどのネスト構造内にあっても
+                        // 必ずトップレベルブロックの直後に挿入する
+                        const { state } = editor;
+                        const { $from } = state.selection;
+                        // depth=1 がトップレベルノード（doc直下）
+                        let insertPos: number;
+                        if ($from.depth >= 1) {
+                            insertPos = $from.end(1) + 1;
+                        } else {
+                            insertPos = $from.pos + 1;
+                        }
+                        // ドキュメントサイズを超えないよう clamp
+                        insertPos = Math.min(insertPos, state.doc.content.size);
+
+                        editor.chain()
+                            .focus()
+                            .insertContentAt(insertPos, { type: 'imageGallery', attrs: { images: urls } })
+                            .run();
+
                         // 挿入後にReactのrender完了を待ってから自動保存
-                        setTimeout(() => handleSave(status, true), 200);
+                        setTimeout(() => handleSave(status, true), 300);
                     }
-                } catch (err) { console.error(err); alert('ギャラリーアップロードに失敗しました'); }
+                } catch (err: any) {
+                    console.error('ギャラリーアップロードエラー:', err);
+                    alert(`ギャラリーアップロードに失敗しました\nエラー: ${err?.message || err}`);
+                }
                 finally { setGalleryUploading(false); }
             }
         }
