@@ -2,7 +2,7 @@
 /**
  * ImageAnnotationEditor — pure HTML5 Canvas
  * ツール: 選択 / 矩形 / 円 / 直線 / 矢印 / テキスト / カーソルスタンプ
- * 矩形・円は塗り色と枠色を別々に指定可能
+ * タッチ操作 (スマホ) 完全対応版
  */
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Square, ArrowUpRight, Type, Undo2, Trash2, Check, Minus, MousePointer2, Move, Circle } from 'lucide-react';
@@ -23,8 +23,12 @@ export type Ann=
 
 interface DragState{mode:DragMode;sx:number;sy:number;origAnn:Ann;}
 export interface Props{
-  file:File; onConfirm:(f:File)=>void; onCancel:()=>void;
+  file:File;
+  onConfirm:(f:File,overwriteUrl?:string)=>void;
+  onCancel:()=>void;
   galleryProgress?:{current:number;total:number};
+  /** 既存アップロード済み画像URL。指定するとこのURLを上書き編集モードになる */
+  overwriteUrl?:string;
 }
 
 /* ── drawing ──────────────────────────────────────────────────── */
@@ -56,7 +60,6 @@ function drawAnn(ctx:CanvasRenderingContext2D,a:Ann){
         ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=a.fs*.07;ctx.strokeText(a.t,a.x,a.y);
         ctx.fillStyle=a.c;ctx.fillText(a.t,a.x,a.y);
     } else if(a.k==='cursor'){
-        // PC arrow cursor shape (similar to standard OS cursor)
         const s=a.fs/18;
         ctx.translate(a.x,a.y);
         ctx.beginPath();
@@ -90,12 +93,12 @@ function handles(a:Ann):{x:number;y:number;m:DragMode}[]{
     if(a.k==='line'||a.k==='arrow') return [{x:a.x1,y:a.y1,m:'p1'},{x:a.x2,y:a.y2,m:'p2'}];
     return [];
 }
-function hitHandle(a:Ann,x:number,y:number):DragMode|null{
-    for(const h of handles(a)) if(Math.hypot(x-h.x,y-h.y)<=9) return h.m;
+function hitHandle(a:Ann,x:number,y:number,tol=9):DragMode|null{
+    for(const h of handles(a)) if(Math.hypot(x-h.x,y-h.y)<=tol) return h.m;
     return null;
 }
 function hitBody(a:Ann,x:number,y:number):boolean{
-    const P=8;
+    const P=12; // タッチ操作のため余白を増やす
     if(a.k==='rect') return x>=a.x-P&&x<=a.x+a.w+P&&y>=a.y-P&&y<=a.y+a.h+P;
     if(a.k==='circle'){const dx=(x-a.cx)/Math.max(a.rx+P,1),dy=(y-a.cy)/Math.max(a.ry+P,1);return dx*dx+dy*dy<=1;}
     if(a.k==='line'||a.k==='arrow'){
@@ -119,7 +122,6 @@ function applyDrag(orig:Ann,mode:DragMode,dx:number,dy:number):Ann{
         else if(mode==='ne'){const nh=Math.max(8,o.h-dy);a.y=o.y+(o.h-nh);a.w=Math.max(8,o.w+dx);a.h=nh;}
         else if(mode==='nw'){const nw=Math.max(8,o.w-dx),nh=Math.max(8,o.h-dy);a.x=o.x+(o.w-nw);a.y=o.y+(o.h-nh);a.w=nw;a.h=nh;}
     } else if(a.k==='circle'){
-        // corner drag: fix opposite corner, recompute center + radii
         const fix={nw:{cx:o.cx+o.rx,cy:o.cy+o.ry},ne:{cx:o.cx-o.rx,cy:o.cy+o.ry},
                    sw:{cx:o.cx+o.rx,cy:o.cy-o.ry},se:{cx:o.cx-o.rx,cy:o.cy-o.ry}} as any;
         const mv={nw:{cx:o.cx-o.rx+dx,cy:o.cy-o.ry+dy},ne:{cx:o.cx+o.rx+dx,cy:o.cy-o.ry+dy},
@@ -138,7 +140,7 @@ function drawSelection(ctx:CanvasRenderingContext2D,a:Ann){
     ctx.strokeStyle=LIME;ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
     ctx.strokeRect(b.x-4,b.y-4,b.w+8,b.h+8);ctx.setLineDash([]);
     for(const h of handles(a)){
-        ctx.beginPath();ctx.arc(h.x,h.y,7,0,Math.PI*2);
+        ctx.beginPath();ctx.arc(h.x,h.y,8,0,Math.PI*2); // タッチ用に少し大きく
         ctx.fillStyle='#fff';ctx.fill();
         ctx.strokeStyle=SAGE;ctx.lineWidth=2;ctx.stroke();
     }
@@ -146,13 +148,13 @@ function drawSelection(ctx:CanvasRenderingContext2D,a:Ann){
 }
 
 /* ══════════════════════════════════════════════════════════════ */
-export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryProgress}:Props){
+export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryProgress,overwriteUrl}:Props){
     const canvasRef=useRef<HTMLCanvasElement>(null);
     const containerRef=useRef<HTMLDivElement>(null);
     const ctxRef=useRef<CanvasRenderingContext2D|null>(null);
     const bgRef=useRef<HTMLImageElement|null>(null);
     const annsRef=useRef<Ann[]>([]);
-    const histRef=useRef<Ann[][]>([[]]);
+    const histRef=useRef<Ann[][]>([[]])
     const selRef=useRef<number|null>(null);
     const dragRef=useRef<DragState|null>(null);
     const drawRef=useRef(false);
@@ -215,7 +217,7 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         const img=new window.Image();
         img.onload=()=>{
             const maxW=Math.min(ctr.clientWidth||800,900);
-            const maxH=Math.min(window.innerHeight-220,580);
+            const maxH=Math.min(window.innerHeight-240,560);
             const sc=Math.min(maxW/img.naturalWidth,maxH/img.naturalHeight,1);
             el.width=Math.round(img.naturalWidth*sc);
             el.height=Math.round(img.naturalHeight*sc);
@@ -231,60 +233,75 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         return()=>URL.revokeObjectURL(url);
     },[file]);
 
-    // mouse events (once, refs keep state fresh)
+    // ── 共通の座標変換ヘルパー ──────────────────────────────────
+    const getCanvasXY = useCallback((clientX:number, clientY:number):{x:number;y:number}=>{
+        const el=canvasRef.current;if(!el)return{x:0,y:0};
+        const r=el.getBoundingClientRect();
+        return{
+            x:(clientX-r.left)*(el.width/r.width),
+            y:(clientY-r.top)*(el.height/r.height),
+        };
+    },[]);
+
+    // ── 共通ドラッグ/描画ロジック ──────────────────────────────
+    const makeLive=useCallback((t:Tool,sx:number,sy:number,x:number,y:number):Ann|null=>{
+        const sc=strokeColRef.current,fc=fillColRef.current,sw=swRef.current;
+        if(t==='rect')return{k:'rect',x:Math.min(x,sx),y:Math.min(y,sy),w:Math.abs(x-sx),h:Math.abs(y-sy),stroke:sc,fill:fc,sw};
+        if(t==='circle'){const cx=(sx+x)/2,cy=(sy+y)/2;return{k:'circle',cx,cy,rx:Math.abs(x-sx)/2,ry:Math.abs(y-sy)/2,stroke:sc,fill:fc,sw};}
+        if(t==='line')  return{k:'line', x1:sx,y1:sy,x2:x,y2:y,c:sc,sw};
+        if(t==='arrow') return{k:'arrow',x1:sx,y1:sy,x2:x,y2:y,c:sc,sw};
+        return null;
+    },[]);
+
+    const handlePointerDown=useCallback((clientX:number,clientY:number)=>{
+        const{x,y}=getCanvasXY(clientX,clientY);
+        const t=toolRef.current;
+        if(t==='select'){
+            if(selRef.current!==null){
+                const hm=hitHandle(annsRef.current[selRef.current],x,y,14); // タッチは広めに
+                if(hm){dragRef.current={mode:hm,sx:x,sy:y,origAnn:{...annsRef.current[selRef.current]}};return;}
+            }
+            let hit=-1;
+            for(let i=annsRef.current.length-1;i>=0;i--){if(hitBody(annsRef.current[i],x,y)){hit=i;break;}}
+            selRef.current=hit<0?null:hit;setSelIdx(selRef.current);
+            if(hit>=0)dragRef.current={mode:'move',sx:x,sy:y,origAnn:{...annsRef.current[hit]}};
+            redrawAll();return;
+        }
+        if(t==='text'){setTxtPos({x,y});setShowTxt(true);return;}
+        if(t==='cursor'){
+            const a:Ann={k:'cursor',x,y,fs:fsRef.current};
+            annsRef.current=[...annsRef.current,a];saveHist();redrawAll();return;
+        }
+        drawRef.current=true;startRef.current={x,y};selRef.current=null;setSelIdx(null);
+    },[getCanvasXY,redrawAll,saveHist]);
+
+    const handlePointerMove=useCallback((clientX:number,clientY:number)=>{
+        const{x,y}=getCanvasXY(clientX,clientY);
+        if(dragRef.current&&selRef.current!==null){
+            const{mode,sx,sy,origAnn}=dragRef.current;
+            const updated=applyDrag(origAnn,mode,x-sx,y-sy);
+            annsRef.current=[...annsRef.current.slice(0,selRef.current),updated,...annsRef.current.slice(selRef.current+1)];
+            redrawAll();return;
+        }
+        if(!drawRef.current)return;
+        liveRef.current=makeLive(toolRef.current,startRef.current.x,startRef.current.y,x,y);
+        redrawAll();
+    },[getCanvasXY,redrawAll,makeLive]);
+
+    const handlePointerUp=useCallback(()=>{
+        if(dragRef.current&&selRef.current!==null){dragRef.current=null;saveHist();return;}
+        if(!drawRef.current)return;
+        drawRef.current=false;const live=liveRef.current;liveRef.current=null;
+        if(live){annsRef.current=[...annsRef.current,live];saveHist();}
+        redrawAll();
+    },[redrawAll,saveHist]);
+
+    // ── マウスイベント ──────────────────────────────────────────
     useEffect(()=>{
         const el=canvasRef.current;if(!el)return;
-        const xy=(e:MouseEvent)=>{
-            const r=el.getBoundingClientRect();
-            return{x:(e.clientX-r.left)*(el.width/r.width),y:(e.clientY-r.top)*(el.height/r.height)};
-        };
-        const makeLive=(t:Tool,sx:number,sy:number,x:number,y:number):Ann|null=>{
-            const sc=strokeColRef.current,fc=fillColRef.current,sw=swRef.current;
-            if(t==='rect')return{k:'rect',x:Math.min(x,sx),y:Math.min(y,sy),w:Math.abs(x-sx),h:Math.abs(y-sy),stroke:sc,fill:fc,sw};
-            if(t==='circle'){const cx=(sx+x)/2,cy=(sy+y)/2;return{k:'circle',cx,cy,rx:Math.abs(x-sx)/2,ry:Math.abs(y-sy)/2,stroke:sc,fill:fc,sw};}
-            if(t==='line')  return{k:'line', x1:sx,y1:sy,x2:x,y2:y,c:sc,sw};
-            if(t==='arrow') return{k:'arrow',x1:sx,y1:sy,x2:x,y2:y,c:sc,sw};
-            return null;
-        };
-        const onDown=(e:MouseEvent)=>{
-            const{x,y}=xy(e);const t=toolRef.current;
-            if(t==='select'){
-                if(selRef.current!==null){
-                    const hm=hitHandle(annsRef.current[selRef.current],x,y);
-                    if(hm){dragRef.current={mode:hm,sx:x,sy:y,origAnn:{...annsRef.current[selRef.current]}};return;}
-                }
-                let hit=-1;
-                for(let i=annsRef.current.length-1;i>=0;i--){if(hitBody(annsRef.current[i],x,y)){hit=i;break;}}
-                selRef.current=hit<0?null:hit;setSelIdx(selRef.current);
-                if(hit>=0)dragRef.current={mode:'move',sx:x,sy:y,origAnn:{...annsRef.current[hit]}};
-                redrawAll();return;
-            }
-            if(t==='text'){setTxtPos({x,y});setShowTxt(true);return;}
-            if(t==='cursor'){
-                const a:Ann={k:'cursor',x,y,fs:fsRef.current};
-                annsRef.current=[...annsRef.current,a];saveHist();redrawAll();return;
-            }
-            drawRef.current=true;startRef.current={x,y};selRef.current=null;setSelIdx(null);
-        };
-        const onMove=(e:MouseEvent)=>{
-            const{x,y}=xy(e);
-            if(dragRef.current&&selRef.current!==null){
-                const{mode,sx,sy,origAnn}=dragRef.current;
-                const updated=applyDrag(origAnn,mode,x-sx,y-sy);
-                annsRef.current=[...annsRef.current.slice(0,selRef.current),updated,...annsRef.current.slice(selRef.current+1)];
-                redrawAll();return;
-            }
-            if(!drawRef.current)return;
-            liveRef.current=makeLive(toolRef.current,startRef.current.x,startRef.current.y,x,y);
-            redrawAll();
-        };
-        const onUp=(_:MouseEvent)=>{
-            if(dragRef.current&&selRef.current!==null){dragRef.current=null;saveHist();return;}
-            if(!drawRef.current)return;
-            drawRef.current=false;const live=liveRef.current;liveRef.current=null;
-            if(live){annsRef.current=[...annsRef.current,live];saveHist();}
-            redrawAll();
-        };
+        const onDown=(e:MouseEvent)=>{e.preventDefault();handlePointerDown(e.clientX,e.clientY);};
+        const onMove=(e:MouseEvent)=>{e.preventDefault();handlePointerMove(e.clientX,e.clientY);};
+        const onUp=  (e:MouseEvent)=>{e.preventDefault();handlePointerUp();};
         el.addEventListener('mousedown',onDown);
         el.addEventListener('mousemove',onMove);
         el.addEventListener('mouseup',onUp);
@@ -295,8 +312,35 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
             el.removeEventListener('mouseup',onUp);
             el.removeEventListener('mouseleave',onUp);
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[]);
+    },[handlePointerDown,handlePointerMove,handlePointerUp]);
+
+    // ── タッチイベント ──────────────────────────────────────────
+    useEffect(()=>{
+        const el=canvasRef.current;if(!el)return;
+        const onTouchStart=(e:TouchEvent)=>{
+            e.preventDefault(); // スクロール防止
+            const t=e.touches[0];if(t)handlePointerDown(t.clientX,t.clientY);
+        };
+        const onTouchMove=(e:TouchEvent)=>{
+            e.preventDefault();
+            const t=e.touches[0];if(t)handlePointerMove(t.clientX,t.clientY);
+        };
+        const onTouchEnd=(e:TouchEvent)=>{
+            e.preventDefault();
+            handlePointerUp();
+        };
+        // passive:false でないと preventDefault が効かない
+        el.addEventListener('touchstart',onTouchStart,{passive:false});
+        el.addEventListener('touchmove', onTouchMove, {passive:false});
+        el.addEventListener('touchend',  onTouchEnd,  {passive:false});
+        el.addEventListener('touchcancel',onTouchEnd, {passive:false});
+        return()=>{
+            el.removeEventListener('touchstart',onTouchStart);
+            el.removeEventListener('touchmove', onTouchMove);
+            el.removeEventListener('touchend',  onTouchEnd);
+            el.removeEventListener('touchcancel',onTouchEnd);
+        };
+    },[handlePointerDown,handlePointerMove,handlePointerUp]);
 
     useEffect(()=>{const el=canvasRef.current;if(el)el.style.cursor=tool==='select'?'default':'crosshair';},[tool]);
 
@@ -322,10 +366,16 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         selRef.current=null;setSelIdx(null);redrawAll();setSaving(true);
         el.toBlob(blob=>{
             if(!blob){setSaving(false);return;}
-            onConfirm(new File([blob],file.name.replace(/\.[^.]+$/,'')+'_annotated.png',{type:'image/png'}));
+            const baseName = overwriteUrl
+                ? (overwriteUrl.split('/').pop()?.split('?')[0] || file.name)
+                : file.name.replace(/\.[^.]+$/,'')+'_annotated.png';
+            onConfirm(
+                new File([blob], baseName, {type:'image/png'}),
+                overwriteUrl,
+            );
             setSaving(false);
         },'image/png');
-    },[file,onConfirm,redrawAll]);
+    },[file,overwriteUrl,onConfirm,redrawAll]);
 
     const hasShape=tool==='rect'||tool==='circle';
     const hasFont= tool==='text'||tool==='cursor';
@@ -341,32 +391,34 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
     ];
 
     const ColorRow=({label,val,onChange}:{label:string;val:string;onChange:(c:string)=>void})=>(
-        <div style={{display:'flex',alignItems:'center',gap:4}}>
+        <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
             <span style={{fontSize:10,color:'rgba(255,255,255,.45)',whiteSpace:'nowrap'}}>{label}</span>
             {PRESETS.map(c=>(
-                <button key={c} onClick={()=>onChange(c)} style={{width:16,height:16,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:val===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
+                <button key={c} onClick={()=>onChange(c)} style={{width:18,height:18,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:val===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
             ))}
             <input type="color" value={val==='transparent'?'#ffffff':val} onChange={e=>onChange(e.target.value)}
-                style={{width:20,height:20,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0}}/>
+                style={{width:22,height:22,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0}}/>
         </div>
     );
 
     return(
-        <div style={{position:'fixed',inset:0,zIndex:9500,background:'rgba(5,12,8,.93)',backdropFilter:'blur(12px)',display:'flex',flexDirection:'column',alignItems:'center',padding:'10px 10px 8px',overflowY:'auto'}}>
+        <div style={{position:'fixed',inset:0,zIndex:9500,background:'rgba(5,12,8,.93)',backdropFilter:'blur(12px)',display:'flex',flexDirection:'column',alignItems:'center',padding:'8px 8px 6px',overflowY:'auto',touchAction:'none'}}>
 
             {/* header */}
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:960,marginBottom:7}}>
-                <div style={{display:'flex',alignItems:'center',gap:10}}>
-                    <div style={{width:27,height:27,borderRadius:7,background:SAGE,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:960,marginBottom:6}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                    <div style={{width:27,height:27,borderRadius:7,background:overwriteUrl?'#7c4a59':SAGE,display:'flex',alignItems:'center',justifyContent:'center'}}>
                         <MousePointer2 size={13} color="#fff"/>
                     </div>
-                    <span style={{fontSize:14,fontWeight:800,color:'#fff'}}>画像を編集</span>
+                    <span style={{fontSize:14,fontWeight:800,color:'#fff'}}>
+                        {overwriteUrl ? '画像を再編集（上書き保存）' : '画像を編集'}
+                    </span>
                     {galleryProgress&&(
                         <span style={{fontSize:11,fontWeight:700,color:LIME,background:'rgba(142,207,178,.15)',padding:'2px 8px',borderRadius:20}}>
                             {galleryProgress.current}/{galleryProgress.total}枚目
                         </span>
                     )}
-                    <span style={{fontSize:9,color:'rgba(255,255,255,.3)'}}>選択ツール:ドラッグ移動/角リサイズ | Ctrl+Z:元に戻す</span>
+                    <span style={{fontSize:9,color:'rgba(255,255,255,.3)',display:'none'}}>選択:ドラッグ移動/角リサイズ</span>
                 </div>
                 <button onClick={onCancel} style={{width:26,height:26,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.1)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}>
                     <X size={13}/>
@@ -374,11 +426,11 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
             </div>
 
             {/* toolbar row 1: tools + stroke width */}
-            <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap',background:'rgba(26,48,36,.97)',borderRadius:11,padding:'5px 8px',marginBottom:6,maxWidth:960,width:'100%',boxShadow:'0 4px 20px rgba(0,0,0,.5)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:3,flexWrap:'wrap',background:'rgba(26,48,36,.97)',borderRadius:11,padding:'5px 8px',marginBottom:5,maxWidth:960,width:'100%',boxShadow:'0 4px 20px rgba(0,0,0,.5)'}}>
                 {TOOLS.map(t=>(
                     <button key={t.id} onClick={()=>setTool(t.id)} title={t.label}
-                        style={{display:'flex',alignItems:'center',gap:3,padding:'4px 8px',borderRadius:6,border:'none',cursor:'pointer',background:tool===t.id?SAGE:'rgba(255,255,255,.07)',color:tool===t.id?'#fff':'rgba(255,255,255,.7)',fontSize:11,fontWeight:700,transition:'all .12s'}}>
-                        {t.icon} {t.label}
+                        style={{display:'flex',alignItems:'center',gap:2,padding:'5px 7px',borderRadius:6,border:'none',cursor:'pointer',background:tool===t.id?SAGE:'rgba(255,255,255,.07)',color:tool===t.id?'#fff':'rgba(255,255,255,.7)',fontSize:11,fontWeight:700,transition:'all .12s',minHeight:34}}>
+                        {t.icon} <span style={{fontSize:10}}>{t.label}</span>
                     </button>
                 ))}
                 <div style={{width:1,height:18,background:'rgba(255,255,255,.12)',margin:'0 2px'}}/>
@@ -392,34 +444,34 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
                 </>}
                 <div style={{marginLeft:'auto',display:'flex',gap:4}}>
                     {tool==='select'&&selIdx!==null&&(
-                        <button onClick={delSelected} title="Del" style={{padding:'3px 7px',borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.2)',color:'#f87171',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',gap:3}}>
+                        <button onClick={delSelected} title="Del" style={{padding:'5px 8px',borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.2)',color:'#f87171',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',gap:3,minHeight:34}}>
                             <Trash2 size={11}/> 削除
                         </button>
                     )}
-                    <button onClick={undo} disabled={!canUndo} style={{width:26,height:26,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',justifyContent:'center',opacity:canUndo?1:.35}}>
-                        <Undo2 size={12}/>
+                    <button onClick={undo} disabled={!canUndo} style={{width:34,height:34,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',justifyContent:'center',opacity:canUndo?1:.35}}>
+                        <Undo2 size={14}/>
                     </button>
-                    <button onClick={()=>{annsRef.current=[];histRef.current=[[]as Ann[]];selRef.current=null;setSelIdx(null);setCanUndo(false);redrawAll();}} style={{width:26,height:26,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.18)',color:'#f87171',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <Trash2 size={12}/>
+                    <button onClick={()=>{annsRef.current=[];histRef.current=[[]as Ann[]];selRef.current=null;setSelIdx(null);setCanUndo(false);redrawAll();}} style={{width:34,height:34,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.18)',color:'#f87171',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <Trash2 size={14}/>
                     </button>
                 </div>
             </div>
 
             {/* toolbar row 2: colors */}
-            <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',background:'rgba(26,48,36,.85)',borderRadius:9,padding:'5px 10px',marginBottom:7,maxWidth:960,width:'100%'}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',background:'rgba(26,48,36,.85)',borderRadius:9,padding:'5px 10px',marginBottom:6,maxWidth:960,width:'100%'}}>
                 {hasShape?(
                     <>
                         <ColorRow label="枠色" val={strokeCol} onChange={setStrokeCol}/>
                         <div style={{width:1,height:18,background:'rgba(255,255,255,.12)',margin:'0 2px'}}/>
                         <span style={{fontSize:10,color:'rgba(255,255,255,.45)',whiteSpace:'nowrap'}}>塗り色</span>
-                        <button onClick={()=>setFillCol('transparent')} style={{padding:'2px 6px',borderRadius:5,border:'none',cursor:'pointer',background:fillCol==='transparent'?SAGE:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',fontSize:10,fontWeight:700}}>
+                        <button onClick={()=>setFillCol('transparent')} style={{padding:'3px 7px',borderRadius:5,border:'none',cursor:'pointer',background:fillCol==='transparent'?SAGE:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',fontSize:10,fontWeight:700}}>
                             なし
                         </button>
                         {PRESETS.map(c=>(
-                            <button key={c} onClick={()=>setFillCol(c)} style={{width:16,height:16,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:fillCol===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
+                            <button key={c} onClick={()=>setFillCol(c)} style={{width:18,height:18,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:fillCol===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
                         ))}
                         <input type="color" value={fillCol==='transparent'?'#ffffff':fillCol} onChange={e=>setFillCol(e.target.value)}
-                            style={{width:20,height:20,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0}}/>
+                            style={{width:22,height:22,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0}}/>
                     </>
                 ):(
                     <ColorRow label="色" val={strokeCol} onChange={setStrokeCol}/>
@@ -427,18 +479,18 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
             </div>
 
             {/* canvas */}
-            <div ref={containerRef} style={{width:'100%',maxWidth:960,display:'flex',justifyContent:'center'}}>
-                <canvas ref={canvasRef} style={{borderRadius:6,display:'block',boxShadow:'0 8px 40px rgba(0,0,0,.7)',maxWidth:'100%'}}/>
+            <div ref={containerRef} style={{width:'100%',maxWidth:960,display:'flex',justifyContent:'center',flex:1,overflow:'hidden'}}>
+                <canvas ref={canvasRef} style={{borderRadius:6,display:'block',boxShadow:'0 8px 40px rgba(0,0,0,.7)',maxWidth:'100%',touchAction:'none'}}/>
             </div>
 
             {/* footer */}
-            <div style={{display:'flex',gap:8,marginTop:8,width:'100%',maxWidth:960}}>
-                <button onClick={onCancel} style={{flex:1,padding:'10px 0',borderRadius:9,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',fontSize:13,fontWeight:700}}>
+            <div style={{display:'flex',gap:8,marginTop:7,width:'100%',maxWidth:960}}>
+                <button onClick={onCancel} style={{flex:1,padding:'11px 0',borderRadius:9,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',fontSize:13,fontWeight:700}}>
                     {galleryProgress?'スキップ':'キャンセル'}
                 </button>
-                <button onClick={confirm} disabled={saving} style={{flex:3,padding:'10px 0',borderRadius:9,border:'none',cursor:'pointer',background:SB,color:LIME,fontSize:13,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 20px rgba(0,0,0,.4)',opacity:saving?.7:1}}>
+                <button onClick={confirm} disabled={saving} style={{flex:3,padding:'11px 0',borderRadius:9,border:'none',cursor:'pointer',background:overwriteUrl?'#7c4a59':SB,color:LIME,fontSize:13,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 20px rgba(0,0,0,.4)',opacity:saving?.7:1}}>
                     <Check size={15}/>
-                    {saving?'処理中...': galleryProgress&&galleryProgress.current<galleryProgress.total
+                    {saving?'処理中...': overwriteUrl?'上書き保存する': galleryProgress&&galleryProgress.current<galleryProgress.total
                         ?`次へ (${galleryProgress.current}/${galleryProgress.total})`
                         :'この画像を使う'}
                 </button>
@@ -447,7 +499,7 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
             {/* text dialog */}
             {showTxt&&(
                 <div style={{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.6)'}}>
-                    <div style={{background:BG,borderRadius:14,padding:22,boxShadow:'0 12px 50px rgba(0,0,0,.4)',display:'flex',flexDirection:'column',gap:12,minWidth:300}}>
+                    <div style={{background:BG,borderRadius:14,padding:22,boxShadow:'0 12px 50px rgba(0,0,0,.4)',display:'flex',flexDirection:'column',gap:12,minWidth:300,margin:'0 16px'}}>
                         <div style={{fontSize:13,fontWeight:700,color:T1}}>テキストを入力</div>
                         <input autoFocus value={txtVal} onChange={e=>setTxtVal(e.target.value)}
                             onKeyDown={e=>{if(e.key==='Enter')commitText();if(e.key==='Escape'){setShowTxt(false);setTxtVal('');}}}

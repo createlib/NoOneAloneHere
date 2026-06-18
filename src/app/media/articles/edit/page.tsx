@@ -20,6 +20,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import OrderedList from '@tiptap/extension-ordered-list';
 import { common, createLowlight } from 'lowlight';
 import {
     ArrowLeft, Save, Send, Bold, Italic, Strikethrough, Highlighter,
@@ -130,8 +131,10 @@ function ArticleEditorInner() {
 
     // 画像アノテーションエディター
     const [annotatingFile, setAnnotatingFile] = useState<File|null>(null);
-    type AnnotatingMode = 'cover' | 'insert' | 'gallery';
+    type AnnotatingMode = 'cover' | 'insert' | 'gallery' | 'redit';
     const [annotatingMode, setAnnotatingMode] = useState<AnnotatingMode>('cover');
+    // 再編集時の上書きURL
+    const [overwriteUrl, setOverwriteUrl] = useState<string|undefined>(undefined);
     // ギャラリー用: 未処理の画像キューと処理済み結果
     const [galleryQueue,   setGalleryQueue]   = useState<File[]>([]);
     const [galleryResults, setGalleryResults] = useState<File[]>([]);
@@ -146,6 +149,11 @@ function ArticleEditorInner() {
     const imageInputRef   = useRef<HTMLInputElement>(null);
     const galleryInputRef = useRef<HTMLInputElement>(null);
     const editorWrapRef   = useRef<HTMLDivElement>(null);
+    const [showListStartPopup, setShowListStartPopup] = useState(false);
+    const [listStartInput, setListStartInput] = useState('');
+    // エディタ内画像クリックメニュー
+    const [imgMenu, setImgMenu] = useState<{url:string;x:number;y:number}|null>(null);
+    const imgMenuRef = useRef<HTMLDivElement>(null);
 
     /* ── Tiptap editor ──────────────────────────────────────────── */
     const editor = useEditor({
@@ -153,6 +161,20 @@ function ArticleEditorInner() {
             StarterKit.configure({
                 codeBlock: false,
                 heading: { levels: [2, 3] },
+                orderedList: false, // 以下のカスタム拡張で代替
+            }),
+            // start属性を完全サポートするカスタムOrderedList
+            OrderedList.extend({
+                addAttributes() {
+                    return {
+                        ...this.parent?.(),
+                        start: {
+                            default: 1,
+                            parseHTML: el => parseInt(el.getAttribute('start') || '1', 10),
+                            renderHTML: attrs => attrs.start !== 1 ? { start: attrs.start } : {},
+                        },
+                    };
+                },
             }),
             Placeholder.configure({ placeholder: '本文を書き始めましょう...' }),
             Image.configure({ inline: false, allowBase64: true }),
@@ -180,6 +202,7 @@ function ArticleEditorInner() {
                     outline: none; min-height: 400px; padding: 0;
                     font-family: 'Noto Sans JP', -apple-system, sans-serif;
                 `,
+                class: 'noah-editor-content',
             },
         },
     });
@@ -422,14 +445,43 @@ function ArticleEditorInner() {
     };
 
     /* -- Annotation confirmed ------------------------------------ */
-    const handleAnnotationConfirm = async (editedFile: File) => {
+    const handleAnnotationConfirm = async (editedFile: File, owUrl?: string) => {
         if (annotatingMode === 'cover') {
             setAnnotatingFile(null);
+            setOverwriteUrl(undefined);
             setCoverFile(editedFile);
             setCoverUrl(URL.createObjectURL(editedFile));
 
+        } else if (annotatingMode === 'redit' && owUrl) {
+            // 既存アップロード済み画像URLを上書き
+            setAnnotatingFile(null);
+            setOverwriteUrl(undefined);
+            if (!user) return;
+            try {
+                // Firebase Storage: URL からパスを抽出して同じパスに上書き
+                // URL 例: https://firebasestorage.googleapis.com/v0/b/.../o/articles%2Fimages%2F.../filename?alt=media&...
+                const { ref: storageRefFn, uploadBytes: uploadBytesFn, getDownloadURL: getDlURL } = await import('firebase/storage');
+                const { storage: st } = await import('@/lib/firebase');
+                // パスをURLからデコード
+                const pathMatch = owUrl.match(/\/o\/(.*?)(?:\?|$)/);
+                if (!pathMatch) throw new Error('Storage path not found');
+                const storagePath = decodeURIComponent(pathMatch[1]);
+                const sRef = storageRefFn(st, storagePath);
+                const snap = await uploadBytesFn(sRef, editedFile);
+                const newUrl = await getDlURL(snap.ref);
+                // エディタ内の対象imgのsrcを新URLに更新
+                if (editor) {
+                    const html = editor.getHTML();
+                    // 旧URLのキャッシュバスター除去して比較
+                    const cleanOld = owUrl.split('?')[0];
+                    const newHtml = html.replace(new RegExp(cleanOld.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[^"]*','g'), newUrl);
+                    if (newHtml !== html) editor.commands.setContent(newHtml);
+                }
+            } catch (err) { console.error(err); alert('画像の上書き保存に失敗しました'); }
+
         } else if (annotatingMode === 'insert') {
             setAnnotatingFile(null);
+            setOverwriteUrl(undefined);
             if (!user || !editor) return;
             try {
                 const iRef = ref(storage, `articles/images/${user.uid}/${Date.now()}_${editedFile.name}`);
@@ -451,6 +503,7 @@ function ArticleEditorInner() {
                 setAnnotatingFile(null);
                 setGalleryResults([]);
                 setGalleryQueue([]);
+                setOverwriteUrl(undefined);
                 if (!user || !editor) return;
                 setGalleryUploading(true);
                 try {
@@ -914,7 +967,79 @@ function ArticleEditorInner() {
                             <TBtn active={editor.isActive('heading',{level:3})} onClick={() => editor.chain().focus().toggleHeading({level:3}).run()} title="H3"><Heading3 size={13} /></TBtn>
                             <div style={{ width:1, background:'rgba(0,0,0,.08)', margin:'4px 2px' }} />
                             <TBtn active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()} title="箇条書き"><List size={13} /></TBtn>
-                            <TBtn active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="番号リスト"><ListOrdered size={13} /></TBtn>
+                            {/* 番号リスト + 開始番号設定 */}
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                <TBtn active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="番号リスト"><ListOrdered size={13} /></TBtn>
+                                {editor.isActive('orderedList') && (
+                                    <button
+                                        title="開始番号を設定"
+                                        onMouseDown={e => e.preventDefault()}
+                                        onClick={() => {
+                                            const node = editor.state.selection.$from.node(-1);
+                                            const cur = node?.attrs?.start || 1;
+                                            setListStartInput(String(cur));
+                                            setShowListStartPopup(v => !v);
+                                        }}
+                                        style={{
+                                            fontSize: 8, fontWeight: 800, color: TM,
+                                            background: 'transparent', border: 'none',
+                                            cursor: 'pointer', padding: '2px 1px',
+                                            lineHeight: 1, opacity: .7,
+                                        }}
+                                    >
+                                        #
+                                    </button>
+                                )}
+                                {showListStartPopup && editor.isActive('orderedList') && (
+                                    <div style={{
+                                        position: 'absolute', top: '100%', left: 0, zIndex: 200,
+                                        background: BG, borderRadius: 10, padding: '10px 12px',
+                                        boxShadow: NEU_SM + ', 0 8px 24px rgba(0,0,0,.12)',
+                                        border: '1px solid rgba(0,0,0,.07)',
+                                        minWidth: 130, marginTop: 4,
+                                    }}>
+                                        <div style={{ fontSize: 10, fontWeight: 700, color: T1, marginBottom: 6 }}>開始番号</div>
+                                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={listStartInput}
+                                                onChange={e => setListStartInput(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        const n = Math.max(1, parseInt(listStartInput) || 1);
+                                                        editor.chain().focus().updateAttributes('orderedList', { start: n }).run();
+                                                        setShowListStartPopup(false);
+                                                    }
+                                                    if (e.key === 'Escape') setShowListStartPopup(false);
+                                                }}
+                                                style={{
+                                                    width: 56, padding: '4px 8px', borderRadius: 7,
+                                                    border: '1px solid rgba(0,0,0,.12)',
+                                                    background: 'white', fontSize: 12, fontWeight: 700,
+                                                    outline: 'none', color: T1,
+                                                }}
+                                                autoFocus
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    const n = Math.max(1, parseInt(listStartInput) || 1);
+                                                    editor.chain().focus().updateAttributes('orderedList', { start: n }).run();
+                                                    setShowListStartPopup(false);
+                                                }}
+                                                style={{
+                                                    padding: '4px 10px', borderRadius: 7, border: 'none',
+                                                    background: SAGE, color: '#fff', fontSize: 11,
+                                                    fontWeight: 700, cursor: 'pointer',
+                                                }}
+                                            >
+                                                OK
+                                            </button>
+                                        </div>
+                                        <div style={{ fontSize: 9, color: TM, marginTop: 5 }}>Enterキーでも確定</div>
+                                    </div>
+                                )}
+                            </div>
                             <TBtn active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()} title="引用"><Quote size={13} /></TBtn>
                             <TBtn active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()} title="コード"><SquareCode size={13} /></TBtn>
                             <TBtn active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()} title="インラインコード"><Code size={13} /></TBtn>
@@ -950,7 +1075,91 @@ function ArticleEditorInner() {
                     )}
 
                     {/* Editor content */}
-                    <EditorContent editor={editor} />
+                    {/* エディタ内画像のクリックで「画像を編集」メニュー */}
+                    <div
+                        style={{ position: 'relative' }}
+                        onClick={e => {
+                            const target = e.target as HTMLElement;
+                            if (target.tagName === 'IMG' && target.closest('.ProseMirror')) {
+                                const imgEl = target as HTMLImageElement;
+                                const src = imgEl.src;
+                                // Firebase Storage画像のみ編集可能
+                                if (src.includes('firebasestorage.googleapis.com') || src.includes('storage.googleapis.com')) {
+                                    const rect = imgEl.getBoundingClientRect();
+                                    const wrapRect = editorWrapRef.current?.getBoundingClientRect();
+                                    setImgMenu({
+                                        url: src,
+                                        x: rect.left - (wrapRect?.left || 0) + rect.width / 2,
+                                        y: rect.top - (wrapRect?.top || 0) - 8,
+                                    });
+                                } else {
+                                    setImgMenu(null);
+                                }
+                            } else {
+                                setImgMenu(null);
+                            }
+                        }}
+                    >
+                        <EditorContent editor={editor} />
+                        {/* 画像編集メニュー */}
+                        {imgMenu && (
+                            <div
+                                ref={imgMenuRef}
+                                style={{
+                                    position: 'absolute',
+                                    left: imgMenu.x,
+                                    top: imgMenu.y,
+                                    transform: 'translate(-50%, -100%)',
+                                    zIndex: 50,
+                                    background: T1,
+                                    borderRadius: 9,
+                                    padding: '6px 4px',
+                                    boxShadow: '0 6px 24px rgba(0,0,0,.3)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    pointerEvents: 'auto',
+                                }}
+                            >
+                                <button
+                                    onMouseDown={e => e.preventDefault()}
+                                    onClick={async () => {
+                                        const imgUrl = imgMenu.url;
+                                        setImgMenu(null);
+                                        // URLの画像をBlob化してFileに変換
+                                        try {
+                                            const res = await fetch(imgUrl);
+                                            const blob = await res.blob();
+                                            const ext = blob.type === 'image/png' ? 'png' : 'jpg';
+                                            const f = new File([blob], `edit_${Date.now()}.${ext}`, { type: blob.type });
+                                            setAnnotatingMode('redit');
+                                            setOverwriteUrl(imgUrl);
+                                            setAnnotatingFile(f);
+                                        } catch { alert('画像の読み込みに失敗しました'); }
+                                    }}
+                                    style={{
+                                        padding: '5px 10px', borderRadius: 6, border: 'none',
+                                        background: SAGE, color: '#fff', fontSize: 11,
+                                        fontWeight: 800, cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: 5,
+                                    }}
+                                >
+                                    <ImageIcon size={11}/> 画像を編集
+                                </button>
+                                <button
+                                    onMouseDown={e => e.preventDefault()}
+                                    onClick={() => setImgMenu(null)}
+                                    style={{
+                                        width: 24, height: 24, borderRadius: 5, border: 'none',
+                                        background: 'rgba(255,255,255,.1)', color: '#fff',
+                                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    }}
+                                >
+                                    <X size={11}/>
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <input ref={imageInputRef}   type="file" accept="image/*" onChange={handleInsertImage} style={{ display:'none' }} />
                 <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGalleryImages} style={{ display:'none' }} />
@@ -1650,12 +1859,14 @@ function ArticleEditorInner() {
                     onConfirm={handleAnnotationConfirm}
                     onCancel={() => {
                         setAnnotatingFile(null);
+                        setOverwriteUrl(undefined);
                         setGalleryResults([]);
                         setGalleryQueue([]);
                     }}
                     galleryProgress={annotatingMode === 'gallery'
                         ? { current: galleryResults.length + 1, total: galleryResults.length + 1 + galleryQueue.length }
                         : undefined}
+                    overwriteUrl={annotatingMode === 'redit' ? overwriteUrl : undefined}
                 />
             )}
         </div>

@@ -138,3 +138,35 @@ html, body {
 .noah-tabs-header::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Tiptap editor & article body: list markers ─────────────────── */
+/* エディタ (.ProseMirror) と閲覧ページ (.article-body) 両方に適用 */
+/* Tailwind のリセットに勝つため !important を使用 */
+.ProseMirror ol,
+.noah-editor-content ol,
+.article-body ol {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+  padding-left: 1.6em !important;
+  margin: 0.5em 0 !important;
+}
+.ProseMirror ul,
+.noah-editor-content ul,
+.article-body ul {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+  padding-left: 1.6em !important;
+  margin: 0.5em 0 !important;
+}
+.ProseMirror li,
+.noah-editor-content li,
+.article-body li {
+  display: list-item !important;
+  margin-bottom: 0.25em !important;
+  line-height: 1.7 !important;
+}
+/* ネストしたリスト */
+.ProseMirror ol ol, .noah-editor-content ol ol { list-style-type: lower-alpha !important; }
+.ProseMirror ol ol ol, .noah-editor-content ol ol ol { list-style-type: lower-roman !important; }
+.ProseMirror ul ul, .noah-editor-content ul ul { list-style-type: circle !important; }
+.ProseMirror ul ul ul, .noah-editor-content ul ul ul { list-style-type: square !important; }
