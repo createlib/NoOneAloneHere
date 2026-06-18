@@ -604,9 +604,7 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
             <div style={{
                 flexShrink:0,
                 display:'flex',alignItems:'center',gap:3,
-                flexWrap:'nowrap',          // 折り返し禁止
-                overflowX:'auto',           // 横スクロール
-                scrollbarWidth:'none',      // スクロールバー非表示
+                flexWrap:'wrap',
                 background:'rgba(26,48,36,.97)',
                 borderRadius:10,padding:'4px 8px',
                 margin:'0 8px 3px',
@@ -646,9 +644,7 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
             <div style={{
                 flexShrink:0,
                 display:'flex',alignItems:'center',gap:6,
-                flexWrap:'nowrap',          // ★ 折り返し禁止（2行化防止）
-                overflowX:'auto',           // ★ 横スクロール
-                scrollbarWidth:'none',
+                flexWrap:'wrap',
                 background:'rgba(26,48,36,.82)',
                 borderRadius:9,padding:'4px 10px',
                 margin:'0 8px 4px',
