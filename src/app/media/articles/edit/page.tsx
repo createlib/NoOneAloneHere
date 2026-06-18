@@ -28,12 +28,12 @@ import {
     AlignLeft, AlignCenter, Plus, X, Eye, ChevronDown, MessageSquare,
     BookOpen, Hash, Upload, Loader2, FileText, PenLine, Underline as UnderlineIcon,
     Type, Pilcrow, SquareCode, Sparkles, Layers, GalleryHorizontal, ListCollapse,
-    RefreshCw, ArchiveRestore, AlertCircle,
+    RefreshCw, ArchiveRestore, AlertCircle, ExternalLink, Play,
 } from 'lucide-react';
 import VisibilityPicker, { VisibilityMode } from '@/components/VisibilityPicker';
 import AiUpdateModal from '@/components/AiUpdateModal';
 import { fetchAiUpdates, DiffSuggestion } from '@/lib/aiArticleUpdater';
-import { AccordionExtension, TabsExtension, TabPanelExtension, ImageGalleryExtension } from '@/components/ArticleExtensions';
+import { AccordionExtension, TabsExtension, TabPanelExtension, ImageGalleryExtension, RichLinkExtension, VideoEmbedExtension } from '@/components/ArticleExtensions';
 import ImageAnnotationEditor from '@/components/ImageAnnotationEditor';
 
 /* ── Design tokens ─────────────────────────────────────────────── */
@@ -114,6 +114,20 @@ function ArticleEditorInner() {
     // 下書きに戻す確認モーダル
     const [showRevertConfirm, setShowRevertConfirm] = useState(false);
 
+    // URL挿入モーダル
+    const [showUrlModal, setShowUrlModal]           = useState(false);
+    const [urlModalInput, setUrlModalInput]         = useState('');
+    const [urlModalLoading, setUrlModalLoading]     = useState(false);
+    const [urlModalOgData, setUrlModalOgData]       = useState<any>(null);
+    const [urlModalType, setUrlModalType]           = useState<'link'|'video'>('link');
+    const [urlModalStyle, setUrlModalStyle]         = useState<string>('card');
+    type VideoStyle = 'embed' | 'thumbnail' | 'text';
+    type LinkStyle  = 'card'  | 'banner'    | 'minimal';
+
+    function isVideoUrl(url: string) {
+        return /youtube\.com|youtu\.be|vimeo\.com/i.test(url);
+    }
+
     // 画像アノテーションエディター
     const [annotatingFile, setAnnotatingFile] = useState<File|null>(null);
     type AnnotatingMode = 'cover' | 'insert' | 'gallery';
@@ -155,6 +169,8 @@ function ArticleEditorInner() {
             TabPanelExtension,
             TabsExtension,
             ImageGalleryExtension,
+            RichLinkExtension,
+            VideoEmbedExtension,
         ],
         content: '',
         editorProps: {
@@ -467,6 +483,136 @@ function ArticleEditorInner() {
         if (url && editor) editor.commands.setYoutubeVideo({ src: url });
     };
 
+    /* ── URL挿入モーダル：ハンドラー群 ───────────────────────── */
+    const openUrlModal = () => {
+        setUrlModalInput('');
+        setUrlModalOgData(null);
+        setUrlModalLoading(false);
+        setUrlModalType('link');
+        setUrlModalStyle('card');
+        setShowUrlModal(true);
+    };
+
+    const fetchOgForModal = async (url: string) => {
+        if (!url.trim()) return;
+        setUrlModalLoading(true);
+        setUrlModalOgData(null);
+
+        const targetUrl = url.startsWith('http') ? url : `https://${url}`;
+
+        // ドメインに依存せずパスパターンで判定（ドメイン変更に自動対応）
+        const noahMatch = targetUrl.match(/\/media\/articles\/view[^?]*\?.*id=([^&]+)/i);
+        if (noahMatch) {
+            const articleId = noahMatch[1];
+            try {
+                const { db, APP_ID } = await import('@/lib/firebase');
+                const { doc, getDoc } = await import('firebase/firestore');
+                const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'articles', articleId));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    setUrlModalOgData({
+                        url: targetUrl,
+                        title:       d.title || '',
+                        description: d.bodyText?.slice(0, 120) || '',
+                        image:       d.coverImageUrl || '',
+                        favicon:     '',
+                        siteName:    'NOAH',
+                        authorName:  d.authorName || '',
+                        authorIcon:  d.authorIcon || '',
+                        readingTime: d.readingTime || 1,
+                        category:    d.category || '',
+                        isNoah:      true,
+                    });
+                    setUrlModalType('link');
+                    setUrlModalStyle('card');
+                    setUrlModalLoading(false);
+                    return;
+                }
+            } catch (e) {
+                console.error('NOAH article fetch error:', e);
+            }
+            // 取得失敗した場合はURLのみ設定
+            setUrlModalOgData({ url: targetUrl, title: '', description: '', image: '', favicon: '', siteName: 'NOAH' });
+            setUrlModalType('link');
+            setUrlModalStyle('card');
+            setUrlModalLoading(false);
+            return;
+        }
+
+        // === YouTube / VimeoはAPIなしでサムネ取得可能 ===
+        const ytMatch = targetUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
+        const vimeoMatch = targetUrl.match(/vimeo\.com\/(\d+)/);
+
+        if (ytMatch || vimeoMatch) {
+            const thumbnail = ytMatch
+                ? `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`
+                : '';
+            setUrlModalOgData({
+                title: '',
+                description: '',
+                image: thumbnail,
+                favicon: 'https://www.google.com/s2/favicons?domain=youtube.com&sz=32',
+                siteName: ytMatch ? 'YouTube' : 'Vimeo',
+                url: targetUrl,
+            });
+            setUrlModalType('video');
+            setUrlModalStyle('embed');
+            setUrlModalLoading(false);
+            return;
+        }
+
+        // === 通常URLはOGP APIで取得を試みる ===
+        try {
+            const res = await fetch(`/api/og?url=${encodeURIComponent(targetUrl)}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            setUrlModalOgData({ ...data, url: data.url || targetUrl });
+            setUrlModalType(isVideoUrl(targetUrl) ? 'video' : 'link');
+            setUrlModalStyle(isVideoUrl(targetUrl) ? 'embed' : 'card');
+        } catch {
+            setUrlModalOgData({ title: '', description: '', image: '', favicon: '', siteName: new URL(targetUrl).hostname, url: targetUrl });
+            setUrlModalType('link');
+            setUrlModalStyle('card');
+        } finally {
+            setUrlModalLoading(false);
+        }
+    };
+
+    const insertUrlBlock = () => {
+        if (!editor || !urlModalOgData) return;
+        if (urlModalType === 'video') {
+            editor.chain().focus().insertContent({
+                type: 'videoEmbed',
+                attrs: {
+                    url:       urlModalOgData.url || urlModalInput,
+                    style:     urlModalStyle,
+                    title:     urlModalOgData.title || '',
+                    thumbnail: '',
+                },
+            }).run();
+        } else {
+            editor.chain().focus().insertContent({
+                type: 'richLink',
+                attrs: {
+                    url:         urlModalOgData.url || urlModalInput,
+                    style:       urlModalStyle,
+                    title:       urlModalOgData.title || '',
+                    description: urlModalOgData.description || '',
+                    image:       urlModalOgData.image || '',
+                    favicon:     urlModalOgData.favicon || '',
+                    siteName:    urlModalOgData.siteName || '',
+                    // NOAH記事固有属性
+                    authorName:  urlModalOgData.authorName  || '',
+                    authorIcon:  urlModalOgData.authorIcon  || '',
+                    readingTime: urlModalOgData.readingTime || 0,
+                    category:    urlModalOgData.category    || '',
+                    isNoah:      urlModalOgData.isNoah      || false,
+                },
+            }).run();
+        }
+        setShowUrlModal(false);
+    };
+
     /* ── Link ────────────────────────────────────────────────── */
     const insertLink = () => {
         if (!editor) return;
@@ -777,6 +923,13 @@ function ArticleEditorInner() {
                             <TBtn active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()} title="インラインコード"><Code size={13} /></TBtn>
                             <div style={{ width:1, background:'rgba(0,0,0,.08)', margin:'4px 2px' }} />
                             <TBtn onClick={insertLink} active={editor.isActive('link')} title="リンク"><LinkIcon size={13} /></TBtn>
+                            <TBtn
+                                onClick={openUrlModal}
+                                title="リッチリンクカード / 動画埋め込み"
+                                active={false}
+                            >
+                                <ExternalLink size={13} />
+                            </TBtn>
                             <TBtn onClick={() => imageInputRef.current?.click()} title="画像"><ImageIcon size={13} /></TBtn>
                             <TBtn onClick={insertYoutube} title="YouTube"><YtIcon size={13} /></TBtn>
                             <TBtn onClick={() => editor.chain().focus().insertTable({rows:3,cols:3,withHeaderRow:true}).run()} title="テーブル"><TableIcon size={13} /></TBtn>
@@ -1140,6 +1293,258 @@ function ArticleEditorInner() {
                 .tiptap [data-type="tab-panel"] { user-select: auto; }
                 .tiptap [data-type="image-gallery"] img::-webkit-scrollbar { display:none; }
             `}</style>
+
+            {/* ── URL挿入モーダル ───────────────────────────────── */}
+            {showUrlModal && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 7500,
+                    background: 'rgba(26,48,36,.55)', backdropFilter: 'blur(8px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '20px',
+                }}
+                    onClick={e => { if (e.target === e.currentTarget) setShowUrlModal(false); }}
+                >
+                    <div style={{
+                        width: '100%', maxWidth: 480, background: BG, borderRadius: 20,
+                        boxShadow: '0 20px 60px rgba(0,0,0,.25)', padding: 24,
+                        maxHeight: '90vh', overflowY: 'auto',
+                    }}>
+                        {/* ヘッダー */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+                            <ExternalLink size={16} color={SAGE} />
+                            <span style={{ fontSize: 15, fontWeight: 800, color: T1 }}>URLを挿入</span>
+                            <button onClick={() => setShowUrlModal(false)}
+                                style={{ marginLeft: 'auto', border: 'none', background: 'transparent', cursor: 'pointer', color: TM }}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* URL入力 */}
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                            <input
+                                value={urlModalInput}
+                                onChange={e => setUrlModalInput(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); fetchOgForModal(urlModalInput); } }}
+                                placeholder="https://..."
+                                style={{
+                                    flex: 1, padding: '9px 14px', borderRadius: 10, border: 'none',
+                                    background: BG, boxShadow: NEU_IN, fontSize: 13, color: T1, outline: 'none',
+                                    fontFamily: 'inherit',
+                                }}
+                            />
+                            <button
+                                onClick={() => fetchOgForModal(urlModalInput)}
+                                disabled={!urlModalInput.trim() || urlModalLoading}
+                                style={{
+                                    padding: '9px 16px', borderRadius: 10, border: 'none',
+                                    background: SAGE, color: '#fff', fontSize: 12, fontWeight: 700,
+                                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                                    opacity: !urlModalInput.trim() || urlModalLoading ? .5 : 1,
+                                    flexShrink: 0,
+                                }}
+                            >
+                                {urlModalLoading
+                                    ? <Loader2 size={13} style={{ animation: 'spin .8s linear infinite' }} />
+                                    : '取得'}
+                            </button>
+                        </div>
+
+                        {/* OGPプレビュー & スタイル選択 */}
+                        {urlModalLoading && (
+                            <div style={{ textAlign: 'center', padding: '24px 0', color: TM, fontSize: 12 }}>
+                                <Loader2 size={20} color={SAGE} style={{ animation: 'spin .8s linear infinite', marginBottom: 8 }} />
+                                <div>情報を取得中...</div>
+                            </div>
+                        )}
+
+                        {urlModalOgData && !urlModalLoading && (
+                            <>
+                                {/* 自動判別バッジ */}
+                                <div style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                                    padding: '4px 10px', borderRadius: 8, marginBottom: 14,
+                                    background: urlModalType === 'video' ? 'rgba(99,102,241,.1)' : urlModalOgData.isNoah ? 'rgba(26,48,36,.08)' : 'rgba(74,124,89,.08)',
+                                    border: `1px solid ${urlModalType === 'video' ? 'rgba(99,102,241,.25)' : urlModalOgData.isNoah ? 'rgba(26,48,36,.2)' : 'rgba(74,124,89,.2)'}`,
+                                }}>
+                                    {urlModalType === 'video'
+                                        ? <><Play size={11} color="#6366f1" /> <span style={{ fontSize: 10, fontWeight: 700, color: '#6366f1' }}>動画URL</span></>
+                                        : urlModalOgData.isNoah
+                                            ? <><span style={{ fontSize: 10, fontWeight: 800, color: SB }}>NOAH</span><span style={{ fontSize: 10, fontWeight: 700, color: SAGE }}>記事リンク</span></>
+                                            : <><ExternalLink size={11} color={SAGE} /> <span style={{ fontSize: 10, fontWeight: 700, color: SAGE }}>リンク</span></>
+                                    }
+                                </div>
+
+                                {/* スタイル選択 */}
+                                <div style={{ marginBottom: 14 }}>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: T1, marginBottom: 8 }}>
+                                        {urlModalType === 'video' ? '埋め込みスタイル' : 'カードスタイル'}
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                        {urlModalType === 'video'
+                                            ? (['embed', 'text'] as const).map(s => (
+                                                <button key={s} onClick={() => setUrlModalStyle(s)}
+                                                    style={{
+                                                        flex: 1, padding: '8px 6px', borderRadius: 10, border: 'none',
+                                                        fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                                                        background: urlModalStyle === s ? '#6366f1' : BG,
+                                                        color: urlModalStyle === s ? '#fff' : T2,
+                                                        boxShadow: urlModalStyle === s ? 'none' : NEU_SM,
+                                                        transition: 'all .15s',
+                                                    }}>
+                                                    {s === 'embed' ? '⊞ 埋め込み' : '🔗 テキスト'}
+                                                </button>
+                                            ))
+                                            : (['card', 'banner', 'minimal'] as const).map(s => (
+                                                <button key={s} onClick={() => setUrlModalStyle(s)}
+                                                    style={{
+                                                        flex: 1, padding: '8px 6px', borderRadius: 10, border: 'none',
+                                                        fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                                                        background: urlModalStyle === s ? SAGE : BG,
+                                                        color: urlModalStyle === s ? '#fff' : T2,
+                                                        boxShadow: urlModalStyle === s ? 'none' : NEU_SM,
+                                                        transition: 'all .15s',
+                                                    }}>
+                                                    {s === 'card' ? '▤ カード' : s === 'banner' ? '🖼 バナー' : '— ミニマル'}
+                                                </button>
+                                            ))
+                                        }
+                                    </div>
+                                </div>
+
+                                {/* プレビュー */}
+                                <div style={{ marginBottom: 18 }}>
+                                    <div style={{ fontSize: 11, fontWeight: 700, color: T1, marginBottom: 8 }}>プレビュー</div>
+                                    <div style={{ padding: 12, borderRadius: 12, background: 'rgba(0,0,0,.03)', border: '1px solid rgba(0,0,0,.06)' }}>
+                                        {urlModalType === 'video' ? (
+                                            urlModalStyle === 'embed' ? (
+                                                <div style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '16/9', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <div style={{ textAlign: 'center', color: '#888', fontSize: 11 }}>
+                                                        <Play size={28} color="#6366f1" fill="#6366f1" style={{ display: 'block', margin: '0 auto 8px' }} />
+                                                        保存後iframe埋め込みで再生可能になります
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: BG, boxShadow: NEU_SM }}>
+                                                    <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(99,102,241,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <Play size={13} color="#6366f1" fill="#6366f1" style={{ marginLeft: 2 }} />
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontSize: 12, fontWeight: 700, color: T1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{urlModalOgData.title || urlModalInput}</div>
+                                                        <div style={{ fontSize: 10, color: TM, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{urlModalInput}</div>
+                                                    </div>
+                                                    <ExternalLink size={11} color={TM} />
+                                                </div>
+                                            )
+                                        ) : urlModalStyle === 'banner' ? (
+                                            <div style={{ borderRadius: 10, overflow: 'hidden', boxShadow: NEU_SM, background: BG, border: urlModalOgData.isNoah ? '1px solid rgba(74,124,89,.15)' : undefined }}>
+                                                {urlModalOgData.image && (
+                                                    <div style={{ position: 'relative' }}>
+                                                        <img src={urlModalOgData.image} alt="" style={{ width: '100%', height: 100, objectFit: 'cover', display: 'block' }} />
+                                                        {urlModalOgData.isNoah && (
+                                                            <>
+                                                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(26,48,36,.6))' }} />
+                                                                {urlModalOgData.category && <div style={{ position: 'absolute', top: 6, left: 8, padding: '2px 7px', borderRadius: 5, background: SAGE, color: '#fff', fontSize: 8, fontWeight: 700 }}>{urlModalOgData.category}</div>}
+                                                                <div style={{ position: 'absolute', top: 6, right: 8, padding: '2px 7px', borderRadius: 5, background: SB, color: LIME, fontSize: 8, fontWeight: 800 }}>NOAH</div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                <div style={{ padding: '10px 12px' }}>
+                                                    {!urlModalOgData.image && urlModalOgData.isNoah && (
+                                                        <div style={{ display: 'flex', gap: 5, marginBottom: 6 }}>
+                                                            {urlModalOgData.category && <span style={{ padding: '1px 6px', borderRadius: 4, background: SAGE, color: '#fff', fontSize: 8, fontWeight: 700 }}>{urlModalOgData.category}</span>}
+                                                            <span style={{ padding: '1px 6px', borderRadius: 4, background: SB, color: LIME, fontSize: 8, fontWeight: 800 }}>NOAH</span>
+                                                        </div>
+                                                    )}
+                                                    {!urlModalOgData.isNoah && urlModalOgData.siteName && <div style={{ fontSize: 9, color: TM, marginBottom: 3, fontWeight: 600 }}>{urlModalOgData.siteName}</div>}
+                                                    <div style={{ fontSize: 12, fontWeight: 700, color: T1 }}>{urlModalOgData.title || urlModalInput}</div>
+                                                    {urlModalOgData.description && <div style={{ fontSize: 10, color: T2, marginTop: 3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2 as any, WebkitBoxOrient: 'vertical' as any }}>{urlModalOgData.description}</div>}
+                                                    {urlModalOgData.isNoah && (urlModalOgData.authorName || urlModalOgData.readingTime) && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                                                            {urlModalOgData.authorIcon && <img src={urlModalOgData.authorIcon} alt="" style={{ width: 16, height: 16, borderRadius: '50%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                                                            {urlModalOgData.authorName && <span style={{ fontSize: 10, fontWeight: 600, color: T2 }}>{urlModalOgData.authorName}</span>}
+                                                            {urlModalOgData.readingTime ? <span style={{ fontSize: 9, color: TM, marginLeft: 'auto' }}>🕐 {urlModalOgData.readingTime}分</span> : null}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ) : urlModalStyle === 'minimal' ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, background: BG, boxShadow: NEU_SM, border: urlModalOgData.isNoah ? '1px solid rgba(74,124,89,.1)' : undefined }}>
+                                                {urlModalOgData.isNoah ? (
+                                                    urlModalOgData.image
+                                                        ? <img src={urlModalOgData.image} alt="" style={{ width: 28, height: 28, borderRadius: 5, objectFit: 'cover', flexShrink: 0 }} />
+                                                        : <div style={{ width: 28, height: 28, borderRadius: 5, background: `linear-gradient(135deg, ${SB}, ${SAGE})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ fontSize: 8, fontWeight: 800, color: LIME }}>N</span></div>
+                                                ) : (
+                                                    urlModalOgData.favicon && <img src={urlModalOgData.favicon} alt="" style={{ width: 14, height: 14, borderRadius: 3 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                                                )}
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <span style={{ fontSize: 12, fontWeight: 600, color: T1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{urlModalOgData.title || urlModalInput}</span>
+                                                    {urlModalOgData.isNoah && urlModalOgData.authorName && <span style={{ fontSize: 9, color: TM }}>{urlModalOgData.authorName}{urlModalOgData.readingTime ? ` · ${urlModalOgData.readingTime}分` : ''}</span>}
+                                                </div>
+                                                {urlModalOgData.isNoah && urlModalOgData.category && <span style={{ padding: '1px 6px', borderRadius: 4, background: SAGE, color: '#fff', fontSize: 8, fontWeight: 700, flexShrink: 0 }}>{urlModalOgData.category}</span>}
+                                                {urlModalOgData.isNoah && <span style={{ padding: '1px 6px', borderRadius: 4, background: SB, color: LIME, fontSize: 8, fontWeight: 800, flexShrink: 0 }}>NOAH</span>}
+                                                {!urlModalOgData.isNoah && urlModalOgData.siteName && <span style={{ fontSize: 10, color: TM }}>{urlModalOgData.siteName}</span>}
+                                                <ExternalLink size={11} color={TM} />
+                                            </div>
+                                        ) : (
+                                            // card
+                                            <div style={{ display: 'flex', borderRadius: 10, overflow: 'hidden', boxShadow: NEU_SM, background: BG, minHeight: 72, border: urlModalOgData.isNoah ? '1px solid rgba(74,124,89,.12)' : undefined }}>
+                                                {urlModalOgData.image ? (
+                                                    <div style={{ width: 90, flexShrink: 0, background: '#eee', overflow: 'hidden' }}>
+                                                        <img src={urlModalOgData.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                                                    </div>
+                                                ) : urlModalOgData.isNoah ? (
+                                                    <div style={{ width: 70, flexShrink: 0, background: `linear-gradient(135deg, ${SB}, ${SAGE})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <span style={{ fontSize: 10, fontWeight: 800, color: LIME }}>NOAH</span>
+                                                    </div>
+                                                ) : null}
+                                                <div style={{ flex: 1, padding: '8px 12px', minWidth: 0 }}>
+                                                    {urlModalOgData.isNoah && (
+                                                        <div style={{ display: 'flex', gap: 5, marginBottom: 4, flexWrap: 'wrap' }}>
+                                                            {urlModalOgData.category && <span style={{ padding: '1px 6px', borderRadius: 4, background: SAGE, color: '#fff', fontSize: 7, fontWeight: 700 }}>{urlModalOgData.category}</span>}
+                                                            <span style={{ padding: '1px 6px', borderRadius: 4, background: SB, color: LIME, fontSize: 7, fontWeight: 800 }}>NOAH</span>
+                                                        </div>
+                                                    )}
+                                                    {!urlModalOgData.isNoah && urlModalOgData.siteName && <div style={{ fontSize: 9, color: TM, marginBottom: 2, fontWeight: 600 }}>{urlModalOgData.siteName}</div>}
+                                                    <div style={{ fontSize: 12, fontWeight: 700, color: T1, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2 as any, WebkitBoxOrient: 'vertical' as any }}>{urlModalOgData.title || urlModalInput}</div>
+                                                    {urlModalOgData.description && <div style={{ fontSize: 10, color: T2, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2 as any, WebkitBoxOrient: 'vertical' as any, marginTop: 3 }}>{urlModalOgData.description}</div>}
+                                                    {urlModalOgData.isNoah && (urlModalOgData.authorName || urlModalOgData.readingTime) && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6 }}>
+                                                            {urlModalOgData.authorIcon && <img src={urlModalOgData.authorIcon} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'cover' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                                                            {urlModalOgData.authorName && <span style={{ fontSize: 9, fontWeight: 600, color: T2 }}>{urlModalOgData.authorName}</span>}
+                                                            {urlModalOgData.readingTime ? <span style={{ fontSize: 8, color: TM, marginLeft: 'auto' }}>🕐 {urlModalOgData.readingTime}分</span> : null}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                    </div>
+                                </div>
+
+                                {/* 挿入ボタン */}
+                                <div style={{ display: 'flex', gap: 10 }}>
+                                    <button onClick={() => setShowUrlModal(false)}
+                                        style={{ flex: 1, padding: '11px 0', borderRadius: 12, border: 'none', background: BG, boxShadow: NEU_SM, fontSize: 12, fontWeight: 700, color: T2, cursor: 'pointer' }}>
+                                        キャンセル
+                                    </button>
+                                    <button onClick={insertUrlBlock}
+                                        style={{
+                                            flex: 2, padding: '11px 0', borderRadius: 12, border: 'none',
+                                            background: urlModalType === 'video' ? '#6366f1' : SB,
+                                            color: urlModalType === 'video' ? '#fff' : LIME,
+                                            fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                        }}>
+                                        {urlModalType === 'video' ? <Play size={13} /> : <ExternalLink size={13} />}
+                                        記事に挿入する
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* ── タブ挿入モーダル ─────────────────────────────── */}
             {showTabsModal && (
