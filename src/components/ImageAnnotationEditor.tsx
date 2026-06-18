@@ -1,11 +1,17 @@
 'use client';
 /**
  * ImageAnnotationEditor — pure HTML5 Canvas
- * ツール: 選択 / 矩形 / 円 / 直線 / 矢印 / テキスト / カーソルスタンプ
- * タッチ操作 (スマホ) 完全対応版
+ * ─ ツール: 選択 / 矩形 / 円 / 直線 / 矢印 / テキスト / カーソルスタンプ
+ * ─ 2本指ピンチ→ズーム、2本指ドラッグ→パン（スマホ）
+ * ─ ホイール→ズーム（デスクトップ）
+ * ─ ツールバー横スクロール（モバイルで折り返しなし）
+ * ─ 固定レイアウト（フッターが常に画面内に表示）
  */
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { X, Square, ArrowUpRight, Type, Undo2, Trash2, Check, Minus, MousePointer2, Move, Circle } from 'lucide-react';
+import {
+    X, Square, ArrowUpRight, Type, Undo2, Trash2, Check,
+    Minus, MousePointer2, Move, Circle, ZoomIn, ZoomOut, Maximize2,
+} from 'lucide-react';
 
 const SB='#1a3024',SAGE='#4a7c59',LIME='#8ecfb2',BG='#f8f6f3',T1='#2a2520',T2='#7a7068';
 const PRESETS=['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#a855f7','#ec4899','#ffffff','#000000','#1a3024'];
@@ -27,11 +33,10 @@ export interface Props{
   onConfirm:(f:File,overwriteUrl?:string)=>void;
   onCancel:()=>void;
   galleryProgress?:{current:number;total:number};
-  /** 既存アップロード済み画像URL。指定するとこのURLを上書き編集モードになる */
   overwriteUrl?:string;
 }
 
-/* ── drawing ──────────────────────────────────────────────────── */
+/* ── drawing ─────────────────────────────────────────────────── */
 function drawAnn(ctx:CanvasRenderingContext2D,a:Ann){
     ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
     if(a.k==='rect'){
@@ -98,7 +103,7 @@ function hitHandle(a:Ann,x:number,y:number,tol=9):DragMode|null{
     return null;
 }
 function hitBody(a:Ann,x:number,y:number):boolean{
-    const P=12; // タッチ操作のため余白を増やす
+    const P=12;
     if(a.k==='rect') return x>=a.x-P&&x<=a.x+a.w+P&&y>=a.y-P&&y<=a.y+a.h+P;
     if(a.k==='circle'){const dx=(x-a.cx)/Math.max(a.rx+P,1),dy=(y-a.cy)/Math.max(a.ry+P,1);return dx*dx+dy*dy<=1;}
     if(a.k==='line'||a.k==='arrow'){
@@ -140,7 +145,7 @@ function drawSelection(ctx:CanvasRenderingContext2D,a:Ann){
     ctx.strokeStyle=LIME;ctx.lineWidth=1.5;ctx.setLineDash([5,3]);
     ctx.strokeRect(b.x-4,b.y-4,b.w+8,b.h+8);ctx.setLineDash([]);
     for(const h of handles(a)){
-        ctx.beginPath();ctx.arc(h.x,h.y,8,0,Math.PI*2); // タッチ用に少し大きく
+        ctx.beginPath();ctx.arc(h.x,h.y,8,0,Math.PI*2);
         ctx.fillStyle='#fff';ctx.fill();
         ctx.strokeStyle=SAGE;ctx.lineWidth=2;ctx.stroke();
     }
@@ -149,40 +154,79 @@ function drawSelection(ctx:CanvasRenderingContext2D,a:Ann){
 
 /* ══════════════════════════════════════════════════════════════ */
 export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryProgress,overwriteUrl}:Props){
-    const canvasRef=useRef<HTMLCanvasElement>(null);
-    const containerRef=useRef<HTMLDivElement>(null);
-    const ctxRef=useRef<CanvasRenderingContext2D|null>(null);
-    const bgRef=useRef<HTMLImageElement|null>(null);
-    const annsRef=useRef<Ann[]>([]);
-    const histRef=useRef<Ann[][]>([[]])
-    const selRef=useRef<number|null>(null);
-    const dragRef=useRef<DragState|null>(null);
-    const drawRef=useRef(false);
-    const startRef=useRef({x:0,y:0});
-    const liveRef=useRef<Ann|null>(null);
-    const toolRef=useRef<Tool>('rect');
-    const strokeColRef=useRef('#ef4444');
-    const fillColRef=useRef('transparent');
-    const swRef=useRef(3);
-    const fsRef=useRef(24);
+    const canvasRef    = useRef<HTMLCanvasElement>(null);
+    const viewportRef  = useRef<HTMLDivElement>(null);   // overflow:hidden のビューポート
+    const transformRef = useRef<HTMLDivElement>(null);   // CSS transform 対象
+    const ctxRef       = useRef<CanvasRenderingContext2D|null>(null);
+    const bgRef        = useRef<HTMLImageElement|null>(null);
+    const annsRef      = useRef<Ann[]>([]);
+    const histRef      = useRef<Ann[][]>([[]])
+    const selRef       = useRef<number|null>(null);
+    const dragRef      = useRef<DragState|null>(null);
+    const drawRef      = useRef(false);
+    const startRef     = useRef({x:0,y:0});
+    const liveRef      = useRef<Ann|null>(null);
+    const toolRef      = useRef<Tool>('rect');
+    const strokeColRef = useRef('#ef4444');
+    const fillColRef   = useRef('transparent');
+    const swRef        = useRef(3);
+    const fsRef        = useRef(24);
 
-    const [tool,setTool]=useState<Tool>('rect');
-    const [strokeCol,setStrokeCol]=useState('#ef4444');
-    const [fillCol,setFillCol]=useState('transparent');
-    const [strokeW,setStrokeW]=useState(3);
-    const [fontSize,setFontSize]=useState(24);
-    const [canUndo,setCanUndo]=useState(false);
-    const [saving,setSaving]=useState(false);
-    const [selIdx,setSelIdx]=useState<number|null>(null);
-    const [showTxt,setShowTxt]=useState(false);
-    const [txtVal,setTxtVal]=useState('');
-    const [txtPos,setTxtPos]=useState({x:0,y:0});
+    // ── ズーム/パン refs（React state は indicator 表示のみ） ──
+    const zoomRef  = useRef(1);
+    const panXRef  = useRef(0);
+    const panYRef  = useRef(0);
+    // ピンチ追跡
+    const pinchRef = useRef({ active:false, lastDist:0, lastCx:0, lastCy:0 });
+
+    const [tool,setTool]           = useState<Tool>('rect');
+    const [strokeCol,setStrokeCol] = useState('#ef4444');
+    const [fillCol,setFillCol]     = useState('transparent');
+    const [strokeW,setStrokeW]     = useState(3);
+    const [fontSize,setFontSize]   = useState(24);
+    const [canUndo,setCanUndo]     = useState(false);
+    const [saving,setSaving]       = useState(false);
+    const [selIdx,setSelIdx]       = useState<number|null>(null);
+    const [showTxt,setShowTxt]     = useState(false);
+    const [txtVal,setTxtVal]       = useState('');
+    const [txtPos,setTxtPos]       = useState({x:0,y:0});
+    const [zoomPct,setZoomPct]     = useState(100); // 表示専用
 
     useEffect(()=>{toolRef.current=tool;},[tool]);
     useEffect(()=>{strokeColRef.current=strokeCol;},[strokeCol]);
     useEffect(()=>{fillColRef.current=fillCol;},[fillCol]);
     useEffect(()=>{swRef.current=strokeW;},[strokeW]);
     useEffect(()=>{fsRef.current=fontSize;},[fontSize]);
+
+    // ── CSS transform を DOM に直接適用（RAF を経由せず 60fps 対応） ──
+    const applyTransform = useCallback((z:number,px:number,py:number)=>{
+        if(transformRef.current){
+            transformRef.current.style.transform=`translate(${px}px,${py}px) scale(${z})`;
+            transformRef.current.style.transformOrigin='0 0';
+        }
+        zoomRef.current=z; panXRef.current=px; panYRef.current=py;
+    },[]);
+
+    // ── ビューポートに対してキャンバスをセンタリング ────────────
+    const centerCanvas = useCallback(()=>{
+        const el=canvasRef.current,vp=viewportRef.current;if(!el||!vp)return;
+        const px=Math.max(0,(vp.clientWidth -el.width )/2);
+        const py=Math.max(0,(vp.clientHeight-el.height)/2);
+        applyTransform(1,px,py);
+        setZoomPct(100);
+    },[applyTransform]);
+
+    // ── ズームをビューポート中心に向けて適用 ───────────────────
+    const adjustZoom = useCallback((factor:number)=>{
+        const vp=viewportRef.current;if(!vp)return;
+        const newZ=Math.max(0.15,Math.min(10,zoomRef.current*factor));
+        const cx=vp.clientWidth/2, cy=vp.clientHeight/2;
+        const canX=(cx-panXRef.current)/zoomRef.current;
+        const canY=(cy-panYRef.current)/zoomRef.current;
+        const newPx=cx-canX*newZ, newPy=cy-canY*newZ;
+        applyTransform(newZ,newPx,newPy);
+        setZoomPct(Math.round(newZ*100));
+    },[applyTransform]);
 
     const redrawAll=useCallback(()=>{
         const ctx=ctxRef.current,img=bgRef.current;if(!ctx||!img)return;
@@ -210,32 +254,56 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         selRef.current=null;setSelIdx(null);saveHist();redrawAll();
     },[saveHist,redrawAll]);
 
-    // canvas init on file change
-    // プレビューは最大1400px幅で表示（編集しやすい高解像度）
+    // ── キャンバス初期化 ──────────────────────────────────────
     useEffect(()=>{
-        const el=canvasRef.current,ctr=containerRef.current;if(!el||!ctr)return;
+        const el=canvasRef.current,vp=viewportRef.current;if(!el||!vp)return;
         const url=URL.createObjectURL(file);
         const img=new window.Image();
         img.onload=()=>{
-            const maxW=Math.min(ctr.clientWidth||1400,1400);
-            const maxH=Math.min(window.innerHeight-220,720);
-            const sc=Math.min(maxW/img.naturalWidth,maxH/img.naturalHeight,1);
+            // ビューポートサイズに合わせてキャンバスを初期化
+            const vpW=Math.min(vp.clientWidth||window.innerWidth-16, 1400);
+            const vpH=Math.min(vp.clientHeight||window.innerHeight-210, window.innerHeight-180);
+            const sc=Math.min(vpW/img.naturalWidth, vpH/img.naturalHeight, 1);
             el.width=Math.round(img.naturalWidth*sc);
             el.height=Math.round(img.naturalHeight*sc);
-            el.style.width=el.width+'px';el.style.height=el.height+'px';
+            el.style.width=el.width+'px'; el.style.height=el.height+'px';
             const ctx=el.getContext('2d')!;
-            ctxRef.current=ctx;bgRef.current=img;
-            annsRef.current=[];histRef.current=[[]as Ann[]];
-            selRef.current=null;setSelIdx(null);setCanUndo(false);
+            ctxRef.current=ctx; bgRef.current=img;
+            annsRef.current=[]; histRef.current=[[]as Ann[]];
+            selRef.current=null; setSelIdx(null); setCanUndo(false);
             ctx.drawImage(img,0,0,el.width,el.height);
             URL.revokeObjectURL(url);
+            // 初期位置をセンタリング
+            const px=Math.max(0,(vp.clientWidth -el.width )/2);
+            const py=Math.max(0,(vp.clientHeight-el.height)/2);
+            applyTransform(1,px,py);
+            setZoomPct(100);
         };
         img.src=url;
         return()=>URL.revokeObjectURL(url);
-    },[file]);
+    },[file,applyTransform]);
 
-    // ── 共通の座標変換ヘルパー ──────────────────────────────────
-    const getCanvasXY = useCallback((clientX:number, clientY:number):{x:number;y:number}=>{
+    // ── ホイールズーム（デスクトップ） ───────────────────────
+    useEffect(()=>{
+        const vp=viewportRef.current;if(!vp)return;
+        const onWheel=(e:WheelEvent)=>{
+            e.preventDefault();
+            const vpRect=vp.getBoundingClientRect();
+            const delta=e.deltaY<0?1.12:1/1.12;
+            const newZ=Math.max(0.15,Math.min(10,zoomRef.current*delta));
+            const cxInVp=e.clientX-vpRect.left, cyInVp=e.clientY-vpRect.top;
+            const canX=(cxInVp-panXRef.current)/zoomRef.current;
+            const canY=(cyInVp-panYRef.current)/zoomRef.current;
+            const newPx=cxInVp-canX*newZ, newPy=cyInVp-canY*newZ;
+            applyTransform(newZ,newPx,newPy);
+            setZoomPct(Math.round(newZ*100));
+        };
+        vp.addEventListener('wheel',onWheel,{passive:false});
+        return()=>vp.removeEventListener('wheel',onWheel);
+    },[applyTransform]);
+
+    // ── 座標変換（getBoundingClientRect は CSS transform を考慮する） ──
+    const getCanvasXY=useCallback((clientX:number,clientY:number):{x:number;y:number}=>{
         const el=canvasRef.current;if(!el)return{x:0,y:0};
         const r=el.getBoundingClientRect();
         return{
@@ -244,7 +312,7 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         };
     },[]);
 
-    // ── 共通ドラッグ/描画ロジック ──────────────────────────────
+    // ── 描画ロジック ──────────────────────────────────────────
     const makeLive=useCallback((t:Tool,sx:number,sy:number,x:number,y:number):Ann|null=>{
         const sc=strokeColRef.current,fc=fillColRef.current,sw=swRef.current;
         if(t==='rect')return{k:'rect',x:Math.min(x,sx),y:Math.min(y,sy),w:Math.abs(x-sx),h:Math.abs(y-sy),stroke:sc,fill:fc,sw};
@@ -259,7 +327,7 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         const t=toolRef.current;
         if(t==='select'){
             if(selRef.current!==null){
-                const hm=hitHandle(annsRef.current[selRef.current],x,y,14); // タッチは広めに
+                const hm=hitHandle(annsRef.current[selRef.current],x,y,14);
                 if(hm){dragRef.current={mode:hm,sx:x,sy:y,origAnn:{...annsRef.current[selRef.current]}};return;}
             }
             let hit=-1;
@@ -297,10 +365,14 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         redrawAll();
     },[redrawAll,saveHist]);
 
-    // ── マウスイベント ──────────────────────────────────────────
+    // ── マウスイベント（canvas に直接） ──────────────────────
     useEffect(()=>{
         const el=canvasRef.current;if(!el)return;
-        const onDown=(e:MouseEvent)=>{e.preventDefault();handlePointerDown(e.clientX,e.clientY);};
+        const onDown=(e:MouseEvent)=>{
+            // 中ボタン or Space+ドラッグ はパン（将来拡張用に予約）
+            if(e.button===1){e.preventDefault();return;}
+            e.preventDefault();handlePointerDown(e.clientX,e.clientY);
+        };
         const onMove=(e:MouseEvent)=>{e.preventDefault();handlePointerMove(e.clientX,e.clientY);};
         const onUp=  (e:MouseEvent)=>{e.preventDefault();handlePointerUp();};
         el.addEventListener('mousedown',onDown);
@@ -315,33 +387,96 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         };
     },[handlePointerDown,handlePointerMove,handlePointerUp]);
 
-    // ── タッチイベント ──────────────────────────────────────────
+    // ── タッチイベント（viewport に貼る：2本指/1本指の両方を処理） ──
     useEffect(()=>{
-        const el=canvasRef.current;if(!el)return;
+        const vp=viewportRef.current;if(!vp)return;
+
+        const getDist=(t:TouchList)=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+        const getCenter=(t:TouchList)=>({
+            x:(t[0].clientX+t[1].clientX)/2,
+            y:(t[0].clientY+t[1].clientY)/2,
+        });
+
         const onTouchStart=(e:TouchEvent)=>{
-            e.preventDefault(); // スクロール防止
-            const t=e.touches[0];if(t)handlePointerDown(t.clientX,t.clientY);
+            e.preventDefault();
+            if(e.touches.length>=2){
+                // ── ピンチ/パン開始 ──
+                pinchRef.current={
+                    active:true,
+                    lastDist:getDist(e.touches),
+                    lastCx:getCenter(e.touches).x,
+                    lastCy:getCenter(e.touches).y,
+                };
+                // 描画中なら中断
+                drawRef.current=false; liveRef.current=null; dragRef.current=null;
+                redrawAll();
+                return;
+            }
+            if(pinchRef.current.active)return; // ピンチ中は描画しない
+            const t=e.touches[0];
+            if(t)handlePointerDown(t.clientX,t.clientY);
         };
+
         const onTouchMove=(e:TouchEvent)=>{
             e.preventDefault();
-            const t=e.touches[0];if(t)handlePointerMove(t.clientX,t.clientY);
+            if(e.touches.length>=2){
+                const p=pinchRef.current;
+                if(!p.active)return;
+                const newDist=getDist(e.touches);
+                const newCtr =getCenter(e.touches);
+                const vpRect =vp.getBoundingClientRect();
+
+                if(p.lastDist>0){
+                    const scaleChange=newDist/p.lastDist;
+                    const newZ=Math.max(0.15,Math.min(10,zoomRef.current*scaleChange));
+
+                    // ピンチ中心点（旧）がキャンバス上のどこに対応するか
+                    const oldCxInVp=p.lastCx-vpRect.left;
+                    const oldCyInVp=p.lastCy-vpRect.top;
+                    const canX=(oldCxInVp-panXRef.current)/zoomRef.current;
+                    const canY=(oldCyInVp-panYRef.current)/zoomRef.current;
+
+                    // そのキャンバス点を新しい中心位置に配置（パン+ズーム同時）
+                    const newCxInVp=newCtr.x-vpRect.left;
+                    const newCyInVp=newCtr.y-vpRect.top;
+                    const newPx=newCxInVp-canX*newZ;
+                    const newPy=newCyInVp-canY*newZ;
+
+                    applyTransform(newZ,newPx,newPy);
+                }
+
+                pinchRef.current={active:true,lastDist:newDist,lastCx:newCtr.x,lastCy:newCtr.y};
+                return;
+            }
+            if(pinchRef.current.active)return;
+            const t=e.touches[0];
+            if(t)handlePointerMove(t.clientX,t.clientY);
         };
+
         const onTouchEnd=(e:TouchEvent)=>{
             e.preventDefault();
+            if(pinchRef.current.active){
+                if(e.touches.length<2){
+                    pinchRef.current.active=false;
+                    // ズーム率を state に反映（インジケーター更新）
+                    setZoomPct(Math.round(zoomRef.current*100));
+                }
+                return;
+            }
             handlePointerUp();
         };
-        // passive:false でないと preventDefault が効かない
-        el.addEventListener('touchstart',onTouchStart,{passive:false});
-        el.addEventListener('touchmove', onTouchMove, {passive:false});
-        el.addEventListener('touchend',  onTouchEnd,  {passive:false});
-        el.addEventListener('touchcancel',onTouchEnd, {passive:false});
+
+        vp.addEventListener('touchstart', onTouchStart,  {passive:false});
+        vp.addEventListener('touchmove',  onTouchMove,   {passive:false});
+        vp.addEventListener('touchend',   onTouchEnd,    {passive:false});
+        vp.addEventListener('touchcancel',onTouchEnd,    {passive:false});
         return()=>{
-            el.removeEventListener('touchstart',onTouchStart);
-            el.removeEventListener('touchmove', onTouchMove);
-            el.removeEventListener('touchend',  onTouchEnd);
-            el.removeEventListener('touchcancel',onTouchEnd);
+            vp.removeEventListener('touchstart', onTouchStart);
+            vp.removeEventListener('touchmove',  onTouchMove);
+            vp.removeEventListener('touchend',   onTouchEnd);
+            vp.removeEventListener('touchcancel',onTouchEnd);
         };
-    },[handlePointerDown,handlePointerMove,handlePointerUp]);
+    },[handlePointerDown,handlePointerMove,handlePointerUp,applyTransform,redrawAll]);
 
     useEffect(()=>{const el=canvasRef.current;if(el)el.style.cursor=tool==='select'?'default':'crosshair';},[tool]);
 
@@ -362,44 +497,29 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         annsRef.current=[...annsRef.current,a];saveHist();redrawAll();setTool('rect');
     },[txtVal,txtPos,saveHist,redrawAll]);
 
+    // ── 確定・保存 ────────────────────────────────────────────
     const confirm=useCallback(()=>{
         const el=canvasRef.current;const origImg=bgRef.current;
         if(!el||!origImg)return;
         selRef.current=null;setSelIdx(null);redrawAll();setSaving(true);
-
-        // 出力用オフスクリーンキャンバス：元画像を最大1920pxにスケール
         const MAX_OUTPUT=1920;
         const outScale=Math.min(MAX_OUTPUT/origImg.naturalWidth,MAX_OUTPUT/origImg.naturalHeight,1);
         const outW=Math.round(origImg.naturalWidth*outScale);
         const outH=Math.round(origImg.naturalHeight*outScale);
         const offscreen=document.createElement('canvas');
-        offscreen.width=outW;
-        offscreen.height=outH;
+        offscreen.width=outW; offscreen.height=outH;
         const octx=offscreen.getContext('2d')!;
-
-        // 元画像を高画質で描画
         octx.drawImage(origImg,0,0,outW,outH);
-
-        // プレビューキャンバスのアノテーションをスケール変換して重ねる
-        const scaleX=outW/el.width;
-        const scaleY=outH/el.height;
-        octx.save();
-        octx.scale(scaleX,scaleY);
-        // アノテーション部分のみプレビューcanvasから転写
+        const scaleX=outW/el.width, scaleY=outH/el.height;
+        octx.save(); octx.scale(scaleX,scaleY);
         annsRef.current.forEach(a=>drawAnn(octx,a));
         octx.restore();
-
-        const baseName = overwriteUrl
-            ? (overwriteUrl.split('/').pop()?.split('?')[0] || file.name)
-            : file.name.replace(/\.[^.]+$/,'')+'_edited.jpg';
-
-        // JPEG 0.85品質で出力（視覚劣化なし、サイズ大幅削減）
+        const baseName=overwriteUrl
+            ?(overwriteUrl.split('/').pop()?.split('?')[0]||file.name)
+            :file.name.replace(/\.[^.]+$/,'')+'_edited.jpg';
         offscreen.toBlob(blob=>{
             if(!blob){setSaving(false);return;}
-            onConfirm(
-                new File([blob], baseName, {type:'image/jpeg'}),
-                overwriteUrl,
-            );
+            onConfirm(new File([blob],baseName,{type:'image/jpeg'}),overwriteUrl);
             setSaving(false);
         },'image/jpeg',0.85);
     },[file,overwriteUrl,onConfirm,redrawAll]);
@@ -408,125 +528,211 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
     const hasFont= tool==='text'||tool==='cursor';
 
     const TOOLS:Array<{id:Tool;icon:React.ReactNode;label:string}>=[
-        {id:'select', icon:<Move size={13}/>,             label:'選択'},
-        {id:'rect',   icon:<Square size={13}/>,            label:'矩形'},
-        {id:'circle', icon:<Circle size={13}/>,            label:'円'},
-        {id:'line',   icon:<Minus size={13}/>,             label:'直線'},
-        {id:'arrow',  icon:<ArrowUpRight size={13}/>,      label:'矢印'},
-        {id:'text',   icon:<Type size={13}/>,              label:'テキスト'},
-        {id:'cursor', icon:<MousePointer2 size={13}/>,     label:'カーソル'},
+        {id:'select', icon:<Move size={13}/>,         label:'選択'},
+        {id:'rect',   icon:<Square size={13}/>,        label:'矩形'},
+        {id:'circle', icon:<Circle size={13}/>,        label:'円'},
+        {id:'line',   icon:<Minus size={13}/>,         label:'直線'},
+        {id:'arrow',  icon:<ArrowUpRight size={13}/>,  label:'矢印'},
+        {id:'text',   icon:<Type size={13}/>,          label:'テキスト'},
+        {id:'cursor', icon:<MousePointer2 size={13}/>, label:'カーソル'},
     ];
 
+    /* ── ColorRow: 横スクロール可能、折り返しなし ─────────────────
+       ▸ nowrap + overflow-x:auto で 2行化しない */
     const ColorRow=({label,val,onChange}:{label:string;val:string;onChange:(c:string)=>void})=>(
-        <div style={{display:'flex',alignItems:'center',gap:4,flexWrap:'wrap'}}>
-            <span style={{fontSize:10,color:'rgba(255,255,255,.45)',whiteSpace:'nowrap'}}>{label}</span>
+        <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
+            <span style={{fontSize:10,color:'rgba(255,255,255,.45)',whiteSpace:'nowrap',flexShrink:0}}>{label}</span>
             {PRESETS.map(c=>(
-                <button key={c} onClick={()=>onChange(c)} style={{width:18,height:18,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:val===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
+                <button key={c} onClick={()=>onChange(c)} style={{width:16,height:16,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:val===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
             ))}
             <input type="color" value={val==='transparent'?'#ffffff':val} onChange={e=>onChange(e.target.value)}
-                style={{width:22,height:22,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0}}/>
+                style={{width:20,height:20,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0,flexShrink:0}}/>
         </div>
     );
 
+    /* ════════════════════════════════════════════════════════════
+     * RENDER
+     * ── 固定レイアウト（flex column / overflow: hidden）
+     *    ・ヘッダー, ツールバー2行, キャンバスビューポート, フッターが
+     *      常に画面内に収まる
+     * ═══════════════════════════════════════════════════════════ */
     return(
-        <div style={{position:'fixed',inset:0,zIndex:9500,background:'rgba(5,12,8,.93)',backdropFilter:'blur(12px)',display:'flex',flexDirection:'column',alignItems:'center',padding:'8px 8px 6px',overflowY:'auto',touchAction:'none'}}>
+        <div style={{
+            position:'fixed',inset:0,zIndex:9500,
+            background:'rgba(5,12,8,.96)',backdropFilter:'blur(12px)',
+            display:'flex',flexDirection:'column',
+            touchAction:'none', // ブラウザのスクロール/ズームを抑制
+            // overflowY を 'hidden' に → フッターが常に下部に固定
+        }}>
 
-            {/* header */}
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:960,marginBottom:6}}>
-                <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-                    <div style={{width:27,height:27,borderRadius:7,background:overwriteUrl?'#7c4a59':SAGE,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            {/* ── ヘッダー ─────────────────────────────────── */}
+            <div style={{flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 10px'}}>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                    <div style={{width:26,height:26,borderRadius:7,background:overwriteUrl?'#7c4a59':SAGE,display:'flex',alignItems:'center',justifyContent:'center'}}>
                         <MousePointer2 size={13} color="#fff"/>
                     </div>
-                    <span style={{fontSize:14,fontWeight:800,color:'#fff'}}>
-                        {overwriteUrl ? '画像を再編集（上書き保存）' : '画像を編集'}
+                    <span style={{fontSize:13,fontWeight:800,color:'#fff',whiteSpace:'nowrap'}}>
+                        {overwriteUrl?'画像を再編集':'画像を編集'}
                     </span>
                     {galleryProgress&&(
-                        <span style={{fontSize:11,fontWeight:700,color:LIME,background:'rgba(142,207,178,.15)',padding:'2px 8px',borderRadius:20}}>
+                        <span style={{fontSize:11,fontWeight:700,color:LIME,background:'rgba(142,207,178,.15)',padding:'2px 8px',borderRadius:20,whiteSpace:'nowrap'}}>
                             {galleryProgress.current}/{galleryProgress.total}枚目
                         </span>
                     )}
-                    <span style={{fontSize:9,color:'rgba(255,255,255,.3)',display:'none'}}>選択:ドラッグ移動/角リサイズ</span>
                 </div>
-                <button onClick={onCancel} style={{width:26,height:26,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.1)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    <X size={13}/>
-                </button>
+                <div style={{display:'flex',alignItems:'center',gap:6}}>
+                    {/* ズームインジケーター + コントロール */}
+                    <div style={{display:'flex',alignItems:'center',gap:3,background:'rgba(255,255,255,.08)',borderRadius:7,padding:'3px 6px'}}>
+                        <button onClick={()=>adjustZoom(1/1.3)} style={{border:'none',background:'transparent',color:'rgba(255,255,255,.7)',cursor:'pointer',display:'flex',alignItems:'center',padding:1}} title="縮小">
+                            <ZoomOut size={12}/>
+                        </button>
+                        <span style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,.6)',minWidth:32,textAlign:'center'}}>{zoomPct}%</span>
+                        <button onClick={()=>adjustZoom(1.3)} style={{border:'none',background:'transparent',color:'rgba(255,255,255,.7)',cursor:'pointer',display:'flex',alignItems:'center',padding:1}} title="拡大">
+                            <ZoomIn size={12}/>
+                        </button>
+                        <button onClick={centerCanvas} style={{border:'none',background:'transparent',color:'rgba(255,255,255,.5)',cursor:'pointer',display:'flex',alignItems:'center',padding:1}} title="リセット">
+                            <Maximize2 size={11}/>
+                        </button>
+                    </div>
+                    <button onClick={onCancel} style={{width:26,height:26,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.1)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <X size={13}/>
+                    </button>
+                </div>
             </div>
 
-            {/* toolbar row 1: tools + stroke width */}
-            <div style={{display:'flex',alignItems:'center',gap:3,flexWrap:'wrap',background:'rgba(26,48,36,.97)',borderRadius:11,padding:'5px 8px',marginBottom:5,maxWidth:960,width:'100%',boxShadow:'0 4px 20px rgba(0,0,0,.5)'}}>
+            {/* ── ツールバー行1: ツール + 太さ（横スクロール） ── */}
+            <div style={{
+                flexShrink:0,
+                display:'flex',alignItems:'center',gap:3,
+                flexWrap:'nowrap',          // 折り返し禁止
+                overflowX:'auto',           // 横スクロール
+                scrollbarWidth:'none',      // スクロールバー非表示
+                background:'rgba(26,48,36,.97)',
+                borderRadius:10,padding:'4px 8px',
+                margin:'0 8px 3px',
+                boxShadow:'0 4px 20px rgba(0,0,0,.5)',
+            }}>
                 {TOOLS.map(t=>(
                     <button key={t.id} onClick={()=>setTool(t.id)} title={t.label}
-                        style={{display:'flex',alignItems:'center',gap:2,padding:'5px 7px',borderRadius:6,border:'none',cursor:'pointer',background:tool===t.id?SAGE:'rgba(255,255,255,.07)',color:tool===t.id?'#fff':'rgba(255,255,255,.7)',fontSize:11,fontWeight:700,transition:'all .12s',minHeight:34}}>
+                        style={{display:'flex',alignItems:'center',gap:2,padding:'5px 7px',borderRadius:6,border:'none',cursor:'pointer',background:tool===t.id?SAGE:'rgba(255,255,255,.07)',color:tool===t.id?'#fff':'rgba(255,255,255,.7)',fontSize:10,fontWeight:700,transition:'all .12s',minHeight:32,flexShrink:0,whiteSpace:'nowrap'}}>
                         {t.icon} <span style={{fontSize:10}}>{t.label}</span>
                     </button>
                 ))}
-                <div style={{width:1,height:18,background:'rgba(255,255,255,.12)',margin:'0 2px'}}/>
-                <span style={{fontSize:10,color:'rgba(255,255,255,.4)'}}>太さ</span>
-                <input type="range" min={1} max={14} value={strokeW} onChange={e=>setStrokeW(+e.target.value)} style={{width:50,accentColor:LIME}}/>
-                <span style={{fontSize:10,color:'rgba(255,255,255,.6)',minWidth:12}}>{strokeW}</span>
+                <div style={{width:1,height:18,background:'rgba(255,255,255,.12)',margin:'0 2px',flexShrink:0}}/>
+                <span style={{fontSize:10,color:'rgba(255,255,255,.4)',whiteSpace:'nowrap',flexShrink:0}}>太さ</span>
+                <input type="range" min={1} max={14} value={strokeW} onChange={e=>setStrokeW(+e.target.value)} style={{width:46,accentColor:LIME,flexShrink:0}}/>
+                <span style={{fontSize:10,color:'rgba(255,255,255,.6)',minWidth:12,flexShrink:0}}>{strokeW}</span>
                 {hasFont&&<>
-                    <span style={{fontSize:10,color:'rgba(255,255,255,.4)'}}>サイズ</span>
-                    <input type="range" min={12} max={80} value={fontSize} onChange={e=>setFontSize(+e.target.value)} style={{width:50,accentColor:LIME}}/>
-                    <span style={{fontSize:10,color:'rgba(255,255,255,.6)',minWidth:18}}>{fontSize}</span>
+                    <span style={{fontSize:10,color:'rgba(255,255,255,.4)',whiteSpace:'nowrap',flexShrink:0}}>サイズ</span>
+                    <input type="range" min={12} max={80} value={fontSize} onChange={e=>setFontSize(+e.target.value)} style={{width:46,accentColor:LIME,flexShrink:0}}/>
+                    <span style={{fontSize:10,color:'rgba(255,255,255,.6)',minWidth:18,flexShrink:0}}>{fontSize}</span>
                 </>}
-                <div style={{marginLeft:'auto',display:'flex',gap:4}}>
+                <div style={{marginLeft:'auto',display:'flex',gap:3,flexShrink:0}}>
                     {tool==='select'&&selIdx!==null&&(
-                        <button onClick={delSelected} title="Del" style={{padding:'5px 8px',borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.2)',color:'#f87171',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',gap:3,minHeight:34}}>
+                        <button onClick={delSelected} title="Del" style={{padding:'4px 7px',borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.2)',color:'#f87171',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',gap:2,minHeight:32,whiteSpace:'nowrap'}}>
                             <Trash2 size={11}/> 削除
                         </button>
                     )}
-                    <button onClick={undo} disabled={!canUndo} style={{width:34,height:34,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',justifyContent:'center',opacity:canUndo?1:.35}}>
-                        <Undo2 size={14}/>
+                    <button onClick={undo} disabled={!canUndo} style={{width:32,height:32,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',justifyContent:'center',opacity:canUndo?1:.35}}>
+                        <Undo2 size={13}/>
                     </button>
-                    <button onClick={()=>{annsRef.current=[];histRef.current=[[]as Ann[]];selRef.current=null;setSelIdx(null);setCanUndo(false);redrawAll();}} style={{width:34,height:34,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.18)',color:'#f87171',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <Trash2 size={14}/>
+                    <button onClick={()=>{annsRef.current=[];histRef.current=[[]as Ann[]];selRef.current=null;setSelIdx(null);setCanUndo(false);redrawAll();}} style={{width:32,height:32,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.18)',color:'#f87171',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <Trash2 size={13}/>
                     </button>
                 </div>
             </div>
 
-            {/* toolbar row 2: colors */}
-            <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',background:'rgba(26,48,36,.85)',borderRadius:9,padding:'5px 10px',marginBottom:6,maxWidth:960,width:'100%'}}>
+            {/* ── ツールバー行2: カラー（横スクロール・nowrap） ─── */}
+            <div style={{
+                flexShrink:0,
+                display:'flex',alignItems:'center',gap:6,
+                flexWrap:'nowrap',          // ★ 折り返し禁止（2行化防止）
+                overflowX:'auto',           // ★ 横スクロール
+                scrollbarWidth:'none',
+                background:'rgba(26,48,36,.82)',
+                borderRadius:9,padding:'4px 10px',
+                margin:'0 8px 4px',
+            }}>
                 {hasShape?(
                     <>
                         <ColorRow label="枠色" val={strokeCol} onChange={setStrokeCol}/>
-                        <div style={{width:1,height:18,background:'rgba(255,255,255,.12)',margin:'0 2px'}}/>
-                        <span style={{fontSize:10,color:'rgba(255,255,255,.45)',whiteSpace:'nowrap'}}>塗り色</span>
-                        <button onClick={()=>setFillCol('transparent')} style={{padding:'3px 7px',borderRadius:5,border:'none',cursor:'pointer',background:fillCol==='transparent'?SAGE:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',fontSize:10,fontWeight:700}}>
+                        <div style={{width:1,height:16,background:'rgba(255,255,255,.12)',margin:'0 2px',flexShrink:0}}/>
+                        <span style={{fontSize:10,color:'rgba(255,255,255,.45)',whiteSpace:'nowrap',flexShrink:0}}>塗り色</span>
+                        <button onClick={()=>setFillCol('transparent')} style={{padding:'2px 7px',borderRadius:5,border:'none',cursor:'pointer',background:fillCol==='transparent'?SAGE:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',fontSize:10,fontWeight:700,flexShrink:0,whiteSpace:'nowrap'}}>
                             なし
                         </button>
                         {PRESETS.map(c=>(
-                            <button key={c} onClick={()=>setFillCol(c)} style={{width:18,height:18,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:fillCol===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
+                            <button key={c} onClick={()=>setFillCol(c)} style={{width:16,height:16,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:fillCol===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
                         ))}
                         <input type="color" value={fillCol==='transparent'?'#ffffff':fillCol} onChange={e=>setFillCol(e.target.value)}
-                            style={{width:22,height:22,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0}}/>
+                            style={{width:20,height:20,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0,flexShrink:0}}/>
                     </>
                 ):(
                     <ColorRow label="色" val={strokeCol} onChange={setStrokeCol}/>
                 )}
             </div>
 
-            {/* canvas */}
-            <div ref={containerRef} style={{width:'100%',maxWidth:960,display:'flex',justifyContent:'center',flex:1,overflow:'hidden'}}>
-                <canvas ref={canvasRef} style={{borderRadius:6,display:'block',boxShadow:'0 8px 40px rgba(0,0,0,.7)',maxWidth:'100%',touchAction:'none'}}/>
+            {/* ── キャンバスビューポート（flex:1 / overflow:hidden）── */}
+            {/* ★ ここがピンチ/ズーム/パンの対象領域 */}
+            <div
+                ref={viewportRef}
+                style={{
+                    flex:1,
+                    overflow:'hidden',
+                    position:'relative',
+                    minHeight:0,        // flex child の shrink を正しく動かす
+                    margin:'0 8px',
+                    borderRadius:8,
+                    background:'rgba(0,0,0,.2)',
+                }}
+            >
+                {/* CSS transform でズーム/パンを適用 */}
+                <div
+                    ref={transformRef}
+                    style={{
+                        position:'absolute',
+                        left:0,top:0,
+                        transformOrigin:'0 0',
+                        transform:'translate(0px,0px) scale(1)',
+                        willChange:'transform',
+                    }}
+                >
+                    <canvas
+                        ref={canvasRef}
+                        style={{
+                            display:'block',
+                            borderRadius:6,
+                            boxShadow:'0 8px 40px rgba(0,0,0,.7)',
+                            touchAction:'none',
+                        }}
+                    />
+                </div>
+
+                {/* ヒント（スマホ向け） */}
+                <div style={{
+                    position:'absolute',bottom:6,left:'50%',transform:'translateX(-50%)',
+                    fontSize:9,color:'rgba(255,255,255,.3)',whiteSpace:'nowrap',
+                    pointerEvents:'none',userSelect:'none',
+                }}>2本指：ズーム / パン</div>
             </div>
 
-            {/* footer */}
-            <div style={{display:'flex',gap:8,marginTop:7,width:'100%',maxWidth:960}}>
+            {/* ── フッター（常に画面下部に固定） ─────────────── */}
+            <div style={{flexShrink:0,display:'flex',gap:8,padding:'6px 8px 8px'}}>
                 <button onClick={onCancel} style={{flex:1,padding:'11px 0',borderRadius:9,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',fontSize:13,fontWeight:700}}>
                     {galleryProgress?'スキップ':'キャンセル'}
                 </button>
                 <button onClick={confirm} disabled={saving} style={{flex:3,padding:'11px 0',borderRadius:9,border:'none',cursor:'pointer',background:overwriteUrl?'#7c4a59':SB,color:LIME,fontSize:13,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 20px rgba(0,0,0,.4)',opacity:saving?.7:1}}>
                     <Check size={15}/>
-                    {saving?'処理中...': overwriteUrl?'上書き保存する': galleryProgress&&galleryProgress.current<galleryProgress.total
+                    {saving?'処理中...' : overwriteUrl?'上書き保存する' : galleryProgress&&galleryProgress.current<galleryProgress.total
                         ?`次へ (${galleryProgress.current}/${galleryProgress.total})`
                         :'この画像を使う'}
                 </button>
             </div>
 
-            {/* text dialog */}
+            {/* ── テキスト入力ダイアログ ───────────────────── */}
             {showTxt&&(
                 <div style={{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.6)'}}>
-                    <div style={{background:BG,borderRadius:14,padding:22,boxShadow:'0 12px 50px rgba(0,0,0,.4)',display:'flex',flexDirection:'column',gap:12,minWidth:300,margin:'0 16px'}}>
+                    <div style={{background:BG,borderRadius:14,padding:22,boxShadow:'0 12px 50px rgba(0,0,0,.4)',display:'flex',flexDirection:'column',gap:12,minWidth:280,margin:'0 16px'}}>
                         <div style={{fontSize:13,fontWeight:700,color:T1}}>テキストを入力</div>
                         <input autoFocus value={txtVal} onChange={e=>setTxtVal(e.target.value)}
                             onKeyDown={e=>{if(e.key==='Enter')commitText();if(e.key==='Escape'){setShowTxt(false);setTxtVal('');}}}
