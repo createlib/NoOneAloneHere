@@ -37,6 +37,7 @@
     "chart.js": "^4.5.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.3.3",
+    "fabric": "^7.4.0",
     "firebase": "^12.11.0",
     "jose": "^6.2.2",
     "leaflet": "^1.9.4",

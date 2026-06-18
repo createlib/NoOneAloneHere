@@ -34,6 +34,7 @@ import VisibilityPicker, { VisibilityMode } from '@/components/VisibilityPicker'
 import AiUpdateModal from '@/components/AiUpdateModal';
 import { fetchAiUpdates, DiffSuggestion } from '@/lib/aiArticleUpdater';
 import { AccordionExtension, TabsExtension, TabPanelExtension, ImageGalleryExtension } from '@/components/ArticleExtensions';
+import ImageAnnotationEditor from '@/components/ImageAnnotationEditor';
 
 /* ── Design tokens ─────────────────────────────────────────────── */
 const BG   = '#f8f6f3';
@@ -112,6 +113,14 @@ function ArticleEditorInner() {
 
     // 下書きに戻す確認モーダル
     const [showRevertConfirm, setShowRevertConfirm] = useState(false);
+
+    // 画像アノテーションエディター
+    const [annotatingFile, setAnnotatingFile] = useState<File|null>(null);
+    type AnnotatingMode = 'cover' | 'insert' | 'gallery';
+    const [annotatingMode, setAnnotatingMode] = useState<AnnotatingMode>('cover');
+    // ギャラリー用: 未処理の画像キューと処理済み結果
+    const [galleryQueue,   setGalleryQueue]   = useState<File[]>([]);
+    const [galleryResults, setGalleryResults] = useState<File[]>([]);
 
     // AI 更新チェック
     const [showAiModal, setShowAiModal]       = useState(false);
@@ -379,21 +388,68 @@ function ArticleEditorInner() {
     /* ── Cover image handler ─────────────────────────────────── */
     const handleCover = (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0]; if (!f) return;
+        e.target.value = '';  // reset so same file can be re-selected
         if (f.size > 10 * 1024 * 1024) { alert('カバー画像は10MB以下にしてください'); return; }
-        setCoverFile(f);
-        setCoverUrl(URL.createObjectURL(f));
+        // アノテーションエディターを起動
+        setAnnotatingMode('cover');
+        setAnnotatingFile(f);
     };
 
     /* ── Insert image into editor ─────────────────────────────── */
     const handleInsertImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0]; if (!f || !user || !editor) return;
+        e.target.value = '';
         if (f.size > 10 * 1024 * 1024) { alert('画像は10MB以下にしてください'); return; }
-        try {
-            const iRef = ref(storage, `articles/images/${user.uid}/${Date.now()}_${f.name}`);
-            const snap = await uploadBytes(iRef, f);
-            const url = await getDownloadURL(snap.ref);
-            editor.chain().focus().setImage({ src: url }).run();
-        } catch (err) { console.error(err); alert('画像のアップロードに失敗しました'); }
+        // アノテーションエディターを起動
+        setAnnotatingMode('insert');
+        setAnnotatingFile(f);
+    };
+
+    /* -- Annotation confirmed ------------------------------------ */
+    const handleAnnotationConfirm = async (editedFile: File) => {
+        if (annotatingMode === 'cover') {
+            setAnnotatingFile(null);
+            setCoverFile(editedFile);
+            setCoverUrl(URL.createObjectURL(editedFile));
+
+        } else if (annotatingMode === 'insert') {
+            setAnnotatingFile(null);
+            if (!user || !editor) return;
+            try {
+                const iRef = ref(storage, `articles/images/${user.uid}/${Date.now()}_${editedFile.name}`);
+                const snap = await uploadBytes(iRef, editedFile);
+                const url  = await getDownloadURL(snap.ref);
+                editor.chain().focus().setImage({ src: url }).run();
+            } catch (err) { console.error(err); alert('画像アップロードに失敗しました'); }
+
+        } else if (annotatingMode === 'gallery') {
+            const newResults = [...galleryResults, editedFile];
+            if (galleryQueue.length > 0) {
+                // 次の画像へ直接移行 (null を経由しない)
+                const [next, ...rest] = galleryQueue;
+                setGalleryResults(newResults);
+                setGalleryQueue(rest);
+                setAnnotatingFile(next); // file prop が変わるだけ → useEffect(,[file]) が再実行
+            } else {
+                // 全枚完了 → アップロード
+                setAnnotatingFile(null);
+                setGalleryResults([]);
+                setGalleryQueue([]);
+                if (!user || !editor) return;
+                setGalleryUploading(true);
+                try {
+                    const urls: string[] = [];
+                    for (const f of newResults) {
+                        const gRef = ref(storage, `articles/gallery/${user.uid}/${Date.now()}_${f.name}`);
+                        const s = await uploadBytes(gRef, f);
+                        urls.push(await getDownloadURL(s.ref));
+                    }
+                    if (urls.length > 0)
+                        editor.chain().focus().insertContent({ type: 'imageGallery', attrs: { images: urls } }).run();
+                } catch (err) { console.error(err); alert('ギャラリーアップロードに失敗しました'); }
+                finally { setGalleryUploading(false); }
+            }
+        }
     };
 
     /* ── Tag handlers ────────────────────────────────────────── */
@@ -446,27 +502,19 @@ function ArticleEditorInner() {
         setTabLabels(['タブ1', 'タブ2']);
     };
 
-    /* ── ギャラリー画像アップロード ──────────────────────────── */
-    const handleGalleryImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || !user || !editor) return;
-        setGalleryUploading(true);
-        try {
-            const urls: string[] = [];
-            for (const f of Array.from(files)) {
-                if (f.size > 10 * 1024 * 1024) continue;
-                const gRef = ref(storage, `articles/gallery/${user.uid}/${Date.now()}_${f.name}`);
-                const snap = await uploadBytes(gRef, f);
-                urls.push(await getDownloadURL(snap.ref));
-            }
-            if (urls.length > 0) {
-                editor.chain().focus().insertContent({
-                    type: 'imageGallery',
-                    attrs: { images: urls },
-                }).run();
-            }
-        } catch (err) { console.error(err); alert('画像のアップロードに失敗しました'); }
-        finally { setGalleryUploading(false); e.target.value = ''; }
+    /* -- gallery: open annotation editor for each image --------- */
+    const handleGalleryImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // FileList は「live view」なので e.target.value='' より先に Array 化する
+        const filesArray = e.target.files ? Array.from(e.target.files) : [];
+        e.target.value = '';   // ← ここで FileList が空になるが、filesArray は安全
+        if (!filesArray.length || !user || !editor) return;
+        const valid = filesArray.filter(f => f.size <= 10 * 1024 * 1024);
+        if (valid.length === 0) return;
+        const [first, ...rest] = valid;
+        setAnnotatingMode('gallery');
+        setGalleryResults([]);
+        setGalleryQueue(rest);
+        setAnnotatingFile(first);
     };
 
     /* ── Load drafts ─────────────────────────────────────────── */
@@ -1190,6 +1238,22 @@ function ArticleEditorInner() {
                     onReject={handleAiReject}
                     onApproveAll={handleAiApproveAll}
                     onRejectAll={handleAiRejectAll}
+                />
+            )}
+
+            {/* 画像アノテーションエディター */}
+            {annotatingFile && (
+                <ImageAnnotationEditor
+                    file={annotatingFile}
+                    onConfirm={handleAnnotationConfirm}
+                    onCancel={() => {
+                        setAnnotatingFile(null);
+                        setGalleryResults([]);
+                        setGalleryQueue([]);
+                    }}
+                    galleryProgress={annotatingMode === 'gallery'
+                        ? { current: galleryResults.length + 1, total: galleryResults.length + 1 + galleryQueue.length }
+                        : undefined}
                 />
             )}
         </div>
