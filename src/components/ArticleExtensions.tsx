@@ -260,9 +260,17 @@ export const TabsExtension = Node.create({
  * ══════════════════════════════════════════════════════════════ */
 function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
     const images: string[] = Array.isArray(node.attrs.images) ? node.attrs.images : [];
+    const scrollRef = React.useRef<HTMLDivElement>(null);
 
     const removeImage = (index: number) => {
         updateAttributes({ images: images.filter((_, i) => i !== index) });
+    };
+
+    // を8方向スクロールボタン
+    const scroll = (dir: 'left' | 'right') => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollBy({ left: dir === 'right' ? 160 : -160, behavior: 'smooth' });
+        }
     };
 
     return (
@@ -273,7 +281,8 @@ function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
                 style={{
                     border: `2px solid rgba(74,124,89,.3)`,
                     borderRadius: 12, marginBottom: 16,
-                    overflow: 'hidden', background: BG, boxShadow: NEU_SM,
+                    background: BG, boxShadow: NEU_SM,
+                    // overflow: 'hidden' を削除→横スクロールが機能するように
                 }}
             >
                 {/* ヘッダー */}
@@ -282,6 +291,7 @@ function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
                     padding: '8px 12px',
                     background: 'rgba(74,124,89,.07)',
                     borderBottom: '1px solid rgba(74,124,89,.15)',
+                    borderRadius: '10px 10px 0 0',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                         <GalleryHorizontal size={12} color={SAGE} />
@@ -289,20 +299,41 @@ function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
                             IMAGE GALLERY ({images.length}枚)
                         </span>
                     </div>
-                    <button
-                        onClick={deleteNode}
-                        style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: TM, display: 'flex' }}
-                        title="ギャラリーを削除"
-                    >
-                        <Trash2 size={12} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {/* 左右スクロールボタン */}
+                        {images.length > 2 && (
+                            <>
+                                <button onClick={() => scroll('left')}
+                                    style={{ border: 'none', background: 'rgba(74,124,89,.15)', cursor: 'pointer', color: SAGE, display: 'flex', borderRadius: 4, padding: '2px 5px' }}
+                                    title="左にスクロール"
+                                >←</button>
+                                <button onClick={() => scroll('right')}
+                                    style={{ border: 'none', background: 'rgba(74,124,89,.15)', cursor: 'pointer', color: SAGE, display: 'flex', borderRadius: 4, padding: '2px 5px' }}
+                                    title="右にスクロール"
+                                >→</button>
+                            </>
+                        )}
+                        <button
+                            onClick={deleteNode}
+                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: TM, display: 'flex' }}
+                            title="ギャラリーを削除"
+                        >
+                            <Trash2 size={12} />
+                        </button>
+                    </div>
                 </div>
 
                 {/* 横スクロール画像リスト */}
-                <div style={{
-                    display: 'flex', gap: 8, padding: 12,
-                    overflowX: 'auto', scrollbarWidth: 'none',
-                }}>
+                <div
+                    ref={scrollRef}
+                    style={{
+                        display: 'flex', gap: 8, padding: 12,
+                        overflowX: 'auto',
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: 'rgba(74,124,89,.4) transparent',
+                        WebkitOverflowScrolling: 'touch' as any,
+                    }}
+                >
                     {images.length === 0 ? (
                         <div style={{ color: TM, fontSize: 12, padding: '20px 0' }}>
                             ツールバーの「ギャラリー」ボタンから画像を追加できます
@@ -314,6 +345,7 @@ function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
                                     src={url} alt=""
                                     style={{ height: 120, borderRadius: 8, objectFit: 'cover', display: 'block' }}
                                 />
+                                {/* 各画像の操作ボタン (削除) */}
                                 <button
                                     onClick={() => removeImage(i)}
                                     style={{
@@ -324,6 +356,13 @@ function ImageGalleryNodeView({ node, updateAttributes, deleteNode }: any) {
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}
                                 >×</button>
+                                {/* 番号バッジ */}
+                                <div style={{
+                                    position: 'absolute', bottom: 4, left: 4,
+                                    padding: '1px 5px', borderRadius: 4,
+                                    background: 'rgba(0,0,0,.5)', color: '#fff',
+                                    fontSize: 9, fontWeight: 700,
+                                }}>{i + 1}</div>
                             </div>
                         ))
                     )}
@@ -355,8 +394,14 @@ export const ImageGalleryExtension = Node.create({
         return [{ tag: 'div[data-type="image-gallery"]' }];
     },
 
-    renderHTML({ HTMLAttributes }) {
-        return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'image-gallery', class: 'noah-gallery' })];
+    renderHTML({ HTMLAttributes, node }) {
+        // attrsから直接imagesを取得して確実に出力（HTMLAttributesの内容に音存しない場合のフォールバック対応）
+        const images = node?.attrs?.images || [];
+        return ['div', mergeAttributes(HTMLAttributes, {
+            'data-type': 'image-gallery',
+            'data-images': JSON.stringify(images),
+            class: 'noah-gallery',
+        })];
     },
 
     addNodeView() {

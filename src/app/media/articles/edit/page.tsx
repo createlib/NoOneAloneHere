@@ -513,8 +513,11 @@ function ArticleEditorInner() {
                         const s = await uploadBytes(gRef, f);
                         urls.push(await getDownloadURL(s.ref));
                     }
-                    if (urls.length > 0)
+                    if (urls.length > 0) {
                         editor.chain().focus().insertContent({ type: 'imageGallery', attrs: { images: urls } }).run();
+                        // 挿入後にReactのrender完了を待ってから自動保存
+                        setTimeout(() => handleSave(status, true), 200);
+                    }
                 } catch (err) { console.error(err); alert('ギャラリーアップロードに失敗しました'); }
                 finally { setGalleryUploading(false); }
             }

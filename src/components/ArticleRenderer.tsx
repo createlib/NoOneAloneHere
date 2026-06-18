@@ -113,32 +113,181 @@ function TabsBlock({ tabs }: { tabs: TabData[] }) {
 }
 
 /* ══════════════════════════════════════════════════════════════
- *  横スクロール画像ギャラリー（ビュー側）
+ *  横スクロール画像ギャラリー（ビュー側）+ ライトボックス
  * ══════════════════════════════════════════════════════════════ */
 function GalleryBlock({ images }: { images: string[] }) {
+    const [lightboxIdx, setLightboxIdx] = React.useState<number | null>(null);
+    const touchStartX = React.useRef<number>(0);
+
     if (images.length === 0) return null;
 
+    const prev = () => setLightboxIdx(i => i !== null ? (i - 1 + images.length) % images.length : null);
+    const next = () => setLightboxIdx(i => i !== null ? (i + 1) % images.length : null);
+    const close = () => setLightboxIdx(null);
+
     return (
-        <div style={{
-            display: 'flex', gap: 10,
-            overflowX: 'auto', padding: '4px 0 16px',
-            scrollbarWidth: 'thin',
-            scrollbarColor: 'rgba(74,124,89,.3) transparent',
-            marginBottom: 8,
-        }}>
-            {images.map((url, i) => (
-                <img
-                    key={i} src={url} alt={`gallery-${i + 1}`}
+        <>
+            {/* 横スクロールギャラリー */}
+            <div style={{
+                display: 'flex', gap: 10,
+                overflowX: 'auto', padding: '4px 0 16px',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(74,124,89,.3) transparent',
+                marginBottom: 8,
+            }}>
+                {images.map((url, i) => (
+                    <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
+                        <img
+                            src={url} alt={`gallery-${i + 1}`}
+                            style={{
+                                height: 220, borderRadius: 10,
+                                objectFit: 'cover', flexShrink: 0,
+                                boxShadow: NEU_SM,
+                                cursor: 'pointer',
+                                display: 'block',
+                            }}
+                            onClick={() => setLightboxIdx(i)}
+                        />
+                        {/* 枚数バッジ */}
+                        <div style={{
+                            position: 'absolute', bottom: 8, left: 8,
+                            background: 'rgba(0,0,0,.55)', color: '#fff',
+                            fontSize: 10, fontWeight: 700,
+                            padding: '2px 6px', borderRadius: 5,
+                        }}>{i + 1}/{images.length}</div>
+                    </div>
+                ))}
+            </div>
+
+            {/* ライトボックス */}
+            {lightboxIdx !== null && (
+                <div
                     style={{
-                        height: 220, borderRadius: 10,
-                        objectFit: 'cover', flexShrink: 0,
-                        boxShadow: NEU_SM,
-                        cursor: 'pointer',
+                        position: 'fixed', inset: 0, zIndex: 9000,
+                        background: 'rgba(0,0,0,.92)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        touchAction: 'none',
                     }}
-                    onClick={() => window.open(url, '_blank')}
-                />
-            ))}
-        </div>
+                    onClick={close}
+                    onKeyDown={e => {
+                        if (e.key === 'ArrowLeft') { e.stopPropagation(); prev(); }
+                        if (e.key === 'ArrowRight') { e.stopPropagation(); next(); }
+                        if (e.key === 'Escape') close();
+                    }}
+                    tabIndex={0}
+                    onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+                    onTouchEnd={e => {
+                        const dx = e.changedTouches[0].clientX - touchStartX.current;
+                        if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
+                    }}
+                >
+                    {/* 閉じるボタン */}
+                    <button
+                        onClick={e => { e.stopPropagation(); close(); }}
+                        style={{
+                            position: 'absolute', top: 16, right: 16,
+                            width: 40, height: 40, borderRadius: '50%',
+                            border: 'none', background: 'rgba(255,255,255,.15)',
+                            color: '#fff', fontSize: 20, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            zIndex: 10,
+                        }}
+                    >✕</button>
+
+                    {/* 枚数表示 */}
+                    <div style={{
+                        position: 'absolute', top: 20, left: '50%',
+                        transform: 'translateX(-50%)',
+                        color: 'rgba(255,255,255,.7)', fontSize: 13, fontWeight: 700,
+                        background: 'rgba(0,0,0,.4)', padding: '4px 12px', borderRadius: 20,
+                    }}>
+                        {lightboxIdx + 1} / {images.length}
+                    </div>
+
+                    {/* 前へボタン */}
+                    {images.length > 1 && (
+                        <button
+                            onClick={e => { e.stopPropagation(); prev(); }}
+                            style={{
+                                position: 'absolute', left: 12, top: '50%',
+                                transform: 'translateY(-50%)',
+                                width: 44, height: 44, borderRadius: '50%',
+                                border: 'none', background: 'rgba(255,255,255,.2)',
+                                color: '#fff', fontSize: 20, cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                backdropFilter: 'blur(4px)',
+                                transition: 'background .15s',
+                                zIndex: 10,
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.35)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,.2)')}
+                        >‹</button>
+                    )}
+
+                    {/* 次へボタン */}
+                    {images.length > 1 && (
+                        <button
+                            onClick={e => { e.stopPropagation(); next(); }}
+                            style={{
+                                position: 'absolute', right: 12, top: '50%',
+                                transform: 'translateY(-50%)',
+                                width: 44, height: 44, borderRadius: '50%',
+                                border: 'none', background: 'rgba(255,255,255,.2)',
+                                color: '#fff', fontSize: 20, cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                backdropFilter: 'blur(4px)',
+                                transition: 'background .15s',
+                                zIndex: 10,
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.35)')}
+                            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,.2)')}
+                        >›</button>
+                    )}
+
+                    {/* メイン画像 */}
+                    <img
+                        src={images[lightboxIdx]}
+                        alt={`gallery-${lightboxIdx + 1}`}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            maxWidth: 'calc(100vw - 96px)',
+                            maxHeight: 'calc(100vh - 96px)',
+                            objectFit: 'contain',
+                            borderRadius: 12,
+                            boxShadow: '0 20px 80px rgba(0,0,0,.8)',
+                            userSelect: 'none',
+                            WebkitUserSelect: 'none',
+                        }}
+                    />
+
+                    {/* サムネイルストリップ（3枚以上の場合） */}
+                    {images.length > 1 && (
+                        <div style={{
+                            position: 'absolute', bottom: 16, left: '50%',
+                            transform: 'translateX(-50%)',
+                            display: 'flex', gap: 6, padding: '6px 10px',
+                            background: 'rgba(0,0,0,.5)', borderRadius: 12,
+                            maxWidth: 'calc(100vw - 40px)', overflowX: 'auto',
+                        }}>
+                            {images.map((url, i) => (
+                                <img
+                                    key={i} src={url} alt=""
+                                    onClick={e => { e.stopPropagation(); setLightboxIdx(i); }}
+                                    style={{
+                                        width: 44, height: 44, borderRadius: 6,
+                                        objectFit: 'cover', cursor: 'pointer',
+                                        flexShrink: 0,
+                                        opacity: i === lightboxIdx ? 1 : 0.5,
+                                        border: i === lightboxIdx ? '2px solid #8ecfb2' : '2px solid transparent',
+                                        transition: 'opacity .15s, border-color .15s',
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+        </>
     );
 }
 
