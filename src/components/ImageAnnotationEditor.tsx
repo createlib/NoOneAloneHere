@@ -537,13 +537,28 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
         {id:'cursor', icon:<MousePointer2 size={13}/>, label:'カーソル'},
     ];
 
-    /* ── ColorRow: 横スクロール可能、折り返しなし ─────────────────
-       ▸ nowrap + overflow-x:auto で 2行化しない */
+    /* ── キーボード抑制：テキストツール以外でキーボードを出さない ──────
+     *  ・tabIndex={-1}  … タブフォーカス対象から外す
+     *  ・onMouseDown preventDefault … クリック時のフォーカス移動を防ぐ
+     *  ・モーダルマウント時に既存フォーカスをクリアすることで
+     *    背後の Tiptap contenteditable が引き続きフォーカスを持つことを防ぐ */
+    useEffect(()=>{
+        // モーダルが開いた瞬間、バックグラウンドの Tiptap エディタなどのフォーカスを解除
+        (document.activeElement as HTMLElement|null)?.blur();
+    },[]);
+
+    // キーボードを出さないボタン共通属性
+    const nb = {
+        tabIndex: -1 as const,
+        onMouseDown: (e:React.MouseEvent)=>e.preventDefault(),
+    };
+
+    /* ── ColorRow ───────────────────────────────────────────────── */
     const ColorRow=({label,val,onChange}:{label:string;val:string;onChange:(c:string)=>void})=>(
         <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
             <span style={{fontSize:10,color:'rgba(255,255,255,.45)',whiteSpace:'nowrap',flexShrink:0}}>{label}</span>
             {PRESETS.map(c=>(
-                <button key={c} onClick={()=>onChange(c)} style={{width:16,height:16,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:val===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
+                <button {...nb} key={c} onClick={()=>onChange(c)} style={{width:16,height:16,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:val===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
             ))}
             <input type="color" value={val==='transparent'?'#ffffff':val} onChange={e=>onChange(e.target.value)}
                 style={{width:20,height:20,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0,flexShrink:0}}/>
@@ -583,18 +598,18 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
                 <div style={{display:'flex',alignItems:'center',gap:6}}>
                     {/* ズームインジケーター + コントロール */}
                     <div style={{display:'flex',alignItems:'center',gap:3,background:'rgba(255,255,255,.08)',borderRadius:7,padding:'3px 6px'}}>
-                        <button onClick={()=>adjustZoom(1/1.3)} style={{border:'none',background:'transparent',color:'rgba(255,255,255,.7)',cursor:'pointer',display:'flex',alignItems:'center',padding:1}} title="縮小">
+                        <button {...nb} onClick={()=>adjustZoom(1/1.3)} style={{border:'none',background:'transparent',color:'rgba(255,255,255,.7)',cursor:'pointer',display:'flex',alignItems:'center',padding:1}} title="縮小">
                             <ZoomOut size={12}/>
                         </button>
                         <span style={{fontSize:10,fontWeight:700,color:'rgba(255,255,255,.6)',minWidth:32,textAlign:'center'}}>{zoomPct}%</span>
-                        <button onClick={()=>adjustZoom(1.3)} style={{border:'none',background:'transparent',color:'rgba(255,255,255,.7)',cursor:'pointer',display:'flex',alignItems:'center',padding:1}} title="拡大">
+                        <button {...nb} onClick={()=>adjustZoom(1.3)} style={{border:'none',background:'transparent',color:'rgba(255,255,255,.7)',cursor:'pointer',display:'flex',alignItems:'center',padding:1}} title="拡大">
                             <ZoomIn size={12}/>
                         </button>
-                        <button onClick={centerCanvas} style={{border:'none',background:'transparent',color:'rgba(255,255,255,.5)',cursor:'pointer',display:'flex',alignItems:'center',padding:1}} title="リセット">
+                        <button {...nb} onClick={centerCanvas} style={{border:'none',background:'transparent',color:'rgba(255,255,255,.5)',cursor:'pointer',display:'flex',alignItems:'center',padding:1}} title="リセット">
                             <Maximize2 size={11}/>
                         </button>
                     </div>
-                    <button onClick={onCancel} style={{width:26,height:26,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.1)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <button {...nb} onClick={onCancel} style={{width:26,height:26,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.1)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center'}}>
                         <X size={13}/>
                     </button>
                 </div>
@@ -611,30 +626,30 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
                 boxShadow:'0 4px 20px rgba(0,0,0,.5)',
             }}>
                 {TOOLS.map(t=>(
-                    <button key={t.id} onClick={()=>setTool(t.id)} title={t.label}
+                    <button {...nb} key={t.id} onClick={()=>setTool(t.id)} title={t.label}
                         style={{display:'flex',alignItems:'center',gap:2,padding:'5px 7px',borderRadius:6,border:'none',cursor:'pointer',background:tool===t.id?SAGE:'rgba(255,255,255,.07)',color:tool===t.id?'#fff':'rgba(255,255,255,.7)',fontSize:10,fontWeight:700,transition:'all .12s',minHeight:32,flexShrink:0,whiteSpace:'nowrap'}}>
                         {t.icon} <span style={{fontSize:10}}>{t.label}</span>
                     </button>
                 ))}
                 <div style={{width:1,height:18,background:'rgba(255,255,255,.12)',margin:'0 2px',flexShrink:0}}/>
                 <span style={{fontSize:10,color:'rgba(255,255,255,.4)',whiteSpace:'nowrap',flexShrink:0}}>太さ</span>
-                <input type="range" min={1} max={14} value={strokeW} onChange={e=>setStrokeW(+e.target.value)} style={{width:46,accentColor:LIME,flexShrink:0}}/>
+                <input tabIndex={-1} type="range" min={1} max={14} value={strokeW} onChange={e=>setStrokeW(+e.target.value)} style={{width:46,accentColor:LIME,flexShrink:0}}/>
                 <span style={{fontSize:10,color:'rgba(255,255,255,.6)',minWidth:12,flexShrink:0}}>{strokeW}</span>
                 {hasFont&&<>
                     <span style={{fontSize:10,color:'rgba(255,255,255,.4)',whiteSpace:'nowrap',flexShrink:0}}>サイズ</span>
-                    <input type="range" min={12} max={80} value={fontSize} onChange={e=>setFontSize(+e.target.value)} style={{width:46,accentColor:LIME,flexShrink:0}}/>
+                    <input tabIndex={-1} type="range" min={12} max={80} value={fontSize} onChange={e=>setFontSize(+e.target.value)} style={{width:46,accentColor:LIME,flexShrink:0}}/>
                     <span style={{fontSize:10,color:'rgba(255,255,255,.6)',minWidth:18,flexShrink:0}}>{fontSize}</span>
                 </>}
                 <div style={{marginLeft:'auto',display:'flex',gap:3,flexShrink:0}}>
                     {tool==='select'&&selIdx!==null&&(
-                        <button onClick={delSelected} title="Del" style={{padding:'4px 7px',borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.2)',color:'#f87171',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',gap:2,minHeight:32,whiteSpace:'nowrap'}}>
+                        <button {...nb} onClick={delSelected} title="Del" style={{padding:'4px 7px',borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.2)',color:'#f87171',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',gap:2,minHeight:32,whiteSpace:'nowrap'}}>
                             <Trash2 size={11}/> 削除
                         </button>
                     )}
-                    <button onClick={undo} disabled={!canUndo} style={{width:32,height:32,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',justifyContent:'center',opacity:canUndo?1:.35}}>
+                    <button {...nb} onClick={undo} disabled={!canUndo} style={{width:32,height:32,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',display:'flex',alignItems:'center',justifyContent:'center',opacity:canUndo?1:.35}}>
                         <Undo2 size={13}/>
                     </button>
-                    <button onClick={()=>{annsRef.current=[];histRef.current=[[]as Ann[]];selRef.current=null;setSelIdx(null);setCanUndo(false);redrawAll();}} style={{width:32,height:32,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.18)',color:'#f87171',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <button {...nb} onClick={()=>{annsRef.current=[];histRef.current=[[]as Ann[]];selRef.current=null;setSelIdx(null);setCanUndo(false);redrawAll();}} style={{width:32,height:32,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(239,68,68,.18)',color:'#f87171',display:'flex',alignItems:'center',justifyContent:'center'}}>
                         <Trash2 size={13}/>
                     </button>
                 </div>
@@ -654,13 +669,13 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
                         <ColorRow label="枠色" val={strokeCol} onChange={setStrokeCol}/>
                         <div style={{width:1,height:16,background:'rgba(255,255,255,.12)',margin:'0 2px',flexShrink:0}}/>
                         <span style={{fontSize:10,color:'rgba(255,255,255,.45)',whiteSpace:'nowrap',flexShrink:0}}>塗り色</span>
-                        <button onClick={()=>setFillCol('transparent')} style={{padding:'2px 7px',borderRadius:5,border:'none',cursor:'pointer',background:fillCol==='transparent'?SAGE:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',fontSize:10,fontWeight:700,flexShrink:0,whiteSpace:'nowrap'}}>
+                        <button {...nb} onClick={()=>setFillCol('transparent')} style={{padding:'2px 7px',borderRadius:5,border:'none',cursor:'pointer',background:fillCol==='transparent'?SAGE:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.8)',fontSize:10,fontWeight:700,flexShrink:0,whiteSpace:'nowrap'}}>
                             なし
                         </button>
                         {PRESETS.map(c=>(
-                            <button key={c} onClick={()=>setFillCol(c)} style={{width:16,height:16,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:fillCol===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
+                            <button {...nb} key={c} onClick={()=>setFillCol(c)} style={{width:16,height:16,borderRadius:'50%',border:'none',cursor:'pointer',background:c,flexShrink:0,boxShadow:fillCol===c?`0 0 0 2px ${LIME}`:'0 0 0 1px rgba(255,255,255,.2)'}}/>
                         ))}
-                        <input type="color" value={fillCol==='transparent'?'#ffffff':fillCol} onChange={e=>setFillCol(e.target.value)}
+                        <input tabIndex={-1} type="color" value={fillCol==='transparent'?'#ffffff':fillCol} onChange={e=>setFillCol(e.target.value)}
                             style={{width:20,height:20,borderRadius:4,border:'none',cursor:'pointer',background:'transparent',padding:0,flexShrink:0}}/>
                     </>
                 ):(
@@ -695,6 +710,8 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
                 >
                     <canvas
                         ref={canvasRef}
+                        tabIndex={-1}   // フォーカス不可にしてキーボードを抑制
+                        onFocus={e=>e.currentTarget.blur()} // 万一フォーカスされても即blur
                         style={{
                             display:'block',
                             borderRadius:6,
@@ -714,10 +731,10 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
 
             {/* ── フッター（常に画面下部に固定） ─────────────── */}
             <div style={{flexShrink:0,display:'flex',gap:8,padding:'6px 8px 8px'}}>
-                <button onClick={onCancel} style={{flex:1,padding:'11px 0',borderRadius:9,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',fontSize:13,fontWeight:700}}>
+                <button {...nb} onClick={onCancel} style={{flex:1,padding:'11px 0',borderRadius:9,border:'none',cursor:'pointer',background:'rgba(255,255,255,.08)',color:'rgba(255,255,255,.7)',fontSize:13,fontWeight:700}}>
                     {galleryProgress?'スキップ':'キャンセル'}
                 </button>
-                <button onClick={confirm} disabled={saving} style={{flex:3,padding:'11px 0',borderRadius:9,border:'none',cursor:'pointer',background:overwriteUrl?'#7c4a59':SB,color:LIME,fontSize:13,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 20px rgba(0,0,0,.4)',opacity:saving?.7:1}}>
+                <button {...nb} onClick={confirm} disabled={saving} style={{flex:3,padding:'11px 0',borderRadius:9,border:'none',cursor:'pointer',background:overwriteUrl?'#7c4a59':SB,color:LIME,fontSize:13,fontWeight:800,display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 4px 20px rgba(0,0,0,.4)',opacity:saving?.7:1}}>
                     <Check size={15}/>
                     {saving?'処理中...' : overwriteUrl?'上書き保存する' : galleryProgress&&galleryProgress.current<galleryProgress.total
                         ?`次へ (${galleryProgress.current}/${galleryProgress.total})`
@@ -734,8 +751,8 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
                             onKeyDown={e=>{if(e.key==='Enter')commitText();if(e.key==='Escape'){setShowTxt(false);setTxtVal('');}}}
                             placeholder="テキストを入力..." style={{padding:'9px 12px',borderRadius:8,border:'1.5px solid #d0ccc8',fontSize:14,color:T1,outline:'none',background:'#fdfcfa'}}/>
                         <div style={{display:'flex',gap:8}}>
-                            <button onClick={()=>{setShowTxt(false);setTxtVal('');}} style={{flex:1,padding:'8px 0',borderRadius:8,border:'none',background:'#e8e4df',color:T2,fontSize:12,fontWeight:700,cursor:'pointer'}}>キャンセル</button>
-                            <button onClick={commitText} style={{flex:2,padding:'8px 0',borderRadius:8,border:'none',background:SB,color:LIME,fontSize:12,fontWeight:700,cursor:'pointer'}}>追加する</button>
+                            <button {...nb} onClick={()=>{setShowTxt(false);setTxtVal('');}} style={{flex:1,padding:'8px 0',borderRadius:8,border:'none',background:'#e8e4df',color:T2,fontSize:12,fontWeight:700,cursor:'pointer'}}>キャンセル</button>
+                            <button {...nb} onClick={commitText} style={{flex:2,padding:'8px 0',borderRadius:8,border:'none',background:SB,color:LIME,fontSize:12,fontWeight:700,cursor:'pointer'}}>追加する</button>
                         </div>
                     </div>
                 </div>
