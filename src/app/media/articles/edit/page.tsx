@@ -82,7 +82,10 @@ function ArticleEditorInner() {
     const { user, loading } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const editId = searchParams.get('id');
+    // editId は初回ロード時に URL から取得し、初回保存後は新しいドキュメント ID を ref に保持する
+    // これにより自動保存のたびに新規ドキュメントが作成される問題を防ぐ
+    const editIdRef = useRef<string | null>(searchParams.get('id'));
+    const editId = editIdRef.current; // ← 後方互換のためのショートカット（初期値のみ）
 
     const [title, setTitle] = useState('');
     const [coverUrl, setCoverUrl] = useState('');
@@ -262,18 +265,30 @@ function ArticleEditorInner() {
         };
     }, [editor]);
 
+    /* ── 前回保存時のコンテンツを記録（変更なし時の無駄な保存を防ぐ） ── */
+    const lastSavedContentRef = useRef<string>('');
+
     /* ── Auto-save every 30s ─────────────────────────────────── */
     useEffect(() => {
         if (!editor || !user) return;
         const interval = setInterval(() => {
-            if (editor.getHTML() && title) {
-                // 公開済み記事は published のまま静かに保存（draft に落とさない）
-                // 下書きは draft のまま保存
-                handleSave(status, true);
-            }
+            const html = editor.getHTML();
+            const currentContent = title + '|' + html;
+            // コンテンツに変更がなければスキップ（無駄な下書き保存を防止）
+            if (!html || !title) return;
+            if (currentContent === lastSavedContentRef.current) return;
+            // statusRef を参照して最新の status を使う
+            handleSaveRef.current(statusRef.current, true);
         }, 30000);
         return () => clearInterval(interval);
-    }, [editor, user, title, status]);
+    }, [editor, user]); // handleSave は ref 経由で参照するため依存配列から除外
+
+    /* ── status / handleSave を ref 経由で参照（useEffect の stale closure 対策） */
+    const statusRef = useRef<'draft'|'published'>('draft');
+    useEffect(() => { statusRef.current = status; }, [status]);
+    const handleSaveRef = useRef<(targetStatus: 'draft'|'published', silent?: boolean) => Promise<void>>(
+        async () => {}
+    );
 
     /* ── Save handler ────────────────────────────────────────── */
     const handleSave = useCallback(async (targetStatus: 'draft'|'published', silent = false) => {
@@ -298,7 +313,8 @@ function ArticleEditorInner() {
             const wordCount = plainText.length;
             const readingTime = Math.max(1, Math.round(wordCount / 500));
 
-            const docId = editId || Date.now().toString();
+            // editIdRef.current を使うことで、初回保存後も同じドキュメントに上書きできる
+            const docId = editIdRef.current || Date.now().toString();
 
             // Resolve custom audience: merge list members + individual users
             let resolvedAllowedUserIds: string[] = [];
@@ -383,13 +399,20 @@ function ArticleEditorInner() {
             const now = new Date();
             setLastSaved(`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`);
 
+            // 初回保存後に editIdRef を更新して以降の保存が同一ドキュメントを上書きするようにする
+            if (!editIdRef.current) {
+                editIdRef.current = docId;
+            }
+            // 保存成功時にコンテンツのスナップショットを更新（次の自動保存でスキップ判定に使う）
+            lastSavedContentRef.current = title + '|' + html;
+
             if (!silent) {
                 if (targetStatus === 'published') {
                     // replace で履歴置き換え → 戻るボタンで編集画面に戻れなくする
                     router.replace(`/media/articles/view?id=${docId}`);
                 } else if (targetStatus === 'draft') {
                     // 下書き保存: URL を編集 URL に更新（新規の場合のみ）
-                    if (!editId) {
+                    if (!editIdRef.current || editIdRef.current === docId) {
                         window.history.replaceState(null, '', `/media/articles/edit?id=${docId}`);
                     }
                 }
@@ -400,7 +423,10 @@ function ArticleEditorInner() {
         } finally {
             if (!silent) setSaving(false);
         }
-    }, [user, editor, title, coverUrl, coverFile, tags, category, visibility, allowedUserIds, allowedListIds, allowComments, editId, status, myProfile]);
+    }, [user, editor, title, coverUrl, coverFile, tags, category, visibility, allowedUserIds, allowedListIds, allowComments, status, myProfile, router]);
+
+    // handleSave を ref に同期（useEffect の stale closure を解消）
+    useEffect(() => { handleSaveRef.current = handleSave; }, [handleSave]);
 
     /* ── 下書きに戻す ────────────────────────────────────────── */
     const doRevertToDraft = useCallback(async () => {
