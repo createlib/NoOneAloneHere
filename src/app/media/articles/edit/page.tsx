@@ -482,28 +482,72 @@ function ArticleEditorInner() {
             // 既存アップロード済み画像URLを上書き
             setAnnotatingFile(null);
             setOverwriteUrl(undefined);
-            if (!user) return;
+            if (!user || !editor) return;
             try {
-                // Firebase Storage: URL からパスを抽出して同じパスに上書き
-                // URL 例: https://firebasestorage.googleapis.com/v0/b/.../o/articles%2Fimages%2F.../filename?alt=media&...
+                // ── Firebase Storage: 同パスに上書きアップロード ──────────────
                 const { ref: storageRefFn, uploadBytes: uploadBytesFn, getDownloadURL: getDlURL } = await import('firebase/storage');
                 const { storage: st } = await import('@/lib/firebase');
-                // パスをURLからデコード
+                // URL から Storage パスを抽出
+                // 例: .../o/articles%2Fimages%2F.../file.jpg?alt=media&token=...
                 const pathMatch = owUrl.match(/\/o\/(.*?)(?:\?|$)/);
-                if (!pathMatch) throw new Error('Storage path not found');
+                if (!pathMatch) throw new Error('Storage パスの抽出に失敗しました');
                 const storagePath = decodeURIComponent(pathMatch[1]);
                 const sRef = storageRefFn(st, storagePath);
                 const snap = await uploadBytesFn(sRef, editedFile);
                 const newUrl = await getDlURL(snap.ref);
-                // エディタ内の対象imgのsrcを新URLに更新
-                if (editor) {
-                    const html = editor.getHTML();
-                    // 旧URLのキャッシュバスター除去して比較
-                    const cleanOld = owUrl.split('?')[0];
-                    const newHtml = html.replace(new RegExp(cleanOld.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[^"]*','g'), newUrl);
-                    if (newHtml !== html) editor.commands.setContent(newHtml);
+
+                // ── ProseMirrorトランザクションで対象ノードのsrcだけを差し替え ──
+                // setContent() を使わないことで他のノード（ギャラリー等）に影響しない
+                const { state, dispatch } = editor.view;
+                const tr = state.tr;
+                let replaced = false;
+
+                state.doc.descendants((node, pos) => {
+                    if (replaced) return false; // 見つかったら停止
+                    if (node.type.name === 'image') {
+                        const nodeSrc: string = node.attrs.src || '';
+                        // クエリパラメータを除いたベースURLで比較
+                        const nodeBase = nodeSrc.split('?')[0];
+                        const owBase   = owUrl.split('?')[0];
+                        if (nodeBase === owBase) {
+                            tr.setNodeMarkup(pos, undefined, {
+                                ...node.attrs,
+                                src: newUrl,
+                            });
+                            replaced = true;
+                            return false;
+                        }
+                    }
+                    // imageGallery ノード内の url も確認
+                    if (node.type.name === 'imageGallery') {
+                        const images: string[] = Array.isArray(node.attrs.images) ? node.attrs.images : [];
+                        const owBase = owUrl.split('?')[0];
+                        const updatedImages = images.map(u => {
+                            const uBase = u.split('?')[0];
+                            return uBase === owBase ? newUrl : u;
+                        });
+                        if (updatedImages.some((u, i) => u !== images[i])) {
+                            tr.setNodeMarkup(pos, undefined, {
+                                ...node.attrs,
+                                images: updatedImages,
+                            });
+                            replaced = true;
+                            return false;
+                        }
+                    }
+                });
+
+                if (replaced) {
+                    dispatch(tr);
+                } else {
+                    // フォールバック: 見つからなかった場合はコンソールに警告
+                    console.warn('上書き対象の画像ノードが見つかりませんでした。URL:', owUrl);
+                    alert('画像が見つかりませんでした。ページを再読み込みして再度お試しください。');
                 }
-            } catch (err) { console.error(err); alert('画像の上書き保存に失敗しました'); }
+            } catch (err: any) {
+                console.error('画像の上書き保存エラー:', err);
+                alert(`画像の上書き保存に失敗しました\nエラー: ${err?.message || err}`);
+            }
 
         } else if (annotatingMode === 'insert') {
             setAnnotatingFile(null);
