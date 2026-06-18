@@ -9,6 +9,7 @@ import {
     serverTimestamp, Timestamp, increment,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { compressImage } from '@/lib/compressImage';
 import { db, storage, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import AppShell from '@/components/AppShell';
@@ -242,11 +243,12 @@ export default function DeckPage() {
         if (!user || !myProfile || (!compText.trim() && compImages.length === 0)) return;
         setPosting(true);
         try {
-            // Upload images
+            // Upload images（最大1920px / JPEG 0.85 に圧縮してからアップロード）
             const imageUrls: string[] = [];
             for (const f of compImages) {
-                const iRef = ref(storage, `posts/${user.uid}/${Date.now()}_${f.name}`);
-                const snap = await uploadBytes(iRef, f);
+                const compressed = await compressImage(f);
+                const iRef = ref(storage, `posts/${user.uid}/${Date.now()}_${compressed.name}`);
+                const snap = await uploadBytes(iRef, compressed);
                 imageUrls.push(await getDownloadURL(snap.ref));
             }
 

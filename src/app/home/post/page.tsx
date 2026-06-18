@@ -10,6 +10,7 @@ import {
     Timestamp, increment,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { compressImage } from '@/lib/compressImage';
 import { db, storage, APP_ID } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import AppShell from '@/components/AppShell';
@@ -212,8 +213,9 @@ function PostDetailPage() {
         try {
             const imageUrls: string[] = [];
             for (const f of replyImages) {
-                const iRef = ref(storage, `posts/${user.uid}/${Date.now()}_${f.name}`);
-                const snap = await uploadBytes(iRef, f);
+                const compressed = await compressImage(f);
+                const iRef = ref(storage, `posts/${user.uid}/${Date.now()}_${compressed.name}`);
+                const snap = await uploadBytes(iRef, compressed);
                 imageUrls.push(await getDownloadURL(snap.ref));
             }
 

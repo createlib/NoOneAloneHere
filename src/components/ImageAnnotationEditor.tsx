@@ -211,13 +211,14 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
     },[saveHist,redrawAll]);
 
     // canvas init on file change
+    // プレビューは最大1400px幅で表示（編集しやすい高解像度）
     useEffect(()=>{
         const el=canvasRef.current,ctr=containerRef.current;if(!el||!ctr)return;
         const url=URL.createObjectURL(file);
         const img=new window.Image();
         img.onload=()=>{
-            const maxW=Math.min(ctr.clientWidth||800,900);
-            const maxH=Math.min(window.innerHeight-240,560);
+            const maxW=Math.min(ctr.clientWidth||1400,1400);
+            const maxH=Math.min(window.innerHeight-220,720);
             const sc=Math.min(maxW/img.naturalWidth,maxH/img.naturalHeight,1);
             el.width=Math.round(img.naturalWidth*sc);
             el.height=Math.round(img.naturalHeight*sc);
@@ -362,19 +363,45 @@ export default function ImageAnnotationEditor({file,onConfirm,onCancel,galleryPr
     },[txtVal,txtPos,saveHist,redrawAll]);
 
     const confirm=useCallback(()=>{
-        const el=canvasRef.current;if(!el)return;
+        const el=canvasRef.current;const origImg=bgRef.current;
+        if(!el||!origImg)return;
         selRef.current=null;setSelIdx(null);redrawAll();setSaving(true);
-        el.toBlob(blob=>{
+
+        // 出力用オフスクリーンキャンバス：元画像を最大1920pxにスケール
+        const MAX_OUTPUT=1920;
+        const outScale=Math.min(MAX_OUTPUT/origImg.naturalWidth,MAX_OUTPUT/origImg.naturalHeight,1);
+        const outW=Math.round(origImg.naturalWidth*outScale);
+        const outH=Math.round(origImg.naturalHeight*outScale);
+        const offscreen=document.createElement('canvas');
+        offscreen.width=outW;
+        offscreen.height=outH;
+        const octx=offscreen.getContext('2d')!;
+
+        // 元画像を高画質で描画
+        octx.drawImage(origImg,0,0,outW,outH);
+
+        // プレビューキャンバスのアノテーションをスケール変換して重ねる
+        const scaleX=outW/el.width;
+        const scaleY=outH/el.height;
+        octx.save();
+        octx.scale(scaleX,scaleY);
+        // アノテーション部分のみプレビューcanvasから転写
+        annsRef.current.forEach(a=>drawAnn(octx,a));
+        octx.restore();
+
+        const baseName = overwriteUrl
+            ? (overwriteUrl.split('/').pop()?.split('?')[0] || file.name)
+            : file.name.replace(/\.[^.]+$/,'')+'_edited.jpg';
+
+        // JPEG 0.85品質で出力（視覚劣化なし、サイズ大幅削減）
+        offscreen.toBlob(blob=>{
             if(!blob){setSaving(false);return;}
-            const baseName = overwriteUrl
-                ? (overwriteUrl.split('/').pop()?.split('?')[0] || file.name)
-                : file.name.replace(/\.[^.]+$/,'')+'_annotated.png';
             onConfirm(
-                new File([blob], baseName, {type:'image/png'}),
+                new File([blob], baseName, {type:'image/jpeg'}),
                 overwriteUrl,
             );
             setSaving(false);
-        },'image/png');
+        },'image/jpeg',0.85);
     },[file,overwriteUrl,onConfirm,redrawAll]);
 
     const hasShape=tool==='rect'||tool==='circle';
