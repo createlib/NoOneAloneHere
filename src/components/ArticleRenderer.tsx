@@ -113,12 +113,10 @@ function TabsBlock({ tabs }: { tabs: TabData[] }) {
 }
 
 /* ══════════════════════════════════════════════════════════════
- *  note風カルーセルギャラリー（ビュー側）+ ライトボックス
+ *  横スクロール画像ギャラリー（ビュー側）+ ライトボックス
  * ══════════════════════════════════════════════════════════════ */
 function GalleryBlock({ images }: { images: string[] }) {
     const [lightboxIdx, setLightboxIdx] = React.useState<number | null>(null);
-    const [currentIdx, setCurrentIdx]   = React.useState(0);
-    const scrollRef   = React.useRef<HTMLDivElement>(null);
     const touchStartX = React.useRef<number>(0);
 
     if (images.length === 0) return null;
@@ -127,98 +125,52 @@ function GalleryBlock({ images }: { images: string[] }) {
     const next = () => setLightboxIdx(i => i !== null ? (i + 1) % images.length : null);
     const close = () => setLightboxIdx(null);
 
-    // スクロール位置からカレントインデックスを更新
-    const onScroll = () => {
-        const el = scrollRef.current; if (!el) return;
-        const idx = Math.round(el.scrollLeft / el.clientWidth);
-        setCurrentIdx(idx);
-    };
-
-    // ドットクリックでスクロール
-    const scrollTo = (i: number) => {
-        scrollRef.current?.scrollTo({ left: i * (scrollRef.current.clientWidth), behavior: 'smooth' });
-    };
-
     return (
         <>
-            {/* ── note風 全幅カルーセル ────────────────────────────
-                ネガティブマージンでコンテナpaddingを突き破り画面端まで広げる */}
-            <div style={{ position: 'relative', marginBottom: 8 }}>
-                {/* スナップスクロールコンテナ */}
-                <div
-                    ref={scrollRef}
-                    onScroll={onScroll}
-                    style={{
-                        display: 'flex',
-                        overflowX: 'auto',
-                        scrollSnapType: 'x mandatory',
-                        scrollbarWidth: 'none',          // スクロールバー非表示
-                        WebkitOverflowScrolling: 'touch' as any,
-                        // ── コンテナのpadding外に広げて画面端まで ──────────
-                        marginLeft: 'calc(-1 * var(--article-px, 16px))',
-                        marginRight: 'calc(-1 * var(--article-px, 16px))',
-                    }}
-                >
-                    {images.map((url, i) => (
-                        <div
-                            key={i}
+            {/* 横スクロールギャラリー */}
+            <div style={{
+                display: 'flex', gap: 8,
+                overflowX: 'auto', padding: '4px 0 12px',
+                scrollbarWidth: 'thin',
+                scrollbarColor: 'rgba(74,124,89,.3) transparent',
+                marginBottom: 8,
+                WebkitOverflowScrolling: 'touch' as any,
+            }}>
+                {images.map((url, i) => (
+                    <div
+                        key={i}
+                        onClick={() => setLightboxIdx(i)}
+                        style={{
+                            flexShrink: 0,
+                            height: 200,
+                            position: 'relative',
+                            cursor: 'pointer',
+                            borderRadius: 10,
+                            overflow: 'hidden',
+                            boxShadow: NEU_SM,
+                            background: '#111',
+                        }}
+                    >
+                        <img
+                            src={url}
+                            alt={`gallery-${i + 1}`}
                             style={{
-                                flexShrink: 0,
-                                // コンテナ幅 + ネガティブマージン分 = 画面いっぱい（モバイル）
-                                // デスクトップでは maxWidth: 720 のコンテナ幅に収まる
-                                width: 'calc(100% + var(--article-px, 20px) * 2)',
-                                scrollSnapAlign: 'start',
-                                position: 'relative',
-                                cursor: 'pointer',
+                                height: '100%',
+                                width: 'auto',          // 縦画像でも横幅が自動調整される
+                                maxWidth: 280,          // 横長画像の上限
+                                objectFit: 'contain',   // 全体表示（切り抜きなし）
+                                display: 'block',
                             }}
-                            onClick={() => setLightboxIdx(i)}
-                        >
-                            <img
-                                src={url}
-                                alt={`gallery-${i + 1}`}
-                                style={{
-                                    width: '100%',
-                                    height: 'clamp(200px, 56vw, 480px)', // 比率でモバイル/デスクトップ両対応
-                                    objectFit: 'cover',
-                                    display: 'block',
-                                }}
-                            />
-                        </div>
-                    ))}
-                </div>
-
-                {/* インジケータードット + 枚数カウンター */}
-                {images.length > 1 && (
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 5,
-                        paddingTop: 8,
-                    }}>
-                        {images.map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => scrollTo(i)}
-                                style={{
-                                    width: i === currentIdx ? 18 : 6,
-                                    height: 6,
-                                    borderRadius: 3,
-                                    border: 'none',
-                                    padding: 0,
-                                    cursor: 'pointer',
-                                    background: i === currentIdx ? SAGE : 'rgba(74,124,89,.25)',
-                                    transition: 'width .2s, background .2s',
-                                    flexShrink: 0,
-                                }}
-                            />
-                        ))}
-                        <span style={{
-                            fontSize: 10, color: T2, marginLeft: 4,
-                            fontWeight: 600, fontVariantNumeric: 'tabular-nums',
-                        }}>{currentIdx + 1}/{images.length}</span>
+                        />
+                        {/* 枚数バッジ */}
+                        <div style={{
+                            position: 'absolute', bottom: 6, left: 6,
+                            background: 'rgba(0,0,0,.55)', color: '#fff',
+                            fontSize: 10, fontWeight: 700,
+                            padding: '2px 6px', borderRadius: 5,
+                        }}>{i + 1}/{images.length}</div>
                     </div>
-                )}
+                ))}
             </div>
 
             {lightboxIdx !== null && (

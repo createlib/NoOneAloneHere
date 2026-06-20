@@ -709,28 +709,28 @@ function MediaPageInner() {
                 @media(max-width:767px){
                     .mob-topbar { display:flex !important; }
 
-                    /* 記事カード: モバイルは横長1カラム */
+                    /* 記事カード: モバイルはnote風 縦スタック全幅1カラム */
                     .article-grid {
                         grid-template-columns: 1fr !important;
-                        gap: 10px !important;
+                        gap: 14px !important;
                     }
                     .article-card-inner {
-                        flex-direction: row !important;
+                        flex-direction: column !important;  /* 縦スタック */
                         border-radius: 12px !important;
-                        align-items: stretch;
                     }
+                    /* サムネイル: 横幅いっぱい・16/9比率 */
                     .article-card-thumb {
-                        width: 110px !important;
-                        aspect-ratio: unset !important;
-                        flex-shrink: 0 !important;
+                        width: 100% !important;
+                        aspect-ratio: 16/9 !important;
                         height: auto !important;
-                        min-height: 80px;
+                        border-radius: 0 !important;
                     }
                     .article-card-info {
-                        padding: 10px 12px !important;
+                        padding: 10px 14px 14px !important;
                         height: auto !important;
                     }
                 }
+
             `}</style>
         </AppShell>
     );
