@@ -412,7 +412,7 @@ function ArticleViewInner() {
                 </div>
             )}
 
-            <div style={{ maxWidth:720, margin:'0 auto', padding:'0 20px' }}>
+            <div style={{ maxWidth:720, margin:'0 auto', padding:'0 20px', ['--article-px' as any]: '20px' }}>
                 {/* Cover */}
                 {article.coverImageUrl && (
                     <div style={{ borderRadius:16, overflow:'hidden', margin:'16px 0 24px', boxShadow:'0 4px 20px rgba(0,0,0,.08)' }}>
