@@ -412,10 +412,10 @@ function ArticleViewInner() {
                 </div>
             )}
 
-            <div style={{ maxWidth:720, margin:'0 auto', padding:'0 20px', ['--article-px' as any]: '20px' }}>
+            <div style={{ maxWidth:720, margin:'0 auto', padding:'0 20px', ['--article-px' as any]: '20px' }} className="article-container">
                 {/* Cover */}
                 {article.coverImageUrl && (
-                    <div style={{ borderRadius:16, overflow:'hidden', margin:'16px 0 24px', boxShadow:'0 4px 20px rgba(0,0,0,.08)' }}>
+                    <div className="article-cover" style={{ overflow:'hidden', margin:'0 0 24px' }}>
                         <img src={article.coverImageUrl} alt="" style={{ width:'100%', aspectRatio:'1280/670', objectFit:'cover', display:'block' }} />
                     </div>
                 )}
@@ -652,7 +652,7 @@ function ArticleViewInner() {
 
             {/* Article body styles */}
             <style>{`
-                @keyframes spin{to{transform:rotate(360deg)}}
+                                @keyframes spin{to{transform:rotate(360deg)}}
                 .article-body { margin-bottom: 40px; }
                 .article-body h2 { font-size: 22px; font-weight: 800; margin: 32px 0 12px; color: ${T1}; border-bottom: 2px solid rgba(0,0,0,.06); padding-bottom: 8px; }
                 .article-body h3 { font-size: 17px; font-weight: 700; margin: 24px 0 8px; color: ${T1}; }
@@ -669,13 +669,23 @@ function ArticleViewInner() {
                 .article-body a { color: ${SAGE}; text-decoration: underline; }
                 .article-body mark { background: #fef08a; padding: 1px 4px; border-radius: 3px; }
                 .article-body hr { border: none; border-top: 2px solid rgba(0,0,0,.06); margin: 24px 0; }
-                .article-body table { border-collapse: collapse; margin: 16px 0; width: 100%; }
-                .article-body th, .article-body td { border: 1px solid rgba(0,0,0,.1); padding: 8px 12px; font-size: 13px; }
+                /* テーブル：横スクロール対応 */
+                .article-body table { border-collapse: collapse; margin: 16px 0; width: max-content; min-width: 100%; }
+                .article-body .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 16px 0; border-radius: 8px; border: 1px solid rgba(0,0,0,.08); }
+                .article-body .table-wrapper table { margin: 0; border-radius: 0; }
+                .article-body th, .article-body td { border: 1px solid rgba(0,0,0,.1); padding: 8px 12px; font-size: 13px; white-space: nowrap; }
                 .article-body th { background: rgba(74,124,89,.06); font-weight: 700; }
                 .article-body s { text-decoration: line-through; color: ${TM}; }
                 .article-body iframe { border-radius: 10px; margin: 16px 0; max-width: 100%; }
                 /* タブヘッダースクロールバー非表示（Webkit） */
                 .noah-tabs-header::-webkit-scrollbar { display: none; }
+                /* カバー画像：モバイルで全幅・角なし */
+                @media (max-width: 767px) {
+                    .article-container { padding: 0 !important; }
+                    .article-cover { margin: 0 !important; border-radius: 0 !important; }
+                    .article-container > *:not(.article-cover) { padding-left: 16px; padding-right: 16px; }
+                    .article-body { padding: 0 16px; }
+                }
             `}</style>
         </div>
     );

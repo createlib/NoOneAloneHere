@@ -740,12 +740,16 @@ export function ArticleRenderer({ html, className = 'article-body' }: ArticleRen
         <div>
             {nodes.map((node, i) => {
                 if (node.type === 'html') {
+                    // テーブルをスクロールラッパーでくるむ
+                    const wrapped = node.html
+                        .replace(/<table/g, '<div class="table-wrapper"><table')
+                        .replace(/<\/table>/g, '</table></div>');
                     return (
                         <div
                             key={i}
                             className={className}
                             style={{ fontSize: 15, lineHeight: 1.85, color: T1 }}
-                            dangerouslySetInnerHTML={{ __html: node.html }}
+                            dangerouslySetInnerHTML={{ __html: wrapped }}
                         />
                     );
                 }

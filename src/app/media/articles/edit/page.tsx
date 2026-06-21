@@ -25,11 +25,12 @@ import { common, createLowlight } from 'lowlight';
 import {
     ArrowLeft, Save, Send, Bold, Italic, Strikethrough, Highlighter,
     Heading2, Heading3, List, ListOrdered, Quote, Code, Link as LinkIcon,
-    Image as ImageIcon, Youtube as YtIcon, Minus, Table as TableIcon,
+    Image as ImageIcon, Minus, Table as TableIcon,
     AlignLeft, AlignCenter, Plus, X, Eye, ChevronDown, MessageSquare,
     BookOpen, Hash, Upload, Loader2, FileText, PenLine, Underline as UnderlineIcon,
     Type, Pilcrow, SquareCode, Sparkles, Layers, GalleryHorizontal, ListCollapse,
     RefreshCw, ArchiveRestore, AlertCircle, ExternalLink, Play,
+    ChevronRight, RowsIcon, Columns2, Trash2,
 } from 'lucide-react';
 import VisibilityPicker, { VisibilityMode } from '@/components/VisibilityPicker';
 import AiUpdateModal from '@/components/AiUpdateModal';
@@ -1150,7 +1151,6 @@ function ArticleEditorInner() {
                                 <ExternalLink size={13} />
                             </TBtn>
                             <TBtn onClick={() => imageInputRef.current?.click()} title="画像"><ImageIcon size={13} /></TBtn>
-                            <TBtn onClick={insertYoutube} title="YouTube"><YtIcon size={13} /></TBtn>
                             <TBtn onClick={() => editor.chain().focus().insertTable({rows:3,cols:3,withHeaderRow:true}).run()} title="テーブル"><TableIcon size={13} /></TBtn>
                             <TBtn onClick={() => editor.chain().focus().setHorizontalRule().run()} title="区切り線"><Minus size={13} /></TBtn>
                             <div style={{ width:1, background:'rgba(0,0,0,.08)', margin:'4px 2px' }} />
@@ -1198,6 +1198,48 @@ function ArticleEditorInner() {
                         }}
                     >
                         <EditorContent editor={editor} />
+
+                        {/* ── テーブル操作ツールバー（テーブル内にカーソルがあるときだけ表示） */}
+                        {editor && editor.isActive('table') && (
+                            <div style={{
+                                display: 'flex', gap: 3, padding: '4px 8px',
+                                background: SB, borderRadius: 8,
+                                boxShadow: '0 2px 12px rgba(0,0,0,.25)',
+                                flexWrap: 'wrap',
+                                margin: '4px 0',
+                            }}>
+                                {/* 行操作 */}
+                                <button onMouseDown={e=>e.preventDefault()} onClick={()=>editor.chain().focus().addRowBefore().run()}
+                                    style={{ padding:'3px 8px', borderRadius:5, border:'none', background:'rgba(255,255,255,.12)', color:'#fff', fontSize:10, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}
+                                    title="上に行を追加">⇑行+</button>
+                                <button onMouseDown={e=>e.preventDefault()} onClick={()=>editor.chain().focus().addRowAfter().run()}
+                                    style={{ padding:'3px 8px', borderRadius:5, border:'none', background:'rgba(255,255,255,.12)', color:'#fff', fontSize:10, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}
+                                    title="下に行を追加">⇓行+</button>
+                                <button onMouseDown={e=>e.preventDefault()} onClick={()=>editor.chain().focus().deleteRow().run()}
+                                    style={{ padding:'3px 8px', borderRadius:5, border:'none', background:'rgba(220,60,60,.25)', color:'#f87171', fontSize:10, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}
+                                    title="現在の行を削除">行削除</button>
+                                <div style={{ width:1, background:'rgba(255,255,255,.15)', margin:'2px 2px' }}/>
+                                {/* 列操作 */}
+                                <button onMouseDown={e=>e.preventDefault()} onClick={()=>editor.chain().focus().addColumnBefore().run()}
+                                    style={{ padding:'3px 8px', borderRadius:5, border:'none', background:'rgba(255,255,255,.12)', color:'#fff', fontSize:10, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}
+                                    title="左に列を追加">⇐列+</button>
+                                <button onMouseDown={e=>e.preventDefault()} onClick={()=>editor.chain().focus().addColumnAfter().run()}
+                                    style={{ padding:'3px 8px', borderRadius:5, border:'none', background:'rgba(255,255,255,.12)', color:'#fff', fontSize:10, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}
+                                    title="右に列を追加">列+⇒</button>
+                                <button onMouseDown={e=>e.preventDefault()} onClick={()=>editor.chain().focus().deleteColumn().run()}
+                                    style={{ padding:'3px 8px', borderRadius:5, border:'none', background:'rgba(220,60,60,.25)', color:'#f87171', fontSize:10, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}
+                                    title="現在の列を削除">列削除</button>
+                                <div style={{ width:1, background:'rgba(255,255,255,.15)', margin:'2px 2px' }}/>
+                                {/* ヘッダー */}
+                                <button onMouseDown={e=>e.preventDefault()} onClick={()=>editor.chain().focus().toggleHeaderRow().run()}
+                                    style={{ padding:'3px 8px', borderRadius:5, border:'none', background:'rgba(255,255,255,.12)', color:'#fff', fontSize:10, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}
+                                    title="ヘッダー行切り替">見出切替</button>
+                                <button onMouseDown={e=>e.preventDefault()} onClick={()=>editor.chain().focus().deleteTable().run()}
+                                    style={{ padding:'3px 8px', borderRadius:5, border:'none', background:'rgba(220,60,60,.35)', color:'#f87171', fontSize:10, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}
+                                    title="テーブルを削除">テーブル削除</button>
+                            </div>
+                        )}
+
                         {/* 画像編集メニュー */}
                         {imgMenu && (
                             <div
